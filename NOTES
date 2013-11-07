@@ -1,0 +1,23 @@
+=================================================
+A Format
+=================================================
+For a description of the graph format please have look into the manual.
+
+=================================================
+B Example partitioner call
+=================================================
+./deploy/kaffpa examples/delaunay_n15.graph --k 2 --preconfiguration=strong
+
+=================================================
+C Upcoming features
+=================================================
+upcoming releases will have:
+- own max-flow min-cut implementation
+- more functions in the library (accessable through the interface)
+- add the possibility to compile on windows
+
+=================================================
+D Known Issues
+=================================================
+- please don't use comments in your graph files
+

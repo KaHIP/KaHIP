@@ -1,0 +1,11 @@
+
+KaHIP-0.53
+------------------------------------------------------------------------
+- added a user guide to the release 
+- added graph checker tool which can check the graph file format and give you hints on how to correct your graph file
+- some minor bug fixes 
+
+
+KaHIP-0.5
+------------------------------------------------------------------------
+- initial release
