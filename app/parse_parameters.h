@@ -141,7 +141,6 @@ int parse_parameters(int argn, char **argv,
         struct arg_lit *mh_enable_kabapE                     = arg_lit0(NULL, "mh_enable_kabapE", "Enable combine operator KaBaPE");
         struct arg_int *maxT                                 = arg_int0(NULL, "maxT", NULL, "maxT parameter for Tabu Search");
         struct arg_int *maxIter                              = arg_int0(NULL, "maxIter", NULL, "maxIter parameter for Tabu Search");
-        struct arg_lit *label_propagation_refinement         = arg_lit0(NULL, "label_propagation_refinement", "Enable label propagation refinement.");
 
         struct arg_end *end                                  = arg_end(100);
 
@@ -252,10 +251,6 @@ int parse_parameters(int argn, char **argv,
                         fprintf(stderr, "Invalid preconfconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);
                 }
-        }
-
-        if(label_propagation_refinement->count > 0) {
-                partition_config.label_propagation_refinement = true;
         }
 
 

@@ -63,21 +63,19 @@ int uncoarsening::perform_uncoarsening(const PartitionConfig & config, graph_hie
 
                 PRINT(std::cout << "log>" << "unrolling graph with " << G->number_of_nodes()<<  std::endl;)
                 
-                if(!config.label_propagation_refinement) {
-                        finer_boundary = new complete_boundary(G); 
-                        finer_boundary->build_from_coarser(coarser_boundary, coarser_no_nodes, hierarchy.get_mapping_of_current_finer());
-                }
+                finer_boundary = new complete_boundary(G); 
+                finer_boundary->build_from_coarser(coarser_boundary, coarser_no_nodes, hierarchy.get_mapping_of_current_finer());
 
                 //call refinement
                 improvement += (int)refine->perform_refinement(cfg, *G, *finer_boundary);
                 ASSERT_TRUE(graph_partition_assertions::assert_graph_has_kway_partition(config, *G));
 
-                if(config.use_balance_singletons && !config.label_propagation_refinement) {
+                if(config.use_balance_singletons) {
                         finer_boundary->balance_singletons( config, *G );
                 }
 
                 // update boundary pointers
-                if(!config.label_propagation_refinement) delete coarser_boundary;
+                delete coarser_boundary;
                 coarser_boundary = finer_boundary;
                 coarser_no_nodes = G->number_of_nodes();
 

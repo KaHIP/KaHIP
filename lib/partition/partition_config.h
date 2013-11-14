@@ -299,7 +299,6 @@ struct PartitionConfig
         std::vector<int> target_weights;
         bool initial_bipartitioning;
         int grow_target;
-        bool label_propagation_refinement;
 
         //=======================================
         //===============Shared Mem OMP==========
