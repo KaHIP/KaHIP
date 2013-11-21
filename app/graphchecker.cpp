@@ -26,7 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <tr1/unordered_map>
+#include <tr1/unordered_set>
 
 using namespace std;
 using namespace std::tr1;
@@ -72,13 +72,18 @@ int main(int argn, char **argv)
         ss >> ew;
 
 
-        std::vector< std::vector< long > > graph;
-        std::vector< std::vector< long > > graph_edgeweights;
-        std::vector< long > graph_nodeweights;
-        graph.resize(nmbNodes);
-        graph_edgeweights.resize(nmbNodes);
-        graph_nodeweights.resize(nmbNodes);
+        std::vector< long > node_starts;
+        node_starts.reserve(nmbNodes + 1);
+        node_starts.push_back(0);
 
+        std::vector< long > adjacent_nodes;
+        adjacent_nodes.reserve(nmbEdges * 2);
+
+        std::vector< long > graph_edgeweights;
+        graph_edgeweights.reserve(nmbEdges * 2);
+        long node_weight;
+
+        long node_degree = 0;
         long node_counter = 0;
         long edge_counter = 0;
 
@@ -106,29 +111,29 @@ int main(int argn, char **argv)
                 if (line[0] == '%') { // a comment in the file
                         continue;
                 }
+                node_degree = 0;
 
                 std::stringstream ss(line);
                 if( node_weights ) {
-                        ss >> graph_nodeweights[node_counter];
-                } else {
-                        graph_nodeweights[node_counter] = 1;
-                }
-                if( graph_nodeweights[node_counter] < 0 ) {
-                        std::cout <<  "The node " <<  node_counter+1 << " has weight < 0."  << std::endl;
-                        std::cout <<  "See line " << node_counter+2 << " of your file."  << std::endl;
-                        std::cout <<  "*******************************************************************************"  << std::endl;
-                        exit(0);
+                        ss >> node_weight;
+                        if( node_weight < 0 ) {
+                            std::cout <<  "The node " <<  node_counter+1 << " has weight < 0."  << std::endl;
+                            std::cout <<  "See line " << node_counter+2 << " of your file."  << std::endl;
+                            std::cout <<  "*******************************************************************************"  << std::endl;
+                            exit(0);
+                        }
                 }
 
                 long target;
                 while( ss >> target ) {
+                        node_degree++;
                         if( target > nmbNodes || target <= 0 ) {
                                  std::cout <<  "Node " << node_counter+1 << " has an edge to a node greater than the number of nodes specified in the file or smaller or equal to zero, i.e. it has target " <<  target << " and the number of nodes specified was " <<  nmbNodes << std::endl;
                                  std::cout <<  "See line " << node_counter+2 << " of your file."  << std::endl;
                                  std::cout <<  "*******************************************************************************"  << std::endl;
                                  exit(0);
                         }
-                        graph[node_counter].push_back(target-1);
+                        adjacent_nodes.push_back(target - 1);
                         long edge_weight = 1;
                         if( edge_weights ) {
                                 if( ss.eof() ) {
@@ -146,10 +151,10 @@ int main(int argn, char **argv)
                                                           <<  "or there are no edge weights at all despite the specification " 
                                                           <<  ew  << " in the first line of the file."<< std::endl;
                                                 std::cout <<  "*******************************************************************************"  << std::endl;
-                                        
+
                                         }
                                         exit(0);
-                                        
+
                                 }
                                 ss >> edge_weight;
                                 if( edge_weight <= 0 ) {
@@ -160,13 +165,15 @@ int main(int argn, char **argv)
                                         exit(0);
                                 }
                         }
-                        graph_edgeweights[node_counter].push_back(edge_weight);
+                        graph_edgeweights.push_back(edge_weight);
                         edge_counter++;
                 }
                 node_counter++;
+                node_starts.push_back(node_starts.back() + node_degree);
         }
         node_counter--;
         std::cout <<  "IO done. Now checking the graph .... "  << std::endl;
+
 
         // check node counter
         if( node_counter != nmbNodes ) {
@@ -178,7 +185,7 @@ int main(int argn, char **argv)
         }
 
         // check edge counter
-        if( edge_counter != 2*nmbEdges) {
+        if( edge_counter != 2*nmbEdges || node_starts.back() != 2*nmbEdges) {
                 std::cout <<  "The number of edges specified in the beginning of the file " 
                           <<  "does not match the number of edges that are in the file."  << std::endl;
                 std::cout <<  "You specified " <<  2*nmbEdges <<  " but there are " <<  edge_counter << std::endl;
@@ -188,17 +195,15 @@ int main(int argn, char **argv)
 
 
         // check if there are parallel edges
-        for( unsigned long node = 0; node < graph.size(); node++) {
-                unordered_map< long, bool > map;
-                for( unsigned long e = 0; e < graph[node].size(); e++) {
-                        unsigned long target = graph[node][e];
-                        if( map.find(target) != map.end()) {
+        for( long node = 0; node < nmbNodes; node++) {
+                unordered_set< long > seen_adjacent_nodes;
+                for( long e = node_starts[node]; e < node_starts[node + 1]; e++) {
+                        long target = adjacent_nodes[e];
+                        if( !seenAdjacentNodes.insert(target).second ) {
                                 std::cout <<  "The file contains parallel edges."  << std::endl;
                                 std::cout <<  "In line " <<  node+2 << " of the file " <<  (target+1) << " is listed twice."   << std::endl;
                                 std::cout <<  "*******************************************************************************"  << std::endl;
                                 exit(0);
-                        } else {
-                                map[target] = true;
                         }
 
                         // check for self loops
@@ -213,23 +218,23 @@ int main(int argn, char **argv)
         }
 
         // if for backward edges and also check if the weights match
-        for( long node = 0; node < (long)graph.size(); node++) {
-                for( long e = 0; e < (long)graph[node].size(); e++) {
-                        long target = graph[node][e];
-                        long forward_weight = graph_edgeweights[node][e];
+        for( long node = 0; node < nmbNodes; node++) {
+                for( long e = node_starts[node]; e < node_starts[node + 1]; e++) {
+                        long target = adjacent_nodes[e];
+                        long forward_weight = graph_edgeweights[e];
 
                         bool found = false;
-                        for( unsigned long e_bar = 0; e_bar < graph[target].size(); e_bar++) {
-                                if(graph[target][e_bar] == node) {
+                        for( long e_bar = node_starts[target]; e_bar < node_starts[target + 1]; e_bar++) {
+                                if( adjacent_nodes[e_bar] == node) {
                                         found = true;
-                                        if( graph_edgeweights[target][e_bar] != forward_weight) {
+                                        if( graph_edgeweights[e_bar] != forward_weight) {
                                                 std::cout <<  "The file does not contain valid edge weights. " 
                                                           <<  "The weights of the forward edges must be equal " 
                                                           <<  "to the weight of the backward edges. "<< std::endl;
                                                 std::cout <<  "Node " <<  node+1 << " does contain an arc to node " 
                                                           << target+1 << " with weight " << forward_weight 
                                                           <<  " but the weight of the backward edge (" <<  target+1 << "," << node+1 << ") " 
-                                                          <<  " is  " << graph_edgeweights[target][e_bar] << std::endl;
+                                                          <<  " is  " << graph_edgeweights[e_bar] << std::endl;
                                                 std::cout <<  "You can find the backward edge in line " << target+2 << " of the file."  << std::endl;
                                                 std::cout <<  "You can find the forward edge in line " << node+2 << " of the file."  << std::endl;
                                                 std::cout <<  "*******************************************************************************"  << std::endl;
