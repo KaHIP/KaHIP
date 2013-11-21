@@ -199,7 +199,7 @@ int main(int argn, char **argv)
                 unordered_set< long > seen_adjacent_nodes;
                 for( long e = node_starts[node]; e < node_starts[node + 1]; e++) {
                         long target = adjacent_nodes[e];
-                        if( !seenAdjacentNodes.insert(target).second ) {
+                        if( !seen_adjacent_nodes.insert(target).second ) {
                                 std::cout <<  "The file contains parallel edges."  << std::endl;
                                 std::cout <<  "In line " <<  node+2 << " of the file " <<  (target+1) << " is listed twice."   << std::endl;
                                 std::cout <<  "*******************************************************************************"  << std::endl;
