@@ -55,7 +55,7 @@ exchanger::~exchanger() {
                 int message_length = st.Get_count(MPI_INT);
                 int* partition_map = new int[message_length];
                 MPI::COMM_WORLD.Recv( partition_map, message_length, MPI_INT, st.Get_source(), rank); 
-                delete partition_map;
+                delete[] partition_map;
         }
 
         MPI::COMM_WORLD.Barrier();
