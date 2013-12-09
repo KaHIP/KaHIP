@@ -98,7 +98,8 @@ int main(int argn, char **argv)
                 edge_weights = true;
         }
 
-        while( !in.eof() ) {
+        while( std::getline(in, line) ) {
+                
                 if( node_counter > nmbNodes ) {
                         std::cout <<  "There are more nodes in the file than specified in the first line of the file."  << std::endl;
                         std::cout <<  "You specified " <<  nmbNodes << " nodes." << std::endl;
@@ -107,7 +108,6 @@ int main(int argn, char **argv)
                         exit(0);
                 }
 
-                std::getline(in, line);
                 if (line[0] == '%') { // a comment in the file
                         continue;
                 }
@@ -170,8 +170,10 @@ int main(int argn, char **argv)
                 }
                 node_counter++;
                 node_starts.push_back(node_starts.back() + node_degree);
+                if(in.eof()) {
+                        break;
+                }
         }
-        node_counter--;
         std::cout <<  "IO done. Now checking the graph .... "  << std::endl;
 
 
