@@ -26,10 +26,9 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <tr1/unordered_set>
+#include <unordered_set>
 
 using namespace std;
-using namespace std::tr1;
 
 // this program implements the functions to check the metis graph 
 // format
@@ -198,7 +197,7 @@ int main(int argn, char **argv)
 
         // check if there are parallel edges
         for( long node = 0; node < nmbNodes; node++) {
-                unordered_set< long > seen_adjacent_nodes;
+                std::unordered_set< long > seen_adjacent_nodes;
                 for( long e = node_starts[node]; e < node_starts[node + 1]; e++) {
                         long target = adjacent_nodes[e];
                         if( !seen_adjacent_nodes.insert(target).second ) {

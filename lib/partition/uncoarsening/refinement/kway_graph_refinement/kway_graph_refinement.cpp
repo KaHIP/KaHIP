@@ -21,6 +21,7 @@
  *****************************************************************************/
 
 #include <algorithm>
+#include <unordered_map>
 
 #include "kway_graph_refinement.h"
 #include "kway_graph_refinement_core.h"
@@ -77,7 +78,7 @@ void kway_graph_refinement::setup_start_nodes(PartitionConfig & config, graph_ac
         QuotientGraphEdges quotient_graph_edges;
         boundary.getQuotientGraphEdges(quotient_graph_edges);
 
-        unordered_map<NodeID, bool> allready_contained;
+        std::unordered_map<NodeID, bool> allready_contained;
 
         for( unsigned i = 0; i < quotient_graph_edges.size(); i++) {
                 boundary_pair & ret_value = quotient_graph_edges[i];

@@ -20,13 +20,11 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include "algorithms/strongly_connected_components.h"
 #include "algorithms/topological_sort.h"
 #include "most_balanced_minimum_cuts.h"
-
-using namespace std::tr1;
 
 most_balanced_minimum_cuts::most_balanced_minimum_cuts() {
 
@@ -173,7 +171,7 @@ void most_balanced_minimum_cuts::build_internal_scc_graph( graph_access & residu
         scc_graph.start_construction(comp_count, edge_count);
         for( unsigned i = 0; i < (unsigned) comp_count; i++) {
                 NodeID node = scc_graph.new_node();
-                unordered_map<NodeID, bool> allready_contained;
+                std::unordered_map<NodeID, bool> allready_contained;
                 for(unsigned j = 0; j < edges[i].size(); j++) {
                         if(allready_contained.find(edges[i][j]) == allready_contained.end()) {
                                 scc_graph.new_edge(node, edges[i][j]);

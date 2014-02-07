@@ -25,13 +25,12 @@
 #include <map>
 #include <math.h>
 #include <sstream>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include "edge_cut_flow_solver.h"
 #include "flow_macros.h"
 #include "most_balanced_minimum_cuts/most_balanced_minimum_cuts.h"
 
-using namespace std::tr1;
 
 edge_cut_flow_solver::edge_cut_flow_solver() {
 }
@@ -99,7 +98,7 @@ EdgeWeight edge_cut_flow_solver::convert_ds( const PartitionConfig & config,
         //building up the graph as in parse.h of hi_pr code
         NodeID idx = 0;
         new_to_old_ids.resize(lhs_boundary_stripe.size() + rhs_boundary_stripe.size());
-        unordered_map<NodeID, NodeID> old_to_new;
+        std::unordered_map<NodeID, NodeID> old_to_new;
         for( unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
                 G.setPartitionIndex(lhs_boundary_stripe[i], BOUNDARY_STRIPE_NODE);
                 new_to_old_ids[idx]                = lhs_boundary_stripe[i];

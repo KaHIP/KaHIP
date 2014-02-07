@@ -36,13 +36,11 @@
 #include <map>
 #include <math.h>
 #include <sstream>
-#include <tr1/unordered_map>
 
 #include "flow_solver.h"
 #include "flow_macros.h"
 #include "most_balanced_minimum_cuts/most_balanced_minimum_cuts.h"
 
-using namespace std::tr1;
 
 flow_solver::flow_solver() {
         pushCnt         = 0;       /* number of pushes */

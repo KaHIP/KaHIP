@@ -198,7 +198,7 @@ bool augmented_Qgraph_fabric::build_augmented_quotient_graph( PartitionConfig & 
                         } // else
 
                         start_block = cur_block;
-                        unordered_map< PartitionID, bool > allready_performed_local_search;
+                        std::unordered_map< PartitionID, bool > allready_performed_local_search;
 
                         while( boundary.getBlockWeight( cur_block ) <= config.upper_bound_partition ) {
                                 boundary_pair bp;

@@ -23,6 +23,8 @@
 #ifndef ACTIVE_BLOCK_QUOTIENT_GRAPH_SCHEDULER_2QATIGSY
 #define ACTIVE_BLOCK_QUOTIENT_GRAPH_SCHEDULER_2QATIGSY
 
+#include <unordered_map>
+
 #include "partition_config.h"
 #include "quotient_graph_scheduling.h"
 #include "random_functions.h"
@@ -40,7 +42,7 @@ class active_block_quotient_graph_scheduler : public quotient_graph_scheduling {
                 virtual void pushStatistics(qgraph_edge_statistics & statistic);
                 virtual void init();
 
-                void activate_blocks(unordered_map<PartitionID, PartitionID> & blocks);
+                void activate_blocks(std::unordered_map<PartitionID, PartitionID> & blocks);
 
         private: 
                 QuotientGraphEdges & m_quotient_graph_edges;
@@ -94,8 +96,8 @@ inline void active_block_quotient_graph_scheduler::pushStatistics(qgraph_edge_st
         }
 }
 
-inline void active_block_quotient_graph_scheduler::activate_blocks(unordered_map<PartitionID, PartitionID> & blocks) {
-        unordered_map<PartitionID, PartitionID>::iterator it;
+inline void active_block_quotient_graph_scheduler::activate_blocks(std::unordered_map<PartitionID, PartitionID> & blocks) {
+        std::unordered_map<PartitionID, PartitionID>::iterator it;
         for(it = blocks.begin(); it != blocks.end(); ++it) {
              m_is_block_active[it->first] = true;
         }

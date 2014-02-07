@@ -23,13 +23,12 @@
 #ifndef VMOVEDHT_4563r97820954
 #define VMOVEDHT_4563r97820954
 
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include "definitions.h"
 #include "limits.h"
 
 using namespace __gnu_cxx;
-using namespace std::tr1;
 
 struct compare_nodes {
         bool operator()(const NodeID lhs, const NodeID rhs) const {
@@ -54,6 +53,6 @@ struct hash_nodes {
        }
 };
 
-typedef unordered_map<const NodeID, moved_index, hash_nodes, compare_nodes> vertex_moved_hashtable;
+typedef std::unordered_map<const NodeID, moved_index, hash_nodes, compare_nodes> vertex_moved_hashtable;
 
 #endif

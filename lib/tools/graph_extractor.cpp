@@ -20,11 +20,9 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#include <tr1/unordered_map>
-
+#include <unordered_map>
 #include "graph_extractor.h"
 
-using namespace std::tr1;
 
 graph_extractor::graph_extractor() {
 
@@ -151,7 +149,7 @@ void graph_extractor::extract_two_blocks_connected(graph_access & G,
                                                    graph_access & pair,
                                                    std::vector<NodeID> & mapping) {
         //// build reverse mapping
-        unordered_map<NodeID,NodeID> reverse_mapping;
+        std::unordered_map<NodeID,NodeID> reverse_mapping;
         NodeID nodes = 0;
         EdgeID edges = 0; // upper bound for number of edges
 

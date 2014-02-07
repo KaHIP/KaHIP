@@ -24,11 +24,9 @@
 #define BUCKET_PQ_EM8YJPA9
 
 #include <limits>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include "priority_queue_interface.h"
-
-using namespace std::tr1;
 
 class bucket_pq : public priority_queue_interface {
         public:
@@ -57,7 +55,7 @@ class bucket_pq : public priority_queue_interface {
                 EdgeWeight m_gain_span;
                 unsigned   m_max_idx; //points to the non-empty bucket with the largest gain
                 
-                unordered_map<NodeID, std::pair<Count, Gain> > m_queue_index;
+                std::unordered_map<NodeID, std::pair<Count, Gain> > m_queue_index;
                 std::vector< std::vector<NodeID> >             m_buckets;
 };
 

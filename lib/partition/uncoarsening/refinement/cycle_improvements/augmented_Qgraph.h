@@ -24,6 +24,7 @@
 #define AUGMENTED_QUOTIENT_GRAPH_E5ZEJUBV
 
 #include <algorithm>
+#include <unordered_map>
 #include <vector>
 
 #include "definitions.h"
@@ -67,7 +68,7 @@ struct block_pair_difference {
         }
 };
 
-typedef unordered_map<const boundary_pair, set_pairwise_local_searches, hash_boundary_pair_directed, compare_boundary_pair_directed> augmented_Qgraph_internal;
+typedef std::unordered_map<const boundary_pair, set_pairwise_local_searches, hash_boundary_pair_directed, compare_boundary_pair_directed> augmented_Qgraph_internal;
 
 class augmented_Qgraph {
 public:

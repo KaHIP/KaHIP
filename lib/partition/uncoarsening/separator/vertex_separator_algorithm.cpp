@@ -48,7 +48,7 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
 
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
 
-        unordered_map<NodeID, bool> allready_separator;
+        std::unordered_map<NodeID, bool> allready_separator;
         do {
                 boundary_pair & bp = scheduler->getNext();
                 PartitionID lhs = bp.lhs;
@@ -83,7 +83,7 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
 
 
         // now print the computed vertex separator to disk
-        unordered_map<NodeID, bool>::iterator it;
+        std::unordered_map<NodeID, bool>::iterator it;
         for( it = allready_separator.begin(); it != allready_separator.end(); ++it) {
                 overall_separator.push_back(it->first);
         }
@@ -116,7 +116,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
 
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
 
-        unordered_map<NodeID, bool> allready_separator;
+        std::unordered_map<NodeID, bool> allready_separator;
         do {
                 boundary_pair & bp = scheduler->getNext();
                 PartitionID lhs = bp.lhs;
@@ -149,14 +149,14 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
 
 
         // now print the computed vertex separator to disk
-        unordered_map<NodeID, bool>::iterator it;
+        std::unordered_map<NodeID, bool>::iterator it;
         for( it = allready_separator.begin(); it != allready_separator.end(); ++it) {
                 overall_separator.push_back(it->first);
         }
         is_vertex_separator(G, allready_separator);         
 }
 
-bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, unordered_map<NodeID, bool> & separator) {
+bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::unordered_map<NodeID, bool> & separator) {
          forall_nodes(G, node) {
                 forall_out_edges(G, e, node) {
                         NodeID target = G.getEdgeTarget(e);

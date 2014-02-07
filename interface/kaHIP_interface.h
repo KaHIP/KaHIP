@@ -49,6 +49,22 @@ void kaffpa_fast(int* n, int* vwgt, int* xadj, int* adjcwgt,
                  double* inbalance,  bool suppress_output, int seed,
                  int* edgecut, int* part); 
 
+void nodeseparator_strong(int* n, int* vwgt, int* xadj, 
+                          int* adjcwgt, int* adjncy, int* nparts, 
+                          double* inbalance,  bool suppress_output, int seed,
+                          int* num_separator_vertices, int** separator); 
+
+void nodeseparator_eco(int* n, int* vwgt, int* xadj, 
+                       int* adjcwgt, int* adjncy,  
+                       int* nparts, double* inbalance,  
+                       bool suppress_output, int seed,
+                       int* num_separator_vertices, int** separator); 
+
+void nodeseparator_fast(int* n, int* vwgt, int* xadj, int* adjcwgt, 
+                        int* adjncy, int* nparts, 
+                        double* inbalance,  bool suppress_output, int seed,
+                        int* num_separator_vertices, int** separator); 
+
 #ifdef __cplusplus
 }
 #endif

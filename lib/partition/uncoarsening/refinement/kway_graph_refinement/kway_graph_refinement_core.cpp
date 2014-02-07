@@ -41,7 +41,7 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round(PartitionCon
                                                                     boundary_starting_nodes & start_nodes, 
                                                                     int step_limit, 
                                                                     vertex_moved_hashtable & moved_idx) {
-        unordered_map<PartitionID, PartitionID> touched_blocks;
+        std::unordered_map<PartitionID, PartitionID> touched_blocks;
         return single_kway_refinement_round_internal(config, G, boundary, start_nodes, 
                                                      step_limit, moved_idx, false, touched_blocks);
 }
@@ -52,7 +52,7 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round(PartitionCon
                                                                     boundary_starting_nodes & start_nodes, 
                                                                     int step_limit, 
                                                                     vertex_moved_hashtable & moved_idx,
-                                                                    unordered_map<PartitionID, PartitionID> & touched_blocks) {
+                                                                    std::unordered_map<PartitionID, PartitionID> & touched_blocks) {
 
         return single_kway_refinement_round_internal(config, G, boundary, start_nodes, 
                                                      step_limit, moved_idx, true, touched_blocks);
@@ -66,7 +66,7 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
                                                                     int step_limit,
                                                                     vertex_moved_hashtable & moved_idx,
                                                                     bool compute_touched_partitions,
-                                                                    unordered_map<PartitionID, PartitionID> &  touched_blocks) {
+                                                                    std::unordered_map<PartitionID, PartitionID> &  touched_blocks) {
 
         commons = kway_graph_refinement_commons::getInstance(config);
         refinement_pq* queue = NULL;

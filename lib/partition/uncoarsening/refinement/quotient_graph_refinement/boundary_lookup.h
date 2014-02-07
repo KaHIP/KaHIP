@@ -23,14 +23,13 @@
 #ifndef BOUNDARY_LOOKUP_2JMSKBSI
 #define BOUNDARY_LOOKUP_2JMSKBSI
 
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include "definitions.h"
 #include "limits.h"
 #include "partial_boundary.h"
 
 using namespace __gnu_cxx;
-using namespace std::tr1;
 
 struct boundary_pair {
         PartitionID k;
@@ -86,7 +85,7 @@ struct hash_boundary_pair{
        }
 };
 
-typedef unordered_map<const boundary_pair, data_boundary_pair, hash_boundary_pair, compare_boundary_pair> block_pairs;
+typedef std::unordered_map<const boundary_pair, data_boundary_pair, hash_boundary_pair, compare_boundary_pair> block_pairs;
 
 
 

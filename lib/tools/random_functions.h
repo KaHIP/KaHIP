@@ -24,13 +24,13 @@
 #define RANDOM_FUNCTIONS_RMEPKWYT
 
 #include <iostream>
-#include <tr1/random>
+#include <random>
 #include <vector>
 
 #include "definitions.h"
 #include "partition_config.h"
 
-typedef std::tr1::mt19937 MersenneTwister;
+typedef std::mt19937 MersenneTwister;
 
 class random_functions {
         public:
@@ -45,8 +45,8 @@ class random_functions {
                                 }                   
 
                                 unsigned int size = vec.size();
-                                std::tr1::uniform_int<unsigned int> A(0,size-1);
-                                std::tr1::uniform_int<unsigned int> B(0,size-1);
+                                std::uniform_int_distribution<unsigned int> A(0,size-1);
+                                std::uniform_int_distribution<unsigned int> B(0,size-1);
 
                                 for( unsigned int i = 0; i < size; i++) {
                                         unsigned int posA = A(m_mt);
@@ -74,7 +74,7 @@ class random_functions {
                                 if(vec.size() < 10) return;
                                         
                                 int distance = 20; 
-                                std::tr1::uniform_int<unsigned int> A(0, distance);
+                                std::uniform_int_distribution<unsigned int> A(0, distance);
                                 unsigned int size = vec.size()-4;
                                 for( unsigned int i = 0; i < size; i++) {
                                         unsigned int posA = i;
@@ -99,8 +99,8 @@ class random_functions {
                                         return;
                                 }
                                 unsigned int size = vec.size();
-                                std::tr1::uniform_int<unsigned int> A(0,size - 4);
-                                std::tr1::uniform_int<unsigned int> B(0,size - 4);
+                                std::uniform_int_distribution<unsigned int> A(0,size - 4);
+                                std::uniform_int_distribution<unsigned int> B(0,size - 4);
 
                                 for( unsigned int i = 0; i < size; i++) {
                                         unsigned int posA = A(m_mt);
@@ -117,8 +117,8 @@ class random_functions {
                         static void permutate_vector_good_small(std::vector<sometype> & vec) {
                                 if(vec.size() < 2) return;
                                 unsigned int size = vec.size();
-                                std::tr1::uniform_int<unsigned int> A(0,size-1);
-                                std::tr1::uniform_int<unsigned int> B(0,size-1);
+                                std::uniform_int_distribution<unsigned int> A(0,size-1);
+                                std::uniform_int_distribution<unsigned int> B(0,size-1);
 
                                 for( unsigned int i = 0; i < size; i++) {
                                         unsigned int posA = A(m_mt);
@@ -146,14 +146,14 @@ class random_functions {
                         }
 
                 static bool nextBool() {
-                        std::tr1::uniform_int<unsigned int> A(0,1);
+                        std::uniform_int_distribution<unsigned int> A(0,1);
                         return (bool) A(m_mt); 
                 }
 
 
                 //including lb and rb
                 static unsigned nextInt(unsigned int lb, unsigned int rb) {
-                        std::tr1::uniform_int<unsigned int> A(lb,rb);
+                        std::uniform_int_distribution<unsigned int> A(lb,rb);
                         return A(m_mt); 
                 }
 

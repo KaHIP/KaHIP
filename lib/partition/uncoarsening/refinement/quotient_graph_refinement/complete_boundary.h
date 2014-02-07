@@ -24,6 +24,7 @@
 #define COMPLETE_BOUNDARY_URZZFDEI
 
 #include <execinfo.h>
+#include <unordered_map>
 #include <utility>
 
 #include "boundary_lookup.h"
@@ -445,7 +446,7 @@ void complete_boundary::setup_start_nodes_around_blocks(graph_access & G,
         std::vector<PartitionID> rhs_neighbors;
         getNeighbors(rhs, rhs_neighbors);
 
-        unordered_map<NodeID, bool> allready_contained;
+        std::unordered_map<NodeID, bool> allready_contained;
         for( unsigned i = 0; i < lhs_neighbors.size(); i++) {
                 PartitionID neighbor = lhs_neighbors[i];
                 PartialBoundary & partial_boundary_lhs = getDirectedBoundary(lhs, lhs, neighbor);
@@ -494,7 +495,7 @@ void complete_boundary::setup_start_nodes_all(graph_access & G, boundary_startin
         QuotientGraphEdges quotient_graph_edges;
         getQuotientGraphEdges(quotient_graph_edges);
 
-        unordered_map<NodeID, bool> allready_contained;
+        std::unordered_map<NodeID, bool> allready_contained;
         
         for( unsigned i = 0; i < quotient_graph_edges.size(); i++) {
                 boundary_pair & ret_value = quotient_graph_edges[i];

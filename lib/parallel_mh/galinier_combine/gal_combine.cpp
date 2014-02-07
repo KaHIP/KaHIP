@@ -23,7 +23,6 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <tr1/unordered_map>
 
 #include "construct_partition.h"
 #include "gal_combine.h"
@@ -33,8 +32,6 @@
 #include "uncoarsening/refinement/mixed_refinement.h"
 #include "uncoarsening/refinement/refinement.h"
 #include "uncoarsening/refinement/tabu_search/tabu_search.h"
-
-using namespace std::tr1;
 
 gal_combine::gal_combine() {
                 
@@ -51,7 +48,7 @@ gal_combine::~gal_combine() {
 // apply our refinements and tabu search
 void gal_combine::perform_gal_combine( PartitionConfig & config, graph_access & G) {
         //first greedily compute a matching of the partitions
-        std::vector< unordered_map<PartitionID, unsigned> > counters(config.k);
+        std::vector< std::unordered_map<PartitionID, unsigned> > counters(config.k);
         forall_nodes(G, node) {
                 //boundary_pair bp;
                 if(counters[G.getPartitionIndex(node)].find(G.getSecondPartitionIndex(node)) != counters[G.getPartitionIndex(node)].end()) {
@@ -74,7 +71,7 @@ void gal_combine::perform_gal_combine( PartitionConfig & config, graph_access & 
                 PartitionID best_unassigned = config.k;
                 NodeWeight  best_value      = 0;
 
-                for( unordered_map<PartitionID, unsigned>::iterator it = counters[cur_partition].begin(); 
+                for( std::unordered_map<PartitionID, unsigned>::iterator it = counters[cur_partition].begin(); 
                      it != counters[cur_partition].end(); ++it) {
                         if( rhs_matched[it->first] == false && it->second > best_value ) {
                                 best_unassigned = it->first; 

@@ -25,7 +25,7 @@
 
 #include <limits>
 #include <vector>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <execinfo.h>
 
 #include "data_structure/priority_queues/priority_queue_interface.h"
@@ -100,7 +100,7 @@ class maxNodeHeap : public priority_queue_interface {
 
         private:
                 std::vector< PQElement >               m_elements;      // elements that contain the data
-                std::tr1::unordered_map<NodeID, int>   m_element_index; // stores index of the node in the m_elements array
+                std::unordered_map<NodeID, int>   m_element_index; // stores index of the node in the m_elements array
                 std::vector< std::pair<Key, int> >     m_heap;          // key and index in elements (pointer)
 
                 void siftUp( int pos );
