@@ -34,8 +34,6 @@
 #include "definitions.h"
 #include "data_structure/graph_access.h"
 
-#define MAXLINE	228000000
-
 class graph_io {
         public:
                 graph_io();
@@ -43,9 +41,6 @@ class graph_io {
 
                 static 
                 int readGraphWeighted(graph_access & G, std::string filename);
-
-                static 
-                int readGraphUnweighted(graph_access& G, std::string filename);
 
                 static
                 int writeGraphWeighted(graph_access & G, std::string filename);

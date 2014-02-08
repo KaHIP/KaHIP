@@ -20,6 +20,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
+#include <sstream>
 #include "graph_io.h"
 
 graph_io::graph_io() {
@@ -95,7 +96,7 @@ int graph_io::readPartition(graph_access & G, std::string filename) {
 }
 
 int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
-        char* line = new char[MAXLINE+1];
+        std::string line;
 
         // open file for reading
         std::ifstream in(filename.c_str());
@@ -107,14 +108,17 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
         NodeID nmbNodes;
         EdgeID nmbEdges;
 
-        in.getline(line, MAXLINE);
+        std::getline(in,line);
         //skip comments
         while( line[0] == '%' ) {
-                in.getline(line, MAXLINE);
+                std::getline(in, line);
         }
 
         int ew = 0;
-        sscanf(line, "%d %d %d", &nmbNodes, &nmbEdges, &ew );
+        std::stringstream ss(line);
+        ss >> nmbNodes;
+        ss >> nmbEdges;
+        ss >> ew;
 
         bool read_ew = false;
         bool read_nw = false;
@@ -129,133 +133,61 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
         }
         nmbEdges *= 2; //since we have forward and backward edges
 
-        
+        NodeID node_counter   = 0;
+        EdgeID edge_counter   = 0;
+
         G.start_construction(nmbNodes, nmbEdges);
-        char *oldstr, *newstr;
 
-        int edge_counter = 0;
-        for (NodeID i = 0; i < nmbNodes; ++i) {
-                NodeID node = G.new_node();
-
-                G.setPartitionIndex(node, 0);
-                in.getline(line, MAXLINE);
-
-                //******************************************
-                // insert the edges given in this line
-                // Parse the Line
-                // *****************************************
-                oldstr = line;
-                newstr = NULL;
-
-                // First Number in this Line is the Nodeweight
-                if(read_nw) {
-                        int weight = (NodeID) strtol(oldstr, &newstr, 10);
-                        oldstr = newstr;
-                        G.setNodeWeight(node, weight);
-                } else {
-                        G.setNodeWeight(node, 1);
+        while(  std::getline(in, line)) {
+       
+                if (line[0] == '%') { // a comment in the file
+                        continue;
                 }
 
-                NodeID source = i;
-                NodeID target = 0;
-                int edgeWeight = 0;
-                for (;;) {
-                        target = (NodeID) strtol(oldstr, &newstr, 10);
-                        oldstr = newstr;
+                NodeID node = G.new_node(); node_counter++;
+                G.setPartitionIndex(node, 0);
 
-                        if (target == 0)
-                                break;
+                std::stringstream ss(line);
 
-                        if(read_ew) {
-                                edgeWeight = (NodeID) strtol(oldstr, &newstr, 10);
-                                oldstr = newstr;
-                        }
+                NodeWeight weight = 1;
+                if( read_nw ) {
+                        ss >> weight;
+                }
+                G.setNodeWeight(node, weight);
 
-                        target -= 1; // -1 since there are no nodes with id 0 in the file
-
-                        ASSERT_NEQ(source, target);
-                        ASSERT_LEQ(target, nmbNodes);
-
-                        EdgeID e = G.new_edge(source, target);
-                        if(read_ew) {
-                                G.setEdgeWeight(e, edgeWeight);
-                        } else {
-                                G.setEdgeWeight(e, 1);
+                NodeID target;
+                while( ss >> target ) {
+                        EdgeWeight edge_weight = 1;
+                        if( read_ew ) {
+                                ss >> edge_weight;
                         }
                         edge_counter++;
+                        EdgeID e = G.new_edge(node, target-1);
+                        G.setEdgeWeight(e, edge_weight);
                 }
-        }
-        std::cout <<  "edge conter " <<  edge_counter  << std::endl;
 
-        G.finish_construction();
-        delete[] line;
-        return 0;
-}
-
-int graph_io::readGraphUnweighted(graph_access & G, std::string filename) {
-        char* line = new char[MAXLINE+1];
-
-        // open file for reading
-        std::ifstream in(filename.c_str());
-        if (!in) {
-                std::cerr << "Error opening unweighted graph " << filename << std::endl;
-                return 1;
-        }
-
-        NodeID nmbNodes;
-        EdgeID nmbEdges;
-
-        in.getline(line, MAXLINE);
-        //skip comments
-        while( line[0] == '%' ) {
-                in.getline(line, MAXLINE);
-        }
-
-        sscanf(line, "%d %d", &nmbNodes, &nmbEdges);
-
-        nmbEdges *= 2; //since we have forward and backward edges
-
-        G.start_construction(nmbNodes, nmbEdges);
-        char *oldstr, *newstr;
-
-        for (NodeID i = 0; i < nmbNodes; ++i) {
-                NodeID node = G.new_node();
-                G.setPartitionIndex(node, 0);
-                G.setNodeWeight(node, 1);
-
-                //Fetch current line
-                in.getline(line, MAXLINE);
-
-                //******************************************
-                // insert the edges given in this line
-                // Parse the Line
-                // *****************************************
-                oldstr = line;
-                newstr = NULL;
-                NodeID source = i;
-                NodeID target = 0;
-
-                for (;;) {
-                        target = (NodeID) strtol(oldstr, &newstr, 10);
-
-                        if (target == 0) {
-                                break;
-                        }
-
-                        oldstr = newstr; target -= 1; // -1 since there are no nodes with id 0 in the file
-
-                        ASSERT_NEQ(source, target);
-                        ASSERT_LEQ(target, nmbNodes);
-
-                        EdgeID e = G.new_edge(source, target);
-                        G.setEdgeWeight(e, 1);
+                if(in.eof()) {
+                        break;
                 }
         }
 
+        if( edge_counter != nmbEdges ) {
+                std::cout <<  "number of specified edges mismatch"  << std::endl;
+                std::cout <<  edge_counter <<  " " <<  nmbEdges  << std::endl;
+                exit(0);
+        }
+
+        if( node_counter != nmbNodes) {
+                std::cout <<  "number of specified nodes mismatch"  << std::endl;
+                std::cout <<  node_counter <<  " " <<  nmbNodes  << std::endl;
+                exit(0);
+        }
+
+
         G.finish_construction();
-        delete[] line;
         return 0;
 }
+
 
 void graph_io::writePartition(graph_access & G, std::string filename) {
         std::ofstream f(filename.c_str());

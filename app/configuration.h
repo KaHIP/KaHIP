@@ -319,6 +319,7 @@ inline void configuration::ufast( PartitionConfig & partition_config ) {
         standardsnw(partition_config);
         partition_config.label_propagation_refinement = true;
         partition_config.cluster_coarsening_during_ip = true;
+        partition_config.balance_factor               = 0;
 }
 
 inline void configuration::uecovb( PartitionConfig & partition_config ) {
