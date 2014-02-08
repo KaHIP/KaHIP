@@ -146,9 +146,6 @@ void kaffpa(int* n,
                         cfg.uecovb(partition_config);
                         break;
                 case STRONGSOCIAL: 
-                        cfg.strongsocial(partition_config);
-                        break;
-                case STRONGERSOCIAL: 
                         cfg.ustrong(partition_config);
                         break;
                 default: 
@@ -242,9 +239,6 @@ void node_separator(int* n,
                         cfg.uecovb(partition_config);
                         break;
                 case STRONGSOCIAL: 
-                        cfg.strongsocial(partition_config);
-                        break;
-                case STRONGERSOCIAL: 
                         cfg.ustrong(partition_config);
                         break;
                 default: 

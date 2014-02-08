@@ -114,9 +114,9 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *initial_partition_optimize_multitry_rounds   = arg_int0(NULL, "initial_partition_optimize_multitry_rounds", NULL, "(Default: 100)");
 
 #ifdef MODE_KAFFPA
-        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fastsocial|ecosocial|strongsocial|strongersocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|snw]." );
+        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fastsocial|ecosocial|strongsocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fastsocial|ecosocial|strongsocial]." );
 #else
-        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fastsocial|ecosocial|strongsocial|strongersocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [strong|eco|fast|snw]." );
+        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fastsocial|ecosocial|strongsocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [strong|eco|fast|fastsocial|ecosocial|strongsocial]." );
 #endif
 
         struct arg_dbl *time_limit                           = arg_dbl0(NULL, "time_limit", NULL, "Time limit in s. Default 0s .");
@@ -252,8 +252,6 @@ int parse_parameters(int argn, char **argv,
                 } else if (strcmp("ecosocial", preconfiguration->sval[0]) == 0) {
                         cfg.uecovb(partition_config);
                 } else if (strcmp("strongsocial", preconfiguration->sval[0]) == 0) {
-                        cfg.strongsocial(partition_config);
-                } else if (strcmp("strongersocial", preconfiguration->sval[0]) == 0) {
                         cfg.ustrong(partition_config);
                 } else {
                         fprintf(stderr, "Invalid preconfconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);

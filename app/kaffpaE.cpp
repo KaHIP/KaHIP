@@ -85,15 +85,12 @@ int main(int argn, char **argv) {
         partition_config.graph_allready_partitioned = false;
         partition_config.kway_adaptive_limits_beta  = log(largest_graph_weight);
 
-        EdgeWeight input_cut = std::numeric_limits<EdgeWeight>::max();
         std::vector<PartitionID> input_partition;
         if(partition_config.input_partition != "") {
                 std::cout <<  "reading input partition" << std::endl;
                 graph_io::readPartition(G, partition_config.input_partition);
                 partition_config.graph_allready_partitioned = true;
 
-                quality_metrics qm;
-                input_cut = qm.edge_cut(G);
                 input_partition.resize(G.number_of_nodes());
 
                 forall_nodes(G, node) {

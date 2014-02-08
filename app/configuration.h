@@ -39,7 +39,6 @@ class configuration {
 
                 void ufast( PartitionConfig & config );
                 void uecovb( PartitionConfig & config );
-                void strongsocial( PartitionConfig & config );
                 void ustrong( PartitionConfig & config ); 
 };
 
@@ -331,11 +330,6 @@ inline void configuration::uecovb( PartitionConfig & partition_config ) {
         partition_config.no_new_initial_partitioning  = true;
         partition_config.balance_factor               = 0.016;
         partition_config.cluster_coarsening_during_ip = true;
-}
-
-inline void configuration::strongsocial( PartitionConfig & partition_config ) {
-        uecovb(partition_config);
-        partition_config.repetitions = 5;
 }
 
 inline void configuration::ustrong( PartitionConfig & partition_config ) {
