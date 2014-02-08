@@ -23,8 +23,6 @@
 #ifndef WCYCLE_PARTITIONER_EPNDQMK
 #define WCYCLE_PARTITIONER_EPNDQMK
 
-#include <unordered_map>
-
 #include "coarsening/coarsening.h"
 #include "coarsening/stop_rules/stop_rules.h"
 #include "data_structure/graph_access.h"
@@ -44,6 +42,7 @@ class wcycle_partitioner {
                                                     complete_boundary ** c_boundary); 
 
                 unsigned   m_level;
+                unsigned   m_deepest_level;
                 stop_rule* m_coarsening_stop_rule;
 
                 std::unordered_map<unsigned, bool> m_have_been_level_down;

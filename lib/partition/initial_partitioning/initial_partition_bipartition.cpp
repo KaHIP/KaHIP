@@ -46,10 +46,16 @@ void initial_partition_bipartition::initial_partition( const PartitionConfig & c
         rec_config.use_fullmultigrid                = false;
         rec_config.fm_search_limit                  = config.bipartition_post_ml_limits;
         rec_config.matching_type                    = MATCHING_GPA;
-        //rec_config.matching_type                    = CLUSTER_COARSENING;
         rec_config.permutation_quality              = PERMUTATION_QUALITY_GOOD;
-
         rec_config.initial_partitioning             = true;
+	rec_config.graph_allready_partitioned       = false;
+
+	if( config.cluster_coarsening_during_ip == true) {
+		rec_config.matching_type             = CLUSTER_COARSENING;
+		rec_config.cluster_coarsening_factor = 12;
+		rec_config.ensemble_clusterings      = false;
+	}
+
 
         std::streambuf* backup = std::cout.rdbuf();
         std::ofstream ofs;

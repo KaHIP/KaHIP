@@ -97,7 +97,8 @@ typedef enum {
 typedef enum {
         MATCHING_RANDOM, 
 	MATCHING_GPA, 
-	MATCHING_RANDOM_GPA
+	MATCHING_RANDOM_GPA,
+        CLUSTER_COARSENING
 } MatchingType;
 
 typedef enum {
@@ -145,6 +146,12 @@ typedef enum {
         CYCLE_REFINEMENT_ALGORITHM_ULTRA_MODEL, 
 	CYCLE_REFINEMENT_ALGORITHM_ULTRA_MODEL_PLUS
 } CycleRefinementAlgorithm;
+
+typedef enum {
+        RANDOM_NODEORDERING, 
+        DEGREE_NODEORDERING
+} NodeOrderingType;
+
 
 #endif
 

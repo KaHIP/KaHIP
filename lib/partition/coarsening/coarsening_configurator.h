@@ -29,6 +29,7 @@
 #include "edge_rating/edge_ratings.h"
 #include "matching/gpa/gpa_matching.h"
 #include "matching/random_matching.h"
+#include "clustering/size_constraint_label_propagation.h"
 #include "stop_rules/stop_rules.h"
 
 class coarsening_configurator {
@@ -57,6 +58,11 @@ inline void coarsening_configurator::configure_coarsening( const PartitionConfig
                         PRINT(std::cout <<  "random gpa matching"  << std::endl;)
                         *edge_matcher = new gpa_matching();
                         break;
+               case CLUSTER_COARSENING:
+                        PRINT(std::cout <<  "cluster_coarsening"  << std::endl;)
+                        *edge_matcher = new size_constraint_label_propagation();
+                        break;
+
         }
 
         if((level == 0 && partition_config.first_level_random_matching) 

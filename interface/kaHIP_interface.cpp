@@ -114,7 +114,7 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
 
 
 
-void kaffpa_strong(int* n, 
+void kaffpa(int* n, 
                    int* vwgt, 
                    int* xadj, 
                    int* adjcwgt, 
@@ -123,56 +123,43 @@ void kaffpa_strong(int* n,
                    double* imbalance, 
                    bool suppress_output, 
                    int seed,
+                   int mode,
                    int* edgecut, 
                    int* part) {
         configuration cfg;
         PartitionConfig partition_config;
-        cfg.strong(partition_config);
-        partition_config.seed = seed;
-        //configure strong
-        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
-}
 
-void kaffpa_eco(int *n, 
-                int* vwgt,
-                int *xadj, 
-                int* adjcwgt, 
-                int *adjncy, 
-                int *nparts, 
-                double *imbalance,  
-                bool suppress_output, 
-                int seed,
-                int *edgecut, 
-                int *part) {
+        switch( mode ) {
+                case FAST: 
+                        cfg.fast(partition_config);
+                        break;
+                case ECO: 
+                        cfg.eco(partition_config);
+                        break;
+                case STRONG: 
+                        cfg.strong(partition_config);
+                        break;
+                case FASTSOCIAL: 
+                        cfg.ufast(partition_config);
+                        break;
+                case ECOSOCIAL: 
+                        cfg.uecovb(partition_config);
+                        break;
+                case STRONGSOCIAL: 
+                        cfg.strongsocial(partition_config);
+                        break;
+                case STRONGERSOCIAL: 
+                        cfg.ustrong(partition_config);
+                        break;
+                default: 
+                        cfg.eco(partition_config);
+                        break;
+        }
 
-        //configure eco 
-        configuration cfg;
-        PartitionConfig partition_config;
-        cfg.eco(partition_config);
-        partition_config.seed = seed;
-
-        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
-}
-
-void kaffpa_fast(int* n, 
-                int* vwgt, 
-                int* xadj, 
-                int* adjcwgt, 
-                int* adjncy,  
-                int* nparts, 
-                double* imbalance,  
-                bool suppress_output, 
-                int seed,
-                int* edgecut, 
-                int* part) {
-
-        //configure fast 
-        configuration cfg;
-        PartitionConfig partition_config;
-        cfg.fast(partition_config);
         partition_config.seed = seed;
         internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
 }
+
 
 void internal_nodeseparator_call(PartitionConfig & partition_config, 
                           bool suppress_output, 
@@ -223,7 +210,7 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
 }
 
 
-void nodeseparator_strong(int* n, 
+void node_separator(int* n, 
                           int* vwgt, 
                           int* xadj, 
                           int* adjcwgt, 
@@ -232,55 +219,41 @@ void nodeseparator_strong(int* n,
                           double* imbalance, 
                           bool suppress_output, 
                           int seed,
+                          int mode,
                           int* num_separator_vertices, 
                           int** separator) {
         configuration cfg;
         PartitionConfig partition_config;
-        cfg.strong(partition_config);
+
+        switch( mode ) {
+                case FAST: 
+                        cfg.fast(partition_config);
+                        break;
+                case ECO: 
+                        cfg.eco(partition_config);
+                        break;
+                case STRONG: 
+                        cfg.strong(partition_config);
+                        break;
+                case FASTSOCIAL: 
+                        cfg.ufast(partition_config);
+                        break;
+                case ECOSOCIAL: 
+                        cfg.uecovb(partition_config);
+                        break;
+                case STRONGSOCIAL: 
+                        cfg.strongsocial(partition_config);
+                        break;
+                case STRONGERSOCIAL: 
+                        cfg.ustrong(partition_config);
+                        break;
+                default: 
+                        cfg.eco(partition_config);
+                        break;
+        }
         partition_config.seed = seed;
 
         internal_nodeseparator_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, num_separator_vertices, separator);
 }
 
-void nodeseparator_eco(int *n, 
-                int* vwgt,
-                int *xadj, 
-                int* adjcwgt, 
-                int *adjncy, 
-                int *nparts, 
-                double *imbalance,  
-                bool suppress_output, 
-                int seed,
-                int* num_separator_vertices, 
-                int** separator) {
-
-        //configure eco 
-        configuration cfg;
-        PartitionConfig partition_config;
-        cfg.eco(partition_config);
-        partition_config.seed = seed;
-
-        internal_nodeseparator_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, num_separator_vertices, separator);
-}
-
-void nodeseparator_fast(int* n, 
-                int* vwgt, 
-                int* xadj, 
-                int* adjcwgt, 
-                int* adjncy,  
-                int* nparts, 
-                double* imbalance,  
-                bool suppress_output, 
-                int seed,
-                int* num_separator_vertices, 
-                int** separator) {
-
-        //configure fast 
-        configuration cfg;
-        PartitionConfig partition_config;
-        cfg.fast(partition_config);
-        partition_config.seed = seed;
-
-        internal_nodeseparator_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, num_separator_vertices, separator);
-}
 

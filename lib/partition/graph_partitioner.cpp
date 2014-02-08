@@ -173,6 +173,27 @@ void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig 
         G.set_partition_count(config.k);
 }
 
+void graph_partitioner::single_run( PartitionConfig & config, graph_access & G) {
+        for( unsigned i = 1; i <= config.global_cycle_iterations; i++) {
+                PRINT(std::cout <<  "vcycle " << i << " of " << config.global_cycle_iterations  << std::endl;)
+                        if(config.use_wcycles || config.use_fullmultigrid)  {
+                                wcycle_partitioner w_partitioner;
+                                w_partitioner.perform_partitioning(config, G);
+                        } else {
+                                coarsening coarsen;
+                                initial_partitioning init_part;
+                                uncoarsening uncoarsen;
+
+                                graph_hierarchy hierarchy;
+
+                                coarsen.perform_coarsening(config, G, hierarchy);
+                                init_part.perform_initial_partitioning(config, hierarchy);
+                                uncoarsen.perform_uncoarsening(config, hierarchy);
+                        }
+                config.graph_allready_partitioned = true;
+                config.balance_factor             = 0;
+        }
+}
 
 void graph_partitioner::perform_partitioning( PartitionConfig & config, graph_access & G) {
         if(config.only_first_level) {
@@ -192,56 +213,36 @@ void graph_partitioner::perform_partitioning( PartitionConfig & config, graph_ac
                 return;
         }
 
-        if(config.no_change_convergence) {
-                bool change_happend = true;
-                PRINT(int i = 0;)
-                while(change_happend) {
-                        PRINT(std::cout <<  "vcycle " << i++ <<  std::endl;)
-                        int improvement = 0;
-
-                        if(config.use_wcycles || config.use_fullmultigrid)  {
-                                wcycle_partitioner w_partitioner;
-                                improvement = w_partitioner.perform_partitioning(config, G);
-
-                        } else {
-                                coarsening coarsen;
-                                uncoarsening uncoarsen;
-
-                                graph_hierarchy hierarchy;
-                                coarsen.perform_coarsening(config, G, hierarchy);
-
-                                initial_partitioning init_part;
-                                init_part.perform_initial_partitioning(config, hierarchy);
-
-                                improvement = uncoarsen.perform_uncoarsening(config, hierarchy);
-                        }
-
-                        config.graph_allready_partitioned = true;
-                        change_happend = improvement > 0;
-
-                }
+        if( config.repetitions == 1 ) {
+                single_run(config,G);
         } else {
+                quality_metrics qm;
+                // currently only for ecosocial
+                EdgeWeight best_cut = std::numeric_limits< EdgeWeight >::max();
+                std::vector< PartitionID > best_map = std::vector< PartitionID >(G.number_of_nodes());
+                for( unsigned i = 0; i < config.repetitions; i++) {
+                        forall_nodes(G, node) {
+                                G.setPartitionIndex(node,0);
+                        } endfor
+                        PartitionConfig working_config = config;
+                        single_run(working_config, G);
 
-                for( unsigned i = 1; i <= config.global_cycle_iterations; i++) {
-                        PRINT(std::cout <<  "vcycle " << i << " of " << config.global_cycle_iterations  << std::endl;)
-                        if(config.use_wcycles || config.use_fullmultigrid)  {
-                                wcycle_partitioner w_partitioner;
-                                w_partitioner.perform_partitioning(config, G);
-                        } else {
-                                coarsening coarsen;
-                                initial_partitioning init_part;
-                                uncoarsening uncoarsen;
+                        EdgeWeight cur_cut = qm.edge_cut(G);
+                        if( cur_cut < best_cut ) {
+                                forall_nodes(G, node) {
+                                        best_map[node] = G.getPartitionIndex(node);
+                                } endfor
 
-                                graph_hierarchy hierarchy;
-
-                                coarsen.perform_coarsening(config, G, hierarchy);
-                                init_part.perform_initial_partitioning(config, hierarchy);
-                                uncoarsen.perform_uncoarsening(config, hierarchy);
+                                best_cut = cur_cut;
                         }
-                        config.graph_allready_partitioned = true;
+                        std::cout <<  "cur_cut " <<  cur_cut  << std::endl;
+
                 }
+
+                forall_nodes(G, node) {
+                        G.setPartitionIndex(node, best_map[node]);
+                } endfor
+
         }
-
-
 }
 

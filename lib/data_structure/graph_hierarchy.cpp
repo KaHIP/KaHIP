@@ -98,3 +98,6 @@ bool graph_hierarchy::isEmpty( ) {
         return m_the_graph_hierarchy.empty();        
 }
 
+unsigned int graph_hierarchy::size() {
+        return m_the_graph_hierarchy.size();        
+}

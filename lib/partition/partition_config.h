@@ -288,16 +288,41 @@ struct PartitionConfig
         bool kaffpa_perfectly_balance;
 
         //=======================================
+        //===========SNW PARTITIONING============
+        //=======================================
+        NodeOrderingType node_ordering;
+
+        int cluster_coarsening_factor; 
+
+        bool ensemble_clusterings; 
+
+        int label_iterations;
+
+        int label_iterations_refinement;
+
+        int number_of_clusterings;
+
+        bool label_propagation_refinement;
+
+        double balance_factor;
+
+        bool cluster_coarsening_during_ip;
+
+        bool set_upperbound;
+
+        int repetitions;
+        
+        //=======================================
         //=========INITIAL PARTITIONING==========
         //=======================================
 
         // variables controling the size of the blocks during 
         // multilevel recursive bisection
         // (for the case where k is not a power of 2)
-        //int ip_target_lhs_block_weight;
-        //int ip_target_rhs_block_weight;
         std::vector<int> target_weights;
+
         bool initial_bipartitioning;
+
         int grow_target;
 
         //=======================================

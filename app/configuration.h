@@ -35,6 +35,12 @@ class configuration {
                 void eco( PartitionConfig & config );
                 void fast( PartitionConfig & config );
                 void standard( PartitionConfig & config );
+                void standardsnw( PartitionConfig & config );
+
+                void ufast( PartitionConfig & config );
+                void uecovb( PartitionConfig & config );
+                void strongsocial( PartitionConfig & config );
+                void ustrong( PartitionConfig & config ); 
 };
 
 inline void configuration::strong( PartitionConfig & partition_config ) {
@@ -268,6 +274,78 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.nc_div               = 2;
         partition_config.nc_b                 = 1;
 #endif
+
+        // social networking parameters
+        partition_config.cluster_coarsening_factor    = 18;
+        partition_config.ensemble_clusterings         = false;
+        partition_config.label_iterations             = 10;
+        partition_config.label_iterations_refinement  = 25;
+        partition_config.number_of_clusterings        = 1;
+        partition_config.label_propagation_refinement = false;
+        partition_config.balance_factor               = 0;
+        partition_config.cluster_coarsening_during_ip = false;
+        partition_config.set_upperbound               = true;
+        partition_config.repetitions                  = 1;
+        partition_config.node_ordering                = DEGREE_NODEORDERING;
+
+}
+
+inline void configuration::standardsnw( PartitionConfig & partition_config ) {
+        partition_config.matching_type        = CLUSTER_COARSENING;
+        partition_config.stop_rule            = STOP_RULE_MULTIPLE_K;
+        partition_config.num_vert_stop_factor = 5000;
+
+        if(2 <= partition_config.k && partition_config.k <= 3) {
+                partition_config.number_of_clusterings = 18;
+        } else if(4 <= partition_config.k && partition_config.k <= 7) {
+                partition_config.number_of_clusterings = 17;
+        } else if(8 <= partition_config.k && partition_config.k <= 15) {
+                partition_config.number_of_clusterings = 15;
+        } else if(16 <= partition_config.k && partition_config.k <= 31) {
+                partition_config.number_of_clusterings = 7;
+        } else { 
+                partition_config.number_of_clusterings = 3;
+        }
+
+        partition_config.balance_factor               = 0.016;
+        if( partition_config.k <= 8 ) {
+                partition_config.balance_factor       = 0.00;
+        }
+
+
+}
+
+inline void configuration::ufast( PartitionConfig & partition_config ) {
+        eco(partition_config);
+        standardsnw(partition_config);
+        partition_config.label_propagation_refinement = true;
+        partition_config.cluster_coarsening_during_ip = true;
+}
+
+inline void configuration::uecovb( PartitionConfig & partition_config ) {
+        eco(partition_config);
+        standardsnw(partition_config);
+        partition_config.label_propagation_refinement = false;
+        partition_config.global_cycle_iterations      = 3;
+        partition_config.use_wcycles                  = false; 
+        partition_config.no_new_initial_partitioning  = true;
+        partition_config.balance_factor               = 0.016;
+        partition_config.cluster_coarsening_during_ip = true;
+}
+
+inline void configuration::strongsocial( PartitionConfig & partition_config ) {
+        uecovb(partition_config);
+        partition_config.repetitions = 5;
+}
+
+inline void configuration::ustrong( PartitionConfig & partition_config ) {
+        strong(partition_config);
+        standardsnw(partition_config);
+
+        partition_config.label_propagation_refinement = false;
+        partition_config.cluster_coarsening_during_ip = true;
+        partition_config.ensemble_clusterings         = true;
+
 
 }
 

@@ -41,6 +41,7 @@ private:
         void perform_recursive_partitioning_internal(PartitionConfig & graph_partitioner_config, 
                                                      graph_access & G, 
                                                      PartitionID lb, PartitionID ub);
+        void single_run( PartitionConfig & config, graph_access & G);
 
         unsigned m_global_k;
 	int m_global_upper_bound;

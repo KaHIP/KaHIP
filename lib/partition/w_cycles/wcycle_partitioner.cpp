@@ -33,6 +33,7 @@
 #include "misc.h"
 #include "random_functions.h"
 #include "uncoarsening/refinement/mixed_refinement.h"
+#include "uncoarsening/refinement/label_propagation_refinement/label_propagation_refinement.h"
 #include "uncoarsening/refinement/refinement.h"
 #include "wcycle_partitioner.h"
 
@@ -103,15 +104,28 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
         complete_boundary* coarser_boundary =  NULL;
         refinement* refine = NULL;
 
-        coarser_boundary = new complete_boundary(coarser);
-        refine = new mixed_refinement();
+        if(!partition_config.label_propagation_refinement) {
+                coarser_boundary = new complete_boundary(coarser);
+                refine = new mixed_refinement();
+        } else {
+                refine = new label_propagation_refinement();
+        }
 
         if(!m_coarsening_stop_rule->stop(no_of_finer_vertices, no_of_coarser_vertices)) {
-	        initial_partitioning init_part;
-		init_part.perform_initial_partitioning(partition_config, *coarser);
 
-                coarser_boundary->build();
-                improvement += refine->perform_refinement(partition_config, *coarser, *coarser_boundary);
+                PartitionConfig cfg; cfg = partition_config;
+
+                double factor = partition_config.balance_factor;
+                cfg.upper_bound_partition = (factor +1.0)*partition_config.upper_bound_partition;
+
+	        initial_partitioning init_part;
+		init_part.perform_initial_partitioning(cfg, *coarser);
+
+                if(!partition_config.label_propagation_refinement) coarser_boundary->build();
+
+                PRINT(std::cout <<  "upper bound " <<  cfg.upper_bound_partition  << std::endl;)
+                improvement += refine->perform_refinement(cfg, *coarser, *coarser_boundary);
+                m_deepest_level = m_level + 1;
         } else {
                 m_level++;
 
@@ -123,11 +137,24 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
                         if(!partition_config.use_fullmultigrid 
                         || m_have_been_level_down.find(m_level) == m_have_been_level_down.end())  { 
 
-                                delete coarser_boundary;
-                                coarser_boundary                = new complete_boundary(coarser);
+                                if(!partition_config.label_propagation_refinement) {
+                                        delete coarser_boundary;
+
+                                        coarser_boundary                = new complete_boundary(coarser);
+                                }
                                 m_have_been_level_down[m_level] = true;
 
-                                improvement += perform_partitioning_recursive( partition_config, *coarser, &coarser_boundary); 
+                                // configurate the algorithm to use the same amount
+                                // of imbalance as was allowed on this level 
+                                PartitionConfig cfg;
+                                cfg = partition_config;
+                                cfg.set_upperbound = false;
+
+                                double cur_factor = partition_config.balance_factor/(m_deepest_level-m_level);
+                                cfg.upper_bound_partition = ( (m_level != 0) * cur_factor+1.0)*partition_config.upper_bound_partition;
+
+                                // do the next arm of the F-cycle
+                                improvement += perform_partitioning_recursive( cfg, *coarser, &coarser_boundary); 
                         }
                 }
 
@@ -135,7 +162,7 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
 
         }
 
-        if(partition_config.use_balance_singletons) {
+        if(partition_config.use_balance_singletons && !partition_config.label_propagation_refinement) {
                 coarser_boundary->balance_singletons( partition_config, *coarser );
         }
         
@@ -150,9 +177,24 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
 
         finer->set_partition_count(coarser->get_partition_count());
         complete_boundary* current_boundary = NULL;
-        current_boundary = new complete_boundary(finer);
-        current_boundary->build_from_coarser(coarser_boundary, no_of_coarser_vertices, coarse_mapping ); 
-        improvement += refine->perform_refinement(partition_config, *finer, *current_boundary);
+        if(!partition_config.label_propagation_refinement) {
+                current_boundary = new complete_boundary(finer);
+                current_boundary->build_from_coarser(coarser_boundary, no_of_coarser_vertices, coarse_mapping ); 
+        }
+
+        PartitionConfig cfg; cfg = partition_config;
+        double cur_factor = partition_config.balance_factor/(m_deepest_level-m_level);
+
+        //only set the upperbound if it is the first time 
+        //we go down the F-cycle
+        if( partition_config.set_upperbound ) {
+                cfg.upper_bound_partition = ( (m_level != 0) * cur_factor+1.0)*partition_config.upper_bound_partition;
+        } else {
+                cfg.upper_bound_partition = partition_config.upper_bound_partition;
+        }
+
+        PRINT(std::cout <<  "upper bound " <<  cfg.upper_bound_partition  << std::endl;)
+        improvement += refine->perform_refinement(cfg, *finer, *current_boundary);
 
         if(c_boundary != NULL) {
                 delete *c_boundary;
@@ -161,6 +203,7 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
 		if( current_boundary != NULL ) delete current_boundary;
 	}
 
+        //std::cout <<  "finer " <<  no_of_finer_vertices  << std::endl;
         delete contracter;
         delete coarse_mapping;
         delete coarser_boundary;

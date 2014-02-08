@@ -39,6 +39,7 @@ public:
         CoarseMapping * get_mapping_of_current_finer();
                
         bool isEmpty();
+        unsigned int size();
 private:
         //private functions
         graph_access * pop_coarsest();

@@ -114,9 +114,9 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *initial_partition_optimize_multitry_rounds   = arg_int0(NULL, "initial_partition_optimize_multitry_rounds", NULL, "(Default: 100)");
 
 #ifdef MODE_KAFFPA
-        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast]." );
+        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fastsocial|ecosocial|strongsocial|strongersocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|snw]." );
 #else
-        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [strong|eco|fast]." );
+        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fastsocial|ecosocial|strongsocial|strongersocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [strong|eco|fast|snw]." );
 #endif
 
         struct arg_dbl *time_limit                           = arg_dbl0(NULL, "time_limit", NULL, "Time limit in s. Default 0s .");
@@ -247,6 +247,14 @@ int parse_parameters(int argn, char **argv,
                         cfg.eco(partition_config);
                 } else if (strcmp("fast", preconfiguration->sval[0]) == 0) {
                         cfg.fast(partition_config);
+                } else if (strcmp("fastsocial", preconfiguration->sval[0]) == 0) {
+                        cfg.ufast(partition_config);
+                } else if (strcmp("ecosocial", preconfiguration->sval[0]) == 0) {
+                        cfg.uecovb(partition_config);
+                } else if (strcmp("strongsocial", preconfiguration->sval[0]) == 0) {
+                        cfg.strongsocial(partition_config);
+                } else if (strcmp("strongersocial", preconfiguration->sval[0]) == 0) {
+                        cfg.ustrong(partition_config);
                 } else {
                         fprintf(stderr, "Invalid preconfconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);

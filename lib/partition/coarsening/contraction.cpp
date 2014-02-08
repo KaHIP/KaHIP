@@ -41,6 +41,10 @@ void contraction::contract(const PartitionConfig & partition_config,
                            const NodeID & no_of_coarse_vertices,
                            const NodePermutationMap & permutation) const {
 
+        if(partition_config.matching_type == CLUSTER_COARSENING) {
+                return contract_clustering(partition_config, G, coarser, edge_matching, coarse_mapping, no_of_coarse_vertices, permutation);
+        }
+
         if(partition_config.combine) {
                 coarser.resizeSecondPartitionIndex(no_of_coarse_vertices);
         }
@@ -102,6 +106,45 @@ void contraction::contract(const PartitionConfig & partition_config,
         coarser.finish_construction();
 }
 
+void contraction::contract_clustering(const PartitionConfig & partition_config, 
+                              graph_access & G, 
+                              graph_access & coarser, 
+                              const Matching & edge_matching,
+                              const CoarseMapping & coarse_mapping,
+                              const NodeID & no_of_coarse_vertices,
+                              const NodePermutationMap & permutation) const {
+
+        if(partition_config.combine) {
+                coarser.resizeSecondPartitionIndex(no_of_coarse_vertices);
+        }
+
+        //save partition map -- important if the graph is allready partitioned
+        std::vector< int > partition_map(G.number_of_nodes());
+        int k = G.get_partition_count();
+        forall_nodes(G, node) {
+                partition_map[node] = G.getPartitionIndex(node);
+                G.setPartitionIndex(node, coarse_mapping[node]);
+        } endfor
+
+        G.set_partition_count(no_of_coarse_vertices);
+
+        complete_boundary bnd(&G);
+        bnd.build();
+        bnd.getUnderlyingQuotientGraph(coarser);
+
+        G.set_partition_count(k);
+        forall_nodes(G, node) {
+                G.setPartitionIndex(node, partition_map[node]);
+                coarser.setPartitionIndex(coarse_mapping[node], G.getPartitionIndex(node));
+
+                if(partition_config.combine) {
+                        coarser.setSecondPartitionIndex(coarse_mapping[node], G.getSecondPartitionIndex(node));
+                }
+
+        } endfor
+
+}
+
 
 // for documentation see technical reports of christian schulz  
 void contraction::contract_partitioned(const PartitionConfig & partition_config, 
@@ -112,6 +155,11 @@ void contraction::contract_partitioned(const PartitionConfig & partition_config,
                                        const NodeID & no_of_coarse_vertices,
                                        const NodePermutationMap & permutation) const {
         
+        if(partition_config.matching_type == CLUSTER_COARSENING) {
+                return contract_clustering(partition_config, G, coarser, edge_matching, coarse_mapping, no_of_coarse_vertices, permutation);
+        }
+
+
         std::vector<NodeID> new_edge_targets(G.number_of_edges());
         forall_edges(G, e) {
                 new_edge_targets[e] = coarse_mapping[G.getEdgeTarget(e)];
