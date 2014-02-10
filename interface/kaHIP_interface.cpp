@@ -140,13 +140,13 @@ void kaffpa(int* n,
                         cfg.strong(partition_config);
                         break;
                 case FASTSOCIAL: 
-                        cfg.ufast(partition_config);
+                        cfg.fastsocial(partition_config);
                         break;
                 case ECOSOCIAL: 
-                        cfg.uecovb(partition_config);
+                        cfg.ecosocial(partition_config);
                         break;
                 case STRONGSOCIAL: 
-                        cfg.ustrong(partition_config);
+                        cfg.strongsocial(partition_config);
                         break;
                 default: 
                         cfg.eco(partition_config);
@@ -233,13 +233,13 @@ void node_separator(int* n,
                         cfg.strong(partition_config);
                         break;
                 case FASTSOCIAL: 
-                        cfg.ufast(partition_config);
+                        cfg.fastsocial(partition_config);
                         break;
                 case ECOSOCIAL: 
-                        cfg.uecovb(partition_config);
+                        cfg.ecosocial(partition_config);
                         break;
                 case STRONGSOCIAL: 
-                        cfg.ustrong(partition_config);
+                        cfg.strongsocial(partition_config);
                         break;
                 default: 
                         cfg.eco(partition_config);

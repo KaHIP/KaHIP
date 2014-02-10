@@ -49,6 +49,7 @@ void initial_partition_bipartition::initial_partition( const PartitionConfig & c
         rec_config.permutation_quality              = PERMUTATION_QUALITY_GOOD;
         rec_config.initial_partitioning             = true;
 	rec_config.graph_allready_partitioned       = false;
+        rec_config.label_propagation_refinement     = false;
 
 	if( config.cluster_coarsening_during_ip == true) {
 		rec_config.matching_type             = CLUSTER_COARSENING;

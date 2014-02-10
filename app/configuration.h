@@ -37,9 +37,9 @@ class configuration {
                 void standard( PartitionConfig & config );
                 void standardsnw( PartitionConfig & config );
 
-                void ufast( PartitionConfig & config );
-                void uecovb( PartitionConfig & config );
-                void ustrong( PartitionConfig & config ); 
+                void fastsocial( PartitionConfig & config );
+                void ecosocial( PartitionConfig & config );
+                void strongsocial( PartitionConfig & config ); 
 };
 
 inline void configuration::strong( PartitionConfig & partition_config ) {
@@ -314,7 +314,7 @@ inline void configuration::standardsnw( PartitionConfig & partition_config ) {
 
 }
 
-inline void configuration::ufast( PartitionConfig & partition_config ) {
+inline void configuration::fastsocial( PartitionConfig & partition_config ) {
         eco(partition_config);
         standardsnw(partition_config);
         partition_config.label_propagation_refinement = true;
@@ -322,7 +322,7 @@ inline void configuration::ufast( PartitionConfig & partition_config ) {
         partition_config.balance_factor               = 0;
 }
 
-inline void configuration::uecovb( PartitionConfig & partition_config ) {
+inline void configuration::ecosocial( PartitionConfig & partition_config ) {
         eco(partition_config);
         standardsnw(partition_config);
         partition_config.label_propagation_refinement = false;
@@ -333,7 +333,7 @@ inline void configuration::uecovb( PartitionConfig & partition_config ) {
         partition_config.cluster_coarsening_during_ip = true;
 }
 
-inline void configuration::ustrong( PartitionConfig & partition_config ) {
+inline void configuration::strongsocial( PartitionConfig & partition_config ) {
         strong(partition_config);
         standardsnw(partition_config);
 

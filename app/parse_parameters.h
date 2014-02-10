@@ -248,11 +248,11 @@ int parse_parameters(int argn, char **argv,
                 } else if (strcmp("fast", preconfiguration->sval[0]) == 0) {
                         cfg.fast(partition_config);
                 } else if (strcmp("fastsocial", preconfiguration->sval[0]) == 0) {
-                        cfg.ufast(partition_config);
+                        cfg.fastsocial(partition_config);
                 } else if (strcmp("ecosocial", preconfiguration->sval[0]) == 0) {
-                        cfg.uecovb(partition_config);
+                        cfg.ecosocial(partition_config);
                 } else if (strcmp("strongsocial", preconfiguration->sval[0]) == 0) {
-                        cfg.ustrong(partition_config);
+                        cfg.strongsocial(partition_config);
                 } else {
                         fprintf(stderr, "Invalid preconfconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);
