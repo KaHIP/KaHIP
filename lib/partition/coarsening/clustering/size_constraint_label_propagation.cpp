@@ -203,7 +203,6 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                         change_counter                   += (cluster_id[node] != max_block);
                         cluster_id[node]                  = max_block;
                 } endfor
-                PRINT(std::cout <<  "number of changes " << change_counter  << std::endl;)
         }
 
         remap_cluster_ids( partition_config, G, cluster_id, no_of_blocks);
@@ -245,6 +244,5 @@ void size_constraint_label_propagation::remap_cluster_ids(const PartitionConfig 
         }
 
         no_of_coarse_vertices = cur_no_clusters;
-        PRINT(std::cout <<  "cur_no " <<  cur_no_clusters  << std::endl;)
 }
 

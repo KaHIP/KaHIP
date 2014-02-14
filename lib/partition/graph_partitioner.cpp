@@ -220,7 +220,7 @@ void graph_partitioner::perform_partitioning( PartitionConfig & config, graph_ac
                 // currently only for ecosocial
                 EdgeWeight best_cut = std::numeric_limits< EdgeWeight >::max();
                 std::vector< PartitionID > best_map = std::vector< PartitionID >(G.number_of_nodes());
-                for( unsigned i = 0; i < config.repetitions; i++) {
+                for( int i = 0; i < config.repetitions; i++) {
                         forall_nodes(G, node) {
                                 G.setPartitionIndex(node,0);
                         } endfor
@@ -235,8 +235,6 @@ void graph_partitioner::perform_partitioning( PartitionConfig & config, graph_ac
 
                                 best_cut = cur_cut;
                         }
-                        std::cout <<  "cur_cut " <<  cur_cut  << std::endl;
-
                 }
 
                 forall_nodes(G, node) {
