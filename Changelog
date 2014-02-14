@@ -1,5 +1,6 @@
 KaHIP-0.6
 ------------------------------------------------------------------------
+- added improved partitioning algorithms for social networks and webgraphs
 - more robust io routine independant line length
 - added support of node separators in library functions of KaHIP
 - added problem description to the manual 
