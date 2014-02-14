@@ -22,4 +22,5 @@ upcoming releases will have:
 D Known Issues
 =================================================
 - please don't use comments in your graph files
+- use at least g++ 4.5
 
