@@ -37,8 +37,6 @@ EdgeWeight label_propagation_refinement::perform_refinement(PartitionConfig & pa
                                                             graph_access & G, 
                                                             complete_boundary & boundary) {
         NodeWeight block_upperbound = partition_config.upper_bound_partition;
-        std::cout <<  "upperbound " <<  block_upperbound  << std::endl;
-        std::cerr <<  "active nodes approach "  << std::endl;
 
         // in this case the _matching paramter is not used 
         // coarse_mappng stores cluster id and the mapping (it is identical)
