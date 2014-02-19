@@ -121,10 +121,9 @@ int main(int argn, char **argv) {
                 std::cout << "max_comm_vol \t"  << qm.max_communication_volume(G) << std::endl;
 
                 // write the partition to the disc 
-                std::string partition("tmppartition");
-                std::stringstream noparts;
-                noparts << "tmppartition" << partition_config.k;
-                graph_io::writePartition(G, noparts.str());
+                std::stringstream filename;
+                filename << "tmppartition" << partition_config.k;
+                graph_io::writePartition(G, filename.str());
         }
  
         MPI::Finalize();

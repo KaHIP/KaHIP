@@ -107,6 +107,11 @@ if env['program'] == 'kaffpa':
         env.Append(CCFLAGS  = '-DMODE_KAFFPA')
         env.Program('kaffpa', ['app/kaffpa.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
 
+if env['program'] == 'label_propagation':
+        env.Append(CXXFLAGS = '-DMODE_LABELPROPAGATION')
+        env.Append(CCFLAGS  = '-DMODE_LABELPROPAGATION')
+        env.Program('label_propagation', ['app/label_propagation.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
+
 if env['program'] == 'partition_to_vertex_separator':
         env.Append(CXXFLAGS = '-DMODE_PARTITIONTOVERTEXSEPARATOR')
         env.Append(CCFLAGS  = '-DMODE_PARTITIONTOVERTEXSEPARATOR')

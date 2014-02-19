@@ -142,6 +142,9 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *maxT                                 = arg_int0(NULL, "maxT", NULL, "maxT parameter for Tabu Search");
         struct arg_int *maxIter                              = arg_int0(NULL, "maxIter", NULL, "maxIter parameter for Tabu Search");
 
+        struct arg_int *cluster_upperbound                   = arg_int0(NULL, "cluster_upperbound", NULL, "Set a size-constraint on the size of a cluster. Default: none");
+        struct arg_int *label_propagation_iterations         = arg_int0(NULL, "label_propagation_iterations", NULL, "Set the number of label propgation iterations. Default: 10.");
+
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -195,8 +198,10 @@ int parse_parameters(int argn, char **argv,
                 mh_enable_kabapE,
                 kabaE_internal_bal,  
                 input_partition,
+#elif defined MODE_LABELPROPAGATION
+                cluster_upperbound,
+                label_propagation_iterations,
 #endif
-
                 end
         };
         // Parse arguments.
@@ -207,7 +212,6 @@ int parse_parameters(int argn, char **argv,
                 printf("Usage: %s", progname);
                 arg_print_syntax(stdout, argtable, "\n");
                 arg_print_glossary(stdout, argtable,"  %-40s %s\n");
-                printf("This is the experimental partitioner program.\n");
                 arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
                 return 1;
         }
@@ -752,7 +756,15 @@ int parse_parameters(int argn, char **argv,
                 }
         }
 
+        if (label_propagation_iterations->count > 0) {
+                partition_config.label_iterations = label_propagation_iterations->ival[0];
+        }
 
+        if (cluster_upperbound->count > 0) {
+                partition_config.cluster_upperbound = cluster_upperbound->ival[0];
+        } else {
+                partition_config.cluster_upperbound = std::numeric_limits< NodeWeight >::max()/2;
+        }
 
         return 0;
 }
