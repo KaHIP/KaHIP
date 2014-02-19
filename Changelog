@@ -1,3 +1,7 @@
+KaHIP-0.61
+------------------------------------------------------------------------
+- added the size-constrained label propagation algorithm as a main program to compute clusterings
+
 KaHIP-0.6
 ------------------------------------------------------------------------
 - added improved partitioning algorithms for social networks and webgraphs
