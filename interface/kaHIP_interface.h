@@ -40,7 +40,7 @@ const int STRONGSOCIAL   = 5;
 // same data structures as in metis 
 // edgecut and part are output parameters
 // part has to be an array of n ints
-void kaffpa_strong(int* n, int* vwgt, int* xadj, 
+void kaffpa(int* n, int* vwgt, int* xadj, 
                    int* adjcwgt, int* adjncy, int* nparts, 
                    double* imbalance,  bool suppress_output, int seed, int mode,
                    int* edgecut, int* part);
