@@ -138,7 +138,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.eco                                    = false;
         partition_config.strong                                 = false;
         partition_config.imbalance                              = 3;
-        partition_config.first_level_random_matching            = true;
+        partition_config.first_level_random_matching            = false;
         partition_config.initial_partitioning_repetitions       = 5;
         partition_config.edge_rating_tiebreaking                = false;
         partition_config.edge_rating                            = WEIGHT;
