@@ -93,7 +93,6 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
                cout.rdbuf(ofs.rdbuf()); 
         }
 
-        partition_config.k         = *nparts;
         partition_config.imbalance = 100*(*imbalance);
         graph_access G;     
         internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
@@ -128,6 +127,7 @@ void kaffpa(int* n,
                    int* part) {
         configuration cfg;
         PartitionConfig partition_config;
+        partition_config.k = *nparts;
 
         switch( mode ) {
                 case FAST: 
@@ -221,6 +221,7 @@ void node_separator(int* n,
                           int** separator) {
         configuration cfg;
         PartitionConfig partition_config;
+        partition_config.k = *nparts;
 
         switch( mode ) {
                 case FAST: 

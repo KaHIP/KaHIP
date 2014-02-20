@@ -65,10 +65,7 @@ inline void coarsening_configurator::configure_coarsening( const PartitionConfig
 
         }
 
-        if((level == 0 && partition_config.first_level_random_matching) 
-           || (partition_config.matching_type == MATCHING_RANDOM_GPA 
-               && level < partition_config.aggressive_random_levels)) {
-
+        if( partition_config.matching_type == MATCHING_RANDOM_GPA && level < partition_config.aggressive_random_levels) {
                 delete *edge_matcher;
                 PRINT(std::cout <<  "random matching"  << std::endl;)
                 *edge_matcher = new random_matching();
