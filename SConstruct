@@ -72,12 +72,14 @@ def GetEnvironment():
 env = GetEnvironment()
 
 env.Append(CPPPATH=['../extern/argtable-2.10/include'])
+env.Append(CPPPATH=['./extern/argtable-2.10/include'])
 env.Append(CPPPATH=['./lib'])
 env.Append(CPPPATH=['./lib/tools'])
 env.Append(CPPPATH=['./lib/partition'])
 env.Append(CPPPATH=['./lib/io'])
 env.Append(CPPPATH=['./lib/partition/uncoarsening/refinement/quotient_graph_refinement/flow_refinement/'])
 env.Append(LIBPATH=['../extern/argtable-2.10/lib'])
+env.Append(LIBPATH=['./extern/argtable-2.10/lib'])
 env.Append(CPPPATH=['../lib'])
 env.Append(CPPPATH=['../lib/tools'])
 env.Append(CPPPATH=['../lib/partition'])
@@ -97,12 +99,12 @@ if SYSTEM == 'Darwin':
         env.Append(LIBPATH=['/usr/local/lib/openmpi/'])
 
 #by D. Luxen
-if not conf.CheckLibWithHeader('argtable2', 'argtable2.h', 'CXX'):
-        print "argtable library not found. Exiting"
-        Exit(-1)
-if not conf.CheckCXXHeader('mpi.h'):
-        print "openmpi header not found. Exiting"
-        Exit(-1)
+#if not conf.CheckLibWithHeader('argtable2', 'argtable2.h', 'CXX'):
+        #print "argtable library not found. Exiting"
+        #Exit(-1)
+#if not conf.CheckCXXHeader('mpi.h'):
+        #print "openmpi header not found. Exiting"
+        #Exit(-1)
 #
 #
 env.Append(CXXFLAGS = '-fopenmp')
