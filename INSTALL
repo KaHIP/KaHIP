@@ -1,0 +1,10 @@
+Required Software Packages
+=====
+
+Before you can start you need to install the following software packages:
+
+- Scons (http://www.scons.org/)
+- Argtable (http://argtable.sourceforge.net/)
+- OpenMPI (http://www.open-mpi.de/)
+
+Once you installed the packages, just type ./compile.sh.
