@@ -108,7 +108,7 @@ int main(int argn, char **argv) {
                                 partitioner.perform_partitioning(partition_config, G);
         } else {
                 PartitionID* map = new PartitionID[G.number_of_nodes()];
-                EdgeWeight best_cut = G.number_of_edges();
+                EdgeWeight best_cut = std::numeric_limits<EdgeWeight>::max();
                 while(t.elapsed() < partition_config.time_limit) {
                         partition_config.graph_allready_partitioned = false;
                         partitioner.perform_partitioning(partition_config, G);
