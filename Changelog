@@ -2,6 +2,7 @@ KaHIP-0.62
 ------------------------------------------------------------------------
 - minor bug fixes
 - added output filename for partitions
+- added additional imbalance for local search to kaffpa if perfectly balanced partitions have to be found
 - minor updates to manual
 - added install notes
 
