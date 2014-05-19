@@ -80,7 +80,12 @@ int main(int argn, char **argv) {
         } endfor
         
         double epsilon = (partition_config.imbalance)/100.0;
-        partition_config.upper_bound_partition      = (1+epsilon)*ceil(largest_graph_weight/(double)partition_config.k);
+        if(  partition_config.imbalance == 0 ) {
+                partition_config.upper_bound_partition      = (1+epsilon+0.01)*ceil(largest_graph_weight/(double)partition_config.k);
+                partition_config.kaffpa_perfectly_balance   = true;
+        } else {
+                partition_config.upper_bound_partition      = (1+epsilon)*ceil(largest_graph_weight/(double)partition_config.k);
+        }
         partition_config.largest_graph_weight       = largest_graph_weight;
         partition_config.graph_allready_partitioned = false;
         partition_config.kway_adaptive_limits_beta  = log(largest_graph_weight);
