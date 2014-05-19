@@ -1,3 +1,11 @@
+KaHIP-0.62
+------------------------------------------------------------------------
+- minor bug fixes
+- added output filename for partitions
+- minor updates to manual
+- added install notes
+
+
 KaHIP-0.61
 ------------------------------------------------------------------------
 - added the size-constrained label propagation algorithm as a main program to compute clusterings
