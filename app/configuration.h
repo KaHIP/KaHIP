@@ -133,6 +133,7 @@ inline void configuration::fast( PartitionConfig & partition_config ) {
 }
 
 inline void configuration::standard( PartitionConfig & partition_config ) {
+        partition_config.filename_output                        = "";
         partition_config.seed                                   = 0;
         partition_config.fast                                   = false;
         partition_config.eco                                    = false;

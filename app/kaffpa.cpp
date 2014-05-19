@@ -152,7 +152,13 @@ int main(int argn, char **argv) {
 
         // write the partition to the disc 
         std::stringstream filename;
-        filename << "tmppartition" << partition_config.k;
+        if(!partition_config.filename_output.compare("")) {
+                // no output filename given
+                filename << "tmppartition" << partition_config.k;
+        } else {
+                filename << partition_config.filename_output;
+        }
+
         graph_io::writePartition(G, filename.str());
         
 }

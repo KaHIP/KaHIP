@@ -125,6 +125,14 @@ int main(int argn, char **argv) {
                 G.setPartitionIndex(separator[i], partition_config.k);
         }
 
-        string separator_outputfilename("tmpseparator");
-        graph_io::writePartition(G, separator_outputfilename);
+         // write the partition to the disc 
+        std::stringstream filename;
+        if(!partition_config.filename_output.compare("")) {
+                // no output filename given
+                filename << "tmpseparator" << partition_config.k;
+        } else {
+                filename << partition_config.filename_output;
+        }
+
+        graph_io::writePartition(G, filename.str());
 }

@@ -22,6 +22,7 @@
 
 #include <argtable2.h>
 #include <iostream>
+#include <sstream>
 #include <math.h>
 #include <regex.h>
 #include <stdio.h>
@@ -94,7 +95,13 @@ int main(int argn, char **argv) {
         std::cout << "number of edges between clusters " << qm.edge_cut(G)                 << std::endl;
 
         // write the clustering  to the disc 
-        std::string filename("tmpclustering");
-        graph_io::writeVector(cluster_id, filename);
-        
+        std::stringstream filename;
+        if(!partition_config.filename_output.compare("")) {
+                // no output filename given
+                filename << "tmpclustering";
+        } else {
+                filename << partition_config.filename_output;
+        }
+        graph_io::writeVector(cluster_id, filename.str());
+
 }

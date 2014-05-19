@@ -285,6 +285,8 @@ struct PartitionConfig
 
         std::string graph_filename;
 
+        std::string filename_output;
+
         bool kaffpa_perfectly_balance;
 
         //=======================================

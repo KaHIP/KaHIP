@@ -56,6 +56,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_lit *enable_omp                           = arg_lit0(NULL, "enable_omp", "Enable parallel omp.");
         struct arg_lit *wcycle_no_new_initial_partitioning   = arg_lit0(NULL, "wcycle_no_new_initial_partitioning", "Using this option, the graph is initially partitioned only the first time we are at the deepest level.");
         struct arg_str *filename                             = arg_strn(NULL, NULL, "FILE", 1, 1, "Path to graph file to partition.");
+        struct arg_str *filename_output                      = arg_str0(NULL, "output_filename", NULL, "Specify the name of the output file (that contains the partition).");
         struct arg_int *user_seed                            = arg_int0(NULL, "seed", NULL, "Seed to use for the PRNG.");
         struct arg_int *k                                    = arg_int1(NULL, "k", NULL, "Number of blocks to partition the graph.");
         struct arg_rex *edge_rating                          = arg_rex0(NULL, "edge_rating", "^(weight|expansionstar|expansionstar2|expansionstar2deg|punch|expansionstar2algdist|expansionstar2algdist2|algdist|algdist2)$", "RATING", REG_EXTENDED, "Edge rating to use. One of {weight, expansionstar, expansionstar2, punch," " expansionstar2deg}. Default: weight"  );
@@ -183,9 +184,11 @@ int parse_parameters(int argn, char **argv,
                 time_limit, 
                 input_partition,
                 enforce_balance, 
+                filename_output, 
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
+                filename_output, 
 
 #elif defined MODE_KAFFPAE
                 k, imbalance, 
@@ -198,9 +201,11 @@ int parse_parameters(int argn, char **argv,
                 mh_enable_kabapE,
                 kabaE_internal_bal,  
                 input_partition,
+                filename_output, 
 #elif defined MODE_LABELPROPAGATION
                 cluster_upperbound,
                 label_propagation_iterations,
+                filename_output, 
 #endif
                 end
         };
@@ -258,11 +263,14 @@ int parse_parameters(int argn, char **argv,
                 } else if (strcmp("strongsocial", preconfiguration->sval[0]) == 0) {
                         cfg.strongsocial(partition_config);
                 } else {
-                        fprintf(stderr, "Invalid preconfconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
+                        fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);
                 }
         }
 
+        if(filename_output->count > 0) {
+                partition_config.filename_output = filename_output->sval[0];
+        }
 
         if(initial_partition_optimize->count > 0) {
                 partition_config.initial_partition_optimize = true;
