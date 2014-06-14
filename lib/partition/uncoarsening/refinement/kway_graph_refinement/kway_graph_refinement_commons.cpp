@@ -40,7 +40,7 @@ kway_graph_refinement_commons* kway_graph_refinement_commons::getInstance( Parti
         #pragma omp critical 
         {
                 if( m_instances == NULL ) {
-                        m_instances = new std::vector< kway_graph_refinement_commons*>(omp_get_max_threads(), NULL);
+                        m_instances = new std::vector< kway_graph_refinement_commons*>(omp_get_max_threads(), reinterpret_cast<kway_graph_refinement_commons*>(NULL));
                 }
         } 
 
