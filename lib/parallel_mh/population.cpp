@@ -82,7 +82,7 @@ void population::createIndividuum(const PartitionConfig & config,
                         double lb 		   = real_epsilon+0.005;
                         double ub 	           = real_epsilon+config.kabaE_internal_bal;
                         double epsilon             = random_functions::nextDouble(lb,ub);
-                        copy.upper_bound_partition = (1+epsilon)*ceil(config.largest_graph_weight/(double)config.k);
+                        copy.upper_bound_partition = (1+epsilon)*ceil(config.work_load/(double)config.k);
 
                         partitioner.perform_partitioning(copy, G);
 
@@ -281,7 +281,7 @@ void population::combine_cross(const PartitionConfig & partition_config,
         PartitionConfig cross_config                      = config;
         cross_config.k                                    = kfactor;
         cross_config.kaffpa_perfectly_balanced_refinement = false;
-        cross_config.upper_bound_partition                = (1+epsilon)*ceil(partition_config.largest_graph_weight/(double)partition_config.k);
+        cross_config.upper_bound_partition                = (1+epsilon)*ceil(partition_config.work_load/(double)partition_config.k);
         cross_config.refinement_scheduling_algorithm      = REFINEMENT_SCHEDULING_ACTIVE_BLOCKS;
         cross_config.combine                              = false;
         cross_config.graph_allready_partitioned           = false;

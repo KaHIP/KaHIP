@@ -153,6 +153,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.combine                                = false;
         partition_config.epsilon                                = 3; 
         partition_config.buffoon                                = false;
+        partition_config.balance_edges                          = false;
 
         partition_config.time_limit 				= 0; 
         partition_config.mh_pool_size                           = 5;

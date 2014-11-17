@@ -52,6 +52,8 @@ struct PartitionConfig
         
         NodeWeight largest_graph_weight; 
 
+	NodeWeight work_load;
+
         unsigned aggressive_random_levels;
         
         bool disable_max_vertex_weight_constraint;
@@ -272,6 +274,8 @@ struct PartitionConfig
 
         bool strong;
 
+	bool balance_edges;
+
         // number of blocks the graph should be partitioned in
         PartitionID k;
 
@@ -313,6 +317,7 @@ struct PartitionConfig
         bool set_upperbound;
 
         int repetitions;
+
         
         //=======================================
         //=========LABEL PROPAGATION=============

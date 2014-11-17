@@ -75,7 +75,7 @@ void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig 
         }
 
         
-        bipart_config.upper_bound_partition              = ceil((1+epsilon)*config.largest_graph_weight/(double)bipart_config.k);
+        bipart_config.upper_bound_partition              = ceil((1+epsilon)*config.work_load/(double)bipart_config.k);
         bipart_config.corner_refinement_enabled          = false;
         bipart_config.quotient_graph_refinement_disabled = false;
         bipart_config.refinement_scheduling_algorithm    = REFINEMENT_SCHEDULING_ACTIVE_BLOCKS;
@@ -92,8 +92,8 @@ void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig 
         if(config.k % 2 != 0) {
                 //otherwise the block weights have to be 
                 bipart_config.target_weights.clear();
-                bipart_config.target_weights.push_back((1+epsilon)*num_blocks_lhs/(double)(num_blocks_lhs+num_blocks_rhs)*config.largest_graph_weight);
-                bipart_config.target_weights.push_back((1+epsilon)*num_blocks_rhs/(double)(num_blocks_lhs+num_blocks_rhs)*config.largest_graph_weight);
+                bipart_config.target_weights.push_back((1+epsilon)*num_blocks_lhs/(double)(num_blocks_lhs+num_blocks_rhs)*config.work_load);
+                bipart_config.target_weights.push_back((1+epsilon)*num_blocks_rhs/(double)(num_blocks_lhs+num_blocks_rhs)*config.work_load);
                 bipart_config.initial_bipartitioning  = true;
                 bipart_config.refinement_type         = REFINEMENT_TYPE_FM; // flows not supported for odd block weights
         } else {
@@ -104,7 +104,7 @@ void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig 
                 bipart_config.initial_bipartitioning  = false;
         }
 
-        bipart_config.grow_target = ceil(num_blocks_lhs/(double)(num_blocks_lhs+num_blocks_rhs)*config.largest_graph_weight);
+        bipart_config.grow_target = ceil(num_blocks_lhs/(double)(num_blocks_lhs+num_blocks_rhs)*config.work_load);
 
         perform_partitioning(bipart_config, G);        
 
@@ -130,6 +130,7 @@ void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig 
                        rec_config.k = num_blocks_lhs;
 
                        rec_config.largest_graph_weight = weight_lhs_block;
+                       rec_config.work_load            = weight_lhs_block;
                        perform_recursive_partitioning_internal( rec_config, extracted_block_lhs, lb, new_ub_lhs);
                        
                        //apply partition
@@ -147,6 +148,7 @@ void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig 
                if(num_blocks_rhs > 1) {
                        rec_config.k = num_blocks_rhs;
                        rec_config.largest_graph_weight = weight_rhs_block;
+                       rec_config.work_load            = weight_lhs_block;
                        perform_recursive_partitioning_internal( rec_config, extracted_block_rhs, new_lb_rhs, ub);
 
                        forall_nodes(extracted_block_rhs, node) {

@@ -306,7 +306,7 @@ EdgeWeight edge_cut_flow_solver::get_min_flow_max_cut(const PartitionConfig & co
                 }
 
                 residualGraph.finish_construction();
-                NodeWeight average_partition_weight = ceil(config.largest_graph_weight / config.k);
+                NodeWeight average_partition_weight = ceil(config.work_load / config.k);
                 NodeWeight perfect_rhs_stripe_weight = abs((int)average_partition_weight - (int)rhs_part_weight+(int) rhs_stripe_weight);
                 
                 most_balanced_minimum_cuts mbmc;

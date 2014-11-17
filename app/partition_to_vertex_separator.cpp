@@ -28,15 +28,16 @@
 #include <argtable2.h>
 #include <regex.h>
 
-#include "../lib/data_structure/graph_access.h"
-#include "../lib/io/graph_io.h"
-#include "../lib/tools/timer.h"
-#include "../lib/tools/quality_metrics.h"
-#include "../lib/tools/macros_assertions.h"
-#include "../lib/tools/random_functions.h"
-#include "../lib/partition/partition_config.h"
-#include "../lib/partition/graph_partitioner.h"
-#include "../lib/partition/uncoarsening/separator/vertex_separator_algorithm.h"
+#include "balance_configuration.h"
+#include "data_structure/graph_access.h"
+#include "io/graph_io.h"
+#include "tools/timer.h"
+#include "tools/quality_metrics.h"
+#include "tools/macros_assertions.h"
+#include "tools/random_functions.h"
+#include "partition/partition_config.h"
+#include "partition/graph_partitioner.h"
+#include "partition/uncoarsening/separator/vertex_separator_algorithm.h"
 
 #include "parse_parameters.h"
 #include <math.h>
@@ -77,18 +78,8 @@ int main(int argn, char **argv) {
        
         G.set_partition_count(partition_config.k); 
  
-        NodeWeight largest_graph_weight = 0;
-        forall_nodes(G, node) {
-                largest_graph_weight += G.getNodeWeight(node);
-        } endfor
-        
-        double epsilon                              = partition_config.imbalance/100.0;
-        partition_config.upper_bound_partition      = ceil((1+epsilon)*largest_graph_weight/(double)partition_config.k);
-        partition_config.largest_graph_weight       = largest_graph_weight;
-        partition_config.graph_allready_partitioned = false;
-        partition_config.kway_adaptive_limits_beta  = log(largest_graph_weight);
-
-        cout <<  "upper bound " <<  partition_config.upper_bound_partition  << endl;
+        balance_configuration bc;
+        bc.configurate_balance( partition_config, G);
 
         if(partition_config.input_partition != "") {
                 cout <<  "reading input partition" << endl;

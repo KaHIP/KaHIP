@@ -93,7 +93,7 @@ EdgeWeight two_way_flow_refinement::iterativ_flow_iteration(PartitionConfig & co
                 return 0; 
         }
 
-        NodeWeight average_partition_weight = ceil(config.largest_graph_weight / config.k);
+        NodeWeight average_partition_weight = ceil(config.work_load / config.k);
         while(cur_improvement > 0 && iteration < max_iterations) {
                 NodeWeight upper_bound_no_lhs = (NodeWeight)std::max((100.0+region_factor*config.imbalance)/100.0*(average_partition_weight) - rhs_part_weight,0.0);
                 NodeWeight upper_bound_no_rhs = (NodeWeight)std::max((100.0+region_factor*config.imbalance)/100.0*(average_partition_weight) - lhs_part_weight,0.0);

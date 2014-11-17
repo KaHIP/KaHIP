@@ -103,7 +103,7 @@ void gal_combine::perform_gal_combine( PartitionConfig & config, graph_access & 
         double real_epsilon = config.imbalance/100.0;
         double epsilon = random_functions::nextDouble(real_epsilon+0.005,real_epsilon+config.kabaE_internal_bal); 
         PartitionConfig copy = config;
-        copy.upper_bound_partition = (1+epsilon)*ceil(config.largest_graph_weight/(double)config.k);
+        copy.upper_bound_partition = (1+epsilon)*ceil(config.work_load/(double)config.k);
 
         complete_boundary boundary(&G);
         boundary.build();
@@ -116,7 +116,7 @@ void gal_combine::perform_gal_combine( PartitionConfig & config, graph_access & 
         boundary2.build();
 
         copy = config;
-        copy.upper_bound_partition = (1+epsilon)*ceil(config.largest_graph_weight/(double)config.k);
+        copy.upper_bound_partition = (1+epsilon)*ceil(config.work_load/(double)config.k);
 
         refine->perform_refinement( copy, G, boundary2);
 

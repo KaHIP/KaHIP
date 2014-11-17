@@ -142,6 +142,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_lit *mh_enable_kabapE                     = arg_lit0(NULL, "mh_enable_kabapE", "Enable combine operator KaBaPE");
         struct arg_int *maxT                                 = arg_int0(NULL, "maxT", NULL, "maxT parameter for Tabu Search");
         struct arg_int *maxIter                              = arg_int0(NULL, "maxIter", NULL, "maxIter parameter for Tabu Search");
+        struct arg_lit *balance_edges 		             = arg_lit0(NULL, "balance_edges", "Turn on balancing of edges among blocks.");
 
         struct arg_int *cluster_upperbound                   = arg_int0(NULL, "cluster_upperbound", NULL, "Set a size-constraint on the size of a cluster. Default: none");
         struct arg_int *label_propagation_iterations         = arg_int0(NULL, "label_propagation_iterations", NULL, "Set the number of label propgation iterations. Default: 10.");
@@ -184,6 +185,7 @@ int parse_parameters(int argn, char **argv,
                 time_limit, 
                 input_partition,
                 enforce_balance, 
+		balance_edges,
                 filename_output, 
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
@@ -200,6 +202,7 @@ int parse_parameters(int argn, char **argv,
                 maxT, maxIter,  
                 mh_enable_kabapE,
                 kabaE_internal_bal,  
+		balance_edges,
                 input_partition,
                 filename_output, 
 #elif defined MODE_LABELPROPAGATION
@@ -295,6 +298,10 @@ int parse_parameters(int argn, char **argv,
         if(mh_disable_combine->count > 0) {
                 partition_config.mh_disable_combine = true;
         }
+
+	if(balance_edges->count > 0) {
+		partition_config.balance_edges = true;
+	}
         
         if(mh_optimize_communication_volume->count > 0) {
                 partition_config.mh_optimize_communication_volume = true;

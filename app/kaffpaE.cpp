@@ -30,6 +30,7 @@
 #include <string.h> 
 
 #include "algorithms/cycle_search.h"
+#include "balance_configuration.h"
 #include "data_structure/graph_access.h"
 #include "graph_io.h"
 #include "macros_assertions.h"
@@ -73,17 +74,8 @@ int main(int argn, char **argv) {
         omp_set_num_threads(1);
         G.set_partition_count(partition_config.k); 
         
-        NodeWeight largest_graph_weight = 0;
-        forall_nodes(G, node) {
-                largest_graph_weight += G.getNodeWeight(node);
-        } endfor
-        std::cout <<  "largest graph weight " <<  largest_graph_weight  << std::endl;
-        
-        double epsilon                              = partition_config.imbalance/100.0;
-        partition_config.upper_bound_partition      = (1+epsilon)*ceil(largest_graph_weight/(double)partition_config.k);
-        partition_config.largest_graph_weight       = largest_graph_weight;
-        partition_config.graph_allready_partitioned = false;
-        partition_config.kway_adaptive_limits_beta  = log(largest_graph_weight);
+        balance_configuration bc;
+        bc.configurate_balance( partition_config, G);
 
         std::vector<PartitionID> input_partition;
         if(partition_config.input_partition != "") {
@@ -117,7 +109,6 @@ int main(int argn, char **argv) {
                 std::cout << "finalobjective  " << cut                            << std::endl;
                 std::cout << "bnd \t\t"         << qm.boundary_nodes(G)           << std::endl;
                 std::cout << "balance \t"       << qm.balance(G)                  << std::endl;
-                std::cout << "finalbalance \t"  << qm.balance(G)                  << std::endl;
                 std::cout << "max_comm_vol \t"  << qm.max_communication_volume(G) << std::endl;
 
                 // write the partition to the disc 

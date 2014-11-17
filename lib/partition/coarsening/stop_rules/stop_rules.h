@@ -42,7 +42,7 @@ class simple_stop_rule : public stop_rule {
                         if(config.disable_max_vertex_weight_constraint) {
                                 config.max_vertex_weight = config.upper_bound_partition; 
                         } else {
-                                config.max_vertex_weight = (NodeWeight)(1.5*config.largest_graph_weight/num_stop);
+                                config.max_vertex_weight = (NodeWeight)(1.5*config.work_load/num_stop);
                         }
                 };
                 virtual ~simple_stop_rule() {};
@@ -84,9 +84,9 @@ class multiple_k_stop_rule : public stop_rule {
                         } else {
                                 if(config.initial_partitioning) {
                                         //if we perform initial partitioning we relax this constraint
-                                        config.max_vertex_weight = 1.5*((double)config.largest_graph_weight)/(2*config.num_vert_stop_factor); 
+                                        config.max_vertex_weight = 1.5*((double)config.work_load)/(2*config.num_vert_stop_factor); 
                                 } else {
-                                        config.max_vertex_weight = (NodeWeight)(1.5*config.largest_graph_weight/num_stop);
+                                        config.max_vertex_weight = (NodeWeight)(1.5*config.work_load/num_stop);
                                 }
                         }
 
