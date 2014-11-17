@@ -35,62 +35,77 @@ strongly_connected_components::~strongly_connected_components() {
 
 int strongly_connected_components::strong_components( graph_access & G, std::vector<int> & comp_num) {
 
-        std::stack<NodeID> unfinished;
-        std::stack<NodeID> roots;
-
-        std::vector<int> dfsnum(G.number_of_nodes(), -1);
+        m_dfsnum.resize(G.number_of_nodes());
+        m_comp_num.resize(G.number_of_nodes());
         m_dfscount   = 0;
         m_comp_count = 0;
 
         forall_nodes(G, node) {
-                comp_num[node] = -1;
+                //comp_num[node] = -1;
+                m_comp_num[node] = -1;
+                m_dfsnum[node]   = -1;
         } endfor
 
         forall_nodes(G, node) {
-                if(dfsnum[node] == -1) {
-                        scc_dfs(node, G, dfsnum, comp_num, unfinished, roots); 
+                if(m_dfsnum[node] == -1) {
+                        explicit_scc_dfs(node, G); 
                 }
         } endfor
+
+        forall_nodes(G, node) {
+                comp_num[node] = m_comp_num[node];
+        } endfor
+        
         return m_comp_count;
 }
 
-void strongly_connected_components::scc_dfs(NodeID node, graph_access & G, 
-                                            std::vector<int> & dfsnum, 
-                                            std::vector<int> & comp_num,
-                                            std::stack<NodeID> & unfinished, 
-                                            std::stack<NodeID> & roots){ 
-        dfsnum[node] = m_dfscount++;
+void strongly_connected_components::explicit_scc_dfs(NodeID node, graph_access & G){ 
+
+        iteration_stack.push( std::pair<NodeID,EdgeID>( node, G.get_first_edge(node) ) );
 
         //make node a tentative scc of its own
-        unfinished.push(node);
-        roots.push(node);
+        m_dfsnum[node] = m_dfscount++;
+        m_unfinished.push(node);
+        m_roots.push(node);
 
-        forall_out_edges(G, e, node) {
-                NodeID target = G.getEdgeTarget(e);
-                //explore edge (node, target)
-                if(dfsnum[target] == -1) {
-                        scc_dfs(target, G, dfsnum, comp_num, unfinished, roots); 
-                } else if( comp_num[target] == -1) {
-                        //merge scc's
-                        while( dfsnum[roots.top()] > dfsnum[target] ) roots.pop();
-                }
+        while( !iteration_stack.empty() ) {
+                NodeID current_node = iteration_stack.top().first;
+                EdgeID current_edge = iteration_stack.top().second;
+                iteration_stack.pop();
 
-        } endfor
+                forall_out_edges_starting_at(G, e, current_node, current_edge) {
+                        NodeID target = G.getEdgeTarget(e);
+                        //explore edge (node, target)
+                        if(m_dfsnum[target] == -1) {
 
-        //return from call of node node
-        NodeID w;
-        if(node == roots.top()) {
-                do {
-                        w = unfinished.top(); 
-                        unfinished.pop();
-                        comp_num[w] = m_comp_count;
-                } while( w != node );
-                m_comp_count++;
-                roots.pop();
-        } 
+                                iteration_stack.push( std::pair<NodeID,EdgeID>( current_node, e ) );
+                                iteration_stack.push( std::pair<NodeID,EdgeID>( target, G.get_first_edge(target) ) );
+
+                                m_dfsnum[target] = m_dfscount++;
+                                m_unfinished.push(target);
+                                m_roots.push(target);
+                                break;
+                        } else if( m_comp_num[target] == -1) {
+                                //merge scc's
+                                while( m_dfsnum[m_roots.top()] > m_dfsnum[target] ) m_roots.pop();
+                        }
+
+                } endfor
+
+                //return from call of node node
+                if(current_node == m_roots.top()) {
+                        NodeID w = 0;
+                        do {
+                                w = m_unfinished.top(); 
+                                m_unfinished.pop();
+                                m_comp_num[w] = m_comp_count;
+                        } while( w != current_node );
+                        m_comp_count++;
+                        m_roots.pop();
+                } 
+        }
 
 }
-
 
 
 

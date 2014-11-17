@@ -51,9 +51,6 @@ void kaffpa_balance_NE(int* n, int* vwgt, int* xadj,
                 double* imbalance,  bool suppress_output, int seed, int mode,
                 int* edgecut, int* part);
 
-
-
-
 void node_separator(int* n, int* vwgt, int* xadj, 
                     int* adjcwgt, int* adjncy, int* nparts, 
                     double* imbalance,  bool suppress_output, int seed, int mode,

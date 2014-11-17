@@ -157,6 +157,7 @@ private:
 #define forall_edges(G,e) { for(EdgeID e = 0, end = G.number_of_edges(); e < end; ++e) {
 #define forall_nodes(G,n) { for(NodeID n = 0, end = G.number_of_nodes(); n < end; ++n) {
 #define forall_out_edges(G,e,n) { for(EdgeID e = G.get_first_edge(n), end = G.get_first_invalid_edge(n); e < end; ++e) {
+#define forall_out_edges_starting_at(G,e,n,e_bar) { for(EdgeID e = e_bar, end = G.get_first_invalid_edge(n); e < end; ++e) {
 #define forall_blocks(G,p) { for (PartitionID p = 0, end = G.get_partition_count(); p < end; p++) {
 #define endfor }}
 
