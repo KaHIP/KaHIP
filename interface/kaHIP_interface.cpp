@@ -67,7 +67,6 @@ void internal_build_graph( PartitionConfig & partition_config,
         bc.configurate_balance( partition_config, G);
 }
 
-
 void internal_kaffpa_call(PartitionConfig & partition_config, 
                           bool suppress_output, 
                           int* n, 
@@ -149,8 +148,6 @@ void kaffpa(int* n,
         internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
 }
 
-
-
 void kaffpa_balance_NE(int* n, 
                    int* vwgt, 
                    int* xadj, 
@@ -195,7 +192,6 @@ void kaffpa_balance_NE(int* n,
         partition_config.balance_edges = true;
         internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
 }
-
 
 void internal_nodeseparator_call(PartitionConfig & partition_config, 
                           bool suppress_output, 
