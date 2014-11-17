@@ -1,13 +1,13 @@
 KaHIP-0.7
 ------------------------------------------------------------------------
 - minor bug fixes
+- added the possibility to balance edges among blocks as well
 - integrated push-relabel flow code
 - added a switch for 64bit compatibility
 - added a sparsification algorithm to improve partitioning speed on social networks
 - integrated linear probing hashmaps for label propagation algorithms within the framework
 - add explicit stack management in strongly connected components algorithm
 - switched to GPLv2
-- added the possibility to balance edges among partitions as well
 
 KaHIP-0.62
 ------------------------------------------------------------------------

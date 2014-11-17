@@ -42,8 +42,16 @@ const int STRONGSOCIAL   = 5;
 // part has to be an array of n ints
 void kaffpa(int* n, int* vwgt, int* xadj, 
                    int* adjcwgt, int* adjncy, int* nparts, 
-                   double* imbalance,  bool suppress_output, int seed, int mode,
+                   double* imbalance,  bool suppress_output, int seed, int mode, 
                    int* edgecut, int* part);
+
+// balance constraint on nodes and edges
+void kaffpa_balance_NE(int* n, int* vwgt, int* xadj, 
+                int* adjcwgt, int* adjncy, int* nparts, 
+                double* imbalance,  bool suppress_output, int seed, int mode,
+                int* edgecut, int* part);
+
+
 
 
 void node_separator(int* n, int* vwgt, int* xadj, 
