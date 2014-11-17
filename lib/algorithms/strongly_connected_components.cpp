@@ -108,6 +108,3 @@ void strongly_connected_components::explicit_scc_dfs(NodeID node, graph_access &
 }
 
 
-
-
-
