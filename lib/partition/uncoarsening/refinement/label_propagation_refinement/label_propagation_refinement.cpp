@@ -40,7 +40,7 @@ EdgeWeight label_propagation_refinement::perform_refinement(PartitionConfig & pa
 
         // in this case the _matching paramter is not used 
         // coarse_mappng stores cluster id and the mapping (it is identical)
-        std::vector<PartitionID> hash_map(G.number_of_nodes(),0);
+        std::vector<PartitionID> hash_map(partition_config.k,0);
         std::vector<NodeID> permutation(G.number_of_nodes());
         std::vector<NodeWeight> cluster_sizes(partition_config.k, 0);
 
@@ -81,8 +81,6 @@ EdgeWeight label_propagation_refinement::perform_refinement(PartitionConfig & pa
                                 PartitionID cur_value     = hash_map[cur_block];
                                 if((cur_value > max_value  || (cur_value == max_value && random_functions::nextBool())) 
                                 && (cluster_sizes[cur_block] + G.getNodeWeight(node) < block_upperbound || (cur_block == my_block && cluster_sizes[my_block] <= partition_config.upper_bound_partition)))
-                                //&& (!partition_config.graph_allready_partitioned || G.getPartitionIndex(node) == G.getPartitionIndex(target))
-                                //&& (!partition_config.combine || G.getSecondPartitionIndex(node) == G.getSecondPartitionIndex(target)))
                                 {
                                         max_value = cur_value;
                                         max_block = cur_block;
