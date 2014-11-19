@@ -23,10 +23,10 @@
 #ifndef CUT_FLOW_PROBLEM_SOLVER_4P49OMM
 #define CUT_FLOW_PROBLEM_SOLVER_4P49OMM
 
-#include "flow_solver.h"
+#include "partition_config.h"
 #include "data_structure/flow_graph.h"
 
-class cut_flow_problem_solver : public flow_solver {
+class cut_flow_problem_solver  {
         public:
                 cut_flow_problem_solver( );
                 virtual ~cut_flow_problem_solver();

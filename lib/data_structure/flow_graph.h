@@ -23,6 +23,7 @@
 #ifndef FLOW_GRAPH_636S5L2S
 #define FLOW_GRAPH_636S5L2S
 
+#include "definitions.h"
 
 struct rEdge {
     NodeID     source;

@@ -23,30 +23,25 @@
 #ifndef VERTEX_SEPARATOR_FLOW_SOLVER_FLA4518Q
 #define VERTEX_SEPARATOR_FLOW_SOLVER_FLA4518Q
 
-#include "flow_solving_kernel/flow_solver.h"
+#include "definitions.h"
+#include "partition_config.h"
+#include "data_structure/flow_graph.h"
 
-class vertex_separator_flow_solver : public flow_solver {
+class vertex_separator_flow_solver  {
 
 public:
         vertex_separator_flow_solver();
         virtual ~vertex_separator_flow_solver();
 
-        bool construct_flow_pb( const PartitionConfig & config, 
-                                graph_access & G, 
-                                PartitionID & lhs, 
-                                PartitionID & rhs, 
-                                std::vector<NodeID> & lhs_boundary_stripe,
-                                std::vector<NodeID> & rhs_boundary_stripe,
-                                std::vector<NodeID> & new_to_old_ids,              
-                                long *n_ad, 
-                                long* m_ad, 
-                                node** nodes_ad, 
-                                arc** arcs_ad, 
-                                long ** cap_ad,
-                                node** source_ad, 
-                                node** sink_ad, 
-                                long* node_min_ad,
-                                EdgeID & no_edges_in_flow_graph); 
+        bool build_flow_pb( const PartitionConfig & config, 
+                               graph_access & G, 
+                               PartitionID & lhs, 
+                               PartitionID & rhs, 
+                               std::vector<NodeID> & lhs_nodes,
+                               std::vector<NodeID> & rhs_nodes,
+                               std::vector<NodeID> & new_to_old_ids,              
+                               flow_graph & fG); 
+
 
 
         void find_separator(const PartitionConfig & config, 
