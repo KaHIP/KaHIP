@@ -1,5 +1,5 @@
 /******************************************************************************
- * edge_cut_flow_solver.h 
+ * cut_flow_problem_solver.h 
  *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
@@ -20,15 +20,16 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#ifndef EDGE_FLOW_SOLVER_4P49OMM
-#define EDGE_FLOW_SOLVER_4P49OMM
+#ifndef CUT_FLOW_PROBLEM_SOLVER_4P49OMM
+#define CUT_FLOW_PROBLEM_SOLVER_4P49OMM
 
 #include "flow_solver.h"
+#include "data_structure/flow_graph.h"
 
-class edge_cut_flow_solver : public flow_solver {
+class cut_flow_problem_solver : public flow_solver {
         public:
-                edge_cut_flow_solver( );
-                virtual ~edge_cut_flow_solver();
+                cut_flow_problem_solver( );
+                virtual ~cut_flow_problem_solver();
 
                 EdgeWeight get_min_flow_max_cut(const PartitionConfig & config, 
                                                 graph_access & G, 
@@ -59,15 +60,7 @@ class edge_cut_flow_solver : public flow_solver {
                                       std::vector<NodeID> & lhs_boundary_stripe,
                                       std::vector<NodeID> & rhs_boundary_stripe,
                                       std::vector<NodeID> & new_to_old_ids,              
-                                      long *n_ad, 
-                                      long* m_ad, 
-                                      node** nodes_ad, 
-                                      arc** arcs_ad, 
-                                      long ** cap_ad,
-                                      node** source_ad, 
-                                      node** sink_ad, 
-                                      long* node_min_ad,
-                                      EdgeID & no_edge_in_flow_graph); 
+                                      flow_graph & rG); 
 
 };
 

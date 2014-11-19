@@ -123,7 +123,7 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
 
                 if(!partition_config.label_propagation_refinement) coarser_boundary->build();
 
-                PRINT(std::cout <<  "upper bound " <<  cfg.upper_bound_partition  << std::endl;)
+                //PRINT(std::cout <<  "upper bound " <<  cfg.upper_bound_partition  << std::endl;)
                 improvement += refine->perform_refinement(cfg, *coarser, *coarser_boundary);
                 m_deepest_level = m_level + 1;
         } else {
@@ -193,7 +193,7 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
                 cfg.upper_bound_partition = partition_config.upper_bound_partition;
         }
 
-        PRINT(std::cout <<  "upper bound " <<  cfg.upper_bound_partition  << std::endl;)
+        //PRINT(std::cout <<  "upper bound " <<  cfg.upper_bound_partition  << std::endl;)
         improvement += refine->perform_refinement(cfg, *finer, *current_boundary);
 
         if(c_boundary != NULL) {

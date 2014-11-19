@@ -27,7 +27,7 @@
 #include <sstream>
 
 #include "boundary_bfs.h"
-#include "flow_solving_kernel/edge_cut_flow_solver.h"
+#include "flow_solving_kernel/cut_flow_problem_solver.h"
 #include "quality_metrics.h"
 #include "two_way_flow_refinement.h"
 
@@ -124,11 +124,11 @@ EdgeWeight two_way_flow_refinement::iterativ_flow_iteration(PartitionConfig & co
                 std::vector<NodeID> new_rhs_nodes;
                 std::vector<NodeID> new_to_old_ids;
 
-                edge_cut_flow_solver fsolve;
+                cut_flow_problem_solver fsolve;
                 EdgeWeight new_cut = fsolve.get_min_flow_max_cut(config, G, 
                                                                 lhs, rhs, 
                                                                 lhs_boundary_stripe, rhs_boundary_stripe, 
-                                                                new_to_old_ids, cut, 
+                                                                new_to_old_ids, best_cut, 
                                                                 rhs_part_weight,
                                                                 rhs_stripe_weight,
                                                                 new_rhs_nodes);

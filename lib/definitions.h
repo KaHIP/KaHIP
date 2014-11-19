@@ -53,6 +53,7 @@ typedef EdgeWeight 	Gain;
 typedef int 		Color;
 typedef unsigned int 	Count;
 typedef std::vector<NodeID> boundary_starting_nodes;
+typedef long FlowType;
 
 const EdgeID UNDEFINED_EDGE            = std::numeric_limits<EdgeID>::max();
 const NodeID NOTMAPPED                 = std::numeric_limits<EdgeID>::max();
