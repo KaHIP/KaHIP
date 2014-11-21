@@ -5,7 +5,6 @@ KaHIP-0.7
 - add explicit stack management in strongly connected components algorithm
 - switched to GPLv2
 - integrated push-relabel flow code
-- added a switch for 64bit compatibility
 
 KaHIP-0.62
 ------------------------------------------------------------------------
