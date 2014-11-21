@@ -131,14 +131,12 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
                 if(lhs_b.size() < rhs_b.size()) {
                         forall_boundary_nodes(lhs_b, cur_bnd_node) {
                                 if(allready_separator.find(cur_bnd_node) == allready_separator.end()) {
-                                        //overall_separator.push_back(cur_bnd_node);
                                         allready_separator[cur_bnd_node] = true;
                                 }
                         } endfor
                 } else {
                         forall_boundary_nodes(rhs_b, cur_bnd_node) {
                                 if(allready_separator.find(cur_bnd_node) == allready_separator.end()) {
-                                        //overall_separator.push_back(cur_bnd_node);
                                         allready_separator[cur_bnd_node] = true;
                                 }
                         } endfor
