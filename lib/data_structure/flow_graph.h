@@ -48,6 +48,7 @@ struct rEdge {
 class flow_graph {
 public:
         flow_graph() {
+                m_num_edges = 0;
         };
 
         virtual ~flow_graph() {};
@@ -55,6 +56,7 @@ public:
         void start_construction(NodeID nodes, EdgeID edges = 0) {
                 m_adjacency_lists.resize(nodes);
                 m_num_nodes = nodes;
+                m_num_edges = edges;
         }
  
         void finish_construction() {};
