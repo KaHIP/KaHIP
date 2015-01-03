@@ -1,3 +1,7 @@
+KaHIP-0.71
+------------------------------------------------------------------------
+- added example java jni wrapper to be able to link the KaHIP library within a java project (misc/java_jni_wrapper)
+
 KaHIP-0.7
 ------------------------------------------------------------------------
 - minor bug fixes

@@ -49,6 +49,7 @@ class flow_graph {
 public:
         flow_graph() {
                 m_num_edges = 0;
+                m_num_nodes = 0;
         };
 
         virtual ~flow_graph() {};
