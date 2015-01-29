@@ -203,7 +203,7 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                         forall_out_edges(fG, e, node) {
                                 NodeID target = fG.getEdgeTarget(node, e);
                                 if( fG.getEdgeCapacity(node, e) > 0 ) {
-                                        if( fG.getEdgeFlow(node, e) < fG.getEdgeCapacity(node, e)) {
+                                        if( fG.getEdgeFlow(node, e) < (FlowType) fG.getEdgeCapacity(node, e)) {
                                                 residualGraph.new_edge(node, target);
                                         } else {
                                                 forall_out_edges(fG, e_bar, target) {

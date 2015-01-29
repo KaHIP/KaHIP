@@ -43,12 +43,18 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
         PartitionConfig cfg     = config;
         cfg.bank_account_factor = 1;
 
+        std::unordered_map<NodeID, bool> allready_separator;
+
         QuotientGraphEdges qgraph_edges;
         boundary.getQuotientGraphEdges(qgraph_edges);
 
+        if(qgraph_edges.size() == 0) {
+                is_vertex_separator(G, allready_separator);         
+                return;
+        }
+
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
 
-        std::unordered_map<NodeID, bool> allready_separator;
         do {
                 boundary_pair & bp = scheduler->getNext();
                 PartitionID lhs = bp.lhs;
