@@ -140,6 +140,7 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
         
         NodeID node_counter   = 0;
         EdgeID edge_counter   = 0;
+        long total_nodeweight = 0;
 
         G.start_construction(nmbNodes, nmbEdges);
 
@@ -157,6 +158,12 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
                 NodeWeight weight = 1;
                 if( read_nw ) {
                         ss >> weight;
+                        total_nodeweight += weight;
+                        if( total_nodeweight > (long) std::numeric_limits<NodeWeight>::max()) {
+                                std::cout <<  "The sum of the node weights is too large (it exceeds the node weight type)."  << std::endl;
+                                std::cout <<  "Currently not supported. Please scale your node weights."  << std::endl;
+                                exit(0);
+                        }
                 }
                 G.setNodeWeight(node, weight);
 
