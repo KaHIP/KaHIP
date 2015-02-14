@@ -25,6 +25,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <limits>
 #include <vector>
 #include <unordered_set>
 
@@ -81,6 +82,7 @@ int main(int argn, char **argv)
         std::vector< long > graph_edgeweights;
         graph_edgeweights.reserve(nmbEdges * 2);
         long node_weight;
+        long total_nodeweight = 0;
 
         long node_degree = 0;
         long node_counter = 0;
@@ -120,6 +122,13 @@ int main(int argn, char **argv)
                             std::cout <<  "See line " << node_counter+2 << " of your file."  << std::endl;
                             std::cout <<  "*******************************************************************************"  << std::endl;
                             exit(0);
+                        }
+                        total_nodeweight += node_weight;
+                        if(total_nodeweight > (long)std::numeric_limits<unsigned int>::max()) {
+                                std::cout <<  "The sum of the node weights exeeds 32 bits. Currently not supported."  << std::endl;
+                                std::cout <<  "Please scale weights of the graph."  << std::endl;
+                                std::cout <<  "*******************************************************************************"  << std::endl;
+                                exit(0);
                         }
                 }
 
