@@ -169,12 +169,18 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
 
                 NodeID target;
                 while( ss >> target ) {
+                        //check for self-loops
+                        if(target-1 == node) {
+                                std::cout <<  "The graph file contains self-loops. This is not supported. Please remove them from the file."  << std::endl;
+                        }
+
                         EdgeWeight edge_weight = 1;
                         if( read_ew ) {
                                 ss >> edge_weight;
                         }
                         edge_counter++;
                         EdgeID e = G.new_edge(node, target-1);
+
                         G.setEdgeWeight(e, edge_weight);
                 }
 
