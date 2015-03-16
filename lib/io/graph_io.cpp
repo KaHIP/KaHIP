@@ -121,7 +121,7 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
         ss >> ew;
 
         if( 2*nmbEdges > std::numeric_limits<int>::max() || nmbNodes > std::numeric_limits<int>::max()) {
-                std::cout <<  "The graph is too large. Currently only 32bit supported!"  << std::endl;
+                std::cerr <<  "The graph is too large. Currently only 32bit supported!"  << std::endl;
                 exit(0);
         }
 
@@ -160,8 +160,8 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
                         ss >> weight;
                         total_nodeweight += weight;
                         if( total_nodeweight > (long) std::numeric_limits<NodeWeight>::max()) {
-                                std::cout <<  "The sum of the node weights is too large (it exceeds the node weight type)."  << std::endl;
-                                std::cout <<  "Currently not supported. Please scale your node weights."  << std::endl;
+                                std::cerr <<  "The sum of the node weights is too large (it exceeds the node weight type)."  << std::endl;
+                                std::cerr <<  "Currently not supported. Please scale your node weights."  << std::endl;
                                 exit(0);
                         }
                 }
@@ -171,7 +171,7 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
                 while( ss >> target ) {
                         //check for self-loops
                         if(target-1 == node) {
-                                std::cout <<  "The graph file contains self-loops. This is not supported. Please remove them from the file."  << std::endl;
+                                std::cerr <<  "The graph file contains self-loops. This is not supported. Please remove them from the file."  << std::endl;
                         }
 
                         EdgeWeight edge_weight = 1;
@@ -190,14 +190,14 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
         }
 
         if( edge_counter != (EdgeID) nmbEdges ) {
-                std::cout <<  "number of specified edges mismatch"  << std::endl;
-                std::cout <<  edge_counter <<  " " <<  nmbEdges  << std::endl;
+                std::cerr <<  "number of specified edges mismatch"  << std::endl;
+                std::cerr <<  edge_counter <<  " " <<  nmbEdges  << std::endl;
                 exit(0);
         }
 
         if( node_counter != (NodeID) nmbNodes) {
-                std::cout <<  "number of specified nodes mismatch"  << std::endl;
-                std::cout <<  node_counter <<  " " <<  nmbNodes  << std::endl;
+                std::cerr <<  "number of specified nodes mismatch"  << std::endl;
+                std::cerr <<  node_counter <<  " " <<  nmbNodes  << std::endl;
                 exit(0);
         }
 
