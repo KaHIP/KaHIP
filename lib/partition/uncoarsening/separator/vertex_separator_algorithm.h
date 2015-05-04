@@ -26,6 +26,7 @@
 #include <unordered_map>
 
 #include "data_structure/graph_access.h"
+#include "data_structure/flow_graph.h"
 #include "partition_config.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/complete_boundary.h"
 
@@ -34,10 +35,30 @@ class vertex_separator_algorithm {
                 vertex_separator_algorithm();
                 virtual ~vertex_separator_algorithm();
 
+                void build_flow_problem(const PartitionConfig & config, 
+                                        graph_access & G, 
+                                        std::vector< NodeID > & lhs_nodes,
+                                        std::vector< NodeID > & rhs_nodes,
+                                        std::vector< NodeID > & separator_nodes,
+                                        flow_graph & rG, 
+                                        std::vector< NodeID > & forward_mapping, 
+                                        NodeID & source, NodeID & sink);
+ 
+                void region_bfs(const PartitionConfig & config, 
+                                graph_access & G, 
+                                std::vector< NodeID > & input_separator, 
+                                PartitionID block, 
+                                std::vector< NodeID > & lhs_nodes);
+
                 void compute_vertex_separator(const PartitionConfig & config, 
                                               graph_access & G, 
                                               complete_boundary & boundary, 
                                               std::vector<NodeID> & overall_separator);
+
+                void improve_vertex_separator(const PartitionConfig & config, 
+                                              graph_access & G, 
+                                              std::vector<NodeID> & input_separator,
+                                              std::vector<NodeID> & output_separator);
 
                 void compute_vertex_separator_simple(const PartitionConfig & config, 
                                                      graph_access & G, 

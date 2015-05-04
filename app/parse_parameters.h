@@ -191,6 +191,10 @@ int parse_parameters(int argn, char **argv,
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
                 filename_output, 
+#elif defined MODE_IMPROVEVERTEXSEPARATOR
+                input_partition, 
+                filename_output, 
+
 
 #elif defined MODE_KAFFPAE
                 k, imbalance, 

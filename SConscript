@@ -116,6 +116,11 @@ if env['program'] == 'partition_to_vertex_separator':
         env.Append(CCFLAGS  = '-DMODE_PARTITIONTOVERTEXSEPARATOR')
         env.Program('partition_to_vertex_separator', ['app/partition_to_vertex_separator.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
 
+if env['program'] == 'improve_vertex_separator':
+        env.Append(CXXFLAGS = '-DMODE_IMPROVEVERTEXSEPARATOR')
+        env.Append(CCFLAGS  = '-DMODE_IMPROVEVERTEXSEPARATOR')
+        env.Program('improve_vertex_separator', ['app/improve_vertex_separator.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
+
 if env['program'] == 'kaffpaE':
         env.Append(CXXFLAGS = '-DMODE_KAFFPAE')
         env.Append(CCFLAGS  = '-DMODE_KAFFPAE')

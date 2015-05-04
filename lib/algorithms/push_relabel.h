@@ -134,7 +134,7 @@ public:
                 }
 
                 if( m_excess[node] > 0 ) {
-                        if( m_count[ m_distance[node] ] == 1 ) {
+                        if( m_count[ m_distance[node] ] == 1 && m_distance[node] < m_G->number_of_nodes()) {
                                 // hence this layer will be empty after the relabel step
                                 gap_heuristic(m_distance[node]);
                         } else {
