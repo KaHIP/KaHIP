@@ -262,7 +262,7 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
         } endfor
 
         std::cout <<  "improvement achieved " <<  (input_separator.size()-value)  << std::endl;
-        std::cout <<  "relative improvment achieved " <<  (input_separator.size()/(double)value)  << std::endl;
+        std::cout <<  "relative improvement achieved " <<  (input_separator.size()/(double)value)  << std::endl;
 }
 
 void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig & config, 
