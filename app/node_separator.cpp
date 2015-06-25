@@ -60,7 +60,6 @@ int main(int argn, char **argv) {
                 return 0;
         }
 
-        partition_config.mode_node_separators = true;
         std::streambuf* backup = std::cout.rdbuf();
         std::ofstream ofs;
         ofs.open("/dev/null");

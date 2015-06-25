@@ -62,6 +62,19 @@ void edge_ratings::rate(graph_access & G, unsigned level) {
                                 break;
                         case WEIGHT:
                                 break;
+                        case SEPARATOR_MULTX:
+                                rate_separator_multx(G);
+                                break;
+                        case SEPARATOR_ADDX:
+                                rate_separator_addx(G);
+                                break;
+                        case SEPARATOR_MAX:
+                                rate_separator_max(G);
+                                break;
+                        case SEPARATOR_LOG:
+                                rate_separator_log(G);
+                                break;
+
                 }
         }
 }
@@ -200,3 +213,51 @@ void edge_ratings::rate_pseudogeom(graph_access & G) {
                 } endfor
         } endfor
 }
+
+void edge_ratings::rate_separator_addx(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  1.0 / (G.getNodeDegree(node) + G.getNodeDegree(target));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+
+}
+
+void edge_ratings::rate_separator_multx(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  pow( G.getNodeDegree(node) * G.getNodeDegree(target), -0.5);
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+
+}
+
+void edge_ratings::rate_separator_max(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating = 1.0/std::max(G.getNodeDegree(node),G.getNodeDegree(target));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+}
+
+void edge_ratings::rate_separator_log(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating = 1.0/log(G.getNodeDegree(node)*G.getNodeDegree(target));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+}
+
+

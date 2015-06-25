@@ -87,6 +87,10 @@ typedef enum {
  	WEIGHT, 
 	PSEUDOGEOM, 
 	EXPANSIONSTAR2ALGDIST, 
+        SEPARATOR_MULTX,
+        SEPARATOR_ADDX,
+        SEPARATOR_MAX,
+        SEPARATOR_LOG
 } EdgeRating;
 
 typedef enum {
