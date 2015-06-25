@@ -36,6 +36,7 @@
 #include "partition/graph_partitioner.h"
 #include "partition/partition_config.h"
 #include "partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
+#include "partition/uncoarsening/separator/vertex_separator_algorithm.h"
 #include "quality_metrics.h"
 #include "random_functions.h"
 #include "timer.h"
@@ -88,59 +89,31 @@ int main(int argn, char **argv) {
         graph_partitioner partitioner;
         quality_metrics qm;
 
-        std::cout <<  "performing partitioning!"  << std::endl;
-        if(partition_config.time_limit == 0) {
-                partitioner.perform_partitioning(partition_config, G);
-        } else {
-                PartitionID* map = new PartitionID[G.number_of_nodes()];
-                EdgeWeight best_cut = std::numeric_limits<EdgeWeight>::max();
-                while(t.elapsed() < partition_config.time_limit) {
-                        partition_config.graph_allready_partitioned = false;
-                        partitioner.perform_partitioning(partition_config, G);
-                        EdgeWeight cut = qm.edge_cut(G);
-                        if(cut < best_cut) {
-                                best_cut = cut;
-                                forall_nodes(G, node) {
-                                        map[node] = G.getPartitionIndex(node);
-                                } endfor
-                        }
-                }
+        std::cout <<  "computing a node separator"  << std::endl;
+        partitioner.perform_partitioning(partition_config, G);
 
-                forall_nodes(G, node) {
-                        G.setPartitionIndex(node, map[node]);
-                } endfor
-        }
+        complete_boundary boundary(&G);
+        boundary.build();
 
-        if( partition_config.kaffpa_perfectly_balance ) {
-                double epsilon                         = partition_config.imbalance/100.0;
-                partition_config.upper_bound_partition = (1+epsilon)*ceil(partition_config.largest_graph_weight/(double)partition_config.k);
+        vertex_separator_algorithm vsa;
+        std::vector<NodeID> separator;
+        vsa.compute_vertex_separator(partition_config, G, boundary, separator);
+        
+        std::vector<NodeID> output_separator;
+        vsa.improve_vertex_separator(partition_config, G, separator, output_separator);
 
-                complete_boundary boundary(&G);
-                boundary.build();
-
-                cycle_refinement cr;
-                cr.perform_refinement(partition_config, G, boundary);
-        }
         // ******************************* done partitioning *****************************************       
         ofs.close();
         std::cout.rdbuf(backup);
-        std::cout <<  "time spent for partitioning " << t.elapsed()  << std::endl;
+        std::cout <<  "time spent to compute vertex separator " << t.elapsed()  << std::endl;
        
         // output some information about the partition that we have computed 
+        std::cout << "initial separator size " << separator.size() << std::endl;
+        std::cout << "new separator size " << output_separator.size() << std::endl;
+        std::cout << "cut \t\t"       << qm.edge_cut(G)   << std::endl;
+
         std::cout << "cut \t\t"         << qm.edge_cut(G)                 << std::endl;
         std::cout << "finalobjective  " << qm.edge_cut(G)                 << std::endl;
-        std::cout << "bnd \t\t"         << qm.boundary_nodes(G)           << std::endl;
-        std::cout << "balance \t"       << qm.balance(G)                  << std::endl;
-        std::cout << "max_comm_vol \t"  << qm.max_communication_volume(G) << std::endl;
 
-        // write the partition to the disc 
-        std::stringstream filename;
-        if(!partition_config.filename_output.compare("")) {
-                filename << "tmppartition" << partition_config.k;
-        } else {
-                filename << partition_config.filename_output;
-        }
-
-        graph_io::writePartition(G, filename.str());
         
 }
