@@ -136,6 +136,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.filename_output                        = "";
         partition_config.seed                                   = 0;
         partition_config.fast                                   = false;
+        partition_config.mode_node_separators                   = false;
         partition_config.eco                                    = false;
         partition_config.strong                                 = false;
         partition_config.imbalance                              = 3;

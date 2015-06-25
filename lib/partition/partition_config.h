@@ -293,6 +293,8 @@ struct PartitionConfig
 
         bool kaffpa_perfectly_balance;
 
+        bool mode_node_separators;
+
         //=======================================
         //===========SNW PARTITIONING============
         //=======================================
@@ -317,6 +319,8 @@ struct PartitionConfig
         bool set_upperbound;
 
         int repetitions;
+
+
 
         
         //=======================================
