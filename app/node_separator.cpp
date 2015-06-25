@@ -108,12 +108,10 @@ int main(int argn, char **argv) {
         std::cout <<  "time spent to compute vertex separator " << t.elapsed()  << std::endl;
        
         // output some information about the partition that we have computed 
-        std::cout << "initial separator size " << separator.size() << std::endl;
-        std::cout << "new separator size " << output_separator.size() << std::endl;
-        std::cout << "cut \t\t"       << qm.edge_cut(G)   << std::endl;
-
-        std::cout << "cut \t\t"         << qm.edge_cut(G)                 << std::endl;
-        std::cout << "finalobjective  " << qm.edge_cut(G)                 << std::endl;
+        std::cout << "initial separator size " << separator.size()        << std::endl;
+        std::cout << "new separator size "     << output_separator.size() << std::endl;
+        std::cout << "cut \t\t"                << qm.edge_cut(G)          << std::endl;
+        std::cout << "finalobjective  "        << qm.edge_cut(G)          << std::endl;
 
         
 }
