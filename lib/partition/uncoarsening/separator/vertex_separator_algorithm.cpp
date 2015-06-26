@@ -25,6 +25,8 @@
 #include "algorithms/push_relabel.h"
 #include "graph_io.h"
 #include "tools/random_functions.h"
+#include "tools/graph_extractor.h"
+#include "data_structure/union_find.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/quotient_graph_scheduling/simple_quotient_graph_scheduler.h"
 #include "vertex_separator_algorithm.h"
 #include "vertex_separator_flow_solver.h"
@@ -263,6 +265,7 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
 
         std::cout <<  "improvement achieved " <<  (input_separator.size()-value)  << std::endl;
         std::cout <<  "relative improvement achieved " <<  (input_separator.size()/(double)value)  << std::endl;
+        is_vertex_separator(G, output_separator);
 }
 
 void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig & config, 
@@ -381,7 +384,6 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
                 //*************************** end **************************************** 
         } while(!scheduler->hasFinished());
 
-
         // now print the computed vertex separator to disk
         std::unordered_map<NodeID, bool>::iterator it;
         for( it = allready_separator.begin(); it != allready_separator.end(); ++it) {
@@ -406,3 +408,37 @@ bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::unor
          } endfor
          return true;
 }
+
+// vertex separator test on connected graphs
+bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::vector<NodeID > & separator) {
+        forall_nodes(G, node) {
+                G.setPartitionIndex(node, 0);
+        } endfor
+        
+        for( unsigned i = 0; i < separator.size(); i++) {
+                G.setPartitionIndex(separator[i], 2);
+        }
+        
+        graph_extractor gE;
+        graph_access Q;
+        std::vector<NodeID> mapping;
+        gE.extract_block(G, Q, 0, mapping);
+
+        union_find uf(Q.number_of_nodes());
+        forall_nodes(Q, source) {
+                forall_out_edges(Q, e, source) {
+                        NodeID target = Q.getEdgeTarget(e);
+                        uf.Union(source, target); 
+                } endfor
+        } endfor
+
+        std::unordered_map<long,long> components;
+        forall_nodes(Q, node) {
+                components[uf.Find(node)] = 0; //now the component exists
+        } endfor
+        if(components.size() > 1) return true;
+
+        std::cout <<  "not a separator!"  << std::endl;
+        return false;
+}
+

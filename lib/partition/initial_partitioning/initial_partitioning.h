@@ -32,6 +32,7 @@ public:
         virtual ~initial_partitioning();
         void perform_initial_partitioning(const PartitionConfig & config, graph_hierarchy & hierarchy);
         void perform_initial_partitioning(const PartitionConfig & config, graph_access &  G);
+        void perform_initial_partitioning_separator(const PartitionConfig & config, graph_access &  G);
 };
 
 

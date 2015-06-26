@@ -71,6 +71,7 @@ class vertex_separator_algorithm {
 
                 //ASSERTIONS
                 bool is_vertex_separator(graph_access & G, std::unordered_map<NodeID, bool> & separator);
+                bool is_vertex_separator(graph_access & G, std::vector<NodeID > & separator);
 
 };
 

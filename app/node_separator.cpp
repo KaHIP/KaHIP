@@ -97,6 +97,7 @@ int main(int argn, char **argv) {
         vertex_separator_algorithm vsa;
         std::vector<NodeID> separator;
         vsa.compute_vertex_separator(partition_config, G, boundary, separator);
+        vsa.is_vertex_separator(G, separator);
         
         std::vector<NodeID> output_separator;
         vsa.improve_vertex_separator(partition_config, G, separator, output_separator);
