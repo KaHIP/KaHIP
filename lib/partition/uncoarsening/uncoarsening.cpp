@@ -39,6 +39,15 @@ uncoarsening::~uncoarsening() {
 }
 
 int uncoarsening::perform_uncoarsening(const PartitionConfig & config, graph_hierarchy & hierarchy) {
+
+        if(config.mode_node_separators) {
+                return perform_uncoarsening_nodeseparator(config, hierarchy);
+        } else {
+                return perform_uncoarsening_cut(config, hierarchy);
+        }
+}
+
+int uncoarsening::perform_uncoarsening_cut(const PartitionConfig & config, graph_hierarchy & hierarchy) {
         int improvement = 0;
 
         PartitionConfig cfg     = config;
@@ -118,4 +127,16 @@ int uncoarsening::perform_uncoarsening(const PartitionConfig & config, graph_hie
         return improvement;
 }
 
+int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & config, graph_hierarchy & hierarchy) {
 
+        PartitionConfig cfg     = config;
+        graph_access * coarsest = hierarchy.get_coarsest();
+        std::cout << "log>" << "unrolling graph with " << coarsest->number_of_nodes() << std::endl;
+
+        while(!hierarchy.isEmpty()) {
+                graph_access* G = hierarchy.pop_finer_and_project();
+                std::cout << "log>" << "unrolling graph with " << G->number_of_nodes() << std::endl;
+        }
+
+        return 0;
+}
