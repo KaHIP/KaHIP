@@ -78,7 +78,7 @@ void vertex_separator_algorithm::region_bfs(const PartitionConfig & config,
         }
 
         std::cout <<  "upperbound " << upper_bound_no_nodes  << std::endl;
-        upper_bound_no_nodes = 0;
+        //upper_bound_no_nodes = 0;
 
         /***************************
 	 * Do the BFS
@@ -99,7 +99,6 @@ void vertex_separator_algorithm::region_bfs(const PartitionConfig & config,
 				node_queue.push(target);
 				reached_nodes.push_back(target);
                                 accumulated_weight += G.getNodeWeight(target);
-                                std::cout <<  "reached target " <<  target  << std::endl;
 			}
 		} endfor
 	}
@@ -253,10 +252,6 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
                                               std::vector<NodeID> & input_separator,
                                               std::vector<NodeID> & output_separator) {
 
-        for( NodeID v : input_separator) {
-                std::cout <<  " " <<  v ;
-        }
-        std::cout << std::endl;
         // perform BFS into one side
         std::vector<NodeID> lhs_nodes;
         region_bfs(config, G, input_separator, 0, lhs_nodes);
