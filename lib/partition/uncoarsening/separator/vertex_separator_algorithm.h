@@ -44,12 +44,6 @@ class vertex_separator_algorithm {
                                         std::vector< NodeID > & forward_mapping, 
                                         NodeID & source, NodeID & sink);
  
-                void region_bfs(const PartitionConfig & config, 
-                                graph_access & G, 
-                                std::vector< NodeID > & input_separator, 
-                                PartitionID block, 
-                                std::vector< NodeID > & lhs_nodes);
-
                 void compute_vertex_separator(const PartitionConfig & config, 
                                               graph_access & G, 
                                               complete_boundary & boundary, 

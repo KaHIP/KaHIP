@@ -22,6 +22,7 @@
 
 #include <sstream>
 
+#include "area_bfs.h"
 #include "algorithms/push_relabel.h"
 #include "graph_io.h"
 #include "tools/random_functions.h"
@@ -37,71 +38,6 @@ vertex_separator_algorithm::vertex_separator_algorithm() {
 
 vertex_separator_algorithm::~vertex_separator_algorithm() {
 
-}
-
-void vertex_separator_algorithm::region_bfs(const PartitionConfig & config, 
-                graph_access & G, 
-                std::vector< NodeID > & input_separator, 
-                PartitionID block, 
-                std::vector< NodeID > & reached_nodes) {
-        std::queue<NodeID> node_queue;
-	std::vector<int> deepth(G.number_of_nodes(), -1);
-	int cur_deepth = 0;
-       
-        random_functions::permutate_vector_good(input_separator, false);
-	/***************************
-	 * Initialize the Queue
-	 * *************************/
-	for(unsigned int i = 0; i < input_separator.size(); i++) {
-                node_queue.push(input_separator[i]);
-		deepth[input_separator[i]] = cur_deepth;
-	}
-	++cur_deepth;
-
-        NodeWeight size_lhs = 0;
-        NodeWeight size_rhs = 0;
-        forall_nodes(G, node) {
-                if(G.getPartitionIndex(node) == 0) {
-                        size_lhs += G.getNodeWeight(node);
-                } else if( G.getPartitionIndex(node) == 1) {
-                        size_rhs += G.getNodeWeight(node);
-                }
-        } endfor
-        
-        NodeWeight accumulated_weight = 0;
-        NodeID upper_bound_no_nodes;
-
-        if( block == 0 ) {
-                upper_bound_no_nodes = config.upper_bound_partition - size_rhs;
-        } else {
-                upper_bound_no_nodes = config.upper_bound_partition - size_lhs;
-        }
-
-        std::cout <<  "upperbound " << upper_bound_no_nodes  << std::endl;
-        //upper_bound_no_nodes = 0;
-
-        /***************************
-	 * Do the BFS
-	 ***************************/
-	while (!node_queue.empty()) {
-		if(accumulated_weight >= upper_bound_no_nodes) break;
-		NodeID n = node_queue.front();
-		node_queue.pop();
-
-		if (deepth[n] == cur_deepth) {
-			cur_deepth++;
-		}
-		forall_out_edges(G,e,n) {
-			NodeID target = G.getEdgeTarget(e);
-			if(deepth[target] == -1 && G.getPartitionIndex(target) == block 
-                           && accumulated_weight + G.getNodeWeight(target) <= upper_bound_no_nodes) {
-				deepth[target] = cur_deepth;
-				node_queue.push(target);
-				reached_nodes.push_back(target);
-                                accumulated_weight += G.getNodeWeight(target);
-			}
-		} endfor
-	}
 }
 
 void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & config, 
@@ -131,7 +67,6 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
         for( NodeID node : lhs_nodes ) {
                 forall_out_edges(G, e, node) {
                         NodeID target = G.getEdgeTarget(e);
-                        //if(G.getPartitionIndex(target) == 0) {
                         if(G.getPartitionIndex(target) == 0 || G.getPartitionIndex(target) == 1) {
                                 // outer boundary node
                                 outer_lhs_boundary_nodes.push_back(node);
@@ -144,7 +79,6 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
                 forall_out_edges(G, e, node) {
                         NodeID target = G.getEdgeTarget(e);
                         if(G.getPartitionIndex(target) == 0) {
-                        //if(G.getPartitionIndex(target) == 0 || G.getPartitionIndex(target) == 1) {
                                 // outer boundary node
                                 outer_lhs_boundary_nodes.push_back(node);
                                 break;
@@ -155,8 +89,7 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
         for( NodeID node : rhs_nodes ) {
                 forall_out_edges(G, e, node) {
                         NodeID target = G.getEdgeTarget(e);
-                        //if(G.getPartitionIndex(target) == 1) {
-                                if(G.getPartitionIndex(target) == 0 || G.getPartitionIndex(target) == 1) {
+                        if(G.getPartitionIndex(target) == 0 || G.getPartitionIndex(target) == 1) {
                                 // outer boundary node
                                 outer_rhs_boundary_nodes.push_back(node);
                                 break;
@@ -168,7 +101,6 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
                 forall_out_edges(G, e, node) {
                         NodeID target = G.getEdgeTarget(e);
                         if(G.getPartitionIndex(target) == 1) {
-                        //if(G.getPartitionIndex(target) == 0 || G.getPartitionIndex(target) == 1) {
                                 // outer boundary node
                                 outer_rhs_boundary_nodes.push_back(node);
                                 break;
@@ -252,16 +184,14 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
                                               std::vector<NodeID> & input_separator,
                                               std::vector<NodeID> & output_separator) {
 
+        area_bfs abfs;
         // perform BFS into one side
         std::vector<NodeID> lhs_nodes;
-        region_bfs(config, G, input_separator, 0, lhs_nodes);
+        abfs.perform_bfs(config, G, input_separator, 0, lhs_nodes);
 
         // perform BFS into other side
         std::vector<NodeID> rhs_nodes;
-        region_bfs(config, G, input_separator, 1, rhs_nodes);
-
-        std::cout <<  "lhs nodes size " <<  lhs_nodes.size()  << std::endl;
-        std::cout <<  "rhs nodes size " <<  rhs_nodes.size()  << std::endl;
+        abfs.perform_bfs(config, G, input_separator, 1, rhs_nodes);
 
         flow_graph rG;
         NodeID source, sink;
@@ -269,20 +199,17 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
         std::vector< NodeID > forward_mapping;
         build_flow_problem(config, G, lhs_nodes, rhs_nodes, input_separator, rG, forward_mapping, source, sink);
 
-
         std::vector<NodeID> source_set;
 	push_relabel mfmc_solver;
 	FlowType value =  mfmc_solver.solve_max_flow_min_cut(rG, source, sink, true, source_set);
 
-        std::cout <<  "source set size " <<  source_set.size()  << std::endl;
-        std::cout <<  "flow value " <<  value  << std::endl;
-        
         std::vector< bool > is_in_source_set( rG.number_of_nodes(), false);
         std::vector< bool > is_in_separator( G.number_of_nodes(), false);
         for( NodeID v : source_set) {
                 is_in_source_set[v] = true;
         }
 
+        //reconstruct the partition IDs
         forall_nodes(rG, node) {
                 if(node == sink || node == source) continue;
                 if( is_in_source_set[node]) {
@@ -291,7 +218,6 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
                         G.setPartitionIndex(forward_mapping[node],1);
                 }
         } endfor
-
 
         output_separator.clear();
         forall_nodes(rG, node) {
@@ -303,19 +229,21 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
                 node++;
         } endfor
 
-
         std::cout <<  "improvement achieved " <<  (input_separator.size()-value)  << std::endl;
         std::cout <<  "relative improvement achieved " <<  (input_separator.size()/(double)value)  << std::endl;
         std::unordered_map<NodeID, bool> allready_separator;
-        for( int i = 0; i < output_separator.size(); i++) {
+        for( unsigned int i = 0; i < output_separator.size(); i++) {
                 allready_separator[output_separator[i]] = true;
         }
-        is_vertex_separator(G, allready_separator);
-        //is_vertex_separator(G, output_separator);
 
-        std::stringstream filename;
-        filename << "tmppartition" << config.k;
-        graph_io::writePartition(G, filename.str());
+        //perform some sanity checks
+        //TODO remove them later on
+        is_vertex_separator(G, allready_separator);
+        is_vertex_separator(G, output_separator);
+
+        //std::stringstream filename;
+        //filename << "tmppartition" << config.k;
+        //graph_io::writePartition(G, filename.str());
 }
 
 void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig & config, 
@@ -336,7 +264,23 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
                 return;
         }
 
+        std::cout <<  "qgraph_edges size " <<  qgraph_edges.size() << std::endl;
+
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
+
+        //print cut edges head tails (heads in 0)
+        forall_nodes(G, node) {
+                //std::cout <<  "pIdx " <<  G.getPartitionIndex(node)  << std::endl;
+                if(G.getPartitionIndex(node) == 0) {
+                        forall_out_edges(G, e, node) {
+                                NodeID target = G.getEdgeTarget(e);
+                                if( G.getPartitionIndex(target) == 1) {
+                                        std::cout <<  node <<  " " <<  target  << std::endl;
+                                } 
+                        } endfor
+                }
+        } endfor
+        
 
         do {
                 boundary_pair & bp = scheduler->getNext();
@@ -367,6 +311,10 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
                 for( unsigned i = 0; i < separator.size(); i++) {
                         allready_separator[separator[i]] = true;
                 }
+
+                for( NodeID node : separator ) {
+                        std::cout <<  "node " <<  node  << std::endl;
+                }
                 //*************************** end **************************************** 
         } while(!scheduler->hasFinished());
 
@@ -376,7 +324,14 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
         for( it = allready_separator.begin(); it != allready_separator.end(); ++it) {
                 overall_separator.push_back(it->first);
         }
+        std::cout <<  "performing check "  << std::endl;
         is_vertex_separator(G, allready_separator);         
+        std::cout <<  "performing check done "  << std::endl;
+
+        std::cout <<  "performing check "  << std::endl;
+        is_vertex_separator(G, overall_separator);         
+        std::cout <<  "performing check done "  << std::endl;
+
 }
 
 void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig & config, 
@@ -404,6 +359,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
         boundary.getQuotientGraphEdges(qgraph_edges);
 
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
+        std::cout <<  "qgraph_edges size " <<  qgraph_edges.size() << std::endl;
 
         std::unordered_map<NodeID, bool> allready_separator;
         do {
@@ -452,9 +408,10 @@ bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::unor
                                 if( separator.find(node)   == separator.end() && 
                                     separator.find(target) == separator.end()) {
                                         std::cout <<  "not a separator! " <<  node <<  " " <<  target << std::endl;
-                                        std::cout <<  G.getPartitionIndex(node)  << std::endl;
-                                        std::cout <<  G.getPartitionIndex(target)  << std::endl;
+                                        std::cout <<  "PartitionIndex node " << G.getPartitionIndex(node)  << std::endl;
+                                        std::cout <<  "PartitionIndex target " << G.getPartitionIndex(target)  << std::endl;
                                         ASSERT_TRUE(false);
+                                        exit(0);
                                 } 
                         } 
                 } endfor
@@ -492,6 +449,7 @@ bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::vect
         if(components.size() > 1) return true;
 
         std::cout <<  "not a separator!"  << std::endl;
+        exit(0);
         return false;
 }
 

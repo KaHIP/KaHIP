@@ -89,17 +89,12 @@ int main(int argn, char **argv) {
         quality_metrics qm;
 
         std::cout <<  "computing a node separator"  << std::endl;
+
+        partition_config.mode_node_separators = true;
+        partition_config.use_fullmultigrid    = false;
+        partition_config.use_wcycles          = false;
+        partition_config.matching_type        = MATCHING_GPA;
         partitioner.perform_partitioning(partition_config, G);
-
-        complete_boundary boundary(&G);
-        boundary.build();
-
-        vertex_separator_algorithm vsa;
-        std::vector<NodeID> separator;
-        vsa.compute_vertex_separator(partition_config, G, boundary, separator);
-        
-        std::vector<NodeID> output_separator;
-        vsa.improve_vertex_separator(partition_config, G, separator, output_separator);
 
         // ******************************* done partitioning *****************************************       
         ofs.close();
@@ -107,10 +102,10 @@ int main(int argn, char **argv) {
         std::cout <<  "time spent to compute vertex separator " << t.elapsed()  << std::endl;
        
         // output some information about the partition that we have computed 
-        std::cout << "initial separator size " << separator.size()        << std::endl;
-        std::cout << "new separator size "     << output_separator.size() << std::endl;
-        std::cout << "cut \t\t"                << qm.edge_cut(G)          << std::endl;
-        std::cout << "finalobjective  "        << qm.edge_cut(G)          << std::endl;
+        //std::cout << "initial separator size " << separator.size()        << std::endl;
+        //std::cout << "new separator size "     << output_separator.size() << std::endl;
+        //std::cout << "cut \t\t"                << qm.edge_cut(G)          << std::endl;
+        //std::cout << "finalobjective  "        << qm.edge_cut(G)          << std::endl;
 
         
 }

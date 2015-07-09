@@ -94,8 +94,7 @@ void coarsening::perform_coarsening(const PartitionConfig & partition_config, gr
                 contraction_stop = coarsening_stop_rule->stop(no_of_finer_vertices, no_of_coarser_vertices);
               
                 no_of_finer_vertices = no_of_coarser_vertices;
-                PRINT(std::cout <<  "no of coarser vertices " << no_of_coarser_vertices   
-                                <<  " and no of edges " <<  coarser->number_of_edges() << std::endl;)
+                std::cout <<  "no of coarser vertices " << no_of_coarser_vertices <<  " and no of edges " <<  coarser->number_of_edges() << std::endl;
 
                 finer = coarser;
 

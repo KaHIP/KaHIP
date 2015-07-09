@@ -177,6 +177,7 @@ void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig 
 
 void graph_partitioner::single_run( PartitionConfig & config, graph_access & G) {
         for( unsigned i = 1; i <= config.global_cycle_iterations; i++) {
+                std::cout <<  "single run"  << std::endl;
                 PRINT(std::cout <<  "vcycle " << i << " of " << config.global_cycle_iterations  << std::endl;)
                         if(config.use_wcycles || config.use_fullmultigrid)  {
                                 wcycle_partitioner w_partitioner;

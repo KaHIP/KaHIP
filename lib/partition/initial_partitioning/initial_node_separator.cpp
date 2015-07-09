@@ -21,18 +21,24 @@ void initial_node_separator::compute_node_separator( const PartitionConfig & con
         quality_metrics qm;
 
         PartitionConfig partition_config = config;
-        std::cout <<  "computing a node separator"  << std::endl;
+        std::cout <<  "initially computing a node separator"  << std::endl;
+        partition_config.mode_node_separators = false;
         partitioner.perform_partitioning(partition_config, G);
 
         complete_boundary boundary(&G);
         boundary.build();
 
+        std::cout <<  "now transforming "  << std::endl;
         vertex_separator_algorithm vsa;
         std::vector<NodeID> separator;
-        vsa.compute_vertex_separator(partition_config, G, boundary, separator);
+        vsa.compute_vertex_separator_simple(partition_config, G, boundary, separator);
         vsa.is_vertex_separator(G, separator);
+        std::cout <<  "separator size " <<  separator.size()  << std::endl;
+        std::cout <<  "now improving"  << std::endl;
         
         std::vector<NodeID> output_separator;
         vsa.improve_vertex_separator(partition_config, G, separator, output_separator);
+        vsa.is_vertex_separator(G, output_separator);
+        std::cout <<  "here"  << std::endl;
 
 }
