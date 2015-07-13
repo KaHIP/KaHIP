@@ -97,7 +97,6 @@ int main(int argn, char **argv) {
         vertex_separator_algorithm vsa;
         std::vector<NodeID> separator;
         vsa.compute_vertex_separator(partition_config, G, boundary, separator);
-        vsa.is_vertex_separator(G, separator);
         
         std::vector<NodeID> output_separator;
         vsa.improve_vertex_separator(partition_config, G, separator, output_separator);
@@ -106,12 +105,15 @@ int main(int argn, char **argv) {
         ofs.close();
         std::cout.rdbuf(backup);
         std::cout <<  "time spent to compute vertex separator " << t.elapsed()  << std::endl;
+        std::cout <<  "=======================================" << std::endl;
        
+        G.set_partition_count(3);
         // output some information about the partition that we have computed 
         std::cout << "initial separator size " << separator.size()        << std::endl;
         std::cout << "new separator size "     << output_separator.size() << std::endl;
         std::cout << "cut \t\t"                << qm.edge_cut(G)          << std::endl;
         std::cout << "finalobjective  "        << qm.edge_cut(G)          << std::endl;
+        std::cout << "balance "                << qm.balance_separator(G)          << std::endl;
 
         
 }

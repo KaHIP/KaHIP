@@ -52,6 +52,8 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
         std::vector<NodeID> outer_lhs_boundary_nodes;
         std::vector<NodeID> outer_rhs_boundary_nodes;
 
+        std::cout <<  "lhsnodes size " <<  lhs_nodes.size()  << std::endl;
+        std::cout <<  "rhsnodes size " <<  rhs_nodes.size()  << std::endl;
         for( NodeID node : lhs_nodes ) {
                 G.setPartitionIndex(node, 3);
         }
@@ -177,6 +179,14 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
         }
 
         rG.finish_construction();
+        //print graph
+        //forall_nodes(rG, node) {
+                //forall_out_edges(rG, e, node) {
+                        //NodeID target = rG.getEdgeTarget(node, e);
+                        //std::cout <<  "node " <<  node <<  " " <<  target  <<  " " <<  rG.getEdgeCapacity(node,e) << std::endl;
+                //} endfor
+        //} endfor
+        
 }
 
 void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig & config, 
@@ -203,6 +213,8 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
 	push_relabel mfmc_solver;
 	FlowType value =  mfmc_solver.solve_max_flow_min_cut(rG, source, sink, true, source_set);
 
+        std::cout <<  "source set size " <<  source_set.size()  << std::endl;
+        std::cout <<  "graph size " <<  rG.number_of_nodes()  << std::endl;
         std::vector< bool > is_in_source_set( rG.number_of_nodes(), false);
         std::vector< bool > is_in_separator( G.number_of_nodes(), false);
         for( NodeID v : source_set) {
@@ -229,8 +241,15 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
                 node++;
         } endfor
 
-        std::cout <<  "improvement achieved " <<  (input_separator.size()-value)  << std::endl;
-        std::cout <<  "relative improvement achieved " <<  (input_separator.size()/(double)value)  << std::endl;
+        NodeWeight separator_weight = 0;
+        for( NodeID v : input_separator) {
+                separator_weight += G.getNodeWeight(v);
+        }
+
+        std::cout <<  "separator weight " <<  separator_weight  << std::endl;
+        std::cout <<  "flow value " <<  value << std::endl;
+        std::cout <<  "improvement achieved " <<  (separator_weight-value)  << std::endl;
+        std::cout <<  "relative improvement achieved " <<  (separator_weight/(double)value)  << std::endl;
         std::unordered_map<NodeID, bool> allready_separator;
         for( unsigned int i = 0; i < output_separator.size(); i++) {
                 allready_separator[output_separator[i]] = true;
@@ -238,8 +257,11 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
 
         //perform some sanity checks
         //TODO remove them later on
+        //
+        std::cout <<  "old test separator "  << std::endl;
         is_vertex_separator(G, allready_separator);
-        is_vertex_separator(G, output_separator);
+        //std::cout <<  "new test separator "  << std::endl;
+        //is_vertex_separator(G, output_separator);
 
         //std::stringstream filename;
         //filename << "tmppartition" << config.k;
@@ -328,9 +350,9 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
         is_vertex_separator(G, allready_separator);         
         std::cout <<  "performing check done "  << std::endl;
 
-        std::cout <<  "performing check "  << std::endl;
-        is_vertex_separator(G, overall_separator);         
-        std::cout <<  "performing check done "  << std::endl;
+        //std::cout <<  "performing check "  << std::endl;
+        //is_vertex_separator(G, overall_separator);         
+        //std::cout <<  "performing check done "  << std::endl;
 
 }
 
@@ -420,36 +442,36 @@ bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::unor
 }
 
 // vertex separator test on connected graphs
-bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::vector<NodeID > & separator) {
-        forall_nodes(G, node) {
-                G.setPartitionIndex(node, 0);
-        } endfor
+//bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::vector<NodeID > & separator) {
+        //forall_nodes(G, node) {
+                //G.setPartitionIndex(node, 0);
+        //} endfor
         
-        for( unsigned i = 0; i < separator.size(); i++) {
-                G.setPartitionIndex(separator[i], 2);
-        }
+        //for( unsigned i = 0; i < separator.size(); i++) {
+                //G.setPartitionIndex(separator[i], 2);
+        //}
         
-        graph_extractor gE;
-        graph_access Q;
-        std::vector<NodeID> mapping;
-        gE.extract_block(G, Q, 0, mapping);
+        //graph_extractor gE;
+        //graph_access Q;
+        //std::vector<NodeID> mapping;
+        //gE.extract_block(G, Q, 0, mapping);
 
-        union_find uf(Q.number_of_nodes());
-        forall_nodes(Q, source) {
-                forall_out_edges(Q, e, source) {
-                        NodeID target = Q.getEdgeTarget(e);
-                        uf.Union(source, target); 
-                } endfor
-        } endfor
+        //union_find uf(Q.number_of_nodes());
+        //forall_nodes(Q, source) {
+                //forall_out_edges(Q, e, source) {
+                        //NodeID target = Q.getEdgeTarget(e);
+                        //uf.Union(source, target); 
+                //} endfor
+        //} endfor
 
-        std::unordered_map<long,long> components;
-        forall_nodes(Q, node) {
-                components[uf.Find(node)] = 0; //now the component exists
-        } endfor
-        if(components.size() > 1) return true;
+        //std::unordered_map<long,long> components;
+        //forall_nodes(Q, node) {
+                //components[uf.Find(node)] = 0; //now the component exists
+        //} endfor
+        //if(components.size() > 1) return true;
 
-        std::cout <<  "not a separator!"  << std::endl;
-        exit(0);
-        return false;
-}
+        //std::cout <<  "not a separator! with test connected comp"  << std::endl;
+        //exit(0);
+        //return false;
+//}
 

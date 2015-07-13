@@ -32,16 +32,10 @@ void initial_node_separator::compute_node_separator( const PartitionConfig & con
         vertex_separator_algorithm vsa;
         std::vector<NodeID> separator;
         vsa.compute_vertex_separator_simple(partition_config, G, boundary, separator);
-        vsa.is_vertex_separator(G, separator);
-        std::cout <<  "separator size " <<  separator.size()  << std::endl;
-        for( NodeID v : separator) {
-                std::cout <<  "separator " <<  v  << std::endl;
-        }
-        std::cout <<  "now improving"  << std::endl;
+        std::cout <<  "initial separator size is " <<  separator.size()  << std::endl;
         
         std::vector<NodeID> output_separator;
         vsa.improve_vertex_separator(partition_config, G, separator, output_separator);
-        vsa.is_vertex_separator(G, output_separator);
-        std::cout <<  "here"  << std::endl;
+        std::cout <<  "new separator size is " <<  output_separator.size()  << std::endl;
 
 }

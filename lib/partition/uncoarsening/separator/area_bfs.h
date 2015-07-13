@@ -47,12 +47,15 @@ class area_bfs {
                         NodeWeight accumulated_weight = 0;
                         NodeID upper_bound_no_nodes;
 
+                        std::cout <<  "upp" <<  config.upper_bound_partition  << std::endl;
                         if( block == 0 ) {
-                                upper_bound_no_nodes = config.upper_bound_partition - size_rhs;
+                                upper_bound_no_nodes = config.upper_bound_partition > size_rhs ? config.upper_bound_partition - size_rhs : 0;
                         } else {
-                                upper_bound_no_nodes = config.upper_bound_partition - size_lhs;
+                                upper_bound_no_nodes = config.upper_bound_partition > size_lhs ? config.upper_bound_partition - size_lhs : 0;
                         }
 
+                        //upper_bound_no_nodes = 0;
+                        std::cout <<  "upperbound " <<  upper_bound_no_nodes  << std::endl;
                         /***************************
                          * Do the BFS
                          ***************************/

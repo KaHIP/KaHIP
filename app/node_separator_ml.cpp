@@ -101,11 +101,15 @@ int main(int argn, char **argv) {
         std::cout.rdbuf(backup);
         std::cout <<  "time spent to compute vertex separator " << t.elapsed()  << std::endl;
        
-        // output some information about the partition that we have computed 
-        //std::cout << "initial separator size " << separator.size()        << std::endl;
-        //std::cout << "new separator size "     << output_separator.size() << std::endl;
-        //std::cout << "cut \t\t"                << qm.edge_cut(G)          << std::endl;
-        //std::cout << "finalobjective  "        << qm.edge_cut(G)          << std::endl;
+        NodeWeight ns_size = 0;
+        forall_nodes(G, node) {
+                if(G.getPartitionIndex(node) == G.getSeparatorBlock()) {
+                        ns_size++;
+                }
+        } endfor
+        std::cout << "separator size " << ns_size  << std::endl;
+        G.set_partition_count(3);
+        std::cout << "balance "        << qm.balance_separator(G) << std::endl;
 
         
 }

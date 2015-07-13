@@ -69,6 +69,7 @@ void vertex_separator_flow_solver::find_separator(const PartitionConfig & config
                         separator.push_back(separator_tmp[i]);                
                 }
         }
+
         std::vector<int>::iterator it2;
         std::vector<int> separator_tmp2(lhs_nodes.size() + rhs_nodes.size(), -1);
         it2 = std::set_difference(lhs_nodes.begin(), lhs_nodes.end(), S.begin(), S.end(), separator_tmp2.begin()); 
