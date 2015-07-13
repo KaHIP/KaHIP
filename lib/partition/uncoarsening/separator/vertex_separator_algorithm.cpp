@@ -52,8 +52,8 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
         std::vector<NodeID> outer_lhs_boundary_nodes;
         std::vector<NodeID> outer_rhs_boundary_nodes;
 
-        std::cout <<  "lhsnodes size " <<  lhs_nodes.size()  << std::endl;
-        std::cout <<  "rhsnodes size " <<  rhs_nodes.size()  << std::endl;
+        //std::cout <<  "lhsnodes size " <<  lhs_nodes.size()  << std::endl;
+        //std::cout <<  "rhsnodes size " <<  rhs_nodes.size()  << std::endl;
         for( NodeID node : lhs_nodes ) {
                 G.setPartitionIndex(node, 3);
         }
@@ -179,14 +179,6 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
         }
 
         rG.finish_construction();
-        //print graph
-        //forall_nodes(rG, node) {
-                //forall_out_edges(rG, e, node) {
-                        //NodeID target = rG.getEdgeTarget(node, e);
-                        //std::cout <<  "node " <<  node <<  " " <<  target  <<  " " <<  rG.getEdgeCapacity(node,e) << std::endl;
-                //} endfor
-        //} endfor
-        
 }
 
 void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig & config, 
@@ -213,8 +205,8 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
 	push_relabel mfmc_solver;
 	FlowType value =  mfmc_solver.solve_max_flow_min_cut(rG, source, sink, true, source_set);
 
-        std::cout <<  "source set size " <<  source_set.size()  << std::endl;
-        std::cout <<  "graph size " <<  rG.number_of_nodes()  << std::endl;
+        //std::cout <<  "source set size " <<  source_set.size()  << std::endl;
+        //std::cout <<  "graph size " <<  rG.number_of_nodes()  << std::endl;
         std::vector< bool > is_in_source_set( rG.number_of_nodes(), false);
         std::vector< bool > is_in_separator( G.number_of_nodes(), false);
         for( NodeID v : source_set) {
@@ -246,26 +238,18 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
                 separator_weight += G.getNodeWeight(v);
         }
 
-        std::cout <<  "separator weight " <<  separator_weight  << std::endl;
-        std::cout <<  "flow value " <<  value << std::endl;
-        std::cout <<  "improvement achieved " <<  (separator_weight-value)  << std::endl;
-        std::cout <<  "relative improvement achieved " <<  (separator_weight/(double)value)  << std::endl;
+        //std::cout <<  "separator weight " <<  separator_weight  << std::endl;
+        //std::cout <<  "flow value " <<  value << std::endl;
+        //std::cout <<  "improvement achieved " <<  (separator_weight-value)  << std::endl;
+        //std::cout <<  "relative improvement achieved " <<  (separator_weight/(double)value)  << std::endl;
         std::unordered_map<NodeID, bool> allready_separator;
         for( unsigned int i = 0; i < output_separator.size(); i++) {
                 allready_separator[output_separator[i]] = true;
         }
 
-        //perform some sanity checks
         //TODO remove them later on
-        //
-        std::cout <<  "old test separator "  << std::endl;
         is_vertex_separator(G, allready_separator);
-        //std::cout <<  "new test separator "  << std::endl;
-        //is_vertex_separator(G, output_separator);
 
-        //std::stringstream filename;
-        //filename << "tmppartition" << config.k;
-        //graph_io::writePartition(G, filename.str());
 }
 
 void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig & config, 
@@ -286,23 +270,7 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
                 return;
         }
 
-        std::cout <<  "qgraph_edges size " <<  qgraph_edges.size() << std::endl;
-
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
-
-        //print cut edges head tails (heads in 0)
-        forall_nodes(G, node) {
-                //std::cout <<  "pIdx " <<  G.getPartitionIndex(node)  << std::endl;
-                if(G.getPartitionIndex(node) == 0) {
-                        forall_out_edges(G, e, node) {
-                                NodeID target = G.getEdgeTarget(e);
-                                if( G.getPartitionIndex(target) == 1) {
-                                        std::cout <<  node <<  " " <<  target  << std::endl;
-                                } 
-                        } endfor
-                }
-        } endfor
-        
 
         do {
                 boundary_pair & bp = scheduler->getNext();
@@ -381,7 +349,6 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
         boundary.getQuotientGraphEdges(qgraph_edges);
 
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
-        std::cout <<  "qgraph_edges size " <<  qgraph_edges.size() << std::endl;
 
         std::unordered_map<NodeID, bool> allready_separator;
         do {

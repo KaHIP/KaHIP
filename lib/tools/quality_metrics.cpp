@@ -217,6 +217,17 @@ double quality_metrics::balance_separator(graph_access& G) {
         return percentage;
 }
 
+NodeWeight quality_metrics::separator_weight(graph_access& G) {
+        NodeWeight separator_size = 0;
+        PartitionID separator_ID = G.getSeparatorBlock();
+        forall_nodes(G, node) {
+                if( G.getPartitionIndex(node) == separator_ID) 
+                        separator_size += G.getNodeWeight(node);
+        } endfor
+
+        return separator_size;
+}
+
 double quality_metrics::balance(graph_access& G) {
         std::vector<PartitionID> part_weights(G.get_partition_count(), 0);
 

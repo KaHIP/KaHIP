@@ -15,6 +15,7 @@ public:
 
         // method computes an initial node separator
         void compute_node_separator( const PartitionConfig & config, graph_access & G);
+        NodeWeight single_run( const PartitionConfig & config, graph_access & G);
 };
 
 
