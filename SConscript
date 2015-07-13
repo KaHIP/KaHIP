@@ -114,8 +114,8 @@ if env['program'] == 'node_separator':
         env.Program('node_separator', ['app/node_separator.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
 
 if env['program'] == 'node_separator_ml':
-        env.Append(CXXFLAGS = '-DMODE_DEVEL -DMODE_NODESEP')
-        env.Append(CCFLAGS  = '-DMODE_DEVEL -DMODE_NODESEP')
+        env.Append(CXXFLAGS = ' -DMODE_NODESEP')
+        env.Append(CCFLAGS  = ' -DMODE_NODESEP')
         env.Program('node_separator_ml', ['app/node_separator_ml.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
 
 if env['program'] == 'label_propagation':

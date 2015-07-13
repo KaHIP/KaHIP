@@ -291,6 +291,10 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.repetitions                  = 1;
         partition_config.node_ordering                = DEGREE_NODEORDERING;
 
+        //node separator parameters
+        partition_config.max_flow_improv_steps        = 5;
+        partition_config.max_initial_ns_tries         = 5;
+
 }
 
 inline void configuration::standardsnw( PartitionConfig & partition_config ) {

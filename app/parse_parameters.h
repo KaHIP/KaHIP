@@ -147,6 +147,8 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *cluster_upperbound                   = arg_int0(NULL, "cluster_upperbound", NULL, "Set a size-constraint on the size of a cluster. Default: none");
         struct arg_int *label_propagation_iterations         = arg_int0(NULL, "label_propagation_iterations", NULL, "Set the number of label propgation iterations. Default: 10.");
 
+        struct arg_int *max_initial_ns_tries                 = arg_int0(NULL, "max_initial_ns_tries", NULL, "Number of NS tries during initial partitioning.");
+        struct arg_int *max_flow_improv_steps                = arg_int0(NULL, "max_flow_improv_steps", NULL, "Maximum number of tries to improve a node separator using flows.");
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -187,6 +189,15 @@ int parse_parameters(int argn, char **argv,
                 enforce_balance, 
 		balance_edges,
                 filename_output, 
+#elif defined MODE_NODESEP
+                k,
+                imbalance,  
+                preconfiguration, 
+                time_limit, 
+                edge_rating,
+                max_flow_improv_steps,
+                max_initial_ns_tries,
+
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
@@ -317,6 +328,14 @@ int parse_parameters(int argn, char **argv,
 
         if(amg_iterations->count > 0) {
                 partition_config.amg_iterations = amg_iterations->ival[0];
+        }
+
+        if(max_initial_ns_tries->count > 0) {
+                partition_config.max_initial_ns_tries = max_initial_ns_tries->ival[0];
+        }
+
+        if(max_flow_improv_steps->count > 0) {
+                partition_config.max_flow_improv_steps = max_flow_improv_steps->ival[0];
         }
 
         if(kabaE_internal_bal->count > 0) {

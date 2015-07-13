@@ -27,6 +27,7 @@
 #include "graph_io.h"
 #include "tools/random_functions.h"
 #include "tools/graph_extractor.h"
+#include "tools/quality_metrics.h"
 #include "data_structure/union_find.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/quotient_graph_scheduling/simple_quotient_graph_scheduler.h"
 #include "vertex_separator_algorithm.h"
@@ -181,11 +182,13 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
         rG.finish_construction();
 }
 
-void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig & config, 
+NodeWeight vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig & config, 
                                               graph_access & G, 
                                               std::vector<NodeID> & input_separator,
                                               std::vector<NodeID> & output_separator) {
 
+        quality_metrics qm;
+        NodeWeight old_separator_weight = qm.separator_weight(G);
         area_bfs abfs;
         // perform BFS into one side
         std::vector<NodeID> lhs_nodes;
@@ -233,10 +236,6 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
                 node++;
         } endfor
 
-        NodeWeight separator_weight = 0;
-        for( NodeID v : input_separator) {
-                separator_weight += G.getNodeWeight(v);
-        }
 
         //std::cout <<  "separator weight " <<  separator_weight  << std::endl;
         //std::cout <<  "flow value " <<  value << std::endl;
@@ -250,6 +249,7 @@ void vertex_separator_algorithm::improve_vertex_separator(const PartitionConfig 
         //TODO remove them later on
         is_vertex_separator(G, allready_separator);
 
+        return old_separator_weight - value; // return improvement
 }
 
 void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig & config, 

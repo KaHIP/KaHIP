@@ -54,7 +54,7 @@ void initial_node_separator::compute_node_separator( const PartitionConfig & con
         std::vector< NodeID > best_separator(G.number_of_nodes(),0);
         NodeWeight best_separator_size = std::numeric_limits< NodeWeight >::max();
 
-        for( unsigned int i  = 0; i  < 10; i ++) {
+        for( unsigned int i  = 0; i  < config.max_initial_ns_tries; i++) {
                 NodeWeight cur_separator_size = single_run(config, G);
                 if(cur_separator_size < best_separator_size) {
                         forall_nodes(G, node) {

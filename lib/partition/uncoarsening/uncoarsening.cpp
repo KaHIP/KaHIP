@@ -138,18 +138,22 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
                 graph_access* G = hierarchy.pop_finer_and_project();
                 std::cout << "log>" << "unrolling graph with " << G->number_of_nodes() << std::endl;
 
-                vertex_separator_algorithm vsa;
+                for( int i = 0; i < config.max_flow_improv_steps; i++) {
+                        vertex_separator_algorithm vsa;
 
-                std::vector<NodeID> separator;
-                forall_nodes((*G), node) {
-                        if( G->getPartitionIndex(node) == 2) {
-                                separator.push_back(node);
-                        }
-                } endfor
-                
-                std::vector<NodeID> output_separator;
-                vsa.improve_vertex_separator(config, *G, separator, output_separator);
-                std::cout <<  "separator size " <<  qm.separator_weight(*G)  << std::endl;
+                        std::vector<NodeID> separator;
+                        forall_nodes((*G), node) {
+                                if( G->getPartitionIndex(node) == 2) {
+                                        separator.push_back(node);
+                                }
+                        } endfor
+
+                        std::vector<NodeID> output_separator;
+                        NodeWeight improvement = vsa.improve_vertex_separator(config, *G, separator, output_separator);
+                        //std::cout <<  "separator size " <<  qm.separator_weight(*G)  << std::endl;
+                        //std::cout <<  "improvement " <<  improvement  << std::endl;
+                        if(improvement == 0) break;
+                }
         }
 
         return 0;
