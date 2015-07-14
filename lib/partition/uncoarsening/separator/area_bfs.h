@@ -60,12 +60,13 @@ class area_bfs {
                         NodeID upper_bound_no_nodes;
 
                         if( block == 0 ) {
-                                upper_bound_no_nodes = std::max((int)(config.upper_bound_partition - size_rhs - size_sep), 0);
+                                upper_bound_no_nodes = std::max((int)(config.region_factor_node_separators*config.upper_bound_partition - size_rhs - size_sep), 0);
                         } else {
-                                upper_bound_no_nodes = std::max((int)(config.upper_bound_partition - size_lhs - size_sep), 0);
+                                upper_bound_no_nodes = std::max((int)(config.region_factor_node_separators*config.upper_bound_partition - size_lhs - size_sep), 0);
                         }
 
-                        //upper_bound_no_nodes = 0;
+                        //upper_bound_no_nodes *= config.region_factor_node_separators ;
+                        //std::cout <<  "region facotr " <<  config.region_factor_node_separators  << std::endl;
                         //std::cout <<  "upper bound no nodes " <<  upper_bound_no_nodes  << std::endl;
                         /***************************
                          * Do the BFS

@@ -49,6 +49,11 @@ class vertex_separator_algorithm {
                                               complete_boundary & boundary, 
                                               std::vector<NodeID> & overall_separator);
 
+                NodeWeight improve_vertex_separator_internal(const PartitionConfig & config, 
+                                              graph_access & G, 
+                                              std::vector<NodeID> & input_separator,
+                                              std::vector<NodeID> & output_separator);
+
                 NodeWeight improve_vertex_separator(const PartitionConfig & config, 
                                               graph_access & G, 
                                               std::vector<NodeID> & input_separator,

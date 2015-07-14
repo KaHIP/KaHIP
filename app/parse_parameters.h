@@ -149,6 +149,7 @@ int parse_parameters(int argn, char **argv,
 
         struct arg_int *max_initial_ns_tries                 = arg_int0(NULL, "max_initial_ns_tries", NULL, "Number of NS tries during initial partitioning.");
         struct arg_int *max_flow_improv_steps                = arg_int0(NULL, "max_flow_improv_steps", NULL, "Maximum number of tries to improve a node separator using flows.");
+        struct arg_dbl *region_factor_node_separators        = arg_dbl0(NULL, "region_factor_node_separators", NULL, "Region factor for flow problems to obtain node separators.");
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -197,7 +198,7 @@ int parse_parameters(int argn, char **argv,
                 edge_rating,
                 max_flow_improv_steps,
                 max_initial_ns_tries,
-
+                region_factor_node_separators,
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
@@ -336,6 +337,10 @@ int parse_parameters(int argn, char **argv,
 
         if(max_flow_improv_steps->count > 0) {
                 partition_config.max_flow_improv_steps = max_flow_improv_steps->ival[0];
+        }
+
+        if(region_factor_node_separators->count > 0) {
+                partition_config.region_factor_node_separators = region_factor_node_separators->dval[0];
         }
 
         if(kabaE_internal_bal->count > 0) {

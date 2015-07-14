@@ -193,6 +193,52 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator(const PartitionC
                                               std::vector<NodeID> & input_separator,
                                               std::vector<NodeID> & output_separator) {
 
+        std::vector< NodeID > current_solution(G.number_of_nodes(), 0);
+        forall_nodes(G, node) {
+                current_solution[node] = G.getPartitionIndex(node);
+        } endfor
+        
+        bool solution_imbalanced;
+        NodeWeight solution_value;
+        double current_region_factor = config.region_factor_node_separators;
+        double iteration = 0;
+        quality_metrics qm;
+        do {
+                PartitionConfig cfg = config;
+                cfg.region_factor_node_separators = current_region_factor;
+                solution_imbalanced = false;
+                solution_value = improve_vertex_separator_internal( cfg , G, input_separator, output_separator);
+                G.set_partition_count(3);
+                double balance = qm.balance_separator(G);
+                std::cout <<  "balance " <<  balance  << std::endl;
+                std::cout <<  "improvement " <<  solution_value  << std::endl;
+                std::cout <<  "region facotr  "<<  current_region_factor  << std::endl;
+                if( balance > 1.2 ) {
+                        solution_imbalanced = true;
+                        current_region_factor /= 2;
+                        current_region_factor = std::max(current_region_factor, 1.0);
+
+                        forall_nodes(G, node) {
+                                G.setPartitionIndex(node, current_solution[node]);
+                        } endfor
+                }
+                iteration++;
+        } while ( solution_imbalanced && iteration < 6);
+
+        if( solution_imbalanced ) {
+                PartitionConfig cfg = config;
+                cfg.region_factor_node_separators = 1;
+                solution_value = improve_vertex_separator_internal( cfg , G, input_separator, output_separator);
+        }
+
+        return solution_value;
+}
+
+NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const PartitionConfig & config, 
+                                              graph_access & G, 
+                                              std::vector<NodeID> & input_separator,
+                                              std::vector<NodeID> & output_separator) {
+
         quality_metrics qm;
         NodeWeight old_separator_weight = qm.separator_weight(G);
         area_bfs abfs;

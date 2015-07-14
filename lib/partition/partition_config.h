@@ -327,6 +327,8 @@ struct PartitionConfig
 
         int max_initial_ns_tries;
 
+        double region_factor_node_separators;
+
         //=======================================
         //=========LABEL PROPAGATION=============
         //=======================================
