@@ -36,26 +36,37 @@ class area_bfs {
 
                         NodeWeight size_lhs = 0;
                         NodeWeight size_rhs = 0;
+                        NodeWeight size_sep = 0;
+
+                        NodeWeight count_lhs = 0;
+                        NodeWeight count_rhs = 0;
                         forall_nodes(G, node) {
                                 if(G.getPartitionIndex(node) == 0) {
                                         size_lhs += G.getNodeWeight(node);
+                                        count_lhs++;
                                 } else if( G.getPartitionIndex(node) == 1) {
                                         size_rhs += G.getNodeWeight(node);
+                                        count_rhs++;
+                                } else if(G.getPartitionIndex(node) == 2) {
+                                        size_sep += G.getNodeWeight(node);
                                 }
                         } endfor
-
+                        //std::cout <<  "size lhs " <<  size_lhs << std::endl;
+                        //std::cout <<  "size rhs " <<  size_rhs << std::endl;
+                        //std::cout <<  "size sep " <<  size_sep << std::endl;
+                        //std::cout <<  "count lhs " <<  count_lhs << std::endl;
+                        //std::cout <<  "count rhs " <<  count_rhs << std::endl;
                         NodeWeight accumulated_weight = 0;
                         NodeID upper_bound_no_nodes;
 
-                        //std::cout <<  "upp" <<  config.upper_bound_partition  << std::endl;
                         if( block == 0 ) {
-                                upper_bound_no_nodes = config.upper_bound_partition > size_rhs ? config.upper_bound_partition - size_rhs : 0;
+                                upper_bound_no_nodes = std::max((int)(config.upper_bound_partition - size_rhs - size_sep), 0);
                         } else {
-                                upper_bound_no_nodes = config.upper_bound_partition > size_lhs ? config.upper_bound_partition - size_lhs : 0;
+                                upper_bound_no_nodes = std::max((int)(config.upper_bound_partition - size_lhs - size_sep), 0);
                         }
 
                         //upper_bound_no_nodes = 0;
-                        //std::cout <<  "upperbound " <<  upper_bound_no_nodes  << std::endl;
+                        //std::cout <<  "upper bound no nodes " <<  upper_bound_no_nodes  << std::endl;
                         /***************************
                          * Do the BFS
                          ***************************/
@@ -78,6 +89,7 @@ class area_bfs {
                                         }
                                 } endfor
                         }
+                        //std::cout <<  "accumulated weight is " <<  accumulated_weight  << std::endl;
                 }
 
 };
