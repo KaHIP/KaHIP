@@ -210,11 +210,11 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator(const PartitionC
                 solution_value = improve_vertex_separator_internal( cfg , G, input_separator, output_separator);
                 G.set_partition_count(3);
                 double balance = qm.balance_separator(G);
-                std::cout <<  "balance " <<  balance  << std::endl;
-                std::cout <<  "improvement " <<  solution_value  << std::endl;
-                std::cout <<  "region facotr  "<<  current_region_factor  << std::endl;
+                //std::cout <<  "balance " <<  balance  << std::endl;
+                //std::cout <<  "improvement " <<  solution_value  << std::endl;
+                //std::cout <<  "region facotr  "<<  current_region_factor  << std::endl;
                 if( balance > 1.2 ) {
-                        std::cout <<  "imbalanced! " <<  balance  << std::endl;
+                        //std::cout <<  "imbalanced! " <<  balance  << std::endl;
                         solution_imbalanced = true;
                         current_region_factor /= 2;
                         current_region_factor = std::max(current_region_factor, 1.0);
