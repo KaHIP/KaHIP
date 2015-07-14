@@ -54,31 +54,6 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
         std::vector<NodeID> outer_lhs_boundary_nodes;
         std::vector<NodeID> outer_rhs_boundary_nodes;
 
-        //std::cout <<  "G.nodes " <<  G.number_of_nodes()  << std::endl;
-        //std::cout <<  "lhsnodes size " <<  lhs_nodes.size()  << std::endl;
-        //std::cout <<  "rhsnodes size " <<  rhs_nodes.size()  << std::endl;
-        //std::cout <<  "separator nodes size " <<  separator_nodes.size()  << std::endl;
-        //graph_extractor ge;
-        //graph_access B;
-        //std::vector< NodeID > vec;
-        //ge.extract_block(G, B, 0, vec);
-
-        //std::cout <<  "bloc zero num " << B.number_of_nodes()  << std::endl;
-        //union_find uf(B.number_of_nodes());
-        //forall_nodes(B, source) {
-                //forall_out_edges(B, e, source) {
-                        //NodeID target = B.getEdgeTarget(e);
-                        //uf.Union(source, target); 
-                //} endfor
-        //} endfor
-
-        //std::unordered_map<long,long> components;
-        //forall_nodes(B, node) {
-        //components[uf.Find(node)] = 0; //now the component exists
-        //} endfor
-        //std::cout <<  "number of connected comp " <<  components.size()  << std::endl;
-
-
         for( NodeID node : lhs_nodes ) {
                 G.setPartitionIndex(node, 3);
         }
@@ -101,13 +76,7 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
                         }
                 } endfor
         }
-        //if( outer_lhs_boundary_nodes.size() == 0) {
-                //outer_lhs_boundary_nodes = lhs_nodes;
-        //}
-        //if( outer_rhs_boundary_nodes.size() == 0) {
-                //outer_rhs_boundary_nodes = rhs_nodes;
-        //}
-
+        
         if(lhs_nodes.size() > 0) {
                 for( NodeID node : separator_nodes) {
                         forall_out_edges(G, e, node) {
@@ -149,15 +118,6 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
                 outer_rhs_boundary_nodes = separator_nodes;
         }
 
-        //forall_nodes(G, node) {
-                //if(G.getPartitionIndex(node) == 1) {
-                        //std::cout <<  "there are some"  << std::endl;
-                //}
-        //} endfor
-        
-        //std::cout <<  "lhsbndsize " <<  outer_lhs_boundary_nodes.size()  << std::endl;
-        //std::cout <<  "rhsbndsize " <<  outer_rhs_boundary_nodes.size()  << std::endl;
-        
         NodeID n = 2*(lhs_nodes.size() + rhs_nodes.size() + separator_nodes.size()) + 2; // source and sink
 
         // find forward and backward mapping
@@ -254,8 +214,6 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator(const PartitionC
 	push_relabel mfmc_solver;
 	FlowType value =  mfmc_solver.solve_max_flow_min_cut(rG, source, sink, true, source_set);
 
-        //std::cout <<  "source set size " <<  source_set.size()  << std::endl;
-        //std::cout <<  "graph size " <<  rG.number_of_nodes()  << std::endl;
         std::vector< bool > is_in_source_set( rG.number_of_nodes(), false);
         std::vector< bool > is_in_separator( G.number_of_nodes(), false);
         for( NodeID v : source_set) {
@@ -283,10 +241,6 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator(const PartitionC
         } endfor
 
 
-        //std::cout <<  "separator weight " <<  separator_weight  << std::endl;
-        //std::cout <<  "flow value " <<  value << std::endl;
-        //std::cout <<  "improvement achieved " <<  (separator_weight-value)  << std::endl;
-        //std::cout <<  "relative improvement achieved " <<  (separator_weight/(double)value)  << std::endl;
         std::unordered_map<NodeID, bool> allready_separator;
         for( unsigned int i = 0; i < output_separator.size(); i++) {
                 allready_separator[output_separator[i]] = true;

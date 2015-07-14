@@ -40,16 +40,10 @@ NodeWeight initial_node_separator::single_run( const PartitionConfig & config, g
         vertex_separator_algorithm vsa; std::vector<NodeID> separator;
         //create a very simple separator from that partition
         vsa.compute_vertex_separator_simple(partition_config, G, boundary, separator);
-        //std::cout <<  "initial sepearator " <<  separator.size()  << std::endl;
         
         std::vector<NodeID> output_separator;
         //improve the separator using flow based techniques
         vsa.improve_vertex_separator(partition_config, G, separator, output_separator);
-        //std::cout <<  "output sepearator " <<  output_separator.size()  << std::endl;
-        //if( output_separator.size() == 0) {
-                //std::cout <<  "autsch"  << std::endl;
-                //exit(0);
-        //}
 
         quality_metrics qm;
         return qm.separator_weight(G);
