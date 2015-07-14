@@ -108,15 +108,19 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
                 //outer_rhs_boundary_nodes = rhs_nodes;
         //}
 
-        for( NodeID node : separator_nodes) {
-                forall_out_edges(G, e, node) {
-                        NodeID target = G.getEdgeTarget(e);
-                        if(G.getPartitionIndex(target) == 0) {
-                                // outer boundary node
-                                outer_lhs_boundary_nodes.push_back(node);
-                                break;
-                        }
-                } endfor
+        if(lhs_nodes.size() > 0) {
+                for( NodeID node : separator_nodes) {
+                        forall_out_edges(G, e, node) {
+                                NodeID target = G.getEdgeTarget(e);
+                                if(G.getPartitionIndex(target) == 0) {
+                                        // outer boundary node
+                                        outer_lhs_boundary_nodes.push_back(node);
+                                        break;
+                                }
+                        } endfor
+                }
+        } else {
+                outer_lhs_boundary_nodes = separator_nodes;
         }
 
         for( NodeID node : rhs_nodes ) {
@@ -130,17 +134,29 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
                 } endfor
         }
 
-        for( NodeID node : separator_nodes) {
-                forall_out_edges(G, e, node) {
-                        NodeID target = G.getEdgeTarget(e);
-                        if(G.getPartitionIndex(target) == 1) {
-                                // outer boundary node
-                                outer_rhs_boundary_nodes.push_back(node);
-                                break;
-                        }
-                } endfor
+        if(rhs_nodes.size() > 0) {
+                for( NodeID node : separator_nodes) {
+                        forall_out_edges(G, e, node) {
+                                NodeID target = G.getEdgeTarget(e);
+                                if(G.getPartitionIndex(target) == 1) {
+                                        // outer boundary node
+                                        outer_rhs_boundary_nodes.push_back(node);
+                                        break;
+                                }
+                        } endfor
+                }
+        } else {
+                outer_rhs_boundary_nodes = separator_nodes;
         }
 
+        //forall_nodes(G, node) {
+                //if(G.getPartitionIndex(node) == 1) {
+                        //std::cout <<  "there are some"  << std::endl;
+                //}
+        //} endfor
+        
+        //std::cout <<  "lhsbndsize " <<  outer_lhs_boundary_nodes.size()  << std::endl;
+        //std::cout <<  "rhsbndsize " <<  outer_rhs_boundary_nodes.size()  << std::endl;
         
         NodeID n = 2*(lhs_nodes.size() + rhs_nodes.size() + separator_nodes.size()) + 2; // source and sink
 

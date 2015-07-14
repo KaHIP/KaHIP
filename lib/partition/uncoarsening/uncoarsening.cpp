@@ -129,10 +129,29 @@ int uncoarsening::perform_uncoarsening_cut(const PartitionConfig & config, graph
 
 int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & config, graph_hierarchy & hierarchy) {
 
+        std::cout <<  "log> starting uncoarsening ---------------"  << std::endl;
         PartitionConfig cfg     = config;
         graph_access * coarsest = hierarchy.get_coarsest();
         quality_metrics qm;
         std::cout << "log>" << "unrolling graph with " << coarsest->number_of_nodes() << std::endl;
+
+
+        for( int i = 0; i < config.max_flow_improv_steps; i++) {
+                        vertex_separator_algorithm vsa;
+
+                        std::vector<NodeID> separator;
+                        forall_nodes((*coarsest), node) {
+                                if( coarsest->getPartitionIndex(node) == 2) {
+                                        separator.push_back(node);
+                                }
+                        } endfor
+
+                        std::vector<NodeID> output_separator;
+                        NodeWeight improvement = vsa.improve_vertex_separator(config, *coarsest, separator, output_separator);
+                        //std::cout <<  "separator size " <<  qm.separator_weight(*G)  << std::endl;
+                        //std::cout <<  "improvement " <<  improvement  << std::endl;
+                        if(improvement == 0) break;
+                }
 
         while(!hierarchy.isEmpty()) {
                 graph_access* G = hierarchy.pop_finer_and_project();
