@@ -205,26 +205,25 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator(const PartitionC
         quality_metrics qm;
         do {
                 PartitionConfig cfg = config;
-                cfg.region_factor_node_separators = current_region_factor;
+                cfg.region_factor_node_separators = 1+current_region_factor;
                 solution_imbalanced = false;
                 solution_value = improve_vertex_separator_internal( cfg , G, input_separator, output_separator);
                 G.set_partition_count(3);
                 double balance = qm.balance_separator(G);
-                //std::cout <<  "balance " <<  balance  << std::endl;
-                //std::cout <<  "improvement " <<  solution_value  << std::endl;
-                //std::cout <<  "region facotr  "<<  current_region_factor  << std::endl;
+                std::cout <<  "balance " <<  balance  << std::endl;
+                std::cout <<  "improvement " <<  solution_value  << std::endl;
+                std::cout <<  "region facotr  "<<  current_region_factor  << std::endl;
                 if( balance > 1.2 ) {
-                        //std::cout <<  "imbalanced! " <<  balance  << std::endl;
+                        std::cout <<  "imbalanced! " <<  balance  << std::endl;
                         solution_imbalanced = true;
                         current_region_factor /= 2;
-                        current_region_factor = std::max(current_region_factor, 1.0);
 
                         forall_nodes(G, node) {
                                 G.setPartitionIndex(node, current_solution[node]);
                         } endfor
                 }
                 iteration++;
-        } while ( solution_imbalanced && iteration < 6);
+        } while ( solution_imbalanced && iteration < 10);
 
         if( solution_imbalanced ) {
                 PartitionConfig cfg = config;
