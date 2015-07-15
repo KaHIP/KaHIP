@@ -51,6 +51,8 @@ NodeWeight initial_node_separator::single_run( const PartitionConfig & config, g
 }
 
 void initial_node_separator::compute_node_separator( const PartitionConfig & config, graph_access & G) {
+        if(config.graph_allready_partitioned) return;
+
         std::vector< NodeID > best_separator(G.number_of_nodes(),0);
         NodeWeight best_separator_size = std::numeric_limits< NodeWeight >::max();
 

@@ -90,10 +90,6 @@ int main(int argn, char **argv) {
 
         std::cout <<  "computing a node separator"  << std::endl;
 
-        partition_config.mode_node_separators = true;
-        partition_config.use_fullmultigrid    = false;
-        partition_config.use_wcycles          = false;
-        partition_config.matching_type        = MATCHING_GPA;
         partitioner.perform_partitioning(partition_config, G);
 
         // ******************************* done partitioning *****************************************       

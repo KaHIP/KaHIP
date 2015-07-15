@@ -34,6 +34,11 @@ class configuration {
                 void strong( PartitionConfig & config );
                 void eco( PartitionConfig & config );
                 void fast( PartitionConfig & config );
+
+                void strong_separator( PartitionConfig & config );
+                void eco_separator( PartitionConfig & config );
+                void fast_separator( PartitionConfig & config );
+
                 void standard( PartitionConfig & config );
                 void standardsnw( PartitionConfig & config );
 
@@ -131,6 +136,112 @@ inline void configuration::fast( PartitionConfig & partition_config ) {
         partition_config.initial_partitioning_repetitions       = 0;
 
 }
+
+inline void configuration::strong_separator( PartitionConfig & partition_config ) {
+        standard(partition_config);
+        partition_config.matching_type                          = MATCHING_GPA;
+        partition_config.permutation_quality                    = PERMUTATION_QUALITY_GOOD;
+        partition_config.permutation_during_refinement          = PERMUTATION_QUALITY_GOOD;
+        partition_config.edge_rating_tiebreaking                = true;
+        partition_config.fm_search_limit                        = 5;
+        partition_config.bank_account_factor                    = 3;
+        partition_config.edge_rating                            = EXPANSIONSTAR2;
+        partition_config.refinement_scheduling_algorithm        = REFINEMENT_SCHEDULING_ACTIVE_BLOCKS_REF_KWAY;
+        partition_config.refinement_type                        = REFINEMENT_TYPE_FM_FLOW;
+        partition_config.global_cycle_iterations                = 2;
+        partition_config.flow_region_factor                     = 8;
+        partition_config.corner_refinement_enabled              = true;
+        partition_config.kway_stop_rule                         = KWAY_ADAPTIVE_STOP_RULE;
+        partition_config.kway_adaptive_limits_alpha             = 10;
+        partition_config.kway_rounds                            = 10;
+        partition_config.rate_first_level_inner_outer           = true;
+        partition_config.use_wcycles                            = false; 
+        partition_config.no_new_initial_partitioning            = true;
+        partition_config.use_fullmultigrid                      = true;
+        partition_config.most_balanced_minimum_cuts             = true;
+        partition_config.local_multitry_fm_alpha                = 10;
+        partition_config.local_multitry_rounds                  = 10;
+
+        partition_config.mh_initial_population_fraction         = 10;
+        partition_config.mh_flip_coin                           = 1; 
+        partition_config.epsilon                                = 3; 
+
+        partition_config.initial_partitioning_type              = INITIAL_PARTITIONING_RECPARTITION;
+        partition_config.bipartition_tries                      = 4;
+        partition_config.minipreps                              = 4;
+        partition_config.initial_partitioning_repetitions       = 64;
+        partition_config.strong = true;
+
+        partition_config.mode_node_separators = true;
+        partition_config.use_fullmultigrid    = false;
+        partition_config.use_wcycles          = false;
+        partition_config.matching_type        = MATCHING_GPA;
+
+}
+
+inline void configuration::eco_separator( PartitionConfig & partition_config ) {
+        standard(partition_config);
+        partition_config.eco                      = true;
+        partition_config.aggressive_random_levels = std::max(2, (int)(7 - log2(partition_config.k)));
+        
+        partition_config.kway_rounds                            = std::min(5, (int)log2(partition_config.k));
+        partition_config.matching_type                          = MATCHING_RANDOM_GPA;
+        partition_config.permutation_quality                    = PERMUTATION_QUALITY_NONE;
+        partition_config.permutation_during_refinement          = PERMUTATION_QUALITY_GOOD;
+        partition_config.edge_rating                            = EXPANSIONSTAR2;
+        partition_config.fm_search_limit                        = 1;
+        partition_config.refinement_type                        = REFINEMENT_TYPE_FM_FLOW;
+        partition_config.flow_region_factor                     = 2;
+        partition_config.corner_refinement_enabled              = true;
+        partition_config.kway_stop_rule                         = KWAY_SIMPLE_STOP_RULE;
+        partition_config.kway_fm_search_limit                   = 1;
+        partition_config.mh_initial_population_fraction         = 50;
+        partition_config.mh_flip_coin                           = 1; 
+
+        partition_config.initial_partitioning_type              = INITIAL_PARTITIONING_RECPARTITION;
+        partition_config.bipartition_tries                      = 4;
+        partition_config.minipreps                              = 4;
+        partition_config.initial_partitioning_repetitions       = 16;
+
+        partition_config.mode_node_separators = true;
+        partition_config.use_fullmultigrid    = false;
+        partition_config.use_wcycles          = false;
+        partition_config.matching_type        = MATCHING_GPA;
+}
+
+inline void configuration::fast_separator( PartitionConfig & partition_config ) {
+        standard(partition_config);
+
+        partition_config.fast = true;
+        if(partition_config.k > 8) {
+                partition_config.quotient_graph_refinement_disabled     = true;
+                partition_config.kway_fm_search_limit                   = 0; 
+                partition_config.kway_stop_rule                         = KWAY_SIMPLE_STOP_RULE; 
+                partition_config.corner_refinement_enabled              = true; 
+        } else {
+                partition_config.corner_refinement_enabled              = false; 
+        }
+        partition_config.permutation_quality                    = PERMUTATION_QUALITY_FAST;
+        partition_config.permutation_during_refinement          = PERMUTATION_QUALITY_NONE;
+        partition_config.matching_type                          = MATCHING_RANDOM_GPA;
+        partition_config.aggressive_random_levels               = 4;
+        partition_config.refinement_scheduling_algorithm        = REFINEMENT_SCHEDULING_FAST;
+        partition_config.edge_rating                            = EXPANSIONSTAR2;
+        partition_config.fm_search_limit                        = 0;
+        partition_config.bank_account_factor                    = 1;
+
+        partition_config.initial_partitioning_type              = INITIAL_PARTITIONING_RECPARTITION;
+        partition_config.bipartition_tries                      = 4;
+        partition_config.minipreps                              = 1;
+        partition_config.initial_partitioning_repetitions       = 0;
+
+        partition_config.mode_node_separators = true;
+        partition_config.use_fullmultigrid    = false;
+        partition_config.use_wcycles          = false;
+        partition_config.matching_type        = MATCHING_GPA;
+}
+
+
 
 inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.filename_output                        = "";

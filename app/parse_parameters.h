@@ -199,6 +199,7 @@ int parse_parameters(int argn, char **argv,
                 max_flow_improv_steps,
                 max_initial_ns_tries,
                 region_factor_node_separators,
+                global_cycle_iterations,
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
@@ -269,6 +270,24 @@ int parse_parameters(int argn, char **argv,
 #endif
 
         if(preconfiguration->count > 0) {
+#ifdef MODE_NODESEP
+                if(strcmp("strong", preconfiguration->sval[0]) == 0) {
+                        cfg.strong_separator(partition_config);
+                } else if (strcmp("eco", preconfiguration->sval[0]) == 0) {
+                        cfg.eco_separator(partition_config);
+                } else if (strcmp("fast", preconfiguration->sval[0]) == 0) {
+                        cfg.fast_separator(partition_config);
+                } else if (strcmp("fastsocial", preconfiguration->sval[0]) == 0) {
+                        cfg.fastsocial(partition_config);
+                } else if (strcmp("ecosocial", preconfiguration->sval[0]) == 0) {
+                        cfg.ecosocial(partition_config);
+                } else if (strcmp("strongsocial", preconfiguration->sval[0]) == 0) {
+                        cfg.strongsocial(partition_config);
+                } else {
+                        fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
+                        exit(0);
+                }
+#else
                 if(strcmp("strong", preconfiguration->sval[0]) == 0) {
                         cfg.strong(partition_config);
                 } else if (strcmp("eco", preconfiguration->sval[0]) == 0) {
@@ -285,6 +304,7 @@ int parse_parameters(int argn, char **argv,
                         fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);
                 }
+#endif
         }
 
         if(filename_output->count > 0) {

@@ -176,6 +176,7 @@ void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig 
 }
 
 void graph_partitioner::single_run( PartitionConfig & config, graph_access & G) {
+
         for( unsigned i = 1; i <= config.global_cycle_iterations; i++) {
                 std::cout <<  "single run"  << std::endl;
                 PRINT(std::cout <<  "vcycle " << i << " of " << config.global_cycle_iterations  << std::endl;)
@@ -189,6 +190,15 @@ void graph_partitioner::single_run( PartitionConfig & config, graph_access & G) 
 
                                 graph_hierarchy hierarchy;
 
+                                if( i % 4 == 1 ) {
+                                        config.edge_rating = SEPARATOR_MAX;
+                                } else if ( i % 4 == 2 ) {
+                                        config.edge_rating = SEPARATOR_LOG;
+                                } else if ( i % 4 == 3 ) {
+                                        config.edge_rating = SEPARATOR_ADDX;
+                                } else if ( i % 4 == 0 ) {
+                                        config.edge_rating = SEPARATOR_MULTX;
+                                }
                                 coarsen.perform_coarsening(config, G, hierarchy);
                                 init_part.perform_initial_partitioning(config, hierarchy);
                                 uncoarsen.perform_uncoarsening(config, hierarchy);
