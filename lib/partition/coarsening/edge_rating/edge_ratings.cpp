@@ -74,6 +74,38 @@ void edge_ratings::rate(graph_access & G, unsigned level) {
                         case SEPARATOR_LOG:
                                 rate_separator_log(G);
                                 break;
+                        case SEPARATOR_R1:
+                                rate_separator_r1(G);
+                                break;
+
+                        case SEPARATOR_R2:
+                                rate_separator_r2(G);
+                                break;
+
+                        case SEPARATOR_R3:
+                                rate_separator_r3(G);
+                                break;
+
+                        case SEPARATOR_R4:
+                                rate_separator_r4(G);
+                                break;
+
+                        case SEPARATOR_R5:
+                                rate_separator_r5(G);
+                                break;
+
+                        case SEPARATOR_R6:
+                                rate_separator_r6(G);
+                                break;
+
+                        case SEPARATOR_R7:
+                                rate_separator_r7(G);
+                                break;
+
+                        case SEPARATOR_R8:
+                                rate_separator_r8(G);
+                                break;
+
 
                 }
         }
@@ -260,4 +292,97 @@ void edge_ratings::rate_separator_log(graph_access & G) {
         } endfor
 }
 
+
+void edge_ratings::rate_separator_r1(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  1.0/(G.getNodeDegree(node) * G.getNodeDegree(target));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+}
+
+void edge_ratings::rate_separator_r2(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  1.0/(G.getNodeDegree(node) * G.getNodeDegree(target)*G.getNodeWeight(node)*G.getNodeWeight(target));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+}
+
+void edge_ratings::rate_separator_r3(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  1.0/(G.getNodeDegree(node) + G.getNodeDegree(target)+G.getNodeWeight(node)+G.getNodeWeight(target));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+
+}
+
+void edge_ratings::rate_separator_r4(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  ((EdgeRatingType)G.getNodeDegree(node) * G.getNodeDegree(target))/(G.getNodeWeight(node)*G.getNodeWeight(target));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+
+}
+
+void edge_ratings::rate_separator_r5(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  ((EdgeRatingType)G.getNodeDegree(node) + G.getNodeDegree(target))/(G.getNodeWeight(node)+G.getNodeWeight(target));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+
+
+}
+
+void edge_ratings::rate_separator_r6(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  1.0/((G.getNodeDegree(node) + G.getNodeDegree(target))*(G.getNodeWeight(node)+G.getNodeWeight(target)));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+
+}
+
+void edge_ratings::rate_separator_r7(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  G.getEdgeWeight(e)*1.0/(G.getNodeDegree(node) * G.getNodeDegree(target)*G.getNodeWeight(node)*G.getNodeWeight(target));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+}
+
+void edge_ratings::rate_separator_r8(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  G.getEdgeWeight(e)*1.0*(G.getNodeDegree(node) * G.getNodeDegree(target))/(G.getNodeWeight(node)*G.getNodeWeight(target));
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+}
 

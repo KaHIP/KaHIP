@@ -90,7 +90,15 @@ typedef enum {
         SEPARATOR_MULTX,
         SEPARATOR_ADDX,
         SEPARATOR_MAX,
-        SEPARATOR_LOG
+        SEPARATOR_LOG,
+        SEPARATOR_R1,
+        SEPARATOR_R2,
+        SEPARATOR_R3,
+        SEPARATOR_R4,
+        SEPARATOR_R5,
+        SEPARATOR_R6,
+        SEPARATOR_R7,
+        SEPARATOR_R8
 } EdgeRating;
 
 typedef enum {

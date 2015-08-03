@@ -30,11 +30,11 @@ NodeWeight initial_node_separator::single_run( const PartitionConfig & config, g
         partition_config.mode_node_separators = false;
 
 
-        int rnd = random_functions::nextInt(0, 4);
-        if( rnd == 0 ) partition_config.edge_rating = SEPARATOR_MULTX;
-        if( rnd == 1 ) partition_config.edge_rating = SEPARATOR_ADDX;
-        if( rnd == 2 ) partition_config.edge_rating = SEPARATOR_MAX;
-        if( rnd == 3 ) partition_config.edge_rating = SEPARATOR_LOG;
+        //int rnd = random_functions::nextInt(0, 4);
+        //if( rnd == 0 ) partition_config.edge_rating = SEPARATOR_MULTX;
+        //if( rnd == 1 ) partition_config.edge_rating = SEPARATOR_ADDX;
+        //if( rnd == 2 ) partition_config.edge_rating = SEPARATOR_MAX;
+        //if( rnd == 3 ) partition_config.edge_rating = SEPARATOR_LOG;
 
         //computing a partition
         partitioner.perform_partitioning(partition_config, G);

@@ -139,8 +139,8 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
 
         for( int i = 0; i < config.max_flow_improv_steps; i++) {
 
-                greedy_ns_local_search gnls;
-                gnls.perform_refinement(config, (*coarsest));
+                //greedy_ns_local_search gnls;
+                //gnls.perform_refinement(config, (*coarsest));
                 vertex_separator_algorithm vsa;
 
                 std::vector<NodeID> separator;
@@ -161,8 +161,8 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
                 graph_access* G = hierarchy.pop_finer_and_project();
                 std::cout << "log>" << "unrolling graph with " << G->number_of_nodes() << std::endl;
 
-                greedy_ns_local_search gnls;
-                gnls.perform_refinement(config, (*G));
+                //greedy_ns_local_search gnls;
+                //gnls.perform_refinement(config, (*G));
 
                 for( int i = 0; i < config.max_flow_improv_steps; i++) {
                         vertex_separator_algorithm vsa;

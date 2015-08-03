@@ -47,8 +47,8 @@ EdgeWeight greedy_ns_local_search::perform_refinement(const PartitionConfig & co
                                //std::cout <<  "gainA " <<  gainToA <<  " gainB " <<  gainToB  << std::endl;
                        if( gainToA > 0 || gainToB > 0 ) {
                                 // try to move it
-                                quality_metrics qm;
-                                std::cout <<  "size of separator before movement " <<  qm.separator_weight(G)  << std::endl;
+                                //quality_metrics qm;
+                                //std::cout <<  "size of separator before movement " <<  qm.separator_weight(G)  << std::endl;
                                 Gain top_gain  = gainToA > gainToB ? gainToA : gainToB;
                                 PartitionID top_block = top_gain == gainToA ? 0 : 1;
                                 std::cout <<  "topblock " <<  top_block  << std::endl;
@@ -116,7 +116,7 @@ EdgeWeight greedy_ns_local_search::perform_refinement(const PartitionConfig & co
 
                                         std::cout <<  "moved a node !"   << std::endl;
                                 }
-                                std::cout <<  "size of separator after movement " <<  qm.separator_weight(G)  << std::endl;
+                                //std::cout <<  "size of separator after movement " <<  qm.separator_weight(G)  << std::endl;
                                 //exit(0);
 
                        }
