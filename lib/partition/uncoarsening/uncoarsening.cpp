@@ -24,6 +24,7 @@
 #include "misc.h"
 #include "quality_metrics.h"
 #include "refinement/mixed_refinement.h"
+#include "refinement/node_separators/greedy_ns_local_search.h"
 #include "refinement/label_propagation_refinement/label_propagation_refinement.h"
 #include "refinement/refinement.h"
 #include "separator/vertex_separator_algorithm.h"
@@ -137,25 +138,31 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
 
 
         for( int i = 0; i < config.max_flow_improv_steps; i++) {
-                        vertex_separator_algorithm vsa;
 
-                        std::vector<NodeID> separator;
-                        forall_nodes((*coarsest), node) {
-                                if( coarsest->getPartitionIndex(node) == 2) {
-                                        separator.push_back(node);
-                                }
-                        } endfor
+                greedy_ns_local_search gnls;
+                gnls.perform_refinement(config, (*coarsest));
+                vertex_separator_algorithm vsa;
 
-                        std::vector<NodeID> output_separator;
-                        NodeWeight improvement = vsa.improve_vertex_separator(config, *coarsest, separator, output_separator);
-                        //std::cout <<  "separator size " <<  qm.separator_weight(*G)  << std::endl;
-                        //std::cout <<  "improvement " <<  improvement  << std::endl;
-                        if(improvement == 0) break;
-                }
+                std::vector<NodeID> separator;
+                forall_nodes((*coarsest), node) {
+                        if( coarsest->getPartitionIndex(node) == 2) {
+                                separator.push_back(node);
+                        }
+                } endfor
+
+                std::vector<NodeID> output_separator;
+                NodeWeight improvement = vsa.improve_vertex_separator(config, *coarsest, separator, output_separator);
+                //std::cout <<  "separator size " <<  qm.separator_weight(*G)  << std::endl;
+                //std::cout <<  "improvement " <<  improvement  << std::endl;
+                if(improvement == 0) break;
+        }
 
         while(!hierarchy.isEmpty()) {
                 graph_access* G = hierarchy.pop_finer_and_project();
                 std::cout << "log>" << "unrolling graph with " << G->number_of_nodes() << std::endl;
+
+                greedy_ns_local_search gnls;
+                gnls.perform_refinement(config, (*G));
 
                 for( int i = 0; i < config.max_flow_improv_steps; i++) {
                         vertex_separator_algorithm vsa;

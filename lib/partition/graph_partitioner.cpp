@@ -190,18 +190,24 @@ void graph_partitioner::single_run( PartitionConfig & config, graph_access & G) 
 
                                 graph_hierarchy hierarchy;
 
-                                if( i % 4 == 0 ) {
-                                        config.edge_rating = SEPARATOR_MAX;
-                                } else if ( i % 4 == 1 ) {
-                                        config.edge_rating = SEPARATOR_LOG;
-                                } else if ( i % 4 == 2 ) {
-                                        config.edge_rating = SEPARATOR_ADDX;
-                                } else if ( i % 4 == 3 ) {
-                                        config.edge_rating = SEPARATOR_MULTX;
-                                }
+                                //if( config.mode_node_separators ) {
+                                        //if( i % 4 == 1 ) {
+                                                //config.edge_rating = SEPARATOR_MAX;
+                                        //} else if ( i % 4 == 2 ) {
+                                                //config.edge_rating = SEPARATOR_LOG;
+                                        //} else if ( i % 4 == 3 ) {
+                                                //config.edge_rating = SEPARATOR_ADDX;
+                                        //} else if ( i % 4 == 0 ) {
+                                                //config.edge_rating = SEPARATOR_MULTX;
+                                        //}
+                                //}
                                 coarsen.perform_coarsening(config, G, hierarchy);
                                 init_part.perform_initial_partitioning(config, hierarchy);
                                 uncoarsen.perform_uncoarsening(config, hierarchy);
+                                if( config.mode_node_separators ) {
+                                        quality_metrics qm;
+                                        std::cout <<  "current separator size " << qm.separator_weight(G)  << std::endl;
+                                }
                         }
                 config.graph_allready_partitioned = true;
                 config.balance_factor             = 0;

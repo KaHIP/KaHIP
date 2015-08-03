@@ -6,6 +6,7 @@
 #include "initial_node_separator.h"
 #include "graph_partitioner.h"
 #include "tools/quality_metrics.h"
+#include "tools/random_functions.h"
 #include "partition/uncoarsening/separator/vertex_separator_algorithm.h"
 
 
@@ -18,7 +19,7 @@ initial_node_separator::~initial_node_separator() {
 }
 
 NodeWeight initial_node_separator::single_run( const PartitionConfig & config, graph_access & G) {
-        
+        std::cout <<  "IP run"  << std::endl;
         std::streambuf* backup = std::cout.rdbuf();
         std::ofstream ofs;
         ofs.open("/dev/null");
@@ -27,6 +28,13 @@ NodeWeight initial_node_separator::single_run( const PartitionConfig & config, g
         graph_partitioner partitioner;
         PartitionConfig partition_config = config;
         partition_config.mode_node_separators = false;
+
+
+        int rnd = random_functions::nextInt(0, 4);
+        if( rnd == 0 ) partition_config.edge_rating = SEPARATOR_MULTX;
+        if( rnd == 1 ) partition_config.edge_rating = SEPARATOR_ADDX;
+        if( rnd == 2 ) partition_config.edge_rating = SEPARATOR_MAX;
+        if( rnd == 3 ) partition_config.edge_rating = SEPARATOR_LOG;
 
         //computing a partition
         partitioner.perform_partitioning(partition_config, G);
