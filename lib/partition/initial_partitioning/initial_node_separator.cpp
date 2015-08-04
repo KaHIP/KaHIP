@@ -20,17 +20,19 @@ initial_node_separator::~initial_node_separator() {
 
 NodeWeight initial_node_separator::single_run( const PartitionConfig & config, graph_access & G) {
         std::cout <<  "IP run"  << std::endl;
+
         std::streambuf* backup = std::cout.rdbuf();
         std::ofstream ofs;
         ofs.open("/dev/null");
         std::cout.rdbuf(ofs.rdbuf()); 
 
         graph_partitioner partitioner;
-        PartitionConfig partition_config = config;
-        partition_config.mode_node_separators = false;
+        PartitionConfig partition_config         = config;
+        partition_config.mode_node_separators    = false;
+        partition_config.global_cycle_iterations = 1;
+        partition_config.repetitions             = 1;
 
 
-        //int rnd = random_functions::nextInt(0, 4);
         //if( rnd == 0 ) partition_config.edge_rating = SEPARATOR_MULTX;
         //if( rnd == 1 ) partition_config.edge_rating = SEPARATOR_ADDX;
         //if( rnd == 2 ) partition_config.edge_rating = SEPARATOR_MAX;
