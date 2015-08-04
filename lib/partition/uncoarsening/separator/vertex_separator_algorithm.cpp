@@ -25,6 +25,7 @@
 #include "area_bfs.h"
 #include "algorithms/push_relabel.h"
 #include "graph_io.h"
+#include "most_balanced_minimum_cuts/most_balanced_minimum_cuts.h"
 #include "tools/random_functions.h"
 #include "tools/graph_extractor.h"
 #include "tools/quality_metrics.h"
@@ -239,6 +240,21 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
                                               std::vector<NodeID> & input_separator,
                                               std::vector<NodeID> & output_separator) {
 
+        NodeWeight lhs_part_weight = 0;
+        NodeWeight rhs_part_weight = 0;
+        NodeWeight separator_weight = 0;
+        forall_nodes(G, node) {
+                if( G.getPartitionIndex(node) == 1 ) {
+                       rhs_part_weight += G.getNodeWeight(node);
+                } else if ( G.getPartitionIndex(node) == 0) {
+                       lhs_part_weight += G.getNodeWeight(node); 
+                } else if (G.getPartitionIndex(node) == 2) {
+                       separator_weight += G.getNodeWeight(node); 
+                } else {
+                       std::cout <<  "pIdx " <<  G.getPartitionIndex(node)  << std::endl;
+                }
+        } endfor
+
         quality_metrics qm;
         NodeWeight old_separator_weight = qm.separator_weight(G);
         area_bfs abfs;
@@ -259,6 +275,49 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
         std::vector<NodeID> source_set;
 	push_relabel mfmc_solver;
 	FlowType value =  mfmc_solver.solve_max_flow_min_cut(rG, source, sink, true, source_set);
+
+        // most balanced minimum cuts
+        graph_access residualGraph; 
+        residualGraph.start_construction(rG.number_of_nodes(), rG.number_of_edges());
+        forall_nodes(rG, node) {
+                NodeID node = residualGraph.new_node(); // for each node here create a new node 
+                if( node != sink && node != source) {
+                        residualGraph.setNodeWeight(node, G.getNodeWeight(node));
+                }
+                forall_out_edges(rG, e, node) {
+                        NodeID target = rG.getEdgeTarget(node, e);
+                        FlowType resCap = rG.getEdgeCapacity(node, e) - rG.getEdgeFlow(node, e);
+                        if(resCap > 0) {
+                                residualGraph.new_edge(node, target);
+                        }
+                } endfor
+        } endfor
+        residualGraph.setNodeWeight(source, 0);
+        residualGraph.setNodeWeight(sink, 0);
+        residualGraph.finish_construction();
+
+        std::cout <<  "input separator " <<  input_separator.size()  << std::endl;
+        std::cout <<  "lhs_part_weight " <<  lhs_part_weight  << std::endl;
+        std::cout <<  "rhs_part_weight " <<  rhs_part_weight  << std::endl;
+        std::cout <<  "separator_weight " <<  separator_weight  << std::endl;
+        std::cout <<  "G.number " <<  G.number_of_nodes()  << std::endl;
+        
+        NodeWeight rhs_stripe_weight = 0;
+        for( NodeID v : rhs_nodes ) {
+                rhs_stripe_weight += G.getNodeWeight(v);
+        }
+        
+
+        NodeWeight average_partition_weight = (lhs_part_weight + rhs_part_weight)/2;;
+        NodeWeight perfect_rhs_stripe_weight = abs((int)average_partition_weight - (int)rhs_part_weight+(int) rhs_stripe_weight);
+        std::cout <<  "perfect rhs stripe weight " <<  perfect_rhs_stripe_weight << std::endl;
+        std::cout <<  "rhs stripe weight " <<  rhs_part_weight << std::endl;
+        std::cout <<  "old source set size " <<  source_set.size()  << std::endl;
+
+        source_set.clear();
+        most_balanced_minimum_cuts mbmc;
+        mbmc.compute_good_balanced_min_cut(residualGraph, config, perfect_rhs_stripe_weight, source_set);
+        std::cout <<  "source set size " <<  source_set.size()  << std::endl;
 
         std::vector< bool > is_in_source_set( rG.number_of_nodes(), false);
         std::vector< bool > is_in_separator( G.number_of_nodes(), false);
@@ -347,10 +406,6 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
                 for( unsigned i = 0; i < separator.size(); i++) {
                         allready_separator[separator[i]] = true;
                 }
-
-                for( NodeID node : separator ) {
-                        std::cout <<  "node " <<  node  << std::endl;
-                }
                 //*************************** end **************************************** 
         } while(!scheduler->hasFinished());
 
@@ -364,11 +419,6 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
         std::cout <<  "performing check "  << std::endl;
         is_vertex_separator(G, allready_separator);         
         std::cout <<  "performing check done "  << std::endl;
-
-        //std::cout <<  "performing check "  << std::endl;
-        //is_vertex_separator(G, overall_separator);         
-        //std::cout <<  "performing check done "  << std::endl;
-
 }
 
 void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig & config, 
@@ -455,38 +505,4 @@ bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::unor
          } endfor
          return true;
 }
-
-// vertex separator test on connected graphs
-//bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::vector<NodeID > & separator) {
-        //forall_nodes(G, node) {
-                //G.setPartitionIndex(node, 0);
-        //} endfor
-        
-        //for( unsigned i = 0; i < separator.size(); i++) {
-                //G.setPartitionIndex(separator[i], 2);
-        //}
-        
-        //graph_extractor gE;
-        //graph_access Q;
-        //std::vector<NodeID> mapping;
-        //gE.extract_block(G, Q, 0, mapping);
-
-        //union_find uf(Q.number_of_nodes());
-        //forall_nodes(Q, source) {
-                //forall_out_edges(Q, e, source) {
-                        //NodeID target = Q.getEdgeTarget(e);
-                        //uf.Union(source, target); 
-                //} endfor
-        //} endfor
-
-        //std::unordered_map<long,long> components;
-        //forall_nodes(Q, node) {
-                //components[uf.Find(node)] = 0; //now the component exists
-        //} endfor
-        //if(components.size() > 1) return true;
-
-        //std::cout <<  "not a separator! with test connected comp"  << std::endl;
-        //exit(0);
-        //return false;
-//}
 
