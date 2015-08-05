@@ -18,6 +18,7 @@ class area_bfs {
                                  graph_access & G, 
                                  std::vector< NodeID > & input_separator, 
                                  PartitionID block, 
+                                 PartitionID block_weight,
                                  std::vector< NodeID > & reached_nodes) {
 
                         std::queue<NodeID> node_queue;
@@ -64,6 +65,7 @@ class area_bfs {
                         } else {
                                 upper_bound_no_nodes = std::max((int)(config.region_factor_node_separators*config.upper_bound_partition - size_lhs - size_sep), 0);
                         }
+                        upper_bound_no_nodes = std::min(upper_bound_no_nodes, block_weight-1);
 
                         //upper_bound_no_nodes *= config.region_factor_node_separators ;
                         //std::cout <<  "region facotr " <<  config.region_factor_node_separators  << std::endl;

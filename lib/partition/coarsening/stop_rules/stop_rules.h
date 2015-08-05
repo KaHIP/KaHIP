@@ -39,6 +39,8 @@ class simple_stop_rule : public stop_rule {
                 simple_stop_rule(PartitionConfig & config, NodeID number_of_nodes) {
                         double x = 60;
 	                num_stop = std::max(number_of_nodes/(2.0*x*config.k), 60.0*config.k);
+                        std::cout << "num_stop " <<  num_stop   << std::endl;
+                        num_stop = 20;
                         if(config.disable_max_vertex_weight_constraint) {
                                 config.max_vertex_weight = config.upper_bound_partition; 
                         } else {

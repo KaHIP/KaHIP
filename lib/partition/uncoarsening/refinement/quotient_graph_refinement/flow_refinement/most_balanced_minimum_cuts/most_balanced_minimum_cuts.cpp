@@ -62,16 +62,33 @@ void most_balanced_minimum_cuts::compute_good_balanced_min_cut( graph_access & r
         std::vector<int> comp_for_rhs;
         compute_new_rhs(scc_graph, config, comp_weights, comp_of_s, comp_of_t, perfect_rhs_weight, comp_for_rhs);
    
+        //std::cout <<  "comp_for_rhs size " <<  comp_for_rhs.size()  << std::endl;
         //add comp_for_rhs nodes to new rhs   
-        for( unsigned i = 0; i < comp_for_rhs.size(); i++) {    
-                int cur_component = comp_for_rhs[i];
-                if(cur_component != comp_of_s && cur_component != comp_of_t) {
-                        for( unsigned j = 0; j < comp_nodes[cur_component].size(); j++) {
-                                new_rhs_nodes.push_back(comp_nodes[cur_component][j]);
+        if(!config.mode_node_separators) {
+                for( unsigned i = 0; i < comp_for_rhs.size(); i++) {    
+                        int cur_component = comp_for_rhs[i];
+                        if(cur_component != comp_of_s && cur_component != comp_of_t) {
+                                for( unsigned j = 0; j < comp_nodes[cur_component].size(); j++) {
+                                        new_rhs_nodes.push_back(comp_nodes[cur_component][j]);
+                                }
                         }
                 }
+        } else {
+                //std::cout <<  "jap"  << std::endl;
+                for( unsigned i = 0; i < comp_for_rhs.size(); i++) {    
+                        int cur_component = comp_for_rhs[i];
+                        if(cur_component != comp_of_s ) {
+                                for( unsigned j = 0; j < comp_nodes[cur_component].size(); j++) {
+                                        if( comp_nodes[cur_component][j] != t )
+                                                new_rhs_nodes.push_back(comp_nodes[cur_component][j]);
+                                }
+                        }
+                }
+
         }
-}
+        //std::cout <<  "new rhs nodes " <<  new_rhs_nodes.size()  << std::endl;
+        //std::cout <<  "scc graph "   <<  scc_graph.number_of_nodes()  << std::endl;
+} 
 
 void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph, 
                                                   const PartitionConfig & config,
@@ -110,7 +127,7 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
 
                 bool t_contained = false;
                 int cur_rhs_weight = 0;
-                int diff = 0;
+                int diff = std::numeric_limits<int>::max();
                 for( unsigned idx = 0; idx < sorted_sequence.size(); idx++) {
                         int cur_component = sorted_sequence[idx];
 
@@ -120,13 +137,20 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
 
                         if(valid_to_add[cur_component]) {
                                 int tmpdiff = optimal_rhs_stripe_weight - cur_rhs_weight - comp_weights[cur_component];
+                                //std::cout <<  "opt rhs str weight " <<  optimal_rhs_stripe_weight  << std::endl;
+                                //std::cout <<  "cur rhs weight " <<  cur_rhs_weight  << std::endl;
+                                //std::cout <<  "comp weight  " <<  comp_weights[cur_component] << std::endl;
                                 bool would_break = tmpdiff <= 0 && t_contained;
                                 if(!would_break) {
                                         tmp_comp_for_rhs.push_back(cur_component);
                                         cur_rhs_weight += comp_weights[cur_component];
                                 } else {
+                                        //std::cout <<  "would break"  << std::endl;
+                                        //std::cout <<  "tmpdiff " << tmpdiff  << std::endl;
+                                        //std::cout <<  "olddiff " << diff  << std::endl;
                                         //decide wether we should add this component now
                                         if(abs(tmpdiff) < abs(diff)) {
+                                                //std::cout <<  "adding comp "  << std::endl;
                                                 //the add it 
                                                 tmp_comp_for_rhs.push_back(cur_component);
                                                 cur_rhs_weight += comp_weights[cur_component];
@@ -138,11 +162,15 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
                         }       
 
                         diff = optimal_rhs_stripe_weight - cur_rhs_weight;
+                        //std::cout <<  "diff now " <<  diff  << std::endl;
                         if( diff <= 0 && t_contained) {
+                                //std::cout <<  "goal reached"  << std::endl;
                                 break;
                         }
+                        //std::cout <<  "next round %%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << std::endl;
                        
                 }
+                //std::cout <<  "diff " <<  diff  << std::endl;
                 if(abs(diff) < best_diff) {
                         best_diff    = abs(diff);
                         comp_for_rhs = tmp_comp_for_rhs;
