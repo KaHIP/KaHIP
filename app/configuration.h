@@ -159,7 +159,7 @@ inline void configuration::strong_separator( PartitionConfig & partition_config 
         partition_config.no_new_initial_partitioning            = true;
         partition_config.use_fullmultigrid                      = true;
         partition_config.most_balanced_minimum_cuts             = true;
-        partition_config.most_balanced_minimum_cuts_node_sep    = true;
+        partition_config.most_balanced_minimum_cuts_node_sep    = false;
         partition_config.local_multitry_fm_alpha                = 10;
         partition_config.local_multitry_rounds                  = 10;
 

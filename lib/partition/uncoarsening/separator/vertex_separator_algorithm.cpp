@@ -251,7 +251,6 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
 
         quality_metrics qm;
         NodeWeight old_separator_weight = separator_weight;
-        std::cout <<  "old separator weight " <<  old_separator_weight  << std::endl;
 
         area_bfs abfs;
         // perform BFS into one side
@@ -294,18 +293,8 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
                 NodeWeight overall_weight = lhs_part_weight + separator_weight + rhs_part_weight;
                 NodeWeight ideal_new_block_weight = (overall_weight - value)/2;
                 NodeWeight amount_to_be_added = ideal_new_block_weight - rhs_part_weight;
-                std::cout <<  "ideal block weight " <<  ideal_new_block_weight  << std::endl;
-                std::cout <<  "overall weight " <<  overall_weight << std::endl;
-                std::cout <<  "new sparator weight " <<  value << std::endl;
-                std::cout <<  "lhs block weight " <<  lhs_part_weight << std::endl;
-                std::cout <<  "rhs block weight " <<  rhs_part_weight << std::endl;
-
                 NodeWeight perfect_rhs_stripe_weight = std::max((NodeWeight)(2*amount_to_be_added+value),(NodeWeight)0);
                  
-
-                std::cout <<  "perfect rhs stript weight " <<  perfect_rhs_stripe_weight << std::endl;
-
-                source_set.clear();
                 PartitionConfig tmpconfig = config;
                 tmpconfig.mode_node_separators = true;
 
@@ -316,12 +305,6 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
                 for( NodeID v : rhs_set) {
                         is_in_source_set[v] = false ;
                 }
-                NodeWeight real_rhs_weight = 0;
-                for( NodeID v : rhs_set ) {
-                        real_rhs_weight += residualGraph.getNodeWeight(v);
-                }
-                std::cout <<  "real rhs weight " <<  real_rhs_weight << std::endl;
-                
         }
         
         //reconstruct the partition IDs
@@ -352,25 +335,6 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
 
         //TODO remove them later on
         is_vertex_separator(G, allready_separator);
-
-        {
-        NodeWeight lhs_part_weight = 0;
-        NodeWeight rhs_part_weight = 0;
-        NodeWeight separator_weight = 0;
-        forall_nodes(G, node) {
-                if( G.getPartitionIndex(node) == 1 ) {
-                       rhs_part_weight += G.getNodeWeight(node);
-                } else if ( G.getPartitionIndex(node) == 0) {
-                       lhs_part_weight += G.getNodeWeight(node); 
-                } else if (G.getPartitionIndex(node) == 2) {
-                       separator_weight += G.getNodeWeight(node); 
-                } 
-        } endfor
-        std::cout <<  "after assignment lhs part weight " <<  lhs_part_weight  << std::endl;
-        std::cout <<  "after assignment rhs part weight " <<  rhs_part_weight  << std::endl;
-        std::cout <<  "after assignment separator weight " <<  separator_weight << std::endl;
-        }
-                std::cout <<  "=================="  << std::endl;
 
         return old_separator_weight - value; // return improvement
 }
