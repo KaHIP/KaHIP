@@ -68,11 +68,44 @@ class vertex_separator_algorithm {
                                               graph_access & G, 
                                               complete_boundary & boundary);
 
+        private:
+                void convert_residualGraph( graph_access & G, std::vector< NodeID > & forward_mapping, 
+                                            NodeID & source, NodeID & sink, 
+                                            flow_graph & rG, graph_access & residualGraph);
+
                 //ASSERTIONS
                 bool is_vertex_separator(graph_access & G, std::unordered_map<NodeID, bool> & separator);
-                //bool is_vertex_separator(graph_access & G, std::vector<NodeID > & separator);
 
 };
 
+inline
+void vertex_separator_algorithm::convert_residualGraph( graph_access & G, std::vector< NodeID > & forward_mapping, 
+                                                        NodeID & source, NodeID & sink, 
+                                                        flow_graph & rG, graph_access & residualGraph) {
 
+        residualGraph.start_construction(rG.number_of_nodes(), rG.number_of_edges());
+        forall_nodes(rG, node) {
+                NodeID node = residualGraph.new_node(); // for each node here create a new node 
+                if( node != sink && node != source) {
+                        residualGraph.setNodeWeight(node, G.getNodeWeight(forward_mapping[node]));
+                }
+
+                forall_out_edges(rG, e, node) {
+                        NodeID target = rG.getEdgeTarget(node, e);
+                        FlowType resCap = rG.getEdgeCapacity(node, e) - rG.getEdgeFlow(node, e);
+                        if(resCap > 0) {
+                                residualGraph.new_edge(node, target);
+                        } else {
+                                EdgeID e_bar = rG.getReverseEdge(node,e);
+                                if(rG.getEdgeFlow(target, e_bar) > 0) {
+                                        residualGraph.new_edge(node, target);
+                                }
+                        }
+                } endfor
+        } endfor
+
+        residualGraph.setNodeWeight(source, 0);
+        residualGraph.setNodeWeight(sink, 0);
+        residualGraph.finish_construction();
+}
 #endif /* end of include guard: VERTEX_SEPARTATOR_ALGORITHM_XUDNZZM8 */

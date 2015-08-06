@@ -52,11 +52,7 @@ class area_bfs {
                                         size_sep += G.getNodeWeight(node);
                                 }
                         } endfor
-                        //std::cout <<  "size lhs " <<  size_lhs << std::endl;
-                        //std::cout <<  "size rhs " <<  size_rhs << std::endl;
-                        //std::cout <<  "size sep " <<  size_sep << std::endl;
-                        //std::cout <<  "count lhs " <<  count_lhs << std::endl;
-                        //std::cout <<  "count rhs " <<  count_rhs << std::endl;
+
                         NodeWeight accumulated_weight = 0;
                         NodeID upper_bound_no_nodes;
 
@@ -67,9 +63,6 @@ class area_bfs {
                         }
                         upper_bound_no_nodes = std::min(upper_bound_no_nodes, block_weight-1);
 
-                        //upper_bound_no_nodes *= config.region_factor_node_separators ;
-                        //std::cout <<  "region facotr " <<  config.region_factor_node_separators  << std::endl;
-                        //std::cout <<  "upper bound no nodes " <<  upper_bound_no_nodes  << std::endl;
                         /***************************
                          * Do the BFS
                          ***************************/
@@ -92,7 +85,6 @@ class area_bfs {
                                         }
                                 } endfor
                         }
-                        //std::cout <<  "accumulated weight is " <<  accumulated_weight  << std::endl;
                 }
 
 };

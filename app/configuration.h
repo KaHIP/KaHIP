@@ -159,6 +159,7 @@ inline void configuration::strong_separator( PartitionConfig & partition_config 
         partition_config.no_new_initial_partitioning            = true;
         partition_config.use_fullmultigrid                      = true;
         partition_config.most_balanced_minimum_cuts             = true;
+        partition_config.most_balanced_minimum_cuts_node_sep    = true;
         partition_config.local_multitry_fm_alpha                = 10;
         partition_config.local_multitry_rounds                  = 10;
 
@@ -341,6 +342,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.toposort_iterations                    = 4;
         partition_config.initial_partition_optimize             = false;
         partition_config.most_balanced_minimum_cuts             = false;
+        partition_config.most_balanced_minimum_cuts_node_sep    = false;
         partition_config.gpa_grow_paths_between_blocks          = true; //used for the kaffpa paper
 
         partition_config.bipartition_algorithm                  = BIPARTITION_BFS;

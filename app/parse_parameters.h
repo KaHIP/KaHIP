@@ -149,6 +149,7 @@ int parse_parameters(int argn, char **argv,
 
         struct arg_int *max_initial_ns_tries                 = arg_int0(NULL, "max_initial_ns_tries", NULL, "Number of NS tries during initial partitioning.");
         struct arg_int *max_flow_improv_steps                = arg_int0(NULL, "max_flow_improv_steps", NULL, "Maximum number of tries to improve a node separator using flows.");
+        struct arg_lit *most_balanced_flows_node_sep         = arg_lit0(NULL, "most_balanced_flows_node_sep", "(Default: disabled)");
         struct arg_dbl *region_factor_node_separators        = arg_dbl0(NULL, "region_factor_node_separators", NULL, "Region factor for flow problems to obtain node separators.");
         struct arg_end *end                                  = arg_end(100);
 
@@ -200,6 +201,7 @@ int parse_parameters(int argn, char **argv,
                 max_initial_ns_tries,
                 region_factor_node_separators,
                 global_cycle_iterations,
+                most_balanced_flows_node_sep,
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
@@ -534,6 +536,10 @@ int parse_parameters(int argn, char **argv,
 
         if(most_balanced_flows->count > 0) {
                 partition_config.most_balanced_minimum_cuts = true;
+        }
+
+        if(most_balanced_flows_node_sep->count > 0) {
+                partition_config.most_balanced_minimum_cuts_node_sep = true;
         }
 
         if(use_wcycles->count > 0) {

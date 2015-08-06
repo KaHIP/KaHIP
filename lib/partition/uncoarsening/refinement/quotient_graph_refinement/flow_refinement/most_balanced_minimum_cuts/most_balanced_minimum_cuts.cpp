@@ -62,7 +62,6 @@ void most_balanced_minimum_cuts::compute_good_balanced_min_cut( graph_access & r
         std::vector<int> comp_for_rhs;
         compute_new_rhs(scc_graph, config, comp_weights, comp_of_s, comp_of_t, perfect_rhs_weight, comp_for_rhs);
    
-        //std::cout <<  "comp_for_rhs size " <<  comp_for_rhs.size()  << std::endl;
         //add comp_for_rhs nodes to new rhs   
         if(!config.mode_node_separators) {
                 for( unsigned i = 0; i < comp_for_rhs.size(); i++) {    
@@ -74,10 +73,8 @@ void most_balanced_minimum_cuts::compute_good_balanced_min_cut( graph_access & r
                         }
                 }
         } else {
-                //std::cout <<  "jap"  << std::endl;
                 for( unsigned i = 0; i < comp_for_rhs.size(); i++) {    
                         int cur_component = comp_for_rhs[i];
-                        //std::cout <<  "cur comp " <<  cur_component  << std::endl;
                         if(cur_component != comp_of_s ) {
                                 for( unsigned j = 0; j < comp_nodes[cur_component].size(); j++) {
                                         if( comp_nodes[cur_component][j] != t )
@@ -87,39 +84,6 @@ void most_balanced_minimum_cuts::compute_good_balanced_min_cut( graph_access & r
                 }
 
         }
-        //std::cout <<  "new rhs nodes " <<  new_rhs_nodes.size()  << std::endl;
-        //std::cout <<  "scc graph "   <<  scc_graph.number_of_nodes()  << std::endl;
-        //std::cout <<  "comp of s " <<  comp_of_s  << std::endl;
-        //std::cout <<  "comp of t " <<  comp_of_t  << std::endl;
-        //forall_nodes(scc_graph, node) {
-                //std::cout <<  "node " <<  node  << std::endl;
-                //forall_out_edges(scc_graph, e, node) {
-                        //NodeID target = scc_graph.getEdgeTarget(e);
-                        //std::cout <<  "scc " <<  node <<  " " <<  target  << std::endl;
-                //} endfor
-        //} endfor
-        
-        //sanity check wether this is a close node set
-        //std::vector< bool > is_in_rhs(residualGraph.number_of_nodes(), false); 
-        //is_in_rhs[t] = true;
-        //for( NodeID v : new_rhs_nodes) {
-                //is_in_rhs[v] = true;
-                //std::cout <<  "v " <<  v  << std::endl;
-        //}
-
-        //forall_nodes(residualGraph, node) {
-                //if( !is_in_rhs[node] ) {
-                        //forall_out_edges(residualGraph, e, node) {
-                                //NodeID target = residualGraph.getEdgeTarget(e);
-                                //if(is_in_rhs[target] ) {
-                                        //std::cout <<  "not a closed node set"  << std::endl;
-                                        //exit(0);
-                                //}
-
-                        //} endfor
-                //}
-        //} endfor
-        
 } 
 
 void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph, 
@@ -129,12 +93,6 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
                                                   int comp_of_t,
                                                   NodeWeight optimal_rhs_stripe_weight,
                                                   std::vector<int> & comp_for_rhs) {
-        //std::cout <<  "&&&&&&&&&&&&&&&&&&&&&&&&"  << std::endl;
-        //std::cout <<  "&&&&&&&&&&&&&&&&&&&&&&&&"  << std::endl;
-        //std::cout <<  "&&&&&&&&&&&&&&&&&&&&&&&&"  << std::endl;
-        //std::cout <<  "&&&&&&&&&&&&&&&&&&&&&&&&"  << std::endl;
-        //std::cout <<  "&&&&&&&&&&&&&&&&&&&&&&&&"  << std::endl;
-      
         //all successors of s cant be in any closure so they are marked invalid / this is basically a bfs in a DAG
         std::vector<bool> valid_to_add(scc_graph.number_of_nodes(), true);
         std::queue<NodeID> node_queue;
@@ -162,41 +120,29 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
 
                 tmp_comp_for_rhs.clear();
 
-                bool t_contained = false;
+                bool t_contained   = false;
                 int cur_rhs_weight = 0;
-                int diff = std::numeric_limits<int>::max();
+                int diff           = std::numeric_limits<int>::max();
                 for( unsigned idx = 0; idx < sorted_sequence.size(); idx++) {
                         int cur_component = sorted_sequence[idx];
 
                         if( cur_component == comp_of_t ) {
                                 t_contained = true;
-                                //std::cout <<  "comp of t inside " <<  comp_of_t  << std::endl;
-                                //std::cout <<  "valid to add? " <<  valid_to_add[cur_component]  << std::endl;
                                 tmp_comp_for_rhs.push_back(cur_component);
                                 continue;
                         }
 
                         if(valid_to_add[cur_component]) {
                                 int tmpdiff = optimal_rhs_stripe_weight - cur_rhs_weight - comp_weights[cur_component];
-                                //std::cout <<  "opt rhs str weight " <<  optimal_rhs_stripe_weight  << std::endl;
-                                //std::cout <<  "cur rhs weight " <<  cur_rhs_weight  << std::endl;
-                                //std::cout <<  "comp weight  " <<  comp_weights[cur_component] << std::endl;
                                 bool would_break = tmpdiff <= 0 && t_contained;
                                 if(!would_break) {
                                         tmp_comp_for_rhs.push_back(cur_component);
-                                        //std::cout <<  "adding " <<  cur_component  << std::endl;
                                         cur_rhs_weight += comp_weights[cur_component];
                                 } else {
-                                        //std::cout <<  "would break"  << std::endl;
-                                        //std::cout <<  "tmpdiff " << tmpdiff  << std::endl;
-                                        //std::cout <<  "olddiff " << diff  << std::endl;
-                                        //std::cout <<  "t_contained?? " << t_contained  << std::endl;
                                         //decide wether we should add this component now
                                         if(abs(tmpdiff) < abs(diff)) {
-                                                //std::cout <<  "adding comp "  << std::endl;
-                                                //the add it 
+                                                //add it 
                                                 tmp_comp_for_rhs.push_back(cur_component);
-                                                //std::cout <<  "adding " <<  cur_component  << std::endl;
                                                 cur_rhs_weight += comp_weights[cur_component];
                                                 diff = optimal_rhs_stripe_weight - cur_rhs_weight;
                                         }       
@@ -206,20 +152,16 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
                         }       
 
                         diff = optimal_rhs_stripe_weight - cur_rhs_weight;
-                        //std::cout <<  "diff now " <<  diff  << std::endl;
                         if( diff <= 0 && t_contained) {
-                                //std::cout <<  "goal reached"  << std::endl;
                                 break;
                         }
-                        //std::cout <<  "next round %%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << std::endl;
                        
                 }
-                //std::cout <<  "diff " <<  diff  << std::endl;
+
                 if(abs(diff) < best_diff) {
                         best_diff    = abs(diff);
                         comp_for_rhs = tmp_comp_for_rhs;
                 }
-
         }
 }
 

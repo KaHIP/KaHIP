@@ -125,6 +125,8 @@ struct PartitionConfig
         RefinementSchedulingAlgorithm refinement_scheduling_algorithm; 
 
         bool most_balanced_minimum_cuts;
+
+        bool most_balanced_minimum_cuts_node_sep;
         
         unsigned toposort_iterations;
 
