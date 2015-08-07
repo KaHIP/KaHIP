@@ -122,7 +122,7 @@ int main(int argn, char **argv) {
 
 	if( not_a_separator ) {
 		std::cout <<  "not a separator "  << std::endl;
-        	std::cout << "separator size " << 10000000000<< std::endl;
+        	std::cout << "separator size " << 10000000000 << std::endl;
 	} else {
         	std::cout << "separator size " << ns_size << std::endl;
 	}

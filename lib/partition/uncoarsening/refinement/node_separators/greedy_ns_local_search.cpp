@@ -5,6 +5,7 @@
 #include "data_structure/priority_queues/maxNodeHeap.h"
 #include "greedy_ns_local_search.h"
 #include "tools/quality_metrics.h"
+#include "tools/random_functions.h"
 
 greedy_ns_local_search::greedy_ns_local_search() {
                 
@@ -15,118 +16,81 @@ greedy_ns_local_search::~greedy_ns_local_search() {
 }
 
 EdgeWeight greedy_ns_local_search::perform_refinement(const PartitionConfig & config, graph_access & G) {
-        NodeWeight weight_blockA = 0;
-        NodeWeight weight_blockB = 0;
+        std::vector< maxNodeHeap > queues; queues.resize(2);
+        std::vector< bool > moved_out_of_separator(G.number_of_nodes(), false);
+        forall_nodes(G, node) {
+                if( G.getPartitionIndex(node) == 2 ) {
+                        Gain toLHS = 0;
+                        Gain toRHS = 0;
+                        compute_gain( G, node, toLHS, toRHS);
 
+                        queues[0].insert(node, toLHS);
+                        queues[1].insert(node, toRHS);
+
+                }
+        } endfor
+        
+        std::vector< NodeWeight > block_weights(3,0);
         forall_nodes(G, node) {
                 if( G.getPartitionIndex(node) == 0) {
-                        weight_blockA += G.getNodeWeight(node);
+                        block_weights[0] += G.getNodeWeight(node);
                 } else if( G.getPartitionIndex(node) == 1 ) {
-                        weight_blockB += G.getNodeWeight(node);
+                        block_weights[1] += G.getNodeWeight(node);
+                } else {
+                        block_weights[2] += G.getNodeWeight(node);
                 }
         } endfor
 
-        forall_nodes(G, node) {
-                if( G.getPartitionIndex(node) == 2) { 
-                        // now this is a separator node
-                        // check if we can move it to one of the blocks
-                        Gain gainArhs = 0;
-                        Gain gainBrhs = 0;
+        int max_number_of_swaps = 10;
+        //roll forwards
+        Gain gainToA = queues[0].maxValue();
+        Gain gainToB = queues[1].maxValue();
 
-                        forall_out_edges(G, e, node) {
-                                NodeID target = G.getEdgeTarget(e);
-                                if( G.getPartitionIndex(target) == 0) {
-                                        gainArhs += G.getNodeWeight(target);
-                                } else if( G.getPartitionIndex(target) == 1 ) {
-                                        gainBrhs += G.getNodeWeight(target);
+        while( gainToA > 0 || gainToB > 0) {
+                Gain top_gain = gainToA > gainToB ? gainToA : gainToB;
+                Gain other_gain = gainToA > gainToB ? gainToB : gainToA;
+
+                PartitionID to_block    = top_gain == gainToA ? 0 : 1;
+                PartitionID other_block = to_block == 0 ? 1 : 0;
+
+                NodeID nodeToBlock = queues[to_block].maxElement();
+                if( block_weights[to_block] + G.getNodeWeight(nodeToBlock) < config.upper_bound_partition ) {
+                        queues[to_block].deleteMax();
+                        queues[other_block].deleteNode(nodeToBlock);
+                        move_node(G, nodeToBlock, to_block, other_block, block_weights, moved_out_of_separator, queues);
+                } else {
+                        NodeID nodeOtherBlock = queues[other_block].maxElement();
+                        if( other_gain >= 0 && block_weights[other_block] + G.getNodeWeight(nodeOtherBlock) < config.upper_bound_partition) {
+                                queues[other_block].deleteMax();
+                                queues[to_block].deleteNode(nodeOtherBlock);
+                                move_node(G, nodeOtherBlock, other_block, to_block, block_weights, moved_out_of_separator, queues);
+                        } else {
+                                // need to make progress (remove a random node from the queues)
+                                if( nodeOtherBlock == nodeToBlock ) {
+                                        queues[0].deleteMax();
+                                        queues[1].deleteMax();
+                                } else {
+                                        int block = random_functions::nextInt(0,1);
+                                        queues[block].deleteMax();
                                 }
-                        } endfor
-
-                        Gain gainToA = G.getNodeWeight(node) - gainBrhs;
-                        Gain gainToB = G.getNodeWeight(node) - gainArhs;
-
-                        //std::cout <<  "gainA " <<  gainToA <<  " gainB " <<  gainToB  << std::endl;
-                        if( gainToA > 0 || gainToB > 0 ) {
-                                // try to move it
-                                //quality_metrics qm;
-                                //std::cout <<  "size of separator before movement " <<  qm.separator_weight(G)  << std::endl;
-                                Gain top_gain  = gainToA > gainToB ? gainToA : gainToB;
-                                PartitionID top_block = top_gain == gainToA ? 0 : 1;
-                                std::cout <<  "topblock " <<  top_block  << std::endl;
-                                std::cout <<  "topgain " <<   top_gain  << std::endl;
-
-                                if( top_block == 0 ) {
-                                        if( weight_blockA + G.getNodeWeight(node) < config.upper_bound_partition) {
-                                                G.setPartitionIndex(node, 0);
-                                                forall_out_edges(G, e, node) {
-                                                        NodeID target = G.getEdgeTarget(e);
-
-                                                        if( G.getPartitionIndex( target ) == 1 ) {
-                                                                G.setPartitionIndex(target,2);
-                                                        }
-                                                } endfor
-                                                weight_blockA += G.getNodeWeight(node);
-                                                weight_blockB -= gainBrhs;
-                                        } else if( gainToB > 0 && weight_blockB + G.getNodeWeight(node) < config.upper_bound_partition ) {
-                                                G.setPartitionIndex(node, 1);
-                                                forall_out_edges(G, e, node) {
-                                                        NodeID target = G.getEdgeTarget(e);
-
-                                                        if( G.getPartitionIndex( target ) == 0 ) {
-                                                                G.setPartitionIndex(target,2);
-                                                        }
-                                                } endfor
-
-                                                weight_blockB += G.getNodeWeight(node);
-                                                weight_blockA -= gainArhs;
-
-                                        }
-                                        std::cout <<  "moved a node !"   << std::endl;
-                                }
-
-                                if( top_block == 1 ) {
-                                        if( weight_blockB + G.getNodeWeight(node) < config.upper_bound_partition) {
-                                                G.setPartitionIndex(node, 1);
-                                                forall_out_edges(G, e, node) {
-                                                        NodeID target = G.getEdgeTarget(e);
-
-                                                        if( G.getPartitionIndex( target ) == 0 ) {
-                                                                G.setPartitionIndex(target,2);
-                                                        }
-                                                } endfor
-
-                                                weight_blockB += G.getNodeWeight(node);
-                                                weight_blockA -= gainArhs;
-
-
-                                        } else if( gainToA > 0 && weight_blockA + G.getNodeWeight(node) < config.upper_bound_partition ) {
-                                                G.setPartitionIndex(node, 0);
-                                                forall_out_edges(G, e, node) {
-                                                        NodeID target = G.getEdgeTarget(e);
-
-                                                        if( G.getPartitionIndex( target ) == 1 ) {
-                                                                G.setPartitionIndex(target,2);
-                                                        }
-                                                } endfor
-                                                weight_blockA += G.getNodeWeight(node);
-                                                weight_blockB -= gainBrhs;
-
-
-
-                                        }
-
-                                        std::cout <<  "moved a node !"   << std::endl;
-                                }
-                                //std::cout <<  "size of separator after movement " <<  qm.separator_weight(G)  << std::endl;
-                                //exit(0);
-
                         }
-
                 }
-        } endfor
 
+                if( queues[0].empty() ) {
+                        break;
+                } else {
+                        gainToA = queues[0].maxValue();
+                }
+
+                if( queues[1].empty() ) {
+                        break;
+                } else {
+                        gainToB = queues[1].maxValue();
+                }
+        }
+
+         
+                  
         return 0;
-
-
 }
 
