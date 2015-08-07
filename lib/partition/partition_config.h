@@ -331,6 +331,12 @@ struct PartitionConfig
 
         double region_factor_node_separators;
 
+	bool sep_flows_disabled;
+
+	bool sep_fm_disabled;
+
+	bool sep_greedy_disabled;
+
         //=======================================
         //=========LABEL PROPAGATION=============
         //=======================================
@@ -348,6 +354,7 @@ struct PartitionConfig
         bool initial_bipartitioning;
 
         int grow_target;
+
 
         //=======================================
         //===============Shared Mem OMP==========

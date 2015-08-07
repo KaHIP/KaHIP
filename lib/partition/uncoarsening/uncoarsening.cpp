@@ -138,56 +138,64 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
         std::cout << "log>" << "unrolling graph with " << coarsest->number_of_nodes() << std::endl;
 
 
-        for( int i = 0; i < config.max_flow_improv_steps; i++) {
+        if( !config.sep_greedy_disabled ) {
+                greedy_ns_local_search gnls;
+                gnls.perform_refinement(config, (*coarsest));
+        }
 
-                //greedy_ns_local_search gnls;
-                //gnls.perform_refinement(config, (*coarsest));
-                
+        if( !config.sep_fm_disabled ) {
                 fm_ns_local_search fmnsls;
                 fmnsls.perform_refinement(config, (*coarsest));
+        }
 
-                vertex_separator_algorithm vsa;
+        if( !config.sep_flows_disabled ) {
+                for( int i = 0; i < config.max_flow_improv_steps; i++) {
 
-                std::vector<NodeID> separator;
-                forall_nodes((*coarsest), node) {
-                        if( coarsest->getPartitionIndex(node) == 2) {
-                                separator.push_back(node);
-                        }
-                } endfor
+                        vertex_separator_algorithm vsa;
 
-                std::vector<NodeID> output_separator;
-                //NodeWeight improvement = vsa.improve_vertex_separator(config, *coarsest, separator, output_separator);
-                //std::cout <<  "separator size " <<  qm.separator_weight(*G)  << std::endl;
-                //std::cout <<  "improvement " <<  improvement  << std::endl;
-                //if(improvement == 0) break;
+                        std::vector<NodeID> separator;
+                        forall_nodes((*coarsest), node) {
+                                if( coarsest->getPartitionIndex(node) == 2) {
+                                        separator.push_back(node);
+                                }
+                        } endfor
+
+                        std::vector<NodeID> output_separator;
+                        NodeWeight improvement = vsa.improve_vertex_separator(config, *coarsest, separator, output_separator);
+                        if(improvement == 0) break;
+                }
         }
 
         while(!hierarchy.isEmpty()) {
                 graph_access* G = hierarchy.pop_finer_and_project();
                 std::cout << "log>" << "unrolling graph with " << G->number_of_nodes() << std::endl;
-                //std::cout <<  "current size " <<  qm.separator_weight(*G)  << std::endl;
 
-                //greedy_ns_local_search gnls;
-                //gnls.perform_refinement(config, (*G));
+                if( !config.sep_greedy_disabled) {
+                        greedy_ns_local_search gnls;
+                        gnls.perform_refinement(config, (*G));
+                }
 
-                fm_ns_local_search fmnsls;
-                fmnsls.perform_refinement(config, (*G));
+                if( !config.sep_fm_disabled) {
+                        fm_ns_local_search fmnsls;
+                        fmnsls.perform_refinement(config, (*G));
+                }
 
-                //for( int i = 0; i < config.max_flow_improv_steps; i++) {
-                        //vertex_separator_algorithm vsa;
+                if( !config.sep_flows_disabled ) {
+                        for( int i = 0; i < config.max_flow_improv_steps; i++) {
+                                vertex_separator_algorithm vsa;
 
-                        //std::vector<NodeID> separator;
-                        //forall_nodes((*G), node) {
-                                //if( G->getPartitionIndex(node) == 2) {
-                                        //separator.push_back(node);
-                                //}
-                        //} endfor
+                                std::vector<NodeID> separator;
+                                forall_nodes((*G), node) {
+                                        if( G->getPartitionIndex(node) == 2) {
+                                                separator.push_back(node);
+                                        }
+                                } endfor
 
-                        //std::vector<NodeID> output_separator;
-                        //NodeWeight improvement = vsa.improve_vertex_separator(config, *G, separator, output_separator);
-                        //std::cout <<  "improvement " <<  improvement  << std::endl;
-                        //if(improvement == 0) break;
-                //}
+                                std::vector<NodeID> output_separator;
+                                NodeWeight improvement = vsa.improve_vertex_separator(config, *G, separator, output_separator);
+                                if(improvement == 0) break;
+                        }
+                }
         }
 
         return 0;

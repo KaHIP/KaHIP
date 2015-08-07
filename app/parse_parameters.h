@@ -151,6 +151,9 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *max_flow_improv_steps                = arg_int0(NULL, "max_flow_improv_steps", NULL, "Maximum number of tries to improve a node separator using flows.");
         struct arg_lit *most_balanced_flows_node_sep         = arg_lit0(NULL, "most_balanced_flows_node_sep", "(Default: disabled)");
         struct arg_dbl *region_factor_node_separators        = arg_dbl0(NULL, "region_factor_node_separators", NULL, "Region factor for flow problems to obtain node separators.");
+        struct arg_lit *sep_flows_disabled		     = arg_lit0(NULL, "sep_flows_disabled", "(Default: disabled)");
+        struct arg_lit *sep_fm_disabled		     	     = arg_lit0(NULL, "sep_fm_disabled", "(Default: disabled)");
+        struct arg_lit *sep_greedy_disabled		     = arg_lit0(NULL, "sep_greedy_disabled", "(Default: disabled)");
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -202,6 +205,9 @@ int parse_parameters(int argn, char **argv,
                 region_factor_node_separators,
                 global_cycle_iterations,
                 most_balanced_flows_node_sep,
+		sep_flows_disabled,
+		sep_fm_disabled,
+		sep_greedy_disabled,
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
@@ -388,6 +394,18 @@ int parse_parameters(int argn, char **argv,
         if(kaba_flip_packings->count > 0) {
                 partition_config.kaba_flip_packings = true;
         }
+
+	if(sep_flows_disabled->count > 0) {
+		partition_config.sep_flows_disabled = true;
+	}
+
+	if(sep_fm_disabled->count > 0) {
+		partition_config.sep_fm_disabled = true;
+	}
+
+	if(sep_greedy_disabled->count > 0) {
+		partition_config.sep_greedy_disabled = true;
+	}
 
         if (kaba_lsearch_p->count) {
                 if(strcmp("coindiff", kaba_lsearch_p->sval[0]) == 0) {
