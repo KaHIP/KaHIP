@@ -19,6 +19,8 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
 
         std::vector< maxNodeHeap > queues; queues.resize(2);
         std::vector< bool > moved_out_of_separator(G.number_of_nodes(), false);
+        std::vector< change_set > rollback_info;
+
         forall_nodes(G, node) {
                 if( G.getPartitionIndex(node) == 2 ) {
                         Gain toLHS = 0;
@@ -27,7 +29,6 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
 
                         queues[0].insert(node, toLHS);
                         queues[1].insert(node, toRHS);
-
                 }
         } endfor
         
@@ -43,6 +44,9 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
         } endfor
 
         int max_number_of_swaps = 10;
+        NodeWeight best_separator = block_weights[2];
+        int undo_idx = 0;
+
         //roll forwards
         Gain gainToA = queues[0].maxValue();
         Gain gainToB = queues[1].maxValue();
@@ -58,13 +62,13 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                 if( block_weights[to_block] + G.getNodeWeight(nodeToBlock) < config.upper_bound_partition ) {
                         queues[to_block].deleteMax();
                         queues[other_block].deleteNode(nodeToBlock);
-                        move_node(G, nodeToBlock, to_block, other_block, block_weights, moved_out_of_separator, queues);
+                        move_node(G, nodeToBlock, to_block, other_block, block_weights, moved_out_of_separator, queues, rollback_info);
                 } else {
                         NodeID nodeOtherBlock = queues[other_block].maxElement();
                         if( other_gain >= 0 && block_weights[other_block] + G.getNodeWeight(nodeOtherBlock) < config.upper_bound_partition) {
                                 queues[other_block].deleteMax();
                                 queues[to_block].deleteNode(nodeOtherBlock);
-                                move_node(G, nodeOtherBlock, other_block, to_block, block_weights, moved_out_of_separator, queues);
+                                move_node(G, nodeOtherBlock, other_block, to_block, block_weights, moved_out_of_separator, queues, rollback_info);
                         } else {
                                 // need to make progress (remove a random node from the queues)
                                 if( nodeOtherBlock == nodeToBlock ) {
@@ -77,6 +81,12 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                         }
                 }
 
+                if( block_weights[2] <= best_separator ) {
+                        best_separator = block_weights[2];
+                        undo_idx = rollback_info.size();
+                        std::cout <<  "undo idx " <<  undo_idx  << std::endl;
+                } 
+
                 if( queues[0].empty() ) {
                         break;
                 } else {
@@ -88,9 +98,11 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                 } else {
                         gainToB = queues[1].maxValue();
                 }
+
         }
 
          
+        std::cout <<  "undo idx " <<  undo_idx << " roll_backinfo " <<  rollback_info.size()  << std::endl;
                   
         return 0;
 

@@ -10,6 +10,12 @@
 #include "partition_config.h"
 #include "data_structure/graph_access.h"
 
+// information to perform undo 
+struct change_set {
+        NodeID node;
+        PartitionID block;
+};
+
 class fm_ns_local_search {
 public:
         fm_ns_local_search();
@@ -22,7 +28,8 @@ private:
         void move_node( graph_access & G,  NodeID & node, PartitionID & to_block, PartitionID & other_block, 
                         std::vector< NodeWeight > & block_weights,
                         std::vector< bool > & moved_out_of_S,
-                        std::vector< maxNodeHeap > & heaps);
+                        std::vector< maxNodeHeap > & heaps,
+                        std::vector< change_set > & rollback_info);
 };
 
 inline
@@ -45,19 +52,31 @@ inline
 void fm_ns_local_search::move_node( graph_access & G, NodeID & node, PartitionID & to_block, PartitionID & other_block, 
                                     std::vector< NodeWeight > & block_weights,
                                     std::vector< bool > & moved_out_of_S, 
-                                    std::vector< maxNodeHeap > & queues) {
+                                    std::vector< maxNodeHeap > & queues,
+                                    std::vector< change_set > & rollback_info) {
+
+        change_set cur_move;
+        cur_move.node = node;
+        cur_move.block = G.getPartitionIndex(node);
+        rollback_info.push_back(cur_move);
+
         G.setPartitionIndex(node, to_block);
         block_weights[to_block] += G.getNodeWeight(node);
         block_weights[2] -= G.getNodeWeight(node);
         moved_out_of_S[node] = true;
 
         std::vector< NodeID > to_be_added;
-        std::vector< NodeID > to_be_updated;
+        std::vector< NodeID > to_be_updated; // replace by hashmap?
         Gain gain_achieved = G.getNodeWeight(node);
         forall_out_edges(G, e, node) {
                 NodeID target = G.getEdgeTarget(e);
 
                 if( G.getPartitionIndex( target ) == other_block ) {
+                        change_set cur_move;
+                        cur_move.node = node;
+                        cur_move.block = G.getPartitionIndex(node);
+                        rollback_info.push_back(cur_move);
+
                         G.setPartitionIndex(target, 2);
                         block_weights[other_block] -= G.getNodeWeight(target);
                         block_weights[2]           += G.getNodeWeight(target);
@@ -73,6 +92,8 @@ void fm_ns_local_search::move_node( graph_access & G, NodeID & node, PartitionID
                                         to_be_updated.push_back(v);
                                 } 
                         } endfor
+                } else if(  G.getPartitionIndex( target ) == 2 ) {
+                        to_be_updated.push_back(target);
                 }
         } endfor
 
@@ -81,7 +102,6 @@ void fm_ns_local_search::move_node( graph_access & G, NodeID & node, PartitionID
 
         for( NodeID node : to_be_added ) {
                 compute_gain( G, node, toLHS, toRHS);
-
                 queues[0].insert(node, toLHS);
                 queues[1].insert(node, toRHS);
         }

@@ -73,6 +73,8 @@ void greedy_ns_local_search::move_node( graph_access & G, NodeID & node, Partiti
                                         to_be_updated.push_back(v);
                                 } 
                         } endfor
+                } else if(  G.getPartitionIndex( target ) == 2 ) {
+                        to_be_updated.push_back(target);
                 }
         } endfor
 
@@ -81,7 +83,6 @@ void greedy_ns_local_search::move_node( graph_access & G, NodeID & node, Partiti
 
         for( NodeID node : to_be_added ) {
                 compute_gain( G, node, toLHS, toRHS);
-
                 queues[0].insert(node, toLHS);
                 queues[1].insert(node, toRHS);
         }
