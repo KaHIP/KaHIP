@@ -90,19 +90,7 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                 }
         }
 
-        // check wether it is still a separator
-        forall_nodes(G, node) {
-                if( G.getPartitionIndex(node) == 0 ) {
-                        forall_out_edges(G, e, node) {
-                                NodeID target = G.getEdgeTarget(e);
-                                if( G.getPartitionIndex(target) == 1 ) {
-                                        std::cout <<  "not a separator after refinment!"  << std::endl;
-                                        exit(0);
-                                }
-                        } endfor
-                }
-        } endfor
-        
+         
                   
         return 0;
 

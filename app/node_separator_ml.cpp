@@ -103,9 +103,29 @@ int main(int argn, char **argv) {
                         ns_size++;
                 }
         } endfor
-        std::cout << "separator size " << ns_size  << std::endl;
         G.set_partition_count(3);
         std::cout << "balance "        << qm.balance_separator(G) << std::endl;
+
+       // check wether it is still a separator
+        bool not_a_separator = false;
+        forall_nodes(G, node) {
+                if( G.getPartitionIndex(node) == 0 ) {
+                        forall_out_edges(G, e, node) {
+                                NodeID target = G.getEdgeTarget(e);
+                                if( G.getPartitionIndex(target) == 1 ) {
+					not_a_separator = true;
+					break;
+                                }
+                        } endfor
+                }
+        } endfor
+
+	if( not_a_separator ) {
+		std::cout <<  "not a separator "  << std::endl;
+        	std::cout << "separator size " << 10000000000<< std::endl;
+	} else {
+        	std::cout << "separator size " << ns_size << std::endl;
+	}
 
         
 }
