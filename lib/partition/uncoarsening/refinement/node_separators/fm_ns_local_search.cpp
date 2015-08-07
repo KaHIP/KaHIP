@@ -21,16 +21,22 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
         std::vector< bool > moved_out_of_separator(G.number_of_nodes(), false);
         std::vector< change_set > rollback_info;
 
+        std::vector< NodeID > start_nodes;
         forall_nodes(G, node) {
                 if( G.getPartitionIndex(node) == 2 ) {
-                        Gain toLHS = 0;
-                        Gain toRHS = 0;
-                        compute_gain( G, node, toLHS, toRHS);
-
-                        queues[0].insert(node, toLHS);
-                        queues[1].insert(node, toRHS);
-                }
+                        start_nodes.push_back(node);
+                       }
         } endfor
+
+        random_functions::permutate_vector_good(start_nodes, false);
+        for( NodeID node : start_nodes ) {
+                Gain toLHS = 0;
+                Gain toRHS = 0;
+                compute_gain( G, node, toLHS, toRHS);
+
+                queues[0].insert(node, toLHS);
+                queues[1].insert(node, toRHS);
+        }
         
         std::vector< NodeWeight > block_weights(3,0);
         forall_nodes(G, node) {
@@ -43,15 +49,16 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                 }
         } endfor
 
-        int max_number_of_swaps = 10;
         NodeWeight best_separator = block_weights[2];
+        NodeWeight input_separator = block_weights[2];
         int undo_idx = 0;
 
+        int steps_till_last_improvement = 0;
         //roll forwards
-        Gain gainToA = queues[0].maxValue();
-        Gain gainToB = queues[1].maxValue();
+        while( steps_till_last_improvement < 100) {
+                Gain gainToA = queues[0].maxValue();
+                Gain gainToB = queues[1].maxValue();
 
-        while( gainToA > 0 || gainToB > 0) {
                 Gain top_gain = gainToA > gainToB ? gainToA : gainToB;
                 Gain other_gain = gainToA > gainToB ? gainToB : gainToA;
 
@@ -81,30 +88,25 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                         }
                 }
 
-                if( block_weights[2] <= best_separator ) {
+                if( block_weights[2] < best_separator ) {
                         best_separator = block_weights[2];
                         undo_idx = rollback_info.size();
-                        std::cout <<  "undo idx " <<  undo_idx  << std::endl;
-                } 
-
-                if( queues[0].empty() ) {
-                        break;
-                } else {
-                        gainToA = queues[0].maxValue();
+                        steps_till_last_improvement = 0;
+                }  else {
+                        steps_till_last_improvement++;
                 }
 
-                if( queues[1].empty() ) {
+                if( queues[0].empty() || queues[1].empty() ) {
                         break;
-                } else {
-                        gainToB = queues[1].maxValue();
                 }
-
         }
 
-         
-        std::cout <<  "undo idx " <<  undo_idx << " roll_backinfo " <<  rollback_info.size()  << std::endl;
+        // roll back 
+        for( int i = rollback_info.size()-1; i >= undo_idx; i--) {
+                G.setPartitionIndex(rollback_info[i].node, rollback_info[i].block);
+        }
                   
-        return 0;
+        return input_separator - best_separator;
 
 }
 

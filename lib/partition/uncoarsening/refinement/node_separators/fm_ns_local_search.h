@@ -73,8 +73,8 @@ void fm_ns_local_search::move_node( graph_access & G, NodeID & node, PartitionID
 
                 if( G.getPartitionIndex( target ) == other_block ) {
                         change_set cur_move;
-                        cur_move.node = node;
-                        cur_move.block = G.getPartitionIndex(node);
+                        cur_move.node = target;
+                        cur_move.block = G.getPartitionIndex(target);
                         rollback_info.push_back(cur_move);
 
                         G.setPartitionIndex(target, 2);
