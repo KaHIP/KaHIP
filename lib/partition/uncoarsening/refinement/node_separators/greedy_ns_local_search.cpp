@@ -2,6 +2,7 @@
 // Author: Christian Schulz <christian.schulz@kit.edu>
 // 
 
+#include "data_structure/priority_queues/maxNodeHeap.h"
 #include "greedy_ns_local_search.h"
 #include "tools/quality_metrics.h"
 
@@ -24,28 +25,28 @@ EdgeWeight greedy_ns_local_search::perform_refinement(const PartitionConfig & co
                         weight_blockB += G.getNodeWeight(node);
                 }
         } endfor
-        
+
         forall_nodes(G, node) {
-               if( G.getPartitionIndex(node) == 2) { 
-                       // now this is a separator node
-                       // check if we can move it to one of the blocks
-                       Gain gainArhs = 0;
-                       Gain gainBrhs = 0;
+                if( G.getPartitionIndex(node) == 2) { 
+                        // now this is a separator node
+                        // check if we can move it to one of the blocks
+                        Gain gainArhs = 0;
+                        Gain gainBrhs = 0;
 
-                       forall_out_edges(G, e, node) {
-                               NodeID target = G.getEdgeTarget(e);
-                               if( G.getPartitionIndex(target) == 0) {
+                        forall_out_edges(G, e, node) {
+                                NodeID target = G.getEdgeTarget(e);
+                                if( G.getPartitionIndex(target) == 0) {
                                         gainArhs += G.getNodeWeight(target);
-                               } else if( G.getPartitionIndex(target) == 1 ) {
+                                } else if( G.getPartitionIndex(target) == 1 ) {
                                         gainBrhs += G.getNodeWeight(target);
-                               }
-                       } endfor
+                                }
+                        } endfor
 
-                       Gain gainToA = G.getNodeWeight(node) - gainBrhs;
-                       Gain gainToB = G.getNodeWeight(node) - gainArhs;
+                        Gain gainToA = G.getNodeWeight(node) - gainBrhs;
+                        Gain gainToB = G.getNodeWeight(node) - gainArhs;
 
-                               //std::cout <<  "gainA " <<  gainToA <<  " gainB " <<  gainToB  << std::endl;
-                       if( gainToA > 0 || gainToB > 0 ) {
+                        //std::cout <<  "gainA " <<  gainToA <<  " gainB " <<  gainToB  << std::endl;
+                        if( gainToA > 0 || gainToB > 0 ) {
                                 // try to move it
                                 //quality_metrics qm;
                                 //std::cout <<  "size of separator before movement " <<  qm.separator_weight(G)  << std::endl;
@@ -119,11 +120,13 @@ EdgeWeight greedy_ns_local_search::perform_refinement(const PartitionConfig & co
                                 //std::cout <<  "size of separator after movement " <<  qm.separator_weight(G)  << std::endl;
                                 //exit(0);
 
-                       }
-               
-               }
+                        }
+
+                }
         } endfor
 
         return 0;
+
+
 }
 

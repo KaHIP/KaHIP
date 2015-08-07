@@ -15,7 +15,6 @@ public:
         virtual ~greedy_ns_local_search();
 
         EdgeWeight perform_refinement(const PartitionConfig & config, graph_access & G);
-
 };
 
 

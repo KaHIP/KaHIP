@@ -229,7 +229,6 @@ inline void maxNodeHeap::deleteNode(NodeID node) {
                 siftDown(heap_index);
                 siftUp(heap_index);
         }
-
 };
 
 inline NodeID maxNodeHeap::deleteMax() {

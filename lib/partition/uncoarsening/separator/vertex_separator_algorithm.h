@@ -20,7 +20,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-
 #ifndef VERTEX_SEPARTATOR_ALGORITHM_XUDNZZM8
 #define VERTEX_SEPARTATOR_ALGORITHM_XUDNZZM8
 
