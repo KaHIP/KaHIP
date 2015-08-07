@@ -220,14 +220,11 @@ double quality_metrics::balance_separator(graph_access& G) {
 NodeWeight quality_metrics::separator_weight(graph_access& G) {
         NodeWeight separator_size = 0;
         PartitionID separator_ID = G.getSeparatorBlock();
-	std::cout <<  "separator is " ;
         forall_nodes(G, node) {
                 if( G.getPartitionIndex(node) == separator_ID) {
-			std::cout <<  node <<  " " ;
                         separator_size += G.getNodeWeight(node);
 		}
         } endfor
-	std::cout <<  ""  << std::endl;
 
         return separator_size;
 }
