@@ -49,9 +49,9 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                 }
         } endfor
 
-        NodeWeight best_separator = block_weights[2];
+        NodeWeight best_separator  = block_weights[2];
         NodeWeight input_separator = block_weights[2];
-        int best_diff = abs(block_weights[1]-block_weights[0]);
+        int best_diff              = abs(block_weights[1]-block_weights[0]);
         int undo_idx = 0;
 
         int steps_till_last_improvement = 0;
@@ -104,7 +104,6 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
 
                 int cur_diff = abs(block_weights[1]-block_weights[0]);
                 if( block_weights[2] < best_separator || (block_weights[2] == best_separator && cur_diff < best_diff)  ) {
-
                         best_separator = block_weights[2];
                         undo_idx = rollback_info.size();
                         steps_till_last_improvement = 0;

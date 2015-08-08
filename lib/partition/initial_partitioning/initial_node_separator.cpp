@@ -8,6 +8,7 @@
 #include "tools/quality_metrics.h"
 #include "tools/random_functions.h"
 #include "partition/uncoarsening/separator/vertex_separator_algorithm.h"
+#include "partition/uncoarsening/refinement/node_separators/fm_ns_local_search.h"
 
 
 initial_node_separator::initial_node_separator() {
@@ -50,7 +51,32 @@ NodeWeight initial_node_separator::single_run( const PartitionConfig & config, g
         vertex_separator_algorithm vsa; std::vector<NodeID> separator;
         //create a very simple separator from that partition
         vsa.compute_vertex_separator_simple(partition_config, G, boundary, separator);
-        
+ 
+	fm_ns_local_search fmnsls;
+	std::vector< NodeWeight > block_weights(3,0);
+	forall_nodes(G, node) {
+		if( G.getPartitionIndex(node) == 0) {
+			block_weights[0] += G.getNodeWeight(node);
+		} else if( G.getPartitionIndex(node) == 1 ) {
+			block_weights[1] += G.getNodeWeight(node);
+		} else {
+			block_weights[2] += G.getNodeWeight(node);
+		}
+	} endfor
+
+	if(block_weights[0] > block_weights[1]) {
+		fmnsls.perform_refinement(partition_config, G, true, 1);
+	} else {
+		fmnsls.perform_refinement(partition_config, G, true, 0);
+	}
+	fmnsls.perform_refinement(partition_config, G);
+	separator.clear();
+	forall_nodes(G, node) {
+		if(G.getPartitionIndex(node) == 2) {
+			separator.push_back(node);
+		}
+	} endfor
+
         std::vector<NodeID> output_separator;
         //improve the separator using flow based techniques
         vsa.improve_vertex_separator(partition_config, G, separator, output_separator);
