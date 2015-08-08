@@ -52,30 +52,30 @@ NodeWeight initial_node_separator::single_run( const PartitionConfig & config, g
         //create a very simple separator from that partition
         vsa.compute_vertex_separator_simple(partition_config, G, boundary, separator);
  
-	fm_ns_local_search fmnsls;
-	std::vector< NodeWeight > block_weights(3,0);
-	forall_nodes(G, node) {
-		if( G.getPartitionIndex(node) == 0) {
-			block_weights[0] += G.getNodeWeight(node);
-		} else if( G.getPartitionIndex(node) == 1 ) {
-			block_weights[1] += G.getNodeWeight(node);
-		} else {
-			block_weights[2] += G.getNodeWeight(node);
-		}
-	} endfor
+	//fm_ns_local_search fmnsls;
+	//std::vector< NodeWeight > block_weights(3,0);
+	//forall_nodes(G, node) {
+		//if( G.getPartitionIndex(node) == 0) {
+			//block_weights[0] += G.getNodeWeight(node);
+		//} else if( G.getPartitionIndex(node) == 1 ) {
+			//block_weights[1] += G.getNodeWeight(node);
+		//} else {
+			//block_weights[2] += G.getNodeWeight(node);
+		//}
+	//} endfor
 
-	if(block_weights[0] > block_weights[1]) {
-		fmnsls.perform_refinement(partition_config, G, true, 1);
-	} else {
-		fmnsls.perform_refinement(partition_config, G, true, 0);
-	}
-	fmnsls.perform_refinement(partition_config, G);
-	separator.clear();
-	forall_nodes(G, node) {
-		if(G.getPartitionIndex(node) == 2) {
-			separator.push_back(node);
-		}
-	} endfor
+	//if(block_weights[0] > block_weights[1]) {
+		//fmnsls.perform_refinement(partition_config, G, true, 1);
+	//} else {
+		//fmnsls.perform_refinement(partition_config, G, true, 0);
+	//}
+	//fmnsls.perform_refinement(partition_config, G);
+	//separator.clear();
+	//forall_nodes(G, node) {
+		//if(G.getPartitionIndex(node) == 2) {
+			//separator.push_back(node);
+		//}
+	//} endfor
 
         std::vector<NodeID> output_separator;
         //improve the separator using flow based techniques
