@@ -179,8 +179,8 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
                         for( unsigned i = 0; i < 5; i++) {
                                 fm_ns_local_search fmnsls;
                                 fmnsls.perform_refinement(config, (*G));
-                                fmnsls.perform_refinement_one_sided(config, (*G),0);
-                                fmnsls.perform_refinement_one_sided(config, (*G),1);
+                                fmnsls.perform_refinement(config, (*G),true, 0);
+                                fmnsls.perform_refinement(config, (*G),true, 1);
                         }
                 }
 

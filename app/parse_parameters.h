@@ -154,6 +154,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_lit *sep_flows_disabled		     = arg_lit0(NULL, "sep_flows_disabled", "(Default: disabled)");
         struct arg_lit *sep_fm_disabled		     	     = arg_lit0(NULL, "sep_fm_disabled", "(Default: disabled)");
         struct arg_lit *sep_greedy_disabled		     = arg_lit0(NULL, "sep_greedy_disabled", "(Default: disabled)");
+        struct arg_int *sep_fm_unsucc_steps		     = arg_int0(NULL, "sep_fm_unsucc_steps", NULL, "Maximum number of steps till last improvement in FM algorithm.");
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -208,6 +209,7 @@ int parse_parameters(int argn, char **argv,
 		sep_flows_disabled,
 		sep_fm_disabled,
 		sep_greedy_disabled,
+		sep_fm_unsucc_steps,
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
@@ -398,6 +400,11 @@ int parse_parameters(int argn, char **argv,
 	if(sep_flows_disabled->count > 0) {
 		partition_config.sep_flows_disabled = true;
 	}
+
+	if(sep_fm_unsucc_steps->count > 0) {
+		partition_config.sep_fm_unsucc_steps = sep_fm_unsucc_steps->ival[0];
+	}
+
 
 	if(sep_fm_disabled->count > 0) {
 		partition_config.sep_fm_disabled = true;

@@ -21,8 +21,7 @@ public:
         fm_ns_local_search();
         virtual ~fm_ns_local_search();
 
-        EdgeWeight perform_refinement(const PartitionConfig & config, graph_access & G);
-        EdgeWeight perform_refinement_one_sided(const PartitionConfig & config, graph_access & G, PartitionID to);
+        EdgeWeight perform_refinement(const PartitionConfig & config, graph_access & G, bool balance = false, PartitionID to = 4);
 
 private: 
         void compute_gain( graph_access & G, NodeID node, Gain & toLHS, Gain & toRHS);

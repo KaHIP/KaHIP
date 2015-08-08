@@ -337,6 +337,8 @@ struct PartitionConfig
 
 	bool sep_greedy_disabled;
 
+	int sep_fm_unsucc_steps;
+
         //=======================================
         //=========LABEL PROPAGATION=============
         //=======================================
