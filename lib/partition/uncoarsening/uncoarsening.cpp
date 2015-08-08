@@ -144,8 +144,12 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
         }
 
         if( !config.sep_fm_disabled ) {
-                fm_ns_local_search fmnsls;
-                fmnsls.perform_refinement(config, (*coarsest));
+                for( int i = 0; i < config.sep_num_fm_reps; i++) {
+                        fm_ns_local_search fmnsls;
+                        fmnsls.perform_refinement(config, (*coarsest));
+                        fmnsls.perform_refinement(config, (*coarsest),true, 0);
+                        fmnsls.perform_refinement(config, (*coarsest),true, 1);
+                }
         }
 
         if( !config.sep_flows_disabled ) {
@@ -176,9 +180,10 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
                 }
 
                 if( !config.sep_fm_disabled) {
-                        for( unsigned i = 0; i < 5; i++) {
+                        for( int i = 0; i < config.sep_num_fm_reps; i++) {
                                 fm_ns_local_search fmnsls;
                                 fmnsls.perform_refinement(config, (*G));
+                                //TODO: do this randomly
                                 fmnsls.perform_refinement(config, (*G),true, 0);
                                 fmnsls.perform_refinement(config, (*G),true, 1);
                         }

@@ -339,6 +339,8 @@ struct PartitionConfig
 
 	int sep_fm_unsucc_steps;
 
+	int sep_num_fm_reps;
+
         //=======================================
         //=========LABEL PROPAGATION=============
         //=======================================

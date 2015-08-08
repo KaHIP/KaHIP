@@ -411,7 +411,8 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
 	partition_config.sep_flows_disabled  	       = false;
 	partition_config.sep_fm_disabled  	       = false;
 	partition_config.sep_greedy_disabled  	       = false;
-	partition_config.sep_fm_unsucc_steps           = 1000;
+	partition_config.sep_fm_unsucc_steps           = 2000;
+        partition_config.sep_num_fm_reps               = 5;
 
 }
 
