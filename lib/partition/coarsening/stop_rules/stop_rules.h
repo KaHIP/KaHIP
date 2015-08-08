@@ -34,6 +34,25 @@ class stop_rule {
                 virtual bool stop( NodeID number_of_finer_vertices, NodeID number_of_coarser_vertices ) = 0;
 };
 
+class separator_simple_stop_rule : public stop_rule {
+        public:
+                separator_simple_stop_rule(PartitionConfig & config, NodeID number_of_nodes) {
+	                num_stop = std::max((NodeID)100, number_of_nodes/30);
+                };
+
+                virtual ~separator_simple_stop_rule() {};
+                bool stop( NodeID number_of_finer_vertices, NodeID number_of_coarser_vertices );
+
+        private:
+                NodeID num_stop;
+};
+
+inline bool separator_simple_stop_rule::stop(NodeID no_of_finer_vertices, NodeID no_of_coarser_vertices ) {
+        double contraction_rate = 1.0 * no_of_finer_vertices / (double)no_of_coarser_vertices;
+        
+        return contraction_rate >= 1.1 && no_of_coarser_vertices >= num_stop;
+}
+
 class simple_stop_rule : public stop_rule {
         public:
                 simple_stop_rule(PartitionConfig & config, NodeID number_of_nodes) {
