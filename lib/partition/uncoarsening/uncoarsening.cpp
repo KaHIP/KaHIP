@@ -184,8 +184,8 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
                                 fm_ns_local_search fmnsls;
                                 fmnsls.perform_refinement(config, (*G));
                                 //TODO: do this randomly
-                                fmnsls.perform_refinement(config, (*G),true, 0);
-                                fmnsls.perform_refinement(config, (*G),true, 1);
+                                fmnsls.perform_refinement(config, (*G), true, 0);
+                                fmnsls.perform_refinement(config, (*G), true, 1);
                         }
                 }
 
