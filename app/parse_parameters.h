@@ -153,9 +153,13 @@ int parse_parameters(int argn, char **argv,
         struct arg_dbl *region_factor_node_separators        = arg_dbl0(NULL, "region_factor_node_separators", NULL, "Region factor for flow problems to obtain node separators.");
         struct arg_lit *sep_flows_disabled		     = arg_lit0(NULL, "sep_flows_disabled", "(Default: disabled)");
         struct arg_lit *sep_fm_disabled		     	     = arg_lit0(NULL, "sep_fm_disabled", "(Default: disabled)");
+        struct arg_lit *sep_loc_fm_disabled		     = arg_lit0(NULL, "sep_loc_fm_disabled", "(Default: disabled)");
         struct arg_lit *sep_greedy_disabled		     = arg_lit0(NULL, "sep_greedy_disabled", "(Default: disabled)");
         struct arg_int *sep_fm_unsucc_steps		     = arg_int0(NULL, "sep_fm_unsucc_steps", NULL, "Maximum number of steps till last improvement in FM algorithm.");
         struct arg_int *sep_num_fm_reps                      = arg_int0(NULL, "sep_num_fm_reps", NULL, "Number of FM repetitions during uncoarsening on each level.");
+        struct arg_int *sep_loc_fm_unsucc_steps		     = arg_int0(NULL, "sep_loc_fm_unsucc_steps", NULL, "Maximum number of steps till last improvement in FM algorithm.");
+        struct arg_int *sep_num_loc_fm_reps                  = arg_int0(NULL, "sep_num_loc_fm_reps", NULL, "Number of FM repetitions during uncoarsening on each level.");
+        struct arg_int *sep_loc_fm_no_snodes                 = arg_int0(NULL, "sep_loc_fm_no_snodes", NULL, "Number of FM repetitions during uncoarsening on each level.");
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -209,9 +213,13 @@ int parse_parameters(int argn, char **argv,
                 most_balanced_flows_node_sep,
 		sep_flows_disabled,
 		sep_fm_disabled,
+		sep_loc_fm_disabled,
 		sep_greedy_disabled,
 		sep_fm_unsucc_steps,
 		sep_num_fm_reps,
+		sep_loc_fm_unsucc_steps,
+		sep_num_loc_fm_reps,
+                sep_loc_fm_no_snodes,
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
@@ -403,6 +411,13 @@ int parse_parameters(int argn, char **argv,
 		partition_config.sep_flows_disabled = true;
 	}
 
+	if(sep_loc_fm_no_snodes->count > 0) {
+		partition_config.sep_loc_fm_no_snodes = sep_loc_fm_no_snodes->ival[0];
+	}
+
+	if(sep_fm_unsucc_steps->count > 0) {
+		partition_config.sep_fm_unsucc_steps = sep_fm_unsucc_steps->ival[0];
+	}
 	if(sep_fm_unsucc_steps->count > 0) {
 		partition_config.sep_fm_unsucc_steps = sep_fm_unsucc_steps->ival[0];
 	}
@@ -411,8 +426,20 @@ int parse_parameters(int argn, char **argv,
 		partition_config.sep_num_fm_reps = sep_num_fm_reps->ival[0];
 	}
 
+	if(sep_loc_fm_unsucc_steps->count > 0) {
+		partition_config.sep_loc_fm_unsucc_steps = sep_loc_fm_unsucc_steps->ival[0];
+	}
+
+	if(sep_num_loc_fm_reps->count > 0) {
+		partition_config.sep_num_loc_fm_reps = sep_num_loc_fm_reps->ival[0];
+	}
+
 	if(sep_fm_disabled->count > 0) {
 		partition_config.sep_fm_disabled = true;
+	}
+
+	if(sep_loc_fm_disabled->count > 0) {
+		partition_config.sep_loc_fm_disabled = true;
 	}
 
 	if(sep_greedy_disabled->count > 0) {

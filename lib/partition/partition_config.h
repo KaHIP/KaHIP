@@ -335,11 +335,19 @@ struct PartitionConfig
 
 	bool sep_fm_disabled;
 
+	bool sep_loc_fm_disabled;
+
+        int sep_loc_fm_no_snodes;
+
 	bool sep_greedy_disabled;
 
 	int sep_fm_unsucc_steps;
 
+	int sep_loc_fm_unsucc_steps;
+
 	int sep_num_fm_reps;
+
+	int sep_num_loc_fm_reps;
 
         //=======================================
         //=========LABEL PROPAGATION=============

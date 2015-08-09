@@ -26,9 +26,11 @@
 #include "refinement/mixed_refinement.h"
 #include "refinement/node_separators/greedy_ns_local_search.h"
 #include "refinement/node_separators/fm_ns_local_search.h"
+#include "refinement/node_separators/localized_fm_ns_local_search.h"
 #include "refinement/label_propagation_refinement/label_propagation_refinement.h"
 #include "refinement/refinement.h"
 #include "separator/vertex_separator_algorithm.h"
+#include "tools/random_functions.h"
 #include "uncoarsening.h"
 
 
@@ -147,8 +149,10 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
                 for( int i = 0; i < config.sep_num_fm_reps; i++) {
                         fm_ns_local_search fmnsls;
                         fmnsls.perform_refinement(config, (*coarsest));
-                        fmnsls.perform_refinement(config, (*coarsest),true, 0);
-                        fmnsls.perform_refinement(config, (*coarsest),true, 1);
+
+                        int rnd_block = random_functions::nextInt(0,1);
+                        fmnsls.perform_refinement(config, (*coarsest),true, rnd_block);
+                        fmnsls.perform_refinement(config, (*coarsest),true, rnd_block == 0? 1 : 0);
                 }
         }
 
@@ -183,11 +187,24 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
                         for( int i = 0; i < config.sep_num_fm_reps; i++) {
                                 fm_ns_local_search fmnsls;
                                 fmnsls.perform_refinement(config, (*G));
-                                //TODO: do this randomly
-                                fmnsls.perform_refinement(config, (*G), true, 0);
-                                fmnsls.perform_refinement(config, (*G), true, 1);
+
+                                int rnd_block = random_functions::nextInt(0,1);
+                                fmnsls.perform_refinement(config, (*G), true, rnd_block);
+                                fmnsls.perform_refinement(config, (*G), true, rnd_block == 0? 1 : 0);
                         }
                 }
+
+                if( !config.sep_loc_fm_disabled) {
+                        for( int i = 0; i < config.sep_num_loc_fm_reps; i++) {
+                                localized_fm_ns_local_search fmnsls;
+                                fmnsls.perform_refinement(config, (*G));
+
+                                int rnd_block = random_functions::nextInt(0,1);
+                                fmnsls.perform_refinement(config, (*G), true, rnd_block);
+                                fmnsls.perform_refinement(config, (*G), true, rnd_block == 0? 1 : 0);
+                        }
+                }
+
 
                 if( !config.sep_flows_disabled ) {
                         for( int i = 0; i < config.max_flow_improv_steps; i++) {
