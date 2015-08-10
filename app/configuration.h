@@ -418,7 +418,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
 	partition_config.sep_loc_fm_disabled  	       = false;
 	partition_config.sep_loc_fm_no_snodes          = 5;
 	partition_config.sep_loc_fm_unsucc_steps       = 100;
-        partition_config.sep_num_loc_fm_reps           = 25;
+        partition_config.sep_num_loc_fm_reps           = 15;
 
 }
 
