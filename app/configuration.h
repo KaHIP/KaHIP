@@ -407,7 +407,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         //node separator parameters
         partition_config.max_flow_improv_steps         = 5;
         partition_config.max_initial_ns_tries          = 5;
-        partition_config.region_factor_node_separators = 4;
+        partition_config.region_factor_node_separators = 1.5;
 	partition_config.sep_flows_disabled  	       = false;
 	partition_config.sep_fm_disabled  	       = false;
 	partition_config.sep_greedy_disabled  	       = false;
