@@ -160,6 +160,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *sep_loc_fm_unsucc_steps		     = arg_int0(NULL, "sep_loc_fm_unsucc_steps", NULL, "Maximum number of steps till last improvement in FM algorithm.");
         struct arg_int *sep_num_loc_fm_reps                  = arg_int0(NULL, "sep_num_loc_fm_reps", NULL, "Number of FM repetitions during uncoarsening on each level.");
         struct arg_int *sep_loc_fm_no_snodes                 = arg_int0(NULL, "sep_loc_fm_no_snodes", NULL, "Number of FM repetitions during uncoarsening on each level.");
+        struct arg_int *sep_num_vert_stop                    = arg_int0(NULL, "sep_num_vert_stop", NULL, "Number of vertices to stop coarsening at.");
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -220,6 +221,7 @@ int parse_parameters(int argn, char **argv,
 		sep_loc_fm_unsucc_steps,
 		sep_num_loc_fm_reps,
                 sep_loc_fm_no_snodes,
+                sep_num_vert_stop,
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
@@ -413,6 +415,10 @@ int parse_parameters(int argn, char **argv,
 
 	if(sep_loc_fm_no_snodes->count > 0) {
 		partition_config.sep_loc_fm_no_snodes = sep_loc_fm_no_snodes->ival[0];
+	}
+
+	if(sep_num_vert_stop->count > 0) {
+		partition_config.sep_num_vert_stop = sep_num_vert_stop->ival[0];
 	}
 
 	if(sep_fm_unsucc_steps->count > 0) {

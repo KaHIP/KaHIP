@@ -413,12 +413,13 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
 	partition_config.sep_greedy_disabled  	       = false;
 
 	partition_config.sep_fm_unsucc_steps           = 2000;
-        partition_config.sep_num_fm_reps               = 5;
+        partition_config.sep_num_fm_reps               = 200;
 
 	partition_config.sep_loc_fm_disabled  	       = false;
 	partition_config.sep_loc_fm_no_snodes          = 5;
 	partition_config.sep_loc_fm_unsucc_steps       = 100;
         partition_config.sep_num_loc_fm_reps           = 25;
+        partition_config.sep_num_vert_stop             = 100;
 
 }
 

@@ -349,6 +349,8 @@ struct PartitionConfig
 
 	int sep_num_loc_fm_reps;
 
+        int sep_num_vert_stop;
+
         //=======================================
         //=========LABEL PROPAGATION=============
         //=======================================

@@ -56,18 +56,18 @@ void coarsening::perform_coarsening(const PartitionConfig & partition_config, gr
         PartitionConfig copy_of_partition_config = partition_config;
 
         stop_rule* coarsening_stop_rule = NULL;
-        //if( partition_config.mode_node_separators ) {
-                //coarsening_stop_rule = new separator_simple_stop_rule(copy_of_partition_config, G.number_of_nodes());
-        //} else {
-        if(partition_config.stop_rule == STOP_RULE_SIMPLE) {
-                coarsening_stop_rule = new simple_stop_rule(copy_of_partition_config, G.number_of_nodes());
-        } else if(partition_config.stop_rule == STOP_RULE_MULTIPLE_K) {
-                coarsening_stop_rule = new multiple_k_stop_rule(copy_of_partition_config, G.number_of_nodes());
+        if( partition_config.mode_node_separators ) {
+                coarsening_stop_rule = new separator_simple_stop_rule(copy_of_partition_config, G.number_of_nodes());
         } else {
-                coarsening_stop_rule = new strong_stop_rule(copy_of_partition_config, G.number_of_nodes());
+                if(partition_config.stop_rule == STOP_RULE_SIMPLE) {
+                        coarsening_stop_rule = new simple_stop_rule(copy_of_partition_config, G.number_of_nodes());
+                } else if(partition_config.stop_rule == STOP_RULE_MULTIPLE_K) {
+                        coarsening_stop_rule = new multiple_k_stop_rule(copy_of_partition_config, G.number_of_nodes());
+                } else {
+                        coarsening_stop_rule = new strong_stop_rule(copy_of_partition_config, G.number_of_nodes());
+                }
         }
-        //}
- 
+
         coarsening_configurator coarsening_config;
 
         unsigned int level    = 0;

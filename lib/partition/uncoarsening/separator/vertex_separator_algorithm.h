@@ -64,6 +64,11 @@ class vertex_separator_algorithm {
                                                      complete_boundary & boundary, 
                                                      std::vector<NodeID> & overall_separator);
 
+                void compute_vertex_separator_simpler(const PartitionConfig & config, 
+                                                     graph_access & G, 
+                                                     complete_boundary & boundary, 
+                                                     std::vector<NodeID> & overall_separator);
+
                 void compute_vertex_separator(const PartitionConfig & config, 
                                               graph_access & G, 
                                               complete_boundary & boundary);
