@@ -95,9 +95,25 @@ void initial_node_separator::compute_node_separator( const PartitionConfig & con
 
         std::vector< NodeID > best_separator(G.number_of_nodes(),0);
         NodeWeight best_separator_size = std::numeric_limits< NodeWeight >::max();
+ 
+        PartitionConfig partition_config = config;
+        partition_config.sep_full_boundary_ip = false;
 
-        for( int i  = 0; i  < config.max_initial_ns_tries; i++) {
-                NodeWeight cur_separator_size = single_run(config, G);
+        for( int i  = 0; i  < partition_config.max_initial_ns_tries; i++) {
+                NodeWeight cur_separator_size = single_run(partition_config, G);
+                if(cur_separator_size < best_separator_size) {
+                        forall_nodes(G, node) {
+                                best_separator[node] = G.getPartitionIndex(node);
+                        } endfor
+                        best_separator_size = cur_separator_size;
+                
+                        std::cout <<  "improved initial separator size " <<  cur_separator_size  << std::endl;
+                }
+        }
+
+        partition_config.sep_full_boundary_ip = true; 
+        for( int i  = 0; i  < partition_config.max_initial_ns_tries; i++) {
+                NodeWeight cur_separator_size = single_run(partition_config, G);
                 if(cur_separator_size < best_separator_size) {
                         forall_nodes(G, node) {
                                 best_separator[node] = G.getPartitionIndex(node);
