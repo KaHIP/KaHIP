@@ -351,6 +351,8 @@ struct PartitionConfig
 
         int sep_num_vert_stop;
 
+        bool sep_full_boundary_ip;
+
         //=======================================
         //=========LABEL PROPAGATION=============
         //=======================================

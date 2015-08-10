@@ -50,7 +50,11 @@ NodeWeight initial_node_separator::single_run( const PartitionConfig & config, g
 
         vertex_separator_algorithm vsa; std::vector<NodeID> separator;
         //create a very simple separator from that partition
-        vsa.compute_vertex_separator_simpler(partition_config, G, boundary, separator);
+        if( partition_config.sep_full_boundary_ip ) {
+                vsa.compute_vertex_separator_simpler(partition_config, G, boundary, separator);
+        } else {
+                vsa.compute_vertex_separator_simple(partition_config, G, boundary, separator);
+        }
  
 	//fm_ns_local_search fmnsls;
 	//std::vector< NodeWeight > block_weights(3,0);

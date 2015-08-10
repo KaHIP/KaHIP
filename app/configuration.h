@@ -420,6 +420,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
 	partition_config.sep_loc_fm_unsucc_steps       = 100;
         partition_config.sep_num_loc_fm_reps           = 25;
         partition_config.sep_num_vert_stop             = 100;
+        partition_config.sep_full_boundary_ip          = false;
 
 }
 
