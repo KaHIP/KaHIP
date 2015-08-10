@@ -37,7 +37,13 @@ class stop_rule {
 class separator_simple_stop_rule : public stop_rule {
         public:
                 separator_simple_stop_rule(PartitionConfig & config, NodeID number_of_nodes) {
-	                num_stop = std::max((NodeID)100, number_of_nodes/30);
+	                num_stop = config.sep_num_vert_stop;
+                        std::cout <<  "num stop " << num_stop  << std::endl;
+                        if(config.disable_max_vertex_weight_constraint) {
+                                config.max_vertex_weight = config.upper_bound_partition; 
+                        } else {
+                                config.max_vertex_weight = (NodeWeight)(1.5*config.work_load/num_stop);
+                        }
                 };
 
                 virtual ~separator_simple_stop_rule() {};

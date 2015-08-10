@@ -416,6 +416,54 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
         graph_io::writeVector(overall_separator, filename.str());
 }
 
+void vertex_separator_algorithm::compute_vertex_separator_simpler(const PartitionConfig & config, 
+                                                          graph_access & G, 
+                                                          complete_boundary & boundary, 
+                                                          std::vector<NodeID> & overall_separator) {
+
+        PartitionConfig cfg     = config;
+        cfg.bank_account_factor = 1;
+
+        QuotientGraphEdges qgraph_edges;
+        boundary.getQuotientGraphEdges(qgraph_edges);
+
+        quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
+
+        std::unordered_map<NodeID, bool> allready_separator;
+        do {
+                boundary_pair & bp = scheduler->getNext();
+                PartitionID lhs = bp.lhs;
+                PartitionID rhs = bp.rhs;
+
+                boundary_starting_nodes start_nodes_lhs;
+                boundary_starting_nodes start_nodes_rhs;
+
+                PartialBoundary & lhs_b = boundary.getDirectedBoundary(lhs, lhs, rhs);
+                PartialBoundary & rhs_b = boundary.getDirectedBoundary(rhs, lhs, rhs);
+
+                        forall_boundary_nodes(lhs_b, cur_bnd_node) {
+                                if(allready_separator.find(cur_bnd_node) == allready_separator.end()) {
+                                        allready_separator[cur_bnd_node] = true;
+                                }
+                        } endfor
+                        forall_boundary_nodes(rhs_b, cur_bnd_node) {
+                                if(allready_separator.find(cur_bnd_node) == allready_separator.end()) {
+                                        allready_separator[cur_bnd_node] = true;
+                                }
+                        } endfor
+
+                //*************************** end **************************************** 
+        } while(!scheduler->hasFinished());
+
+        // now print the computed vertex separator to disk
+        std::unordered_map<NodeID, bool>::iterator it;
+        for( it = allready_separator.begin(); it != allready_separator.end(); ++it) {
+                overall_separator.push_back(it->first);
+                G.setPartitionIndex(it->first, G.getSeparatorBlock());
+        }
+        is_vertex_separator(G, allready_separator);         
+}
+
 void vertex_separator_algorithm::compute_vertex_separator_simple(const PartitionConfig & config, 
                                                           graph_access & G, 
                                                           complete_boundary & boundary, 
