@@ -353,6 +353,8 @@ struct PartitionConfig
 
         bool sep_full_boundary_ip;
 
+        EdgeRating sep_edge_rating_during_ip;
+
         //=======================================
         //=========LABEL PROPAGATION=============
         //=======================================

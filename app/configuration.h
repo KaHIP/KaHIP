@@ -406,7 +406,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
 
         //node separator parameters
         partition_config.max_flow_improv_steps         = 5;
-        partition_config.max_initial_ns_tries          = 5;
+        partition_config.max_initial_ns_tries          = 25;
         partition_config.region_factor_node_separators = 1.5;
 	partition_config.sep_flows_disabled  	       = false;
 	partition_config.sep_fm_disabled  	       = false;
@@ -419,8 +419,9 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
 	partition_config.sep_loc_fm_no_snodes          = 5;
 	partition_config.sep_loc_fm_unsucc_steps       = 100;
         partition_config.sep_num_loc_fm_reps           = 25;
-        partition_config.sep_num_vert_stop             = 100;
+        partition_config.sep_num_vert_stop             = 8000;
         partition_config.sep_full_boundary_ip          = false;
+        partition_config.sep_edge_rating_during_ip     = SEPARATOR_MULTX;
 
 }
 

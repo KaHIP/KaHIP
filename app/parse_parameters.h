@@ -162,6 +162,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *sep_num_loc_fm_reps                  = arg_int0(NULL, "sep_num_loc_fm_reps", NULL, "Number of FM repetitions during uncoarsening on each level.");
         struct arg_int *sep_loc_fm_no_snodes                 = arg_int0(NULL, "sep_loc_fm_no_snodes", NULL, "Number of FM repetitions during uncoarsening on each level.");
         struct arg_int *sep_num_vert_stop                    = arg_int0(NULL, "sep_num_vert_stop", NULL, "Number of vertices to stop coarsening at.");
+        struct arg_rex *sep_edge_rating_during_ip            = arg_rex0(NULL, "sep_edge_rating_during_ip", "^(weight|expansionstar|expansionstar2|expansionstar2deg|punch|expansionstar2algdist|expansionstar2algdist2|algdist|algdist2|sepmultx|sepaddx|sepmax|seplog|r1|r2|r3|r4|r5|r6|r7|r8)$", "RATING", REG_EXTENDED, "Edge rating to use. One of {weight, expansionstar, expansionstar2, punch, sepmultx, sepaddx, sepmax, seplog, " " expansionstar2deg}. Default: weight"  );
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -224,6 +225,7 @@ int parse_parameters(int argn, char **argv,
                 sep_loc_fm_no_snodes,
                 sep_num_vert_stop,
                 sep_full_boundary_ip,
+                sep_edge_rating_during_ip,
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
@@ -768,6 +770,44 @@ int parse_parameters(int argn, char **argv,
                 }
         }
 
+        if (sep_edge_rating_during_ip->count > 0) {
+                if(strcmp("expansionstar", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = EXPANSIONSTAR;
+                } else if (strcmp("expansionstar2", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = EXPANSIONSTAR2;
+                } else if (strcmp("expansionstar2algdist", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = EXPANSIONSTAR2ALGDIST;
+                } else if (strcmp("geom", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = PSEUDOGEOM;
+                } else if (strcmp("sepaddx", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_ADDX;
+                } else if (strcmp("sepmultx", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_MULTX;
+                } else if (strcmp("sepmax", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_MAX;
+                } else if (strcmp("seplog", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_LOG;
+                } else if (strcmp("r1", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R1;
+                } else if (strcmp("r2", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R2;
+                } else if (strcmp("r3", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R3;
+                } else if (strcmp("r4", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R4;
+                } else if (strcmp("r5", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R5;
+                } else if (strcmp("r6", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R6;
+                } else if (strcmp("r7", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R7;
+                } else if (strcmp("r8", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R8;
+                } else {
+                        fprintf(stderr, "Invalid edge rating variant: \"%s\"\n", sep_edge_rating_during_ip->sval[0]);
+                        exit(0);
+                }
+        }
 
         if (edge_rating->count > 0) {
                 if(strcmp("expansionstar", edge_rating->sval[0]) == 0) {
