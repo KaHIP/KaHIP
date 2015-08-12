@@ -32,7 +32,7 @@ NodeWeight initial_node_separator::single_run( const PartitionConfig & config, g
         partition_config.mode_node_separators    = false;
         partition_config.global_cycle_iterations = 1;
         partition_config.repetitions             = 1;
-        partition_config.edge_rating             = config.sep_edge_rating_during_ip;
+        //partition_config.edge_rating             = config.sep_edge_rating_during_ip;
 
 
         //if( rnd == 0 ) partition_config.edge_rating = SEPARATOR_MULTX;
