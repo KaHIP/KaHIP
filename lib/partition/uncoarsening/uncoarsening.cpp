@@ -45,7 +45,7 @@ uncoarsening::~uncoarsening() {
 int uncoarsening::perform_uncoarsening(const PartitionConfig & config, graph_hierarchy & hierarchy) {
 
         if(config.mode_node_separators) {
-                return perform_uncoarsening_nodeseparator(config, hierarchy);
+                return perform_uncoarsening_nodeseparator_fast(config, hierarchy);
         } else {
                 return perform_uncoarsening_cut(config, hierarchy);
         }
@@ -130,8 +130,7 @@ int uncoarsening::perform_uncoarsening_cut(const PartitionConfig & config, graph
 
         return improvement;
 }
-
-int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & config, graph_hierarchy & hierarchy) {
+int uncoarsening::perform_uncoarsening_nodeseparator_fast(const PartitionConfig & config, graph_hierarchy & hierarchy) {
 
         std::cout <<  "log> starting uncoarsening ---------------"  << std::endl;
         PartitionConfig cfg     = config;
@@ -139,6 +138,113 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
         quality_metrics qm;
         std::cout << "log>" << "unrolling graph with " << coarsest->number_of_nodes() << std::endl;
 
+        std::vector< NodeWeight > block_weights(3,0);
+        PartialBoundary current_separator;
+        forall_nodes((*coarsest), node) {
+                if( coarsest->getPartitionIndex(node) == 0) {
+                        block_weights[0] += coarsest->getNodeWeight(node);
+                } else if( coarsest->getPartitionIndex(node) == 1 ) {
+                        block_weights[1] += coarsest->getNodeWeight(node);
+                } else {
+                        block_weights[2] += coarsest->getNodeWeight(node);
+                        current_separator.insert(node);
+                }
+        } endfor
+        
+
+        if( !config.sep_greedy_disabled ) {
+                greedy_ns_local_search gnls;
+                gnls.perform_refinement(config, (*coarsest));
+        }
+
+        if( !config.sep_fm_disabled ) {
+                for( int i = 0; i < config.sep_num_fm_reps; i++) {
+                        fm_ns_local_search fmnsls;
+                        fmnsls.perform_refinement(config, (*coarsest), block_weights, current_separator);
+
+                        int rnd_block = random_functions::nextInt(0,1);
+                        fmnsls.perform_refinement(config, (*coarsest), block_weights, current_separator, true, rnd_block);
+                        fmnsls.perform_refinement(config, (*coarsest), block_weights, current_separator, true, rnd_block == 0? 1 : 0);
+                }
+        }
+
+        if( !config.sep_flows_disabled ) {
+                for( int i = 0; i < config.max_flow_improv_steps; i++) {
+
+                        vertex_separator_algorithm vsa;
+
+                        std::vector<NodeID> separator;
+                        forall_nodes((*coarsest), node) {
+                                if( coarsest->getPartitionIndex(node) == 2) {
+                                        separator.push_back(node);
+                                }
+                        } endfor
+
+                        std::vector<NodeID> output_separator;
+                        NodeWeight improvement = vsa.improve_vertex_separator(config, *coarsest, separator, output_separator);
+                        if(improvement == 0) break;
+                }
+        }
+
+        while(!hierarchy.isEmpty()) {
+                graph_access* G = hierarchy.pop_finer_and_project_ns(current_separator);
+                std::cout << "log>" << "unrolling graph with " << G->number_of_nodes() << std::endl;
+
+                if( !config.sep_greedy_disabled) {
+                        greedy_ns_local_search gnls;
+                        gnls.perform_refinement(config, (*G));
+                }
+
+                if( !config.sep_fm_disabled) {
+                        for( int i = 0; i < config.sep_num_fm_reps; i++) {
+                                fm_ns_local_search fmnsls;
+                                fmnsls.perform_refinement(config, (*G), block_weights, current_separator);
+
+                                int rnd_block = random_functions::nextInt(0,1);
+                                fmnsls.perform_refinement(config, (*G), block_weights, current_separator, true, rnd_block);
+                                fmnsls.perform_refinement(config, (*G), block_weights, current_separator, true, rnd_block == 0? 1 : 0);
+                        }
+                }
+
+                if( !config.sep_loc_fm_disabled) {
+                        for( int i = 0; i < config.sep_num_loc_fm_reps; i++) {
+                                localized_fm_ns_local_search fmnsls;
+                                fmnsls.perform_refinement(config, (*G));
+
+                                int rnd_block = random_functions::nextInt(0,1);
+                                fmnsls.perform_refinement(config, (*G), true, rnd_block);
+                                fmnsls.perform_refinement(config, (*G), true, rnd_block == 0? 1 : 0);
+                        }
+                }
+
+
+                if( !config.sep_flows_disabled ) {
+                        for( int i = 0; i < config.max_flow_improv_steps; i++) {
+                                vertex_separator_algorithm vsa;
+
+                                std::vector<NodeID> separator;
+                                forall_nodes((*G), node) {
+                                        if( G->getPartitionIndex(node) == 2) {
+                                                separator.push_back(node);
+                                        }
+                                } endfor
+
+                                std::vector<NodeID> output_separator;
+                                NodeWeight improvement = vsa.improve_vertex_separator(config, *G, separator, output_separator);
+                                if(improvement == 0) break;
+                        }
+                }
+        }
+
+        return 0;
+}
+int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & config, graph_hierarchy & hierarchy) {
+
+        std::cout <<  "log> starting uncoarsening ---------------"  << std::endl;
+        PartitionConfig cfg     = config;
+        graph_access * coarsest = hierarchy.get_coarsest();
+        quality_metrics qm;
+        std::cout << "log>" << "unrolling graph with " << coarsest->number_of_nodes() << std::endl;
 
         if( !config.sep_greedy_disabled ) {
                 greedy_ns_local_search gnls;

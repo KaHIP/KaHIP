@@ -56,6 +56,7 @@ class PartialBoundary {
 
                 bool contains(NodeID node);
                 void insert(NodeID node);
+                void clear();
                 void deleteNode(NodeID node);
                 NodeID size();
 
@@ -77,6 +78,11 @@ inline void PartialBoundary::deleteNode(NodeID node) {
 inline NodeID PartialBoundary::size() {
         return internal_boundary.size();
 }
+
+inline void PartialBoundary::clear() {
+        return internal_boundary.clear();
+}
+
 
 
 //iterator for

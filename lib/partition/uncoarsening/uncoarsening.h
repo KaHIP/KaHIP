@@ -34,6 +34,7 @@ public:
         int perform_uncoarsening(const PartitionConfig & config, graph_hierarchy & hierarchy);
         int perform_uncoarsening_cut(const PartitionConfig & config, graph_hierarchy & hierarchy);
         int perform_uncoarsening_nodeseparator(const PartitionConfig & config, graph_hierarchy & hierarchy);
+        int perform_uncoarsening_nodeseparator_fast(const PartitionConfig & config, graph_hierarchy & hierarchy);
 };
 
 
