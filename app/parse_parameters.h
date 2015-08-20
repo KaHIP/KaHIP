@@ -156,6 +156,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_lit *sep_loc_fm_disabled		     = arg_lit0(NULL, "sep_loc_fm_disabled", "(Default: disabled)");
         struct arg_lit *sep_greedy_disabled		     = arg_lit0(NULL, "sep_greedy_disabled", "(Default: disabled)");
         struct arg_lit *sep_full_boundary_ip                 = arg_lit0(NULL, "sep_full_boundary_ip", "(Default: disabled)");
+        struct arg_lit *sep_faster_ns                        = arg_lit0(NULL, "sep_faster_ns", "(Default: disabled)");
         struct arg_int *sep_fm_unsucc_steps		     = arg_int0(NULL, "sep_fm_unsucc_steps", NULL, "Maximum number of steps till last improvement in FM algorithm.");
         struct arg_int *sep_num_fm_reps                      = arg_int0(NULL, "sep_num_fm_reps", NULL, "Number of FM repetitions during uncoarsening on each level.");
         struct arg_int *sep_loc_fm_unsucc_steps		     = arg_int0(NULL, "sep_loc_fm_unsucc_steps", NULL, "Maximum number of steps till last improvement in FM algorithm.");
@@ -226,6 +227,7 @@ int parse_parameters(int argn, char **argv,
                 sep_num_vert_stop,
                 sep_full_boundary_ip,
                 sep_edge_rating_during_ip,
+                sep_faster_ns,
 
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
@@ -416,6 +418,10 @@ int parse_parameters(int argn, char **argv,
 	if(sep_flows_disabled->count > 0) {
 		partition_config.sep_flows_disabled = true;
 	}
+
+        if(sep_faster_ns->count > 0) {
+                partition_config.faster_ns = true;
+        }
 
 	if(sep_loc_fm_no_snodes->count > 0) {
 		partition_config.sep_loc_fm_no_snodes = sep_loc_fm_no_snodes->ival[0];

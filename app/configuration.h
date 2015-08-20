@@ -366,6 +366,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.kaba_enable_zero_weight_cycles         = true;
         partition_config.mh_enable_gal_combine			= false;
         partition_config.mh_easy_construction                   = false;
+        partition_config.faster_ns                              = false;
 
         partition_config.maxT                                   = 100;
         partition_config.maxIter                                = 500000;

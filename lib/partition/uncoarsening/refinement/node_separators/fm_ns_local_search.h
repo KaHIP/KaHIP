@@ -24,7 +24,9 @@ public:
         virtual ~fm_ns_local_search();
 
         EdgeWeight perform_refinement(const PartitionConfig & config, graph_access & G, bool balance = false, PartitionID to = 4);
-        EdgeWeight perform_refinement(const PartitionConfig & config, graph_access & G, std::vector< NodeWeight > & node_weight, PartialBoundary & separator, bool balance = false, PartitionID to = 4);
+        EdgeWeight perform_refinement(const PartitionConfig & config, graph_access & G, std::vector< NodeWeight > & block_weight, 
+                                      std::vector< bool > & moved_out_of_separator,
+                                      PartialBoundary & separator, bool balance = false, PartitionID to = 4);
 
 private: 
         void compute_gain( graph_access & G, NodeID node, Gain & toLHS, Gain & toRHS);
@@ -40,6 +42,8 @@ private:
                         std::vector< maxNodeHeap > & heaps,
                         std::vector< change_set > & rollback_info,
                         PartialBoundary & separator);
+
+        std::vector< NodeID > moved_nodes;
 };
 
 
@@ -71,6 +75,7 @@ void fm_ns_local_search::move_node( graph_access & G, NodeID & node, PartitionID
         cur_move.block = G.getPartitionIndex(node);
         rollback_info.push_back(cur_move);
 
+        //std::cout <<  "node " <<  node  << std::endl;
         G.setPartitionIndex(node, to_block);
         block_weights[to_block] += G.getNodeWeight(node);
         block_weights[2] -= G.getNodeWeight(node);
@@ -137,17 +142,20 @@ void fm_ns_local_search::move_node( graph_access & G, NodeID & node, PartitionID
         cur_move.block = G.getPartitionIndex(node);
         rollback_info.push_back(cur_move);
         separator.deleteNode(node);
+        //std::cout <<  "node " <<  node  << std::endl;
 
         G.setPartitionIndex(node, to_block);
         block_weights[to_block] += G.getNodeWeight(node);
         block_weights[2] -= G.getNodeWeight(node);
         moved_out_of_S[node] = true;
+        moved_nodes.push_back(node);
 
         std::vector< NodeID > to_be_added;
         std::vector< NodeID > to_be_updated; // replace by hashmap?
         Gain gain_achieved = G.getNodeWeight(node);
         forall_out_edges(G, e, node) {
                 NodeID target = G.getEdgeTarget(e);
+                //std::cout <<  "target " <<  target  << std::endl;
 
                 if( G.getPartitionIndex( target ) == other_block ) {
                         change_set cur_move;
@@ -156,6 +164,8 @@ void fm_ns_local_search::move_node( graph_access & G, NodeID & node, PartitionID
                         rollback_info.push_back(cur_move);
 
                         G.setPartitionIndex(target, 2);
+                        separator.insert(target);
+
                         block_weights[other_block] -= G.getNodeWeight(target);
                         block_weights[2]           += G.getNodeWeight(target);
                         gain_achieved              -= G.getNodeWeight(target);
@@ -182,7 +192,6 @@ void fm_ns_local_search::move_node( graph_access & G, NodeID & node, PartitionID
                 compute_gain( G, node, toLHS, toRHS);
                 queues[0].insert(node, toLHS);
                 queues[1].insert(node, toRHS);
-                separator.insert(node);
         }
 
         for( NodeID node : to_be_updated) {
