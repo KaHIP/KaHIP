@@ -235,11 +235,10 @@ int uncoarsening::perform_uncoarsening_nodeseparator_fast(const PartitionConfig 
         std::cout <<  "log> starting uncoarsening ---------------"  << std::endl;
         PartitionConfig cfg     = config;
         graph_access * coarsest = hierarchy.get_coarsest();
-        quality_metrics qm;
         std::cout << "log>" << "unrolling graph with " << coarsest->number_of_nodes() << std::endl;
 
-        std::vector< NodeWeight > block_weights(3,0);
-        PartialBoundary current_separator;
+        std::vector< NodeWeight > block_weights(3,0); PartialBoundary current_separator;
+        //compute coarsest block weights and separator
         forall_nodes((*coarsest), node) {
                 block_weights[coarsest->getPartitionIndex(node)] += coarsest->getNodeWeight(node);
                 if( coarsest->getPartitionIndex(node) == 2) {

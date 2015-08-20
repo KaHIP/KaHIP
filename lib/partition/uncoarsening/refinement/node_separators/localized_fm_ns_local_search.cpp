@@ -49,9 +49,7 @@ EdgeWeight localized_fm_ns_local_search::perform_refinement(const PartitionConfi
         }
         moved_nodes.clear();
 
-        //std::cout <<  "rnd abx " <<  random_functions::nextInt(0,10000)  << std::endl;
         return improvement;
-
 }
 
 EdgeWeight localized_fm_ns_local_search::perform_refinement(const PartitionConfig & config, graph_access & G, 
@@ -86,9 +84,7 @@ EdgeWeight localized_fm_ns_local_search::perform_refinement(const PartitionConfi
                 }
         }
 
-        //std::cout <<  "rnd abx " <<  random_functions::nextInt(0,10000)  << std::endl;
         return improvement;
-
 }
 
 EdgeWeight localized_fm_ns_local_search::perform_refinement_internal(const PartitionConfig & config, graph_access & G,
@@ -110,17 +106,6 @@ EdgeWeight localized_fm_ns_local_search::perform_refinement_internal(const Parti
                 queues[1].insert(node, toRHS);
         }
         
-        //std::vector< NodeWeight > block_weights(3,0);
-        //forall_nodes(G, node) {
-                //if( G.getPartitionIndex(node) == 0) {
-                        //block_weights[0] += G.getNodeWeight(node);
-                //} else if( G.getPartitionIndex(node) == 1 ) {
-                        //block_weights[1] += G.getNodeWeight(node);
-                //} else {
-                        //block_weights[2] += G.getNodeWeight(node);
-                //}
-        //} endfor
-
         NodeWeight best_separator  = block_weights[2];
         NodeWeight input_separator = block_weights[2];
         int best_diff              = abs(block_weights[1]-block_weights[0]);

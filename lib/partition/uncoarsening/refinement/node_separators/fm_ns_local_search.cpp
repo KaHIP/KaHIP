@@ -28,15 +28,9 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                 }
         } endfor
 
-        //std::cout <<  "rnd " <<  random_functions::nextInt(0,10000) << std::endl;
         random_functions::permutate_vector_good(start_nodes, false);
         std::sort(start_nodes.begin(), start_nodes.end());
-        //std::cout <<  "start nodes " ;
-        //for ( NodeID v : start_nodes ) {
-                //std::cout <<  v << " ";
-        //}
-        //std::cout <<  ""  << std::endl;
-
+        
         for( NodeID node : start_nodes ) {
                 Gain toLHS = 0;
                 Gain toRHS = 0;
@@ -56,10 +50,6 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                         block_weights[2] += G.getNodeWeight(node);
                 }
         } endfor
-        //for( unsigned i = 0; i < 3; i++) {
-                //std::cout <<  "input bw " << block_weights[i]  << std::endl;
-        //}
- 
 
         NodeWeight best_separator  = block_weights[2];
         NodeWeight input_separator = block_weights[2];
@@ -87,29 +77,22 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                                 to_block = top_gain == gainToA ? 0 : 1;
                         }
                 }
-                //std::cout <<  "top gain " <<  top_gain  << std::endl;
 
                 Gain other_gain = gainToA > gainToB ? gainToB : gainToA;
                 PartitionID other_block = to_block == 0 ? 1 : 0;
 
                 NodeID nodeToBlock = queues[to_block].maxElement();
-                //std::cout <<  "nodeToBlock " <<  nodeToBlock << std::endl;
                 if( block_weights[to_block] + G.getNodeWeight(nodeToBlock) < config.upper_bound_partition ) {
-                        //std::cout <<  "case A"  << std::endl;
                         queues[to_block].deleteMax();
                         queues[other_block].deleteNode(nodeToBlock);
                         move_node(G, nodeToBlock, to_block, other_block, block_weights, moved_out_of_separator, queues, rollback_info);
                 } else {
-                        //std::cout <<  "case B"  << std::endl;
                         NodeID nodeOtherBlock = queues[other_block].maxElement();
-                        //std::cout <<  "nodeOther " <<  nodeOtherBlock <<  " otherGain " <<  other_gain  << std::endl;
                         if( other_gain >= 0 && block_weights[other_block] + G.getNodeWeight(nodeOtherBlock) < config.upper_bound_partition) {
-                                //std::cout <<  "case C"  << std::endl;
                                 queues[other_block].deleteMax();
                                 queues[to_block].deleteNode(nodeOtherBlock);
                                 move_node(G, nodeOtherBlock, other_block, to_block, block_weights, moved_out_of_separator, queues, rollback_info);
                         } else {
-                                //std::cout <<  "case D"  << std::endl;
                                 // need to make progress (remove a random node from the queues)
                                 if( nodeOtherBlock == nodeToBlock ) {
                                         queues[0].deleteMax();
@@ -126,12 +109,8 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                         best_separator = block_weights[2];
                         undo_idx = rollback_info.size();
                         steps_till_last_improvement = 0;
-                        //std::cout <<  "update " <<  best_separator <<  " " <<  cur_diff  << std::endl;
                 }  else {
                         steps_till_last_improvement++;
-                        //for( unsigned i = 0; i < 3; i++) {
-                                ////std::cout <<  "bw " << block_weights[i]  << std::endl;
-                        //}
                 }
 
                 if( queues[0].empty() || queues[1].empty() ) {
@@ -144,9 +123,6 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                 G.setPartitionIndex(rollback_info[i].node, rollback_info[i].block);
         }
                   
-        //std::cout <<  "best separator " <<  best_separator  << std::endl;
-
-        //std::cout <<  "rnd2 " <<  random_functions::nextInt(0,10000) << std::endl;
         return input_separator - best_separator;
 
 }
@@ -157,30 +133,16 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                                                   PartialBoundary & separator, bool balance, PartitionID to) {
 
         std::vector< maxNodeHeap > queues; queues.resize(2);
-        //std::vector< bool > moved_out_of_separator(G.number_of_nodes(), false);
-        forall_nodes(G, node) {
-                moved_out_of_separator[node] = false;
-        } endfor
-        
         std::vector< change_set > rollback_info;
 
         std::vector< NodeID > start_nodes;
         forall_boundary_nodes( separator, node ) {
                  start_nodes.push_back(node);
         } endfor 
-        //for( unsigned i = 0; i < 3; i++) {
-                //std::cout <<  "input bw " << block_weights[i]  << std::endl;
-        //}
-       
-        //std::cout <<  "rnd " <<  random_functions::nextInt(0,10000) << std::endl;
+
         random_functions::permutate_vector_good(start_nodes, false);
         std::sort(start_nodes.begin(), start_nodes.end());
-        //std::cout <<  "start nodes " ;
-        //for ( NodeID v : start_nodes ) {
-                //std::cout <<  v << " ";
-        //}
-        //std::cout <<  ""  << std::endl;
-
+        
         for( NodeID node : start_nodes ) {
                 Gain toLHS = 0;
                 Gain toRHS = 0;
@@ -218,39 +180,22 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                                 to_block = top_gain == gainToA ? 0 : 1;
                         }
                 }
-                //forall_nodes(G, node) {
-                        //if(G.getPartitionIndex(node) == 2) {
-                                //if(!separator.contains(node)) {
-                                        //std::cout <<  "problem beginning of loop "  << std::endl;
-                                        //std::cout <<  "node " <<  node  << std::endl;
-                                        //exit(0);
-                                //}
-                        //}
-                //} endfor
-
-                //std::cout <<  "top gain " <<  top_gain  << std::endl;
-
+                
                 Gain other_gain = gainToA > gainToB ? gainToB : gainToA;
                 PartitionID other_block = to_block == 0 ? 1 : 0;
 
                 NodeID nodeToBlock = queues[to_block].maxElement();
-                //std::cout <<  "nodeToBlock " <<  nodeToBlock << std::endl;
                 if( block_weights[to_block] + G.getNodeWeight(nodeToBlock) < config.upper_bound_partition ) {
-                        //std::cout <<  "case A"  << std::endl;
                         queues[to_block].deleteMax();
                         queues[other_block].deleteNode(nodeToBlock);
                         move_node(G, nodeToBlock, to_block, other_block, block_weights, moved_out_of_separator, queues, rollback_info, separator);
                 } else {
-                        //std::cout <<  "case B"  << std::endl;
                         NodeID nodeOtherBlock = queues[other_block].maxElement();
-                        //std::cout <<  "nodeOther " <<  nodeOtherBlock <<  " otherGain " <<  other_gain  << std::endl;
                         if( other_gain >= 0 && block_weights[other_block] + G.getNodeWeight(nodeOtherBlock) < config.upper_bound_partition) {
-                                //std::cout <<  "case C"  << std::endl;
                                 queues[other_block].deleteMax();
                                 queues[to_block].deleteNode(nodeOtherBlock);
                                 move_node(G, nodeOtherBlock, other_block, to_block, block_weights, moved_out_of_separator, queues, rollback_info, separator);
                         } else {
-                                //std::cout <<  "case D"  << std::endl;
                                 // need to make progress (remove a random node from the queues)
                                 if( nodeOtherBlock == nodeToBlock ) {
                                         queues[0].deleteMax();
@@ -268,27 +213,13 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                         undo_idx                    = rollback_info.size();
                         steps_till_last_improvement = 0;
                         best_block_weights          = block_weights;
-                        //std::cout <<  "update " <<  best_separator <<  " " <<  cur_diff  << std::endl;
                 }  else {
                         steps_till_last_improvement++;
-                        //for( unsigned i = 0; i < 3; i++) {
-                                //std::cout <<  "bw " << block_weights[i]  << std::endl;
-                        //}
                 }
 
                 if( queues[0].empty() || queues[1].empty() ) {
                         break;
                 }
-                //forall_nodes(G, node) {
-                        //if(G.getPartitionIndex(node) == 2) {
-                                //if(!separator.contains(node)) {
-                                        //std::cout <<  "problem bevor rollback "  << std::endl;
-                                        //std::cout <<  "node " <<  node  << std::endl;
-                                        //exit(0);
-                                //}
-                        //}
-                //} endfor
-                
         }
 
         // roll back 
@@ -303,15 +234,7 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                 moved_out_of_separator[node] = false;
         }
         moved_nodes.clear();
-        //forall_nodes(G, node) {
-                //if(moved_out_of_separator[node] == true) {
-                        //std::cout <<  "problem "  << std::endl;
-                        //exit(0);
-                //}
-        //} endfor
-        
-        //std::cout <<  "best separator " <<  best_separator  << std::endl;
-        //std::cout <<  "rnd2 " <<  random_functions::nextInt(0,10000) << std::endl;
+
         return input_separator - best_separator;
 
 }
