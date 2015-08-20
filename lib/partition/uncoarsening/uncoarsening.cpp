@@ -278,7 +278,7 @@ int uncoarsening::perform_uncoarsening_nodeseparator_fast(const PartitionConfig 
                         } endfor
 
                         std::vector<NodeID> output_separator;
-                        NodeWeight improvement = vsa.improve_vertex_separator(config, *coarsest, separator, output_separator);
+                        NodeWeight improvement = vsa.improve_vertex_separator(config, *coarsest, block_weights, current_separator);
                         if(improvement == 0) break;
                 }
         }
@@ -328,7 +328,7 @@ int uncoarsening::perform_uncoarsening_nodeseparator_fast(const PartitionConfig 
                                 } endfor
 
                                 std::vector<NodeID> output_separator;
-                                NodeWeight improvement = vsa.improve_vertex_separator(config, *G, separator, output_separator);
+                                NodeWeight improvement = vsa.improve_vertex_separator(config, *G, block_weights, current_separator);
                                 if(improvement == 0) break;
                         }
                 }
