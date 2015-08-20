@@ -6,7 +6,6 @@
 #include "fm_ns_local_search.h"
 #include "data_structure/priority_queues/maxNodeHeap.h"
 #include "tools/random_functions.h"
-#include "tools/quality_metrics.h"
 
 fm_ns_local_search::fm_ns_local_search() {
                 
@@ -31,7 +30,7 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
 
         //std::cout <<  "rnd " <<  random_functions::nextInt(0,10000) << std::endl;
         random_functions::permutate_vector_good(start_nodes, false);
-        //std::sort(start_nodes.begin(), start_nodes.end());
+        std::sort(start_nodes.begin(), start_nodes.end());
         //std::cout <<  "start nodes " ;
         //for ( NodeID v : start_nodes ) {
                 //std::cout <<  v << " ";
@@ -175,7 +174,7 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
        
         //std::cout <<  "rnd " <<  random_functions::nextInt(0,10000) << std::endl;
         random_functions::permutate_vector_good(start_nodes, false);
-        //std::sort(start_nodes.begin(), start_nodes.end());
+        std::sort(start_nodes.begin(), start_nodes.end());
         //std::cout <<  "start nodes " ;
         //for ( NodeID v : start_nodes ) {
                 //std::cout <<  v << " ";

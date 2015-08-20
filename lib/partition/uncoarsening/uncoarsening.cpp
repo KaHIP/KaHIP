@@ -301,18 +301,18 @@ int uncoarsening::perform_uncoarsening_nodeseparator_fast(const PartitionConfig 
 
                                 int rnd_block = random_functions::nextInt(0,1);
                                 fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block);
-                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block == 0? 1 : 0);
+                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block == 0 ? 1 : 0);
                         }
                 }
 
                 if( !config.sep_loc_fm_disabled) {
                         for( int i = 0; i < config.sep_num_loc_fm_reps; i++) {
                                 localized_fm_ns_local_search fmnsls;
-                                fmnsls.perform_refinement(config, (*G));
+                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator);
 
                                 int rnd_block = random_functions::nextInt(0,1);
-                                fmnsls.perform_refinement(config, (*G), true, rnd_block);
-                                fmnsls.perform_refinement(config, (*G), true, rnd_block == 0? 1 : 0);
+                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block);
+                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block == 0 ? 1 : 0);
                         }
                 }
 
