@@ -24,7 +24,6 @@ EdgeWeight localized_fm_ns_local_search::perform_refinement(const PartitionConfi
                 start_nodes.push_back(node);
         } endfor
         random_functions::permutate_vector_good(start_nodes, false);
-        std::sort(start_nodes.begin(), start_nodes.end());
 
         EdgeWeight improvement = 0;
         while( start_nodes.size() > 0 ) {
@@ -63,7 +62,6 @@ EdgeWeight localized_fm_ns_local_search::perform_refinement(const PartitionConfi
                 }
         } endfor
         random_functions::permutate_vector_good(start_nodes, false);
-        std::sort(start_nodes.begin(), start_nodes.end());
 
         EdgeWeight improvement = 0;
         while( start_nodes.size() > 0 ) {

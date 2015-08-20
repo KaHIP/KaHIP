@@ -74,7 +74,13 @@ inline void configuration::strong( PartitionConfig & partition_config ) {
 
         partition_config.mh_initial_population_fraction         = 10;
         partition_config.mh_flip_coin                           = 1; 
+#ifndef MODE_NODESEP
         partition_config.epsilon                                = 3; 
+        partition_config.imbalance                              = 3;
+#else
+        partition_config.epsilon                                = 20; 
+        partition_config.imbalance                              = 20;
+#endif
 
         partition_config.initial_partitioning_type              = INITIAL_PARTITIONING_RECPARTITION;
         partition_config.bipartition_tries                      = 4;
@@ -165,7 +171,14 @@ inline void configuration::strong_separator( PartitionConfig & partition_config 
 
         partition_config.mh_initial_population_fraction         = 10;
         partition_config.mh_flip_coin                           = 1; 
+
+#ifndef MODE_NODESEP
         partition_config.epsilon                                = 3; 
+        partition_config.imbalance                              = 3;
+#else
+        partition_config.epsilon                                = 20; 
+        partition_config.imbalance                              = 20;
+#endif
 
         partition_config.initial_partitioning_type              = INITIAL_PARTITIONING_RECPARTITION;
         partition_config.bipartition_tries                      = 4;
@@ -251,7 +264,6 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.mode_node_separators                   = false;
         partition_config.eco                                    = false;
         partition_config.strong                                 = false;
-        partition_config.imbalance                              = 3;
         partition_config.first_level_random_matching            = false;
         partition_config.initial_partitioning_repetitions       = 5;
         partition_config.edge_rating_tiebreaking                = false;
@@ -264,7 +276,14 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.minipreps                              = 10;
         partition_config.enable_omp                             = false;
         partition_config.combine                                = false;
+#ifndef MODE_NODESEP
         partition_config.epsilon                                = 3; 
+        partition_config.imbalance                              = 3;
+#else
+        partition_config.epsilon                                = 20; 
+        partition_config.imbalance                              = 20;
+#endif
+
         partition_config.buffoon                                = false;
         partition_config.balance_edges                          = false;
 

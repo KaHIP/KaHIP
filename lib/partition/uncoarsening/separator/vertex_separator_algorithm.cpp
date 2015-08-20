@@ -194,77 +194,53 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator(const PartitionC
 								std::vector< NodeWeight > & block_weights,
 						 	        PartialBoundary & separator) {
 
-        std::vector< NodeID > current_solution(G.number_of_nodes(), 0);
-        forall_nodes(G, node) {
-                current_solution[node] = G.getPartitionIndex(node);
-        } endfor
-	std::vector< NodeWeight > old_block_weights = block_weights;
+        G.set_partition_count(3);
         
-	for( unsigned i = 0; i < 3; i++) {
-		std::cout <<  "bw " <<  block_weights[i]  << std::endl;
-	}
-        bool solution_imbalanced;
+        double current_region_factor    = config.region_factor_node_separators;
+        double iteration                = 0;
+        NodeWeight prev_solution_value  = block_weights[2];
+
         NodeWeight solution_value;
-        double current_region_factor = config.region_factor_node_separators;
-        double iteration = 0;
-        quality_metrics qm;
+        bool solution_imbalanced;
+        std::vector< NodeWeight > old_block_weights = block_weights;
+
         do {
-                PartitionConfig cfg = config;
+                PartitionConfig cfg               = config;
                 cfg.region_factor_node_separators = 1+current_region_factor;
-                solution_imbalanced = false;
-		for( unsigned i = 0; i < 3; i++) {
-			std::cout <<  "bw " <<  block_weights[i]  << std::endl;
-		}
-
-		std::vector< NodeWeight > real_block_weights_(3,0);
-		forall_nodes(G, node) {
-			real_block_weights_[G.getPartitionIndex(node)] += G.getNodeWeight(node);
-		} endfor
-
-		for( unsigned i = 0; i < 3; i++) {
-			if( block_weights[i] != real_block_weights_[i] ) {
-				std::cout <<  "problem before "  << std::endl;
-				std::cout <<  block_weights[i]  << " " << real_block_weights_[i] << " " << i << std::endl;
-				exit(0);
-			}
-		}
+                solution_imbalanced               = false;
 	
+                std::vector< NodeID > old_lhs;
+                std::vector< NodeID > old_rhs;
+                std::vector< NodeID > old_sep;
 
-                solution_value = improve_vertex_separator_internal( cfg , G, block_weights, separator);
-		for( unsigned i = 0; i < 3; i++) {
-			std::cout <<  "after bw " <<  block_weights[i]  << std::endl;
-		}
+                solution_value = improve_vertex_separator_internal( cfg , G, block_weights, separator, old_lhs, old_rhs, old_sep);
 
-
-		std::vector< NodeWeight > real_block_weights(3,0);
-		forall_nodes(G, node) {
-			real_block_weights[G.getPartitionIndex(node)] += G.getNodeWeight(node);
-		} endfor
-
-		for( unsigned i = 0; i < 3; i++) {
-			if( block_weights[i] != real_block_weights[i] ) {
-				std::cout <<  "problem"  << std::endl;
-				std::cout <<  block_weights[i]  << " " << real_block_weights[i] << " " << i << std::endl;
-				exit(0);
-			}
-		}
+                if( solution_value == prev_solution_value ) {
+                        NodeWeight cur_diff = abs( block_weights[1] - block_weights[0] );
+                        NodeWeight old_diff = abs( old_block_weights[1] - old_block_weights[0] );
+                        if( cur_diff > old_diff ) {
+                                //reconstruct old solution and return since solution value will not be better
+                                apply_vectors( G, old_lhs, old_rhs, old_sep);
+                                separator.clear();
+                                for( NodeID node : old_sep ) {
+                                        separator.insert(node);
+                                }
+                                block_weights = old_block_weights;
+                        }
+                        return 0;
+                }
 	
-                G.set_partition_count(3);
-                //double balance = qm.balance_separator(G);
-		//std::cout <<  "balance " <<  balance  << std::endl;
                 if( block_weights[0] > config.upper_bound_partition || block_weights[1] > config.upper_bound_partition ) {
                         solution_imbalanced = true;
                         current_region_factor /= 2;
 
+                        //reconstruct old solution
+                        apply_vectors( G, old_lhs, old_rhs, old_sep);
 			separator.clear();
-                        forall_nodes(G, node) {
-                                G.setPartitionIndex(node, current_solution[node]);
-				if( G.getPartitionIndex(node) == 2) {
-					separator.insert(node);
-				}
-                        } endfor
+                        for( NodeID node : old_sep ) {
+                                separator.insert(node);
+                        }
 			block_weights = old_block_weights;
-			std::cout <<  "undoing change "  << std::endl;
                 }
                 iteration++;
         } while ( solution_imbalanced && iteration < 10);
@@ -272,48 +248,36 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator(const PartitionC
         if( solution_imbalanced ) {
                 PartitionConfig cfg = config;
                 cfg.region_factor_node_separators = 1;
-                solution_value = improve_vertex_separator_internal(cfg , G, block_weights, separator);
+
+                std::vector< NodeID > old_lhs;
+                std::vector< NodeID > old_rhs;
+                std::vector< NodeID > old_sep;
+                solution_value = improve_vertex_separator_internal(cfg , G, block_weights, separator, old_lhs, old_rhs, old_sep);
         }
 
-        return solution_value;
+        return prev_solution_value-solution_value;
 }
 
 NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const PartitionConfig & config, 
 	                                                                 graph_access & G, 
 									 std::vector< NodeWeight > & block_weights,
-			 						 PartialBoundary & separator) {
-	std::cout <<  "starting new round"  << std::endl;
-        NodeWeight lhs_part_weight = 0;
-        NodeWeight rhs_part_weight = 0;
-        NodeWeight separator_weight = 0;
-        //forall_nodes(G, node) {
-                //if( G.getPartitionIndex(node) == 1 ) {
-                       //rhs_part_weight += G.getNodeWeight(node);
-                //} else if ( G.getPartitionIndex(node) == 0) {
-                       //lhs_part_weight += G.getNodeWeight(node); 
-                //} else if (G.getPartitionIndex(node) == 2) {
-                       //separator_weight += G.getNodeWeight(node); 
-                //} 
-        //} endfor
-	lhs_part_weight  = block_weights[0];
-	rhs_part_weight  = block_weights[1];
-	separator_weight = block_weights[2];
-
-        quality_metrics qm;
-        NodeWeight old_separator_weight = separator_weight;
+			 						 PartialBoundary & separator,
+                                                                         std::vector< NodeID > & lhs_nodes, 
+                                                                         std::vector< NodeID > & rhs_nodes,
+                                                                         std::vector< NodeID > & start_nodes) {
+        NodeWeight lhs_part_weight  = block_weights[0];
+        NodeWeight rhs_part_weight  = block_weights[1];
+        NodeWeight separator_weight = block_weights[2];
 
         area_bfs abfs;
         // perform BFS into one side
-        std::vector<NodeID> lhs_nodes;
-        std::vector<NodeID> start_nodes;
 	forall_boundary_nodes( separator, node ) {
 		start_nodes.push_back(node);
 	} endfor
-        abfs.perform_bfs(config, G, start_nodes, 0, lhs_part_weight, lhs_nodes);
+        abfs.perform_bfs(config, G, start_nodes, 0, block_weights, lhs_nodes);
 
         // perform BFS into other side
-        std::vector<NodeID> rhs_nodes;
-        abfs.perform_bfs(config, G, start_nodes, 1, rhs_part_weight, rhs_nodes);
+        abfs.perform_bfs(config, G, start_nodes, 1, block_weights, rhs_nodes);
 
         // now build the flow problem
         flow_graph rG; NodeID source, sink;
@@ -324,7 +288,6 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
         bool compute_source_set = !config.most_balanced_minimum_cuts_node_sep;
 	FlowType value =  mfmc_solver.solve_max_flow_min_cut(rG, source, sink, compute_source_set, source_set);
 
-	std::cout <<  "flow value is " <<  value  << std::endl;
         std::vector< bool > is_in_source_set( rG.number_of_nodes());
         bool start_value = config.most_balanced_minimum_cuts_node_sep;
         forall_nodes(rG, node) {
@@ -363,17 +326,8 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
         }
         
 
-	for( NodeID node : lhs_nodes ) {
-		G.setPartitionIndex(node, 0);
-	}	
-
-	for( NodeID node : rhs_nodes ) {
-		G.setPartitionIndex(node, 1);
-	}
-
-	for( NodeID node : start_nodes ) {
-		G.setPartitionIndex(node, 2);
-	}
+        //reconstruct old pidx for weight computations
+        apply_vectors( G, lhs_nodes, rhs_nodes, start_nodes );
 
         //reconstruct the partition IDs
         forall_nodes(rG, node) {
@@ -383,7 +337,6 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
 		bool is_frontier_node = is_in_source_set[node] && !is_in_source_set[node+1];
 		if(!is_frontier_node) {
 			block_weights[G.getPartitionIndex(v)] -= G.getNodeWeight(v);
-
 			G.setPartitionIndex(v, to_set);
 			block_weights[G.getPartitionIndex(v)] += G.getNodeWeight(v);
 		} else {
@@ -403,35 +356,8 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
                 }
                 node++;
         } endfor
-	NodeWeight sum = block_weights[0]+block_weights[1]+block_weights[2];
-	NodeWeight total_weight = 0;
-	forall_nodes(G, node) {
-		total_weight += G.getNodeWeight(node);
-	} endfor
-	if( total_weight != sum ) {
-		std::cout <<  "problem with sum"  << std::endl;
-		std::cout <<  total_weight <<  " " <<  sum  << std::endl;
-		for( unsigned i = 0; i < 3; i++) {
-			std::cout <<  "moep bw " <<  block_weights[i]  << std::endl;
-		}
 
-
-		exit(0);
-	}
-	
-
-
-        std::unordered_map<NodeID, bool> allready_separator;
-	forall_boundary_nodes( separator, node ) {
-                allready_separator[node] = true;
-	} endfor 
-
-        //TODO remove them later on
-        is_vertex_separator(G, allready_separator);
-
-	std::cout <<  "first round done"  << std::endl;
-        return old_separator_weight - value; // return improvement
-
+        return value; // return flow value 
 }
 
 
@@ -495,17 +421,20 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
                 } 
         } endfor
 
-        quality_metrics qm;
         NodeWeight old_separator_weight = separator_weight;
 
         area_bfs abfs;
+        std::vector< NodeWeight > block_weights(3, 0);
+        block_weights[0] = lhs_part_weight;
+        block_weights[1] = rhs_part_weight;
+        block_weights[2] = old_separator_weight;
         // perform BFS into one side
         std::vector<NodeID> lhs_nodes;
-        abfs.perform_bfs(config, G, input_separator, 0, lhs_part_weight, lhs_nodes);
+        abfs.perform_bfs(config, G, input_separator, 0, block_weights, lhs_nodes);
 
         // perform BFS into other side
         std::vector<NodeID> rhs_nodes;
-        abfs.perform_bfs(config, G, input_separator, 1, rhs_part_weight, rhs_nodes);
+        abfs.perform_bfs(config, G, input_separator, 1, block_weights, rhs_nodes);
 
         // now build the flow problem
         flow_graph rG; NodeID source, sink;

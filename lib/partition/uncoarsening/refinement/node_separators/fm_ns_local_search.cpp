@@ -29,7 +29,6 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
         } endfor
 
         random_functions::permutate_vector_good(start_nodes, false);
-        std::sort(start_nodes.begin(), start_nodes.end());
         
         for( NodeID node : start_nodes ) {
                 Gain toLHS = 0;
@@ -141,7 +140,6 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
         } endfor 
 
         random_functions::permutate_vector_good(start_nodes, false);
-        std::sort(start_nodes.begin(), start_nodes.end());
         
         for( NodeID node : start_nodes ) {
                 Gain toLHS = 0;

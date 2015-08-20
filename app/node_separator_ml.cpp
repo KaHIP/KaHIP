@@ -37,6 +37,7 @@
 #include "partition/partition_config.h"
 #include "partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
 #include "partition/uncoarsening/separator/vertex_separator_algorithm.h"
+#include "partition/uncoarsening/separator/area_bfs.h"
 #include "quality_metrics.h"
 #include "random_functions.h"
 #include "timer.h"
@@ -76,6 +77,8 @@ int main(int argn, char **argv) {
        
         G.set_partition_count(partition_config.k); 
  
+        std::cout <<  "imbalance is " <<  partition_config.imbalance  << std::endl;
+        std::cout <<  "epsilon is "   <<  partition_config.epsilon << std::endl;
         balance_configuration bc;
         bc.configurate_balance( partition_config, G);
 
@@ -87,6 +90,11 @@ int main(int argn, char **argv) {
         t.restart();
         graph_partitioner partitioner;
         quality_metrics qm;
+        area_bfs::m_deepth.resize(G.number_of_nodes());
+        forall_nodes(G, node) {
+                area_bfs::m_deepth[node] = 0;
+        } endfor
+        
 
         std::cout <<  "computing a node separator"  << std::endl;
 

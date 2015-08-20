@@ -143,11 +143,6 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
         quality_metrics qm;
         std::cout << "log>" << "unrolling graph with " << coarsest->number_of_nodes() << std::endl;
 
-        if( !config.sep_greedy_disabled ) {
-                greedy_ns_local_search gnls;
-                gnls.perform_refinement(config, (*coarsest));
-        }
-
         if( !config.sep_fm_disabled ) {
                 for( int i = 0; i < config.sep_num_fm_reps; i++) {
                         fm_ns_local_search fmnsls;
@@ -155,7 +150,7 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
 
                         int rnd_block = random_functions::nextInt(0,1);
                         fmnsls.perform_refinement(config, (*coarsest),true, rnd_block);
-                        fmnsls.perform_refinement(config, (*coarsest),true, rnd_block == 0? 1 : 0);
+                        fmnsls.perform_refinement(config, (*coarsest),true, rnd_block == 0 ? 1 : 0);
                 }
         }
 
@@ -180,11 +175,6 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
         while(!hierarchy.isEmpty()) {
                 graph_access* G = hierarchy.pop_finer_and_project();
                 std::cout << "log>" << "unrolling graph with " << G->number_of_nodes() << std::endl;
-
-                if( !config.sep_greedy_disabled) {
-                        greedy_ns_local_search gnls;
-                        gnls.perform_refinement(config, (*G));
-                }
 
                 if( !config.sep_fm_disabled) {
                         for( int i = 0; i < config.sep_num_fm_reps; i++) {
@@ -247,12 +237,6 @@ int uncoarsening::perform_uncoarsening_nodeseparator_fast(const PartitionConfig 
         } endfor
         
 
-        if( !config.sep_greedy_disabled ) {
-                greedy_ns_local_search gnls;
-                gnls.perform_refinement(config, (*coarsest));
-        }
-
-
         std::vector< bool > moved_out_of_S(coarsest->number_of_nodes(), false);
         if( !config.sep_fm_disabled ) {
                 for( int i = 0; i < config.sep_num_fm_reps; i++) {
@@ -269,14 +253,6 @@ int uncoarsening::perform_uncoarsening_nodeseparator_fast(const PartitionConfig 
                 for( int i = 0; i < config.max_flow_improv_steps; i++) {
 
                         vertex_separator_algorithm vsa;
-
-                        std::vector<NodeID> separator;
-                        forall_nodes((*coarsest), node) {
-                                if( coarsest->getPartitionIndex(node) == 2) {
-                                        separator.push_back(node);
-                                }
-                        } endfor
-
                         std::vector<NodeID> output_separator;
                         NodeWeight improvement = vsa.improve_vertex_separator(config, *coarsest, block_weights, current_separator);
                         if(improvement == 0) break;
@@ -287,46 +263,36 @@ int uncoarsening::perform_uncoarsening_nodeseparator_fast(const PartitionConfig 
                 graph_access* G = hierarchy.pop_finer_and_project_ns(current_separator);
                 std::cout << "log>" << "unrolling graph with " << G->number_of_nodes() << std::endl;
 
-                if( !config.sep_greedy_disabled) {
-                        greedy_ns_local_search gnls;
-                        gnls.perform_refinement(config, (*G));
-                }
-
                 std::vector< bool > moved_out_of_S(G->number_of_nodes(), false);
                 if( !config.sep_fm_disabled) {
                         for( int i = 0; i < config.sep_num_fm_reps; i++) {
+                                
                                 fm_ns_local_search fmnsls;
-                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator);
+                                NodeWeight improvement = 0;
+                                improvement += fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator);
 
                                 int rnd_block = random_functions::nextInt(0,1);
-                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block);
-                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block == 0 ? 1 : 0);
+                                improvement += fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block);
+                                improvement += fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block == 0 ? 1 : 0);
+                                if( improvement == 0 ) break;
                         }
                 }
 
                 if( !config.sep_loc_fm_disabled) {
                         for( int i = 0; i < config.sep_num_loc_fm_reps; i++) {
                                 localized_fm_ns_local_search fmnsls;
-                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator);
+                                NodeWeight improvement = 0;
+                                improvement += fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator);
 
                                 int rnd_block = random_functions::nextInt(0,1);
-                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block);
-                                fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block == 0 ? 1 : 0);
+                                improvement += fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block);
+                                improvement += fmnsls.perform_refinement(config, (*G), block_weights, moved_out_of_S, current_separator, true, rnd_block == 0 ? 1 : 0);
                         }
                 }
-
 
                 if( !config.sep_flows_disabled ) {
                         for( int i = 0; i < config.max_flow_improv_steps; i++) {
                                 vertex_separator_algorithm vsa;
-
-                                std::vector<NodeID> separator;
-                                forall_nodes((*G), node) {
-                                        if( G->getPartitionIndex(node) == 2) {
-                                                separator.push_back(node);
-                                        }
-                                } endfor
-
                                 std::vector<NodeID> output_separator;
                                 NodeWeight improvement = vsa.improve_vertex_separator(config, *G, block_weights, current_separator);
                                 if(improvement == 0) break;
