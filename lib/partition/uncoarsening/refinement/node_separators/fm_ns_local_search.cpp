@@ -234,6 +234,5 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
         moved_nodes.clear();
 
         return input_separator - best_separator;
-
 }
 
