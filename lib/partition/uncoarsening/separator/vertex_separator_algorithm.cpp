@@ -216,8 +216,8 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator(const PartitionC
                 solution_value = improve_vertex_separator_internal( cfg , G, block_weights, separator, old_lhs, old_rhs, old_sep);
 
                 if( solution_value == prev_solution_value ) {
-                        NodeWeight cur_diff = abs( block_weights[1] - block_weights[0] );
-                        NodeWeight old_diff = abs( old_block_weights[1] - old_block_weights[0] );
+                        NodeWeight cur_diff = abs( (int)(block_weights[1]) - (int)(block_weights[0]) );
+                        NodeWeight old_diff = abs( (int)(old_block_weights[1]) - (int)(old_block_weights[0]) );
                         if( cur_diff > old_diff ) {
                                 //reconstruct old solution and return since solution value will not be better
                                 apply_vectors( G, old_lhs, old_rhs, old_sep);
