@@ -52,9 +52,8 @@ int graph_io::writeGraph(graph_access & G, std::string filename) {
         f << G.number_of_nodes() <<  " " <<  G.number_of_edges()/2 << std::endl;
 
         forall_nodes(G, node) {
-                f <<  node <<  " ";
                 forall_out_edges(G, e, node) {
-                        f <<   G.getEdgeTarget(e) << " " ;
+                        f <<   (G.getEdgeTarget(e)+1) << " " ;
                 } endfor 
                 f <<  std::endl;
         } endfor
