@@ -50,6 +50,7 @@ public:
         void rate_separator_r6(graph_access & G);
         void rate_separator_r7(graph_access & G);
         void rate_separator_r8(graph_access & G);
+        void rate_realweight(graph_access & G);
 
 private:
         const PartitionConfig & partition_config;

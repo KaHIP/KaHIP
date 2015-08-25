@@ -62,6 +62,8 @@ void edge_ratings::rate(graph_access & G, unsigned level) {
                                 break;
                         case WEIGHT:
                                 break;
+                        case REALWEIGHT:
+                                break;
                         case SEPARATOR_MULTX:
                                 rate_separator_multx(G);
                                 break;
@@ -375,6 +377,16 @@ void edge_ratings::rate_separator_r7(graph_access & G) {
         } endfor
 }
 
+void edge_ratings::rate_realweight(graph_access & G) {
+        forall_nodes(G,node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+
+                        EdgeRatingType rating =  G.getEdgeWeight(e);
+                        G.setEdgeRating(e, rating);
+                } endfor
+        } endfor
+}
 void edge_ratings::rate_separator_r8(graph_access & G) {
         forall_nodes(G,node) {
                 forall_out_edges(G, e, node) {
