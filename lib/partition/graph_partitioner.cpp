@@ -191,17 +191,16 @@ void graph_partitioner::single_run( PartitionConfig & config, graph_access & G) 
                                 graph_hierarchy hierarchy;
 
                                 if( config.mode_node_separators ) {
-                                        if( i % 6 == 2 ) {
+                                        int rnd = random_functions::nextInt(0,3);
+                                        if( rnd == 0 ) {
                                                 config.edge_rating = SEPARATOR_MULTX;
-                                        } else if ( i % 6 == 3 ) {
-                                                config.edge_rating = SEPARATOR_ADDX;
-                                        } else if ( i % 6 == 4 ) {
-                                                config.edge_rating = SEPARATOR_R8;
-                                        } else if ( i % 6 == 5 ) {
-                                                config.edge_rating = SEPARATOR_LOG;
-                                        } else if ( i % 6 == 0 ) {
+                                        } else if ( rnd  == 1 ) {
+                                                config.edge_rating = WEIGHT;
+                                        } else if ( rnd  == 2 ) {
                                                 config.edge_rating = SEPARATOR_MAX;
-                                        }
+                                        } else if ( rnd  == 3 ) {
+                                                config.edge_rating = SEPARATOR_LOG;
+                                        } 
                                 }
                                 coarsen.perform_coarsening(config, G, hierarchy);
                                 init_part.perform_initial_partitioning(config, hierarchy);
