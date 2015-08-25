@@ -820,6 +820,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.edge_rating = EXPANSIONSTAR;
                 } else if (strcmp("expansionstar2", edge_rating->sval[0]) == 0) {
                         partition_config.edge_rating = EXPANSIONSTAR2;
+                } else if (strcmp("weight", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = WEIGHT;
                 } else if (strcmp("expansionstar2algdist", edge_rating->sval[0]) == 0) {
                         partition_config.edge_rating = EXPANSIONSTAR2ALGDIST;
                 } else if (strcmp("geom", edge_rating->sval[0]) == 0) {
