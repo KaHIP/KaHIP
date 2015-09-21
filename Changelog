@@ -1,3 +1,8 @@
+KaHIP-0.72
+------------------------------------------------------------------------
+- bug fix perfectly balanced case in kaffpaE
+- better exhaustion of the given amount of imbalance 
+
 KaHIP-0.71
 ------------------------------------------------------------------------
 - added example java jni wrapper to be able to link the KaHIP library within a java project (misc/java_jni_wrapper)
