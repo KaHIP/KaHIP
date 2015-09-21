@@ -73,7 +73,8 @@ int main(int argn, char **argv) {
 
         omp_set_num_threads(1);
         G.set_partition_count(partition_config.k); 
-        
+        partition_config.kaffpaE = true; // necessary for balance configuration 
+
         balance_configuration bc;
         bc.configurate_balance( partition_config, G);
 

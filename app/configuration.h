@@ -241,6 +241,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.disable_hard_rebalance                 = false;
         partition_config.amg_iterations                         = 5;
         partition_config.kaffpa_perfectly_balance               = false;
+        partition_config.kaffpaE                                = false;
 
         partition_config.remove_negative_cycles			= false;
         partition_config.cycle_refinement_algorithm             = CYCLE_REFINEMENT_ALGORITHM_ULTRA_MODEL;

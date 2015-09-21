@@ -52,10 +52,10 @@ public:
                 }
 
                 double epsilon  = (partition_config.imbalance)/100.0;
-                if(  partition_config.imbalance == 0 ) {
+                if(  partition_config.imbalance == 0 && !partition_config.kaffpaE) {
                         partition_config.upper_bound_partition    = (1+epsilon+0.01)*ceil(largest_graph_weight/(double)partition_config.k);
                         partition_config.kaffpa_perfectly_balance = true;
-                        } else {
+                } else {
                         NodeWeight load                           = largest_graph_weight + edge_weights;
                         partition_config.upper_bound_partition    = (1+epsilon)*ceil(load/(double)partition_config.k);
                 }

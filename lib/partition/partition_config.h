@@ -274,6 +274,8 @@ struct PartitionConfig
 
         bool strong;
 
+        bool kaffpaE;
+
 	bool balance_edges;
 
         // number of blocks the graph should be partitioned in
