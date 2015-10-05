@@ -1,0 +1,85 @@
+#/******************************************************************************
+# * SConstruct
+# *
+# * Source of KaHIP -- Karlsruhe High Quality Partitioning.
+# *
+# ******************************************************************************
+# * Copyright (C) 2013 Christian Schulz <christian.schulz@kit.edu>
+# *
+# * This program is free software: you can redistribute it and/or modify it
+# * under the terms of the GNU General Public License as published by the Free
+# * Software Foundation, either version 3 of the License, or (at your option)
+# * any later version.
+# *
+# * This program is distributed in the hope that it will be useful, but WITHOUT
+# * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# * more details.
+# *
+# * You should have received a copy of the GNU General Public License along with
+# * this program.  If not, see <http://www.gnu.org/licenses/>.
+# *****************************************************************************/
+
+# scons build file for the KaHIP.
+#
+# You can build it in the following variants:
+#
+#   optimized            no debug symbols, no assertions, optimization.
+#   optimized_output     no debug symbols, no assertions, optimization -- more output on console.
+#
+#   scons variant=${variant} program=${program}
+import os
+import platform
+import sys
+
+# Get the current platform.
+SYSTEM = platform.uname()[0]
+HOST = platform.uname()[1]
+
+# Get shortcut to $HOME.
+HOME = os.environ['HOME']
+
+def GetEnvironment():
+  """Get environment variables from command line and environment.
+
+  Exits on errors.
+
+  Returns
+    Environment with the configuration from the command line.
+  """
+  opts = Variables()
+  opts.Add('variant', 'the variant to build, optimized or optimized with output', 'optimized')
+  opts.Add('program', 'program or interface to compile', 'kaffpa')
+
+  env = Environment(options=opts, ENV=os.environ)
+  if not env['variant'] in ['optimized','optimized_output','debug']:
+    print 'Illegal value for variant: %s' % env['variant']
+    sys.exit(1)
+  
+  if not env['program'] in ['interfacetest']:
+    print 'Illegal value for program: %s' % env['program']
+    sys.exit(1)
+
+  # Special configuration for 64 bit machines.
+  if platform.architecture()[0] == '64bit':
+     env.Append(CPPFLAGS=['-DPOINTER64=1'])
+
+  return env
+
+# Get the common environment.
+env = GetEnvironment()
+
+env.Append(LIBPATH=['./'])
+
+conf = Configure(env)
+
+#
+env.Append(CXXFLAGS = '-fopenmp')
+# Apply variant specific settings.
+if env['variant'] == 'optimized':
+  env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x ')
+  env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops')
+
+# Execute the SConscript.
+SConscript('SConscript', exports=['env'],variant_dir=env['variant'], duplicate=False)
+
