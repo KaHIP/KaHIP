@@ -1,6 +1,5 @@
 cd ../../
 ./compile.sh
-scons program=library variant=optimized -j 8
 cd misc/example_library_call
 cp ../../deploy/libkahip.a . 
 cp ../../deploy/*.h . 
