@@ -36,7 +36,9 @@ public:
         EdgeWeight edge_cut(graph_access & G, int * partition_map); 
         EdgeWeight edge_cut(graph_access & G, PartitionID lhs, PartitionID rhs);
         EdgeWeight max_communication_volume(graph_access & G);
+        EdgeWeight min_communication_volume(graph_access & G);
         EdgeWeight max_communication_volume(graph_access & G, int * partition_map);
+        EdgeWeight total_communication_volume(graph_access & G); 
         EdgeWeight objective(const PartitionConfig & config, graph_access & G, int * partition_map);
         EdgeWeight edge_cut_connected(graph_access & G, int * partition_map);
         int boundary_nodes(graph_access & G);

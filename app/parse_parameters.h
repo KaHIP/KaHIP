@@ -183,11 +183,13 @@ int parse_parameters(int argn, char **argv,
                 k, imbalance,  
                 preconfiguration, 
                 time_limit, 
-                input_partition,
                 enforce_balance, 
 		balance_edges,
                 filename_output, 
-
+#elif defined MODE_EVALUATOR
+                k,   
+                preconfiguration, 
+                input_partition,
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
                 filename_output, 

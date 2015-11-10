@@ -106,6 +106,11 @@ if env['program'] == 'kaffpa':
         env.Append(CCFLAGS  = '-DMODE_KAFFPA')
         env.Program('kaffpa', ['app/kaffpa.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
 
+if env['program'] == 'evaluator':
+        env.Append(CXXFLAGS = '-DMODE_EVALUATOR')
+        env.Append(CCFLAGS  = '-DMODE_EVALUATOR')
+        env.Program('evaluator', ['app/evaluator.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
+
 if env['program'] == 'label_propagation':
         env.Append(CXXFLAGS = '-DMODE_LABELPROPAGATION')
         env.Append(CCFLAGS  = '-DMODE_LABELPROPAGATION')

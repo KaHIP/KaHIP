@@ -148,6 +148,29 @@ EdgeWeight quality_metrics::max_communication_volume(graph_access & G, int * par
     return max_comm_volume;
 }
 
+EdgeWeight quality_metrics::min_communication_volume(graph_access & G) {
+    std::vector<EdgeWeight> block_volume(G.get_partition_count(),0);
+    forall_nodes(G, node) {
+        PartitionID block = G.getPartitionIndex(node);
+        std::vector<bool> block_incident(G.get_partition_count(), false);
+        block_incident[block] = true;
+        int num_incident_blocks = 0;
+
+        forall_out_edges(G, e, node) {
+            NodeID target = G.getEdgeTarget(e);
+            PartitionID target_block = G.getPartitionIndex(target);
+            if(!block_incident[target_block]) {
+                block_incident[target_block] = true;
+                num_incident_blocks++;
+            }
+        } endfor
+        block_volume[block] += num_incident_blocks;
+    } endfor
+
+    EdgeWeight min_comm_volume = *(std::min_element(block_volume.begin(), block_volume.end()));
+    return min_comm_volume;
+}
+
 EdgeWeight quality_metrics::max_communication_volume(graph_access & G) {
     std::vector<EdgeWeight> block_volume(G.get_partition_count(),0);
     forall_nodes(G, node) {
@@ -170,6 +193,30 @@ EdgeWeight quality_metrics::max_communication_volume(graph_access & G) {
     EdgeWeight max_comm_volume = *(std::max_element(block_volume.begin(), block_volume.end()));
     return max_comm_volume;
 }
+
+EdgeWeight quality_metrics::total_communication_volume(graph_access & G) {
+    std::vector<EdgeWeight> block_volume(G.get_partition_count(),0);
+    forall_nodes(G, node) {
+        PartitionID block = G.getPartitionIndex(node);
+        std::vector<bool> block_incident(G.get_partition_count(), false);
+        block_incident[block] = true;
+        int num_incident_blocks = 0;
+
+        forall_out_edges(G, e, node) {
+            NodeID target = G.getEdgeTarget(e);
+            PartitionID target_block = G.getPartitionIndex(target);
+            if(!block_incident[target_block]) {
+                block_incident[target_block] = true;
+                num_incident_blocks++;
+            }
+        } endfor
+        block_volume[block] += num_incident_blocks;
+    } endfor
+
+    EdgeWeight total_comm_volume = std::accumulate(block_volume.begin(), block_volume.end(),0);
+    return total_comm_volume;
+}
+
 
 
 int quality_metrics::boundary_nodes(graph_access& G) {
