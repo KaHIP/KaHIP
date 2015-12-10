@@ -2,6 +2,7 @@ KaHIP v0.72
 =====
 
 The graph partitioning framework KaHIP -- Karlsruhe High Quality Partitioning.
+KaHIP  is a family of graph partitioning programs. It includes KaFFPa (Karlsruhe Fast Flow Partitioner), which is a multilevel graph partitioning algorithm, in its variants Strong, Eco and Fast, KaFFPaE (KaFFPaEvolutionary) which is a parallel evolutionary algorithm that uses KaFFPa to provide combine and mutation operations, as well as KaBaPE which extends the evolutionary algorithm. Moreover, specialized techniques are included to partition road networks (Buffoon) and to output a vertex separator from a given partition.
 
 Main project site:
 http://algo2.iti.kit.edu/documents/kahip/index.html
@@ -9,5 +10,14 @@ http://algo2.iti.kit.edu/documents/kahip/index.html
 Installation Notes
 =====
 
-For a list of required packages have a look at the INSTALL file.
+Before you can start you need to install the following software packages:
 
+- Scons (http://www.scons.org/)
+- Argtable (http://argtable.sourceforge.net/)
+- OpenMPI (http://www.open-mpi.de/)
+
+Once you installed the packages, just type ./compile.sh. Once you did that you can try to run the following command:
+
+./deploy/kaffpa examples/delaunay_n15.graph --k 2 --preconfiguration=strong
+
+For a description of the graph format please have look into the manual.
