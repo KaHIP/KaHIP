@@ -263,6 +263,31 @@ double quality_metrics::balance(graph_access& G) {
         return percentage;
 }
 
+double quality_metrics::balance_edges(graph_access& G) {
+        std::vector<PartitionID> part_weights(G.get_partition_count(), 0);
+
+        double overallWeight = 0;
+
+        forall_nodes(G, n) {
+                PartitionID curPartition = G.getPartitionIndex(n);
+                part_weights[curPartition] += G.getNodeDegree(n);
+                overallWeight += G.getNodeDegree(n);
+        } endfor
+
+        double balance_part_weight = ceil(overallWeight / (double)G.get_partition_count());
+        double cur_max             = -1;
+
+        forall_blocks(G, p) {
+                double cur = part_weights[p];
+                if (cur > cur_max) {
+                        cur_max = cur;
+                }
+        } endfor
+
+        double percentage = cur_max/balance_part_weight;
+        return percentage;
+}
+
 EdgeWeight quality_metrics::objective(const PartitionConfig & config, graph_access & G, int* partition_map) {
         if(config.mh_optimize_communication_volume) {
                 return max_communication_volume(G, partition_map);

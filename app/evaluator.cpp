@@ -70,6 +70,7 @@ int main(int argn, char **argv) {
         std::cout << "cut \t\t"         << qm.edge_cut(G)                 << std::endl;
         std::cout << "no boundary vertices \t\t" << qm.boundary_nodes(G)           << std::endl;
         std::cout << "balance \t"       << qm.balance(G)                  << std::endl;
+        std::cout << "balance based on edges \t"       << qm.balance_edges(G)                  << std::endl;
         std::cout << "max comm vol \t"  << qm.max_communication_volume(G) << std::endl;
         std::cout << "min comm vol \t"  << qm.min_communication_volume(G) << std::endl;
         std::cout << "total comm vol \t"  << qm.total_communication_volume(G) << std::endl;
