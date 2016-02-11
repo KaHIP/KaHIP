@@ -137,4 +137,6 @@ if env['program'] == 'graphchecker':
         env.Program('graphchecker', ['app/graphchecker.cpp'], LIBS=['libargtable2','gomp'])
 
 if env['program'] == 'library':
+        env.Append(CXXFLAGS = '-fPIC')
+        env.Append(CCFLAGS  = '-fPIC')
         SConscript('interface/SConscript',exports='env')

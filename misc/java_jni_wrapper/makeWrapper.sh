@@ -36,5 +36,5 @@ set -x
 javac KaHIPWrapper.java KaHIPWrapperResult.java
 javah KaHIPWrapper
 g++ $INCLUDEDIRS $LIBDIRS -fPIC -c KaHIPWrapper.cpp  
-g++ $INCLUDEDIRS $LIBDIRS -shared -o libwrapkahip.so -Wl,-soname,wrapkahip KaHIPWrapper.o -lkahip -lmpi -lmpi_cxx -lgomp
+mpicxx $INCLUDEDIRS $LIBDIRS -shared -fPIC -o libwrapkahip.so -Wl,-soname,wrapkahip KaHIPWrapper.o -lkahip -lmpi -lmpi_cxx -lgomp
 set +x
