@@ -1,5 +1,9 @@
-Upcoming
+KaHIP-1.00
 ------------------------------------------------------------------------
+- included new multi-level node separator algorithms
+- max-flow min-cut improvements for node separator
+- locallized local search for the node separator problem
+- fm-based local search for the node separator problem
 - added a small tool to evaluate partition metrics
 
 KaHIP-0.72

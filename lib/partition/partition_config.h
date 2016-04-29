@@ -125,6 +125,8 @@ struct PartitionConfig
         RefinementSchedulingAlgorithm refinement_scheduling_algorithm; 
 
         bool most_balanced_minimum_cuts;
+
+        bool most_balanced_minimum_cuts_node_sep;
         
         unsigned toposort_iterations;
 
@@ -295,6 +297,8 @@ struct PartitionConfig
 
         bool kaffpa_perfectly_balance;
 
+        bool mode_node_separators;
+
         //=======================================
         //===========SNW PARTITIONING============
         //=======================================
@@ -320,7 +324,41 @@ struct PartitionConfig
 
         int repetitions;
 
-        
+        //=======================================
+        //===========NODE SEPARATOR==============
+        //=======================================
+        int max_flow_improv_steps;
+
+        int max_initial_ns_tries;
+
+        double region_factor_node_separators;
+
+	bool sep_flows_disabled;
+
+	bool sep_fm_disabled;
+
+	bool sep_loc_fm_disabled;
+
+        int sep_loc_fm_no_snodes;
+
+	bool sep_greedy_disabled;
+
+	int sep_fm_unsucc_steps;
+
+	int sep_loc_fm_unsucc_steps;
+
+	int sep_num_fm_reps;
+
+	int sep_num_loc_fm_reps;
+
+        int sep_num_vert_stop;
+
+        bool sep_full_boundary_ip;
+
+        bool faster_ns;
+
+        EdgeRating sep_edge_rating_during_ip;
+
         //=======================================
         //=========LABEL PROPAGATION=============
         //=======================================
@@ -338,6 +376,7 @@ struct PartitionConfig
         bool initial_bipartitioning;
 
         int grow_target;
+
 
         //=======================================
         //===============Shared Mem OMP==========

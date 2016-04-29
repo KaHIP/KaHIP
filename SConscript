@@ -62,7 +62,9 @@ libkaffpa_files = [   'lib/data_structure/graph_hierarchy.cpp',
                       'lib/partition/initial_partitioning/initial_partition_bipartition.cpp',
                       'lib/partition/initial_partitioning/initial_refinement/initial_refinement.cpp',
                       'lib/partition/initial_partitioning/bipartition.cpp',
+                      'lib/partition/initial_partitioning/initial_node_separator.cpp',
                       'lib/partition/uncoarsening/uncoarsening.cpp',
+                      'lib/partition/uncoarsening/separator/area_bfs.cpp',
                       'lib/partition/uncoarsening/separator/vertex_separator_algorithm.cpp',
                       'lib/partition/uncoarsening/separator/vertex_separator_flow_solver.cpp',
                       'lib/partition/uncoarsening/refinement/cycle_improvements/greedy_neg_cycle.cpp',
@@ -88,6 +90,9 @@ libkaffpa_files = [   'lib/data_structure/graph_hierarchy.cpp',
                       'lib/partition/uncoarsening/refinement/cycle_improvements/augmented_Qgraph_fabric.cpp', 
                       'lib/partition/uncoarsening/refinement/cycle_improvements/advanced_models.cpp', 
                       'lib/partition/uncoarsening/refinement/kway_graph_refinement/multitry_kway_fm.cpp', 
+                      'lib/partition/uncoarsening/refinement/node_separators/greedy_ns_local_search.cpp', 
+                      'lib/partition/uncoarsening/refinement/node_separators/fm_ns_local_search.cpp', 
+                      'lib/partition/uncoarsening/refinement/node_separators/localized_fm_ns_local_search.cpp', 
                       'lib/algorithms/cycle_search.cpp',
                       'lib/partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.cpp',
                       'lib/parallel_mh/galinier_combine/gal_combine.cpp',
@@ -111,6 +116,11 @@ if env['program'] == 'evaluator':
         env.Append(CCFLAGS  = '-DMODE_EVALUATOR')
         env.Program('evaluator', ['app/evaluator.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
 
+if env['program'] == 'node_separator':
+        env.Append(CXXFLAGS = ' -DMODE_NODESEP')
+        env.Append(CCFLAGS  = ' -DMODE_NODESEP')
+        env.Program('node_separator', ['app/node_separator_ml.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
+
 if env['program'] == 'label_propagation':
         env.Append(CXXFLAGS = '-DMODE_LABELPROPAGATION')
         env.Append(CCFLAGS  = '-DMODE_LABELPROPAGATION')
@@ -120,6 +130,17 @@ if env['program'] == 'partition_to_vertex_separator':
         env.Append(CXXFLAGS = '-DMODE_PARTITIONTOVERTEXSEPARATOR')
         env.Append(CCFLAGS  = '-DMODE_PARTITIONTOVERTEXSEPARATOR')
         env.Program('partition_to_vertex_separator', ['app/partition_to_vertex_separator.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
+
+if env['program'] == 'interfacetest':
+        env['CXX'] = 'mpicxx'
+        env.Append(CXXFLAGS = '-DMODE_KAFFPA')
+        env.Append(CCFLAGS  = '-DMODE_KAFFPA')
+        env.Program('interface_test', ['app/interface_test.cpp','interface/kaHIP_interface.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
+
+if env['program'] == 'improve_vertex_separator':
+        env.Append(CXXFLAGS = '-DMODE_IMPROVEVERTEXSEPARATOR')
+        env.Append(CCFLAGS  = '-DMODE_IMPROVEVERTEXSEPARATOR')
+        env.Program('improve_vertex_separator', ['app/improve_vertex_separator.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
 
 if env['program'] == 'kaffpaE':
         env.Append(CXXFLAGS = '-DMODE_KAFFPAE')

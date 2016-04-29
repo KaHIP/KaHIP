@@ -167,7 +167,7 @@ class complete_boundary;
 class graph_access {
         friend class complete_boundary;
         public:
-                graph_access() { m_max_degree_computed = false; m_max_degree = 0; graphref = new basicGraph();}
+                graph_access() { m_max_degree_computed = false; m_max_degree = 0; graphref = new basicGraph(); m_separator_block_ID = 2;}
                 virtual ~graph_access(){ delete graphref; };
 
                 /* ============================================================= */
@@ -189,6 +189,9 @@ class graph_access {
 
                 PartitionID get_partition_count(); 
                 void set_partition_count(PartitionID count); 
+
+                PartitionID getSeparatorBlock();
+                void setSeparatorBlock(PartitionID id);
 
                 PartitionID getPartitionIndex(NodeID node);
                 void setPartitionIndex(NodeID node, PartitionID id);
@@ -232,6 +235,7 @@ class graph_access {
                 bool         m_max_degree_computed;
                 unsigned int m_partition_count;
                 EdgeWeight   m_max_degree;
+                PartitionID  m_separator_block_ID;
                 std::vector<PartitionID> m_second_partition_index;
 };
 
@@ -297,6 +301,14 @@ inline void graph_access::setSecondPartitionIndex(NodeID node, PartitionID id) {
 #endif
 }
 
+
+inline PartitionID graph_access::getSeparatorBlock() {
+        return m_separator_block_ID;
+}
+
+inline void graph_access::setSeparatorBlock(PartitionID id) {
+        m_separator_block_ID = id;
+}
 
 inline PartitionID graph_access::getPartitionIndex(NodeID node) {
 #ifdef NDEBUG

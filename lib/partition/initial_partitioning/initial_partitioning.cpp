@@ -28,6 +28,7 @@
 #include "initial_partition_bipartition.h"
 #include "initial_partitioning.h"
 #include "initial_refinement/initial_refinement.h"
+#include "initial_node_separator.h"
 #include "quality_metrics.h"
 #include "random_functions.h"
 #include "timer.h"
@@ -42,8 +43,13 @@ initial_partitioning::~initial_partitioning() {
 
 void initial_partitioning::perform_initial_partitioning(const PartitionConfig & config, graph_hierarchy & hierarchy) {
         graph_access& G = *hierarchy.get_coarsest();
-        perform_initial_partitioning(config, G);
+        if(config.mode_node_separators) {
+                perform_initial_partitioning_separator(config, G);
+        } else {
+                perform_initial_partitioning(config, G);
+        }
 }
+
 
 void initial_partitioning::perform_initial_partitioning(const PartitionConfig & config, graph_access &  G) {
 
@@ -135,5 +141,10 @@ void initial_partitioning::perform_initial_partitioning(const PartitionConfig & 
         delete[] partition_map;
         delete[] best_map;
         delete partition;
+}
+
+void initial_partitioning::perform_initial_partitioning_separator(const PartitionConfig & config, graph_access &  G) {
+        initial_node_separator ipns;
+        ipns.compute_node_separator(config,G);
 }
 

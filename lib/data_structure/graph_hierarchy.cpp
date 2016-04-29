@@ -79,6 +79,41 @@ graph_access* graph_hierarchy::pop_finer_and_project() {
         return finer;                
 }
 
+graph_access* graph_hierarchy::pop_finer_and_project_ns( PartialBoundary & separator ) {
+        graph_access* finer = pop_coarsest();
+
+        CoarseMapping* coarse_mapping = m_the_mappings.top(); // mapps finer to coarser nodes
+        m_the_mappings.pop(); 
+
+        if(finer == m_coarsest_graph) {
+                m_current_coarser_graph = finer;
+                finer = pop_coarsest();
+                finer->set_partition_count(m_current_coarser_graph->get_partition_count());
+               
+                coarse_mapping = m_the_mappings.top(); 
+                m_the_mappings.pop();
+        }
+        
+        ASSERT_EQ(m_the_graph_hierarchy.size(), m_the_mappings.size());
+
+	separator.clear();
+        //perform projection
+        graph_access& fRef = *finer;
+        graph_access& cRef = *m_current_coarser_graph;
+        forall_nodes(fRef, n) {
+                NodeID coarser_node              = (*coarse_mapping)[n];
+                PartitionID coarser_partition_id = cRef.getPartitionIndex(coarser_node);
+                fRef.setPartitionIndex(n, coarser_partition_id);
+		if( coarser_partition_id == 2 ) separator.insert(n);
+        } endfor
+
+        m_current_coarse_mapping = coarse_mapping;
+        finer->set_partition_count(m_current_coarser_graph->get_partition_count());
+        m_current_coarser_graph = finer;
+
+        return finer;                
+}
+
 CoarseMapping * graph_hierarchy::get_mapping_of_current_finer() {
         return m_current_coarse_mapping; 
 }

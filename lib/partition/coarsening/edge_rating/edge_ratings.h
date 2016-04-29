@@ -38,6 +38,20 @@ public:
         void rate_inner_outer(graph_access & G);
         void rate_pseudogeom(graph_access & G); 
         void compute_algdist(graph_access & G, std::vector<float> & dist); 
+        void rate_separator_addx(graph_access & G);
+        void rate_separator_multx(graph_access & G);
+        void rate_separator_max(graph_access & G);
+        void rate_separator_log(graph_access & G);
+        void rate_separator_r1(graph_access & G);
+        void rate_separator_r2(graph_access & G);
+        void rate_separator_r3(graph_access & G);
+        void rate_separator_r4(graph_access & G);
+        void rate_separator_r5(graph_access & G);
+        void rate_separator_r6(graph_access & G);
+        void rate_separator_r7(graph_access & G);
+        void rate_separator_r8(graph_access & G);
+        void rate_realweight(graph_access & G);
+
 private:
         const PartitionConfig & partition_config;
 };

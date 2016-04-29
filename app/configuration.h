@@ -34,12 +34,22 @@ class configuration {
                 void strong( PartitionConfig & config );
                 void eco( PartitionConfig & config );
                 void fast( PartitionConfig & config );
+
+                void strong_separator( PartitionConfig & config );
+                void eco_separator( PartitionConfig & config );
+                void fast_separator( PartitionConfig & config );
+
                 void standard( PartitionConfig & config );
                 void standardsnw( PartitionConfig & config );
 
                 void fastsocial( PartitionConfig & config );
                 void ecosocial( PartitionConfig & config );
                 void strongsocial( PartitionConfig & config ); 
+
+                void fastsocial_separator( PartitionConfig & config );
+                void ecosocial_separator( PartitionConfig & config );
+                void strongsocial_separator( PartitionConfig & config ); 
+
 };
 
 inline void configuration::strong( PartitionConfig & partition_config ) {
@@ -69,7 +79,13 @@ inline void configuration::strong( PartitionConfig & partition_config ) {
 
         partition_config.mh_initial_population_fraction         = 10;
         partition_config.mh_flip_coin                           = 1; 
+#ifndef MODE_NODESEP
         partition_config.epsilon                                = 3; 
+        partition_config.imbalance                              = 3;
+#else
+        partition_config.epsilon                                = 20; 
+        partition_config.imbalance                              = 20;
+#endif
 
         partition_config.initial_partitioning_type              = INITIAL_PARTITIONING_RECPARTITION;
         partition_config.bipartition_tries                      = 4;
@@ -132,13 +148,141 @@ inline void configuration::fast( PartitionConfig & partition_config ) {
 
 }
 
+inline void configuration::strong_separator( PartitionConfig & partition_config ) {
+        standard(partition_config);
+        partition_config.matching_type                          = MATCHING_GPA;
+        partition_config.permutation_quality                    = PERMUTATION_QUALITY_GOOD;
+        partition_config.permutation_during_refinement          = PERMUTATION_QUALITY_GOOD;
+        partition_config.edge_rating_tiebreaking                = true;
+        partition_config.fm_search_limit                        = 5;
+        partition_config.bank_account_factor                    = 3;
+        partition_config.edge_rating                            = EXPANSIONSTAR2;
+        partition_config.refinement_scheduling_algorithm        = REFINEMENT_SCHEDULING_ACTIVE_BLOCKS_REF_KWAY;
+        partition_config.refinement_type                        = REFINEMENT_TYPE_FM_FLOW;
+        partition_config.global_cycle_iterations                = 3;
+        partition_config.flow_region_factor                     = 8;
+        partition_config.corner_refinement_enabled              = true;
+        partition_config.kway_stop_rule                         = KWAY_ADAPTIVE_STOP_RULE;
+        partition_config.kway_adaptive_limits_alpha             = 10;
+        partition_config.kway_rounds                            = 10;
+        partition_config.rate_first_level_inner_outer           = true;
+        partition_config.use_wcycles                            = false; 
+        partition_config.no_new_initial_partitioning            = true;
+        partition_config.use_fullmultigrid                      = true;
+        partition_config.most_balanced_minimum_cuts             = true;
+        partition_config.most_balanced_minimum_cuts_node_sep    = false;
+        partition_config.local_multitry_fm_alpha                = 10;
+        partition_config.local_multitry_rounds                  = 10;
+
+        partition_config.mh_initial_population_fraction         = 10;
+        partition_config.mh_flip_coin                           = 1; 
+
+#ifndef MODE_NODESEP
+        partition_config.epsilon                                = 3; 
+        partition_config.imbalance                              = 3;
+#else
+        partition_config.epsilon                                = 20; 
+        partition_config.imbalance                              = 20;
+#endif
+
+        partition_config.initial_partitioning_type              = INITIAL_PARTITIONING_RECPARTITION;
+        partition_config.bipartition_tries                      = 4;
+        partition_config.minipreps                              = 4;
+        partition_config.initial_partitioning_repetitions       = 64;
+        partition_config.strong = true;
+
+        partition_config.mode_node_separators = true;
+        partition_config.use_fullmultigrid    = false;
+        partition_config.use_wcycles          = false;
+        partition_config.matching_type        = MATCHING_GPA;
+        partition_config.global_cycle_iterations = 3;
+        partition_config.region_factor_node_separators = 1;
+
+}
+
+inline void configuration::eco_separator( PartitionConfig & partition_config ) {
+        standard(partition_config);
+        partition_config.eco                      = true;
+        partition_config.aggressive_random_levels = std::max(2, (int)(7 - log2(partition_config.k)));
+        
+        partition_config.kway_rounds                            = std::min(5, (int)log2(partition_config.k));
+        partition_config.matching_type                          = MATCHING_RANDOM_GPA;
+        partition_config.permutation_quality                    = PERMUTATION_QUALITY_NONE;
+        partition_config.permutation_during_refinement          = PERMUTATION_QUALITY_GOOD;
+        partition_config.edge_rating                            = EXPANSIONSTAR2;
+        partition_config.fm_search_limit                        = 1;
+        partition_config.refinement_type                        = REFINEMENT_TYPE_FM_FLOW;
+        partition_config.flow_region_factor                     = 2;
+        partition_config.corner_refinement_enabled              = true;
+        partition_config.kway_stop_rule                         = KWAY_SIMPLE_STOP_RULE;
+        partition_config.kway_fm_search_limit                   = 1;
+        partition_config.mh_initial_population_fraction         = 50;
+        partition_config.mh_flip_coin                           = 1; 
+
+        partition_config.initial_partitioning_type              = INITIAL_PARTITIONING_RECPARTITION;
+        partition_config.bipartition_tries                      = 4;
+        partition_config.minipreps                              = 4;
+        partition_config.initial_partitioning_repetitions       = 16;
+
+        partition_config.mode_node_separators = true;
+        partition_config.use_fullmultigrid    = false;
+        partition_config.use_wcycles          = false;
+        partition_config.matching_type        = MATCHING_GPA;
+	partition_config.sep_loc_fm_disabled  = true;
+	partition_config.sep_flows_disabled   = false;
+	partition_config.sep_fm_disabled      = false;
+	partition_config.sep_greedy_disabled  = true;
+        partition_config.region_factor_node_separators = 0.5;
+        partition_config.global_cycle_iterations = 2;
+
+}
+
+inline void configuration::fast_separator( PartitionConfig & partition_config ) {
+        standard(partition_config);
+
+        partition_config.fast = true;
+        if(partition_config.k > 8) {
+                partition_config.quotient_graph_refinement_disabled     = true;
+                partition_config.kway_fm_search_limit                   = 0; 
+                partition_config.kway_stop_rule                         = KWAY_SIMPLE_STOP_RULE; 
+                partition_config.corner_refinement_enabled              = true; 
+        } else {
+                partition_config.corner_refinement_enabled              = false; 
+        }
+        partition_config.permutation_quality                    = PERMUTATION_QUALITY_FAST;
+        partition_config.permutation_during_refinement          = PERMUTATION_QUALITY_NONE;
+        partition_config.matching_type                          = MATCHING_RANDOM_GPA;
+        partition_config.aggressive_random_levels               = 4;
+        partition_config.refinement_scheduling_algorithm        = REFINEMENT_SCHEDULING_FAST;
+        partition_config.edge_rating                            = EXPANSIONSTAR2;
+        partition_config.fm_search_limit                        = 0;
+        partition_config.bank_account_factor                    = 1;
+
+        partition_config.initial_partitioning_type              = INITIAL_PARTITIONING_RECPARTITION;
+        partition_config.bipartition_tries                      = 4;
+        partition_config.minipreps                              = 1;
+        partition_config.initial_partitioning_repetitions       = 0;
+
+        partition_config.mode_node_separators    = true;
+        partition_config.use_fullmultigrid       = false;
+        partition_config.use_wcycles             = false;
+        partition_config.matching_type           = MATCHING_GPA;
+        partition_config.sep_loc_fm_disabled     = true;
+        partition_config.sep_flows_disabled      = true;
+        partition_config.sep_fm_disabled         = false;
+        partition_config.sep_greedy_disabled     = true;
+        partition_config.global_cycle_iterations = 1;
+}
+
+
+
 inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.filename_output                        = "";
         partition_config.seed                                   = 0;
         partition_config.fast                                   = false;
+        partition_config.mode_node_separators                   = false;
         partition_config.eco                                    = false;
         partition_config.strong                                 = false;
-        partition_config.imbalance                              = 3;
         partition_config.first_level_random_matching            = false;
         partition_config.initial_partitioning_repetitions       = 5;
         partition_config.edge_rating_tiebreaking                = false;
@@ -151,7 +295,14 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.minipreps                              = 10;
         partition_config.enable_omp                             = false;
         partition_config.combine                                = false;
+#ifndef MODE_NODESEP
         partition_config.epsilon                                = 3; 
+        partition_config.imbalance                              = 3;
+#else
+        partition_config.epsilon                                = 20; 
+        partition_config.imbalance                              = 20;
+#endif
+
         partition_config.buffoon                                = false;
         partition_config.balance_edges                          = false;
 
@@ -229,6 +380,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.toposort_iterations                    = 4;
         partition_config.initial_partition_optimize             = false;
         partition_config.most_balanced_minimum_cuts             = false;
+        partition_config.most_balanced_minimum_cuts_node_sep    = false;
         partition_config.gpa_grow_paths_between_blocks          = true; //used for the kaffpa paper
 
         partition_config.bipartition_algorithm                  = BIPARTITION_BFS;
@@ -253,6 +405,7 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.kaba_enable_zero_weight_cycles         = true;
         partition_config.mh_enable_gal_combine			= false;
         partition_config.mh_easy_construction                   = false;
+        partition_config.faster_ns                              = false;
 
         partition_config.maxT                                   = 100;
         partition_config.maxIter                                = 500000;
@@ -291,6 +444,25 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.repetitions                  = 1;
         partition_config.node_ordering                = DEGREE_NODEORDERING;
 
+        //node separator parameters
+        partition_config.max_flow_improv_steps         = 5;
+        partition_config.max_initial_ns_tries          = 25;
+        partition_config.region_factor_node_separators = 0.5;
+	partition_config.sep_flows_disabled  	       = false;
+	partition_config.sep_fm_disabled  	       = false;
+	partition_config.sep_greedy_disabled  	       = true;
+
+	partition_config.sep_fm_unsucc_steps           = 2000;
+        partition_config.sep_num_fm_reps               = 200;
+
+	partition_config.sep_loc_fm_disabled  	       = false;
+	partition_config.sep_loc_fm_no_snodes          = 20;
+	partition_config.sep_loc_fm_unsucc_steps       = 50;
+        partition_config.sep_num_loc_fm_reps           = 25;
+        partition_config.sep_num_vert_stop             = 8000;
+        partition_config.sep_full_boundary_ip          = false;
+        partition_config.sep_edge_rating_during_ip     = SEPARATOR_MULTX;
+
 }
 
 inline void configuration::standardsnw( PartitionConfig & partition_config ) {
@@ -317,6 +489,46 @@ inline void configuration::standardsnw( PartitionConfig & partition_config ) {
 
 
 }
+
+inline void configuration::fastsocial_separator( PartitionConfig & partition_config ) {
+        eco(partition_config);
+        standardsnw(partition_config);
+        partition_config.label_propagation_refinement = true;
+        partition_config.cluster_coarsening_during_ip = true;
+        partition_config.balance_factor               = 0;
+
+        partition_config.mode_node_separators    = true;
+        partition_config.use_fullmultigrid       = false;
+        partition_config.use_wcycles             = false;
+        partition_config.matching_type           = MATCHING_GPA;
+        partition_config.sep_loc_fm_disabled     = true;
+        partition_config.sep_flows_disabled      = true;
+        partition_config.sep_fm_disabled         = false;
+        partition_config.sep_greedy_disabled     = true;
+        partition_config.global_cycle_iterations = 1;
+
+}
+
+inline void configuration::ecosocial_separator( PartitionConfig & partition_config ) {
+        eco(partition_config);
+        standardsnw(partition_config);
+        partition_config.label_propagation_refinement = false;
+        partition_config.global_cycle_iterations      = 3;
+        partition_config.use_wcycles                  = false; 
+        partition_config.no_new_initial_partitioning  = true;
+        partition_config.balance_factor               = 0.016;
+        partition_config.cluster_coarsening_during_ip = true;
+}
+
+inline void configuration::strongsocial_separator( PartitionConfig & partition_config ) {
+        strong(partition_config);
+        standardsnw(partition_config);
+
+        partition_config.label_propagation_refinement = false;
+        partition_config.cluster_coarsening_during_ip = true;
+        partition_config.ensemble_clusterings         = true;
+}
+
 
 inline void configuration::fastsocial( PartitionConfig & partition_config ) {
         eco(partition_config);
@@ -345,6 +557,11 @@ inline void configuration::strongsocial( PartitionConfig & partition_config ) {
         partition_config.cluster_coarsening_during_ip = true;
         partition_config.ensemble_clusterings         = true;
 
+        partition_config.mode_node_separators = true;
+        partition_config.use_fullmultigrid    = false;
+        partition_config.use_wcycles          = false;
+        partition_config.matching_type        = MATCHING_GPA;
+        partition_config.global_cycle_iterations = 3;
 
 }
 

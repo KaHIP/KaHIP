@@ -237,6 +237,44 @@ int quality_metrics::boundary_nodes(graph_access& G) {
         return no_of_boundary_nodes;
 }
 
+double quality_metrics::balance_separator(graph_access& G) {
+        std::vector<PartitionID> part_weights(G.get_partition_count(), 0);
+
+        double overallWeight = 0;
+
+        forall_nodes(G, n) {
+                PartitionID curPartition = G.getPartitionIndex(n);
+                part_weights[curPartition] += G.getNodeWeight(n);
+                overallWeight += G.getNodeWeight(n);
+        } endfor
+
+        double balance_part_weight = ceil(overallWeight / (double)(G.get_partition_count()-1));
+        double cur_max             = -1;
+
+        PartitionID separator_block = G.getSeparatorBlock();
+        forall_blocks(G, p) {
+                if( p == separator_block ) continue;
+                double cur = part_weights[p];
+                if (cur > cur_max) {
+                        cur_max = cur;
+                }
+        } endfor
+
+        double percentage = cur_max/balance_part_weight;
+        return percentage;
+}
+
+NodeWeight quality_metrics::separator_weight(graph_access& G) {
+        NodeWeight separator_size = 0;
+        PartitionID separator_ID = G.getSeparatorBlock();
+        forall_nodes(G, node) {
+                if( G.getPartitionIndex(node) == separator_ID) {
+                        separator_size += G.getNodeWeight(node);
+		}
+        } endfor
+
+        return separator_size;
+}
 
 double quality_metrics::balance(graph_access& G) {
         std::vector<PartitionID> part_weights(G.get_partition_count(), 0);

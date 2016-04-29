@@ -63,15 +63,28 @@ void most_balanced_minimum_cuts::compute_good_balanced_min_cut( graph_access & r
         compute_new_rhs(scc_graph, config, comp_weights, comp_of_s, comp_of_t, perfect_rhs_weight, comp_for_rhs);
    
         //add comp_for_rhs nodes to new rhs   
-        for( unsigned i = 0; i < comp_for_rhs.size(); i++) {    
-                int cur_component = comp_for_rhs[i];
-                if(cur_component != comp_of_s && cur_component != comp_of_t) {
-                        for( unsigned j = 0; j < comp_nodes[cur_component].size(); j++) {
-                                new_rhs_nodes.push_back(comp_nodes[cur_component][j]);
+        if(!config.mode_node_separators) {
+                for( unsigned i = 0; i < comp_for_rhs.size(); i++) {    
+                        int cur_component = comp_for_rhs[i];
+                        if(cur_component != comp_of_s && cur_component != comp_of_t) {
+                                for( unsigned j = 0; j < comp_nodes[cur_component].size(); j++) {
+                                        new_rhs_nodes.push_back(comp_nodes[cur_component][j]);
+                                }
                         }
                 }
+        } else {
+                for( unsigned i = 0; i < comp_for_rhs.size(); i++) {    
+                        int cur_component = comp_for_rhs[i];
+                        if(cur_component != comp_of_s ) {
+                                for( unsigned j = 0; j < comp_nodes[cur_component].size(); j++) {
+                                        if( comp_nodes[cur_component][j] != t )
+                                                new_rhs_nodes.push_back(comp_nodes[cur_component][j]);
+                                }
+                        }
+                }
+
         }
-}
+} 
 
 void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph, 
                                                   const PartitionConfig & config,
@@ -80,7 +93,6 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
                                                   int comp_of_t,
                                                   NodeWeight optimal_rhs_stripe_weight,
                                                   std::vector<int> & comp_for_rhs) {
-      
         //all successors of s cant be in any closure so they are marked invalid / this is basically a bfs in a DAG
         std::vector<bool> valid_to_add(scc_graph.number_of_nodes(), true);
         std::queue<NodeID> node_queue;
@@ -108,14 +120,16 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
 
                 tmp_comp_for_rhs.clear();
 
-                bool t_contained = false;
+                bool t_contained   = false;
                 int cur_rhs_weight = 0;
-                int diff = 0;
+                int diff           = std::numeric_limits<int>::max();
                 for( unsigned idx = 0; idx < sorted_sequence.size(); idx++) {
                         int cur_component = sorted_sequence[idx];
 
                         if( cur_component == comp_of_t ) {
                                 t_contained = true;
+                                tmp_comp_for_rhs.push_back(cur_component);
+                                continue;
                         }
 
                         if(valid_to_add[cur_component]) {
@@ -127,7 +141,7 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
                                 } else {
                                         //decide wether we should add this component now
                                         if(abs(tmpdiff) < abs(diff)) {
-                                                //the add it 
+                                                //add it 
                                                 tmp_comp_for_rhs.push_back(cur_component);
                                                 cur_rhs_weight += comp_weights[cur_component];
                                                 diff = optimal_rhs_stripe_weight - cur_rhs_weight;
@@ -143,11 +157,11 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
                         }
                        
                 }
+
                 if(abs(diff) < best_diff) {
                         best_diff    = abs(diff);
                         comp_for_rhs = tmp_comp_for_rhs;
                 }
-
         }
 }
 

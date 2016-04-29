@@ -59,7 +59,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_str *filename_output                      = arg_str0(NULL, "output_filename", NULL, "Specify the name of the output file (that contains the partition).");
         struct arg_int *user_seed                            = arg_int0(NULL, "seed", NULL, "Seed to use for the PRNG.");
         struct arg_int *k                                    = arg_int1(NULL, "k", NULL, "Number of blocks to partition the graph.");
-        struct arg_rex *edge_rating                          = arg_rex0(NULL, "edge_rating", "^(weight|expansionstar|expansionstar2|expansionstar2deg|punch|expansionstar2algdist|expansionstar2algdist2|algdist|algdist2)$", "RATING", REG_EXTENDED, "Edge rating to use. One of {weight, expansionstar, expansionstar2, punch," " expansionstar2deg}. Default: weight"  );
+        struct arg_rex *edge_rating                          = arg_rex0(NULL, "edge_rating", "^(weight|realweight|expansionstar|expansionstar2|expansionstar2deg|punch|expansionstar2algdist|expansionstar2algdist2|algdist|algdist2|sepmultx|sepaddx|sepmax|seplog|r1|r2|r3|r4|r5|r6|r7|r8)$", "RATING", REG_EXTENDED, "Edge rating to use. One of {weight, expansionstar, expansionstar2, punch, sepmultx, sepaddx, sepmax, seplog, " " expansionstar2deg}. Default: weight"  );
         struct arg_rex *refinement_type                      = arg_rex0(NULL, "refinement_type", "^(fm|fm_flow|flow)$", "TYPE", REG_EXTENDED, "Refinementvariant to use. One of {fm, fm_flow, flow}. Default: fm"  );
         struct arg_rex *matching_type                        = arg_rex0(NULL, "matching", "^(random|hem|shem|regions|gpa|randomgpa|localmax)$", "TYPE", REG_EXTENDED, "Type of matchings to use during coarsening. One of {random, hem," " shem, regions, gpa, randomgpa, localmax}."  );
         struct arg_int *mh_pool_size                         = arg_int0(NULL, "mh_pool_size", NULL, "MetaHeuristic Pool Size.");
@@ -147,6 +147,23 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *cluster_upperbound                   = arg_int0(NULL, "cluster_upperbound", NULL, "Set a size-constraint on the size of a cluster. Default: none");
         struct arg_int *label_propagation_iterations         = arg_int0(NULL, "label_propagation_iterations", NULL, "Set the number of label propgation iterations. Default: 10.");
 
+        struct arg_int *max_initial_ns_tries                 = arg_int0(NULL, "max_initial_ns_tries", NULL, "Number of NS tries during initial partitioning.");
+        struct arg_int *max_flow_improv_steps                = arg_int0(NULL, "max_flow_improv_steps", NULL, "Maximum number of tries to improve a node separator using flows.");
+        struct arg_lit *most_balanced_flows_node_sep         = arg_lit0(NULL, "most_balanced_flows_node_sep", "(Default: disabled)");
+        struct arg_dbl *region_factor_node_separators        = arg_dbl0(NULL, "region_factor_node_separators", NULL, "Region factor for flow problems to obtain node separators.");
+        struct arg_lit *sep_flows_disabled		     = arg_lit0(NULL, "sep_flows_disabled", "(Default: disabled)");
+        struct arg_lit *sep_fm_disabled		     	     = arg_lit0(NULL, "sep_fm_disabled", "(Default: disabled)");
+        struct arg_lit *sep_loc_fm_disabled		     = arg_lit0(NULL, "sep_loc_fm_disabled", "(Default: disabled)");
+        struct arg_lit *sep_greedy_disabled		     = arg_lit0(NULL, "sep_greedy_disabled", "(Default: disabled)");
+        struct arg_lit *sep_full_boundary_ip                 = arg_lit0(NULL, "sep_full_boundary_ip", "(Default: disabled)");
+        struct arg_lit *sep_faster_ns                        = arg_lit0(NULL, "sep_faster_ns", "(Default: disabled)");
+        struct arg_int *sep_fm_unsucc_steps		     = arg_int0(NULL, "sep_fm_unsucc_steps", NULL, "Maximum number of steps till last improvement in FM algorithm.");
+        struct arg_int *sep_num_fm_reps                      = arg_int0(NULL, "sep_num_fm_reps", NULL, "Number of FM repetitions during uncoarsening on each level.");
+        struct arg_int *sep_loc_fm_unsucc_steps		     = arg_int0(NULL, "sep_loc_fm_unsucc_steps", NULL, "Maximum number of steps till last improvement in FM algorithm.");
+        struct arg_int *sep_num_loc_fm_reps                  = arg_int0(NULL, "sep_num_loc_fm_reps", NULL, "Number of FM repetitions during uncoarsening on each level.");
+        struct arg_int *sep_loc_fm_no_snodes                 = arg_int0(NULL, "sep_loc_fm_no_snodes", NULL, "Number of FM repetitions during uncoarsening on each level.");
+        struct arg_int *sep_num_vert_stop                    = arg_int0(NULL, "sep_num_vert_stop", NULL, "Number of vertices to stop coarsening at.");
+        struct arg_rex *sep_edge_rating_during_ip            = arg_rex0(NULL, "sep_edge_rating_during_ip", "^(weight|expansionstar|expansionstar2|expansionstar2deg|punch|expansionstar2algdist|expansionstar2algdist2|algdist|algdist2|sepmultx|sepaddx|sepmax|seplog|r1|r2|r3|r4|r5|r6|r7|r8)$", "RATING", REG_EXTENDED, "Edge rating to use. One of {weight, expansionstar, expansionstar2, punch, sepmultx, sepaddx, sepmax, seplog, " " expansionstar2deg}. Default: weight"  );
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -170,7 +187,7 @@ int parse_parameters(int argn, char **argv,
                 recursive_bipartitioning, use_bucket_queues, time_limit, unsuccessful_reps, local_partitioning_repetitions, 
                 mh_pool_size, mh_plain_repetitions, mh_disable_nc_combine, mh_disable_cross_combine, mh_enable_tournament_selection,       
                 mh_disable_combine, mh_enable_quickstart, mh_disable_diversify_islands, mh_flip_coin, mh_initial_population_fraction, 
-		mh_num_ncs_to_compute, mh_print_log,mh_sequential_mode, mh_optimize_communication_volume, mh_enable_tabu_search,
+		mh_print_log,mh_sequential_mode, mh_optimize_communication_volume, mh_enable_tabu_search,
                 mh_disable_diversify, mh_diversify_best, mh_cross_combine_original_k, disable_balance_singletons, initial_partition_optimize_fm_limits,
                 initial_partition_optimize_multitry_fm_alpha, initial_partition_optimize_multitry_rounds,
                 enable_omp, 
@@ -190,10 +207,37 @@ int parse_parameters(int argn, char **argv,
                 k,   
                 preconfiguration, 
                 input_partition,
+#elif defined MODE_NODESEP
+                //k,
+                imbalance,  
+                preconfiguration, 
+                filename_output, 
+                //time_limit, 
+                //edge_rating,
+                //max_flow_improv_steps,
+                //max_initial_ns_tries,
+                //region_factor_node_separators,
+                //global_cycle_iterations,
+                //most_balanced_flows_node_sep,
+		//sep_flows_disabled,
+		//sep_fm_disabled,
+		//sep_loc_fm_disabled,
+		//sep_greedy_disabled,
+		//sep_fm_unsucc_steps,
+		//sep_num_fm_reps,
+		//sep_loc_fm_unsucc_steps,
+		//sep_num_loc_fm_reps,
+                //sep_loc_fm_no_snodes,
+                //sep_num_vert_stop,
+                //sep_full_boundary_ip,
+                //sep_edge_rating_during_ip,
+                //sep_faster_ns,
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
                 filename_output, 
-
+#elif defined MODE_IMPROVEVERTEXSEPARATOR
+                input_partition, 
+                filename_output, 
 #elif defined MODE_KAFFPAE
                 k, imbalance, 
                 preconfiguration,  
@@ -254,7 +298,29 @@ int parse_parameters(int argn, char **argv,
         cfg.strong(partition_config);
 #endif
 
+#ifdef MODE_NODESEP
+        cfg.eco_separator(partition_config);
+#endif
+
         if(preconfiguration->count > 0) {
+#ifdef MODE_NODESEP
+                if(strcmp("strong", preconfiguration->sval[0]) == 0) {
+                        cfg.strong_separator(partition_config);
+                } else if (strcmp("eco", preconfiguration->sval[0]) == 0) {
+                        cfg.eco_separator(partition_config);
+                } else if (strcmp("fast", preconfiguration->sval[0]) == 0) {
+                        cfg.fast_separator(partition_config);
+                } else if (strcmp("fastsocial", preconfiguration->sval[0]) == 0) {
+                        cfg.fastsocial(partition_config);
+                } else if (strcmp("ecosocial", preconfiguration->sval[0]) == 0) {
+                        cfg.ecosocial(partition_config);
+                } else if (strcmp("strongsocial", preconfiguration->sval[0]) == 0) {
+                        cfg.strongsocial(partition_config);
+                } else {
+                        fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
+                        exit(0);
+                }
+#else
                 if(strcmp("strong", preconfiguration->sval[0]) == 0) {
                         cfg.strong(partition_config);
                 } else if (strcmp("eco", preconfiguration->sval[0]) == 0) {
@@ -271,6 +337,7 @@ int parse_parameters(int argn, char **argv,
                         fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);
                 }
+#endif
         }
 
         if(filename_output->count > 0) {
@@ -317,6 +384,18 @@ int parse_parameters(int argn, char **argv,
                 partition_config.amg_iterations = amg_iterations->ival[0];
         }
 
+        if(max_initial_ns_tries->count > 0) {
+                partition_config.max_initial_ns_tries = max_initial_ns_tries->ival[0];
+        }
+
+        if(max_flow_improv_steps->count > 0) {
+                partition_config.max_flow_improv_steps = max_flow_improv_steps->ival[0];
+        }
+
+        if(region_factor_node_separators->count > 0) {
+                partition_config.region_factor_node_separators = region_factor_node_separators->dval[0];
+        }
+
         if(kabaE_internal_bal->count > 0) {
                 partition_config.kabaE_internal_bal = kabaE_internal_bal->dval[0];
         }
@@ -340,6 +419,57 @@ int parse_parameters(int argn, char **argv,
         if(kaba_flip_packings->count > 0) {
                 partition_config.kaba_flip_packings = true;
         }
+
+	if(sep_flows_disabled->count > 0) {
+		partition_config.sep_flows_disabled = true;
+	}
+
+        if(sep_faster_ns->count > 0) {
+                partition_config.faster_ns = true;
+        }
+
+	if(sep_loc_fm_no_snodes->count > 0) {
+		partition_config.sep_loc_fm_no_snodes = sep_loc_fm_no_snodes->ival[0];
+	}
+
+	if(sep_num_vert_stop->count > 0) {
+		partition_config.sep_num_vert_stop = sep_num_vert_stop->ival[0];
+	}
+
+	if(sep_fm_unsucc_steps->count > 0) {
+		partition_config.sep_fm_unsucc_steps = sep_fm_unsucc_steps->ival[0];
+	}
+	if(sep_fm_unsucc_steps->count > 0) {
+		partition_config.sep_fm_unsucc_steps = sep_fm_unsucc_steps->ival[0];
+	}
+
+	if(sep_num_fm_reps->count > 0) {
+		partition_config.sep_num_fm_reps = sep_num_fm_reps->ival[0];
+	}
+
+	if(sep_loc_fm_unsucc_steps->count > 0) {
+		partition_config.sep_loc_fm_unsucc_steps = sep_loc_fm_unsucc_steps->ival[0];
+	}
+
+	if(sep_num_loc_fm_reps->count > 0) {
+		partition_config.sep_num_loc_fm_reps = sep_num_loc_fm_reps->ival[0];
+	}
+
+	if(sep_fm_disabled->count > 0) {
+		partition_config.sep_fm_disabled = true;
+	}
+
+	if(sep_loc_fm_disabled->count > 0) {
+		partition_config.sep_loc_fm_disabled = true;
+	}
+
+	if(sep_greedy_disabled->count > 0) {
+		partition_config.sep_greedy_disabled = true;
+	}
+
+	if(sep_full_boundary_ip->count > 0) {
+		partition_config.sep_full_boundary_ip = true;
+	}
 
         if (kaba_lsearch_p->count) {
                 if(strcmp("coindiff", kaba_lsearch_p->sval[0]) == 0) {
@@ -488,6 +618,10 @@ int parse_parameters(int argn, char **argv,
 
         if(most_balanced_flows->count > 0) {
                 partition_config.most_balanced_minimum_cuts = true;
+        }
+
+        if(most_balanced_flows_node_sep->count > 0) {
+                partition_config.most_balanced_minimum_cuts_node_sep = true;
         }
 
         if(use_wcycles->count > 0) {
@@ -647,16 +781,82 @@ int parse_parameters(int argn, char **argv,
                 }
         }
 
+        if (sep_edge_rating_during_ip->count > 0) {
+                if(strcmp("expansionstar", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = EXPANSIONSTAR;
+                } else if (strcmp("expansionstar2", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = EXPANSIONSTAR2;
+                } else if (strcmp("expansionstar2algdist", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = EXPANSIONSTAR2ALGDIST;
+                } else if (strcmp("geom", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = PSEUDOGEOM;
+                } else if (strcmp("sepaddx", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_ADDX;
+                } else if (strcmp("sepmultx", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_MULTX;
+                } else if (strcmp("sepmax", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_MAX;
+                } else if (strcmp("seplog", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_LOG;
+                } else if (strcmp("r1", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R1;
+                } else if (strcmp("r2", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R2;
+                } else if (strcmp("r3", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R3;
+                } else if (strcmp("r4", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R4;
+                } else if (strcmp("r5", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R5;
+                } else if (strcmp("r6", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R6;
+                } else if (strcmp("r7", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R7;
+                } else if (strcmp("r8", sep_edge_rating_during_ip->sval[0]) == 0) {
+                        partition_config.sep_edge_rating_during_ip = SEPARATOR_R8;
+                } else {
+                        fprintf(stderr, "Invalid edge rating variant: \"%s\"\n", sep_edge_rating_during_ip->sval[0]);
+                        exit(0);
+                }
+        }
 
         if (edge_rating->count > 0) {
                 if(strcmp("expansionstar", edge_rating->sval[0]) == 0) {
                         partition_config.edge_rating = EXPANSIONSTAR;
                 } else if (strcmp("expansionstar2", edge_rating->sval[0]) == 0) {
                         partition_config.edge_rating = EXPANSIONSTAR2;
+                } else if (strcmp("weight", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = WEIGHT;
+                } else if (strcmp("realweight", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = REALWEIGHT;
                 } else if (strcmp("expansionstar2algdist", edge_rating->sval[0]) == 0) {
                         partition_config.edge_rating = EXPANSIONSTAR2ALGDIST;
                 } else if (strcmp("geom", edge_rating->sval[0]) == 0) {
                         partition_config.edge_rating = PSEUDOGEOM;
+                } else if (strcmp("sepaddx", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_ADDX;
+                } else if (strcmp("sepmultx", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_MULTX;
+                } else if (strcmp("sepmax", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_MAX;
+                } else if (strcmp("seplog", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_LOG;
+                } else if (strcmp("r1", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_R1;
+                } else if (strcmp("r2", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_R2;
+                } else if (strcmp("r3", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_R3;
+                } else if (strcmp("r4", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_R4;
+                } else if (strcmp("r5", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_R5;
+                } else if (strcmp("r6", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_R6;
+                } else if (strcmp("r7", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_R7;
+                } else if (strcmp("r8", edge_rating->sval[0]) == 0) {
+                        partition_config.edge_rating = SEPARATOR_R8;
                 } else {
                         fprintf(stderr, "Invalid edge rating variant: \"%s\"\n", edge_rating->sval[0]);
                         exit(0);

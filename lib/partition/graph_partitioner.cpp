@@ -176,6 +176,7 @@ void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig 
 }
 
 void graph_partitioner::single_run( PartitionConfig & config, graph_access & G) {
+
         for( unsigned i = 1; i <= config.global_cycle_iterations; i++) {
                 PRINT(std::cout <<  "vcycle " << i << " of " << config.global_cycle_iterations  << std::endl;)
                         if(config.use_wcycles || config.use_fullmultigrid)  {
@@ -188,9 +189,25 @@ void graph_partitioner::single_run( PartitionConfig & config, graph_access & G) 
 
                                 graph_hierarchy hierarchy;
 
+                                if( config.mode_node_separators ) {
+                                        int rnd = random_functions::nextInt(0,3);
+                                        if( rnd == 0 ) {
+                                                config.edge_rating = SEPARATOR_MULTX;
+                                        } else if ( rnd  == 1 ) {
+                                                config.edge_rating = WEIGHT;
+                                        } else if ( rnd  == 2 ) {
+                                                config.edge_rating = SEPARATOR_MAX;
+                                        } else if ( rnd  == 3 ) {
+                                                config.edge_rating = SEPARATOR_LOG;
+                                        } 
+                                }
                                 coarsen.perform_coarsening(config, G, hierarchy);
                                 init_part.perform_initial_partitioning(config, hierarchy);
                                 uncoarsen.perform_uncoarsening(config, hierarchy);
+                                if( config.mode_node_separators ) {
+                                        quality_metrics qm;
+                                        std::cout <<  "vcycle result " << qm.separator_weight(G)  << std::endl;
+                                }
                         }
                 config.graph_allready_partitioned = true;
                 config.balance_factor             = 0;

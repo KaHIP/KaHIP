@@ -42,8 +42,10 @@ public:
         EdgeWeight objective(const PartitionConfig & config, graph_access & G, int * partition_map);
         EdgeWeight edge_cut_connected(graph_access & G, int * partition_map);
         int boundary_nodes(graph_access & G);
+        NodeWeight separator_weight(graph_access& G);
         double balance(graph_access & G);
         double balance_edges(graph_access & G);
+        double balance_separator(graph_access & G);
 };
 
 #endif /* end of include guard: QUALITY_METRICS_10HC2I5M */

@@ -30,6 +30,7 @@
 #include "../lib/tools/macros_assertions.h"
 #include "../lib/tools/random_functions.h"
 #include "../lib/parallel_mh/parallel_mh_async.h"
+#include "../lib/partition/uncoarsening/separator/area_bfs.h"
 #include "../lib/partition/partition_config.h"
 #include "../lib/partition/graph_partitioner.h"
 #include "../lib/partition/uncoarsening/separator/vertex_separator_algorithm.h"
@@ -202,6 +203,7 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
                           int* adjncy, 
                           int* nparts, 
                           double* imbalance, 
+                          int mode,
                           int* num_nodeseparator_vertices, 
                           int** separator) {
 
@@ -217,24 +219,73 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
         partition_config.imbalance = 100*(*imbalance);
         graph_access G;     
         internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
-
-        
         graph_partitioner partitioner;
-        partitioner.perform_partitioning(partition_config, G);
 
-        // now compute a node separator from the partition of the graph
-        complete_boundary boundary(&G);
-        boundary.build();
+        area_bfs::m_deepth.resize(G.number_of_nodes());
+        forall_nodes(G, node) {
+                area_bfs::m_deepth[node] = 0;
+        } endfor
 
-        vertex_separator_algorithm vsa;
-        std::vector<NodeID> internal_separator;
-        vsa.compute_vertex_separator(partition_config, G, boundary, internal_separator);
+        if( partition_config.k > 2 ) {
+                partitioner.perform_partitioning(partition_config, G);
 
-        // copy to output variables
-        *num_nodeseparator_vertices =  internal_separator.size();
-        *separator = new int[*num_nodeseparator_vertices];
-        for( unsigned int i = 0; i < internal_separator.size(); i++) {
-                (*separator)[i] = internal_separator[i];
+                // now compute a node separator from the partition of the graph
+                complete_boundary boundary(&G);
+                boundary.build();
+
+                vertex_separator_algorithm vsa;
+                std::vector<NodeID> internal_separator;
+                vsa.compute_vertex_separator(partition_config, G, boundary, internal_separator);
+
+                // copy to output variables
+                *num_nodeseparator_vertices =  internal_separator.size();
+                *separator = new int[*num_nodeseparator_vertices];
+                for( unsigned int i = 0; i < internal_separator.size(); i++) {
+                        (*separator)[i] = internal_separator[i];
+                }
+        } else {
+                
+                configuration cfg;
+                switch( mode ) {
+                        case FAST: 
+                                cfg.fast_separator(partition_config);
+                                break;
+                        case ECO: 
+                                cfg.eco_separator(partition_config);
+                                break;
+                        case STRONG: 
+                                cfg.strong_separator(partition_config);
+                                break;
+                        case FASTSOCIAL: 
+                                cfg.fastsocial_separator(partition_config);
+                                break;
+                        case ECOSOCIAL: 
+                                cfg.ecosocial_separator(partition_config);
+                                break;
+                        case STRONGSOCIAL: 
+                                cfg.strongsocial_separator(partition_config);
+                                break;
+                        default: 
+                                cfg.strong_separator(partition_config);
+                                break;
+                }       
+                partition_config.mode_node_separators = true;
+                partitioner.perform_partitioning(partition_config, G);
+                NodeWeight ns_size = 0;
+                forall_nodes(G, node) {
+                        if(G.getPartitionIndex(node) == G.getSeparatorBlock()) {
+                                ns_size++;
+                        }
+                } endfor
+                *num_nodeseparator_vertices = ns_size;
+                *separator = new int[*num_nodeseparator_vertices];
+                unsigned int i = 0;
+                forall_nodes(G, node) {
+                        if(G.getPartitionIndex(node) == G.getSeparatorBlock()) {
+                                (*separator)[i] = node;
+                                i++;
+                        }
+                } endfor
         }
 
         ofs.close();
@@ -243,17 +294,17 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
 
 
 void node_separator(int* n, 
-                          int* vwgt, 
-                          int* xadj, 
-                          int* adjcwgt, 
-                          int* adjncy, 
-                          int* nparts, 
-                          double* imbalance, 
-                          bool suppress_output, 
-                          int seed,
-                          int mode,
-                          int* num_separator_vertices, 
-                          int** separator) {
+                    int* vwgt, 
+                    int* xadj, 
+                    int* adjcwgt, 
+                    int* adjncy, 
+                    int* nparts, 
+                    double* imbalance, 
+                    bool suppress_output, 
+                    int seed,
+                    int mode,
+                    int* num_separator_vertices, 
+                    int** separator) {
         configuration cfg;
         PartitionConfig partition_config;
         partition_config.k = *nparts;
@@ -283,7 +334,7 @@ void node_separator(int* n,
         }
         partition_config.seed = seed;
 
-        internal_nodeseparator_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, num_separator_vertices, separator);
+        internal_nodeseparator_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, mode, num_separator_vertices, separator);
 }
 
 
