@@ -383,7 +383,7 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator(const PartitionC
                 solution_value = improve_vertex_separator_internal( cfg , G, input_separator, output_separator);
                 G.set_partition_count(3);
                 double balance = qm.balance_separator(G);
-                if( balance > 1.2 ) {
+                if( balance > (1+config.epsilon/(double)100) ) {
                         solution_imbalanced = true;
                         current_region_factor /= 2;
 
@@ -509,7 +509,7 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
         }
 
         //TODO remove them later on
-        is_vertex_separator(G, allready_separator);
+        //is_vertex_separator(G, allready_separator);
 
         return old_separator_weight - value; // return improvement
 }
