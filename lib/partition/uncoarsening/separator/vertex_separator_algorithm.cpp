@@ -528,7 +528,7 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
         boundary.getQuotientGraphEdges(qgraph_edges);
 
         if(qgraph_edges.size() == 0) {
-                is_vertex_separator(G, allready_separator);         
+                //is_vertex_separator(G, allready_separator);         
                 return;
         }
 
@@ -573,9 +573,9 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
                 overall_separator.push_back(it->first);
                 G.setPartitionIndex(it->first, G.getSeparatorBlock());
         }
-        std::cout <<  "performing check "  << std::endl;
-        is_vertex_separator(G, allready_separator);         
-        std::cout <<  "performing check done "  << std::endl;
+        //std::cout <<  "performing check "  << std::endl;
+        //is_vertex_separator(G, allready_separator);         
+        //std::cout <<  "performing check done "  << std::endl;
 }
 
 void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig & config, 
@@ -636,7 +636,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simpler(const Partitio
                 overall_separator.push_back(it->first);
                 G.setPartitionIndex(it->first, G.getSeparatorBlock());
         }
-        is_vertex_separator(G, allready_separator);         
+        //is_vertex_separator(G, allready_separator);         
 }
 
 void vertex_separator_algorithm::compute_vertex_separator_simple(const PartitionConfig & config, 
@@ -687,7 +687,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
                 overall_separator.push_back(it->first);
                 G.setPartitionIndex(it->first, G.getSeparatorBlock());
         }
-        is_vertex_separator(G, allready_separator);         
+        //is_vertex_separator(G, allready_separator);         
 }
 
 
