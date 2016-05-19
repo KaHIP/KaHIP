@@ -573,6 +573,7 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
                 overall_separator.push_back(it->first);
                 G.setPartitionIndex(it->first, G.getSeparatorBlock());
         }
+        delete scheduler;
         //std::cout <<  "performing check "  << std::endl;
         //is_vertex_separator(G, allready_separator);         
         //std::cout <<  "performing check done "  << std::endl;
@@ -637,6 +638,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simpler(const Partitio
                 G.setPartitionIndex(it->first, G.getSeparatorBlock());
         }
         //is_vertex_separator(G, allready_separator);         
+        delete scheduler;
 }
 
 void vertex_separator_algorithm::compute_vertex_separator_simple(const PartitionConfig & config, 
@@ -688,6 +690,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
                 G.setPartitionIndex(it->first, G.getSeparatorBlock());
         }
         //is_vertex_separator(G, allready_separator);         
+        delete scheduler;
 }
 
 
