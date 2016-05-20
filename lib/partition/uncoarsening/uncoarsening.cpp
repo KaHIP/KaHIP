@@ -172,6 +172,7 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
                 }
         }
 
+        graph_access* to_delete = NULL;
         while(!hierarchy.isEmpty()) {
                 graph_access* G = hierarchy.pop_finer_and_project();
                 std::cout << "log>" << "unrolling graph with " << G->number_of_nodes() << std::endl;
@@ -215,7 +216,14 @@ int uncoarsening::perform_uncoarsening_nodeseparator(const PartitionConfig & con
                                 if(improvement == 0) break;
                         }
                 }
+                if(to_delete != NULL) {
+			delete to_delete;
+		}
+		if(!hierarchy.isEmpty()) {
+			to_delete = G;
+		}
         }
+	delete coarsest;
 
         return 0;
 }
@@ -259,6 +267,7 @@ int uncoarsening::perform_uncoarsening_nodeseparator_fast(const PartitionConfig 
                 }
         }
 
+        graph_access* to_delete = NULL;
         while(!hierarchy.isEmpty()) {
                 graph_access* G = hierarchy.pop_finer_and_project_ns(current_separator);
                 std::cout << "log>" << "unrolling graph with " << G->number_of_nodes() << std::endl;
@@ -298,7 +307,14 @@ int uncoarsening::perform_uncoarsening_nodeseparator_fast(const PartitionConfig 
                                 if(improvement == 0) break;
                         }
                 }
+                if(to_delete != NULL) {
+			delete to_delete;
+		}
+		if(!hierarchy.isEmpty()) {
+			to_delete = G;
+		}
         }
+	delete coarsest;
 
         return 0;
 }
