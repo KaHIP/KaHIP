@@ -257,13 +257,16 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
                                 cfg.strong_separator(partition_config);
                                 break;
                         case FASTSOCIAL: 
-                                cfg.fastsocial_separator(partition_config);
+                                cfg.fast_separator(partition_config);
+                                //cfg.fastsocial_separator(partition_config);
                                 break;
                         case ECOSOCIAL: 
-                                cfg.ecosocial_separator(partition_config);
+                                cfg.eco_separator(partition_config);
+                                //cfg.ecosocial_separator(partition_config);
                                 break;
                         case STRONGSOCIAL: 
-                                cfg.strongsocial_separator(partition_config);
+                                //cfg.strongsocial_separator(partition_config);
+                                cfg.strong_separator(partition_config);
                                 break;
                         default: 
                                 cfg.strong_separator(partition_config);

@@ -311,11 +311,14 @@ int parse_parameters(int argn, char **argv,
                 } else if (strcmp("fast", preconfiguration->sval[0]) == 0) {
                         cfg.fast_separator(partition_config);
                 } else if (strcmp("fastsocial", preconfiguration->sval[0]) == 0) {
-                        cfg.fastsocial(partition_config);
+                        std::cout <<  "fastsocial not supported yet"  << std::endl;
+                        exit(0);
                 } else if (strcmp("ecosocial", preconfiguration->sval[0]) == 0) {
-                        cfg.ecosocial(partition_config);
+                        std::cout <<  "ecosocial not supported yet"  << std::endl;
+                        exit(0);
                 } else if (strcmp("strongsocial", preconfiguration->sval[0]) == 0) {
-                        cfg.strongsocial(partition_config);
+                        std::cout <<  "strongsocial not supported yet"  << std::endl;
+                        exit(0);
                 } else {
                         fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);

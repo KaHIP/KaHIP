@@ -27,6 +27,7 @@
 #include "data_structure/union_find.h"
 
 #include <unordered_map>
+#include <numeric>
 
 quality_metrics::quality_metrics() {
 }
