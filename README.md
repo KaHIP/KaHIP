@@ -8,6 +8,8 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 Main project site:
 http://algo2.iti.kit.edu/documents/kahip/index.html
 
+[![Build Status](https://travis-ci.org/schulzchristian/KaHIP.svg?branch=master)](https://travis-ci.org/schulzchristian/KaHIP)
+
 Installation Notes
 =====
 
