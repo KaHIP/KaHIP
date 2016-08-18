@@ -1,0 +1,14 @@
+language: cpp
+
+compiler:
+  - gcc
+
+script: 
+  - scons program=kaffpa variant=optimized 
+  - scons program=node_separators variant=optimized 
+  - scons program=evaluator variant=optimized 
+  - scons program=kaffpaE variant=optimized 
+  - scons program=graphchecker variant=optimized 
+  - scons program=label_propagation variant=optimized 
+  - scons program=library variant=optimized 
+  - scons program=partition_to_vertex_separator variant=optimized 
