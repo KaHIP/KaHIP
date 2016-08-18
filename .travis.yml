@@ -3,9 +3,13 @@ language: cpp
 compiler:
   - gcc
 
+before_script:
+  - sudo apt-get -qq update
+  - sudo apt-get install libopenmpi-dev
+
 script: 
   - scons program=kaffpa variant=optimized 
-  - scons program=node_separators variant=optimized 
+  - scons program=node_separator variant=optimized 
   - scons program=evaluator variant=optimized 
   - scons program=kaffpaE variant=optimized 
   - scons program=graphchecker variant=optimized 
