@@ -21,7 +21,6 @@
  *****************************************************************************/
 
 #include <iostream>
-#include <mpi.h>
 #include "kaHIP_interface.h"
 #include "../lib/data_structure/graph_access.h"
 #include "../lib/io/graph_io.h"
