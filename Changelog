@@ -1,3 +1,5 @@
+- bugfix to partition_to_vertex_separator program
+
 KaHIP-1.00
 ------------------------------------------------------------------------
 - included new multi-level node separator algorithms
