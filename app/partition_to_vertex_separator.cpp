@@ -126,4 +126,22 @@ int main(int argn, char **argv) {
         }
 
         graph_io::writePartition(G, filename.str());
+
+#ifndef NDEBUG
+        forall_nodes(G, node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+                        if( G.getPartitionIndex(node) != G.getPartitionIndex(target)) {
+                                if(G.getPartitionIndex(node) != partition_config.k && G.getPartitionIndex(target) != partition_config.k) {
+                                        std::cout <<  "not a separator!!"  << std::endl;
+                                        std::cout <<  G.getPartitionIndex(node)   << std::endl;
+                                        std::cout <<  G.getPartitionIndex(target)   << std::endl;
+                                        std::cout <<   node  <<  " " <<  target  << std::endl;
+                                        exit(0);
+
+                                }
+                        } 
+                } endfor
+        } endfor
+#endif
 }

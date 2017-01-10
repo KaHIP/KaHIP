@@ -53,13 +53,18 @@ void vertex_separator_flow_solver::find_separator(const PartitionConfig & config
         NodeID source = fG.number_of_nodes() - 2;
         NodeID sink   = fG.number_of_nodes() - 1;
 
-        std::vector<NodeID> S;
-        pr.solve_max_flow_min_cut( fG, source, sink, true, S);
+        std::vector<NodeID> S_tmp;
+        pr.solve_max_flow_min_cut( fG, source, sink, true, S_tmp);
 
+        std::vector<NodeID> S;
+        for( unsigned i = 0; i < S_tmp.size(); i++) {
+                if( S_tmp[i] != source && S_tmp[i] != sink) 
+                        S.push_back(new_to_old_ids[S_tmp[i]]);
+        }
         std::sort(lhs_nodes.begin(), lhs_nodes.end());
         std::sort(rhs_nodes.begin(), rhs_nodes.end());
         std::sort(S.begin(), S.end());
-
+ 
         std::vector<int> separator_tmp(lhs_nodes.size() + rhs_nodes.size(), -1);
         std::vector<int>::iterator it;
         it = std::set_intersection(rhs_nodes.begin(), rhs_nodes.end(), S.begin(), S.end(), separator_tmp.begin()); 
