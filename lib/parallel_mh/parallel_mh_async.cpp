@@ -36,7 +36,8 @@
 #include "quality_metrics.h"
 #include "random_functions.h"
 
-parallel_mh_async::parallel_mh_async() : parallel_mh_async( MPI_COMM_WORLD ) {
+parallel_mh_async::parallel_mh_async() : MASTER(0), m_time_limit(0) {
+        parallel_mh_async( MPI_COMM_WORLD );
 }
 
 parallel_mh_async::parallel_mh_async(MPI_Comm communicator) : MASTER(0), m_time_limit(0) {
