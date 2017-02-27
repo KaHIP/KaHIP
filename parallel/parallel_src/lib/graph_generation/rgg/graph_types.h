@@ -1,24 +1,25 @@
-/* File:   graph_types.h
- * Author: Manuel Holtgrewe <holtgrewe@ira.uka.de>
+/******************************************************************************
+ * graph_types.h
  *
- * This header defines elementary graph-related types such as vertex and edge
- * ids.
+ * Source of KaHIP -- Karlsruhe High Quality Graph Partitioning 
+ ******************************************************************************
+ * Copyright (C) 2017 Christian Schulz 
  *
- * Constants:
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 2 of the License, or (at your option)
+ * any later version.
  *
- *   kInvalidVertex   The identifier for an invalid vertex, e.g. for sentinels.
- *   kInvalidEdgeId   The identifier for an invalid edges, e.g. for sentinels.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
  *
- * Types:
- *
- *   Edge                   std::pair-like struct representing an edge.
- *   EdgeCount              Type to use for internal edges.
- *   EdgeWeight             Type to use for edge weights.
- *   EdgeId                 Type to use for edge identifiers (integral).
- *   GraphFileFormat        Enum for specifying a graph file format.
- *   VertexId               Type to use for vertex identifiers (integral).
- *   VertexWeight           Type to use for vertex weights.
- */
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *****************************************************************************/
+
+
 #ifndef GRAPH_TYPES_H
 #define GRAPH_TYPES_H
 

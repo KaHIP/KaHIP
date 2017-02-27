@@ -1,50 +1,23 @@
-// File:   static_distributed_graph.h
-// Author: Manuel Holtgrewe <holtgrewe@ira.uka.de>
-//
-// This header defines a static distributed graph.
-//
-// Types:
-//
-//   StaticDistributedGraph Class that represents a distributed graph, contains
-//                          a local and a ghost graph.
-//
-// Nomenclauture
-// -------------
-//
-// A Graph G = (V, E) has a set V of vertices (not nodes) and a set E of
-// edges.
-//
-// Given an edge (u, v), u is called the tail, v is called the head.
-//
-// A "star" around a vertex u is the pair (u, { (u, v) \in E }), i.e. a
-// vertex with its outgoing edges.
-//
-// The vertices that are owned by a process are "local vertices".  The
-// vertices of which a process knows the stars but which are not owned
-// by it are called "neighbour vertices".  Other vertices are called "remote
-// vertices".
-//
-// A "splitters array" or just "splitters" is array with nondescending values.
-// These splitters split a sequence of length n into k parts.  The first value
-// is always 0, the last one is always n+1, there are k+1 entries.  The
-// splitters array contains intervals, the i-th interval of indices in the
-// sequence is [splitters[i], splitters[i+1]).
-//
-// Naming conventions
-// ------------------
-//
-// edge identifier variables    e, f, g, ...
-// vertex identifier variables  u, v, w, ...
-//
-// Vertex Ownership
-// ----------------
-//
-// On coarsening, when the hierarchy is constructed, we give out new vertex
-// numbers on every level.  Each process holds contiguously numbered vertices.
-//
-// Since very process knows about all its neighbour vertices, the neighbouring
-// processes can send update notifications when a vertex is migrated away from
-// them to a third process.  The same is true for edges.
+/******************************************************************************
+ * static_distributed_graph.h
+ *
+ * Source of KaHIP -- Karlsruhe High Quality Graph Partitioning 
+ ******************************************************************************
+ * Copyright (C) 2017 Christian Schulz 
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *****************************************************************************/
 
 #ifndef STATIC_DISTRIBUTED_GRAPH_H
 #define STATIC_DISTRIBUTED_GRAPH_H

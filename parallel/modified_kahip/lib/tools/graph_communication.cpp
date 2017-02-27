@@ -4,11 +4,11 @@
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
  ******************************************************************************
- * Copyright (C) 2013 Christian Schulz <christian.schulz@kit.edu>
+ * Copyright (C) 2013-2015 Christian Schulz <christian.schulz@kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option)
+ * Software Foundation, either version 2 of the License, or (at your option)
  * any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -33,7 +33,8 @@ graph_communication::~graph_communication() {
 }
 
 void graph_communication::broadcast_graph( graph_access & G, unsigned root) {
-        int rank       = MPI::COMM_WORLD.Get_rank();
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
         //first B-Cast number of nodes and number of edges 
         unsigned number_of_nodes = 0;
@@ -44,7 +45,7 @@ void graph_communication::broadcast_graph( graph_access & G, unsigned root) {
                buffer[0] = G.number_of_nodes();
                buffer[1] = G.number_of_edges();
         }
-        MPI::COMM_WORLD.Bcast(&buffer[0], 2, MPI_INT, root);
+        MPI_Bcast(&buffer[0], 2, MPI_INT, root, MPI_COMM_WORLD);
 
         number_of_nodes = buffer[0];
         number_of_edges = buffer[1];
@@ -68,10 +69,10 @@ void graph_communication::broadcast_graph( graph_access & G, unsigned root) {
                 adjwgt = new int[number_of_edges];
         }
 
-        MPI::COMM_WORLD.Bcast(xadj,   number_of_nodes+1, MPI_INT, root);
-        MPI::COMM_WORLD.Bcast(adjncy, number_of_edges  , MPI_INT, root);
-        MPI::COMM_WORLD.Bcast(vwgt,   number_of_nodes  , MPI_INT, root);
-        MPI::COMM_WORLD.Bcast(adjwgt, number_of_edges  , MPI_INT, root);
+        MPI_Bcast(xadj,   number_of_nodes+1, MPI_INT, root, MPI_COMM_WORLD);
+        MPI_Bcast(adjncy, number_of_edges  , MPI_INT, root, MPI_COMM_WORLD);
+        MPI_Bcast(vwgt,   number_of_nodes  , MPI_INT, root, MPI_COMM_WORLD);
+        MPI_Bcast(adjwgt, number_of_edges  , MPI_INT, root, MPI_COMM_WORLD);
 
         G.build_from_metis_weighted( number_of_nodes, xadj, adjncy, vwgt, adjwgt); 
 

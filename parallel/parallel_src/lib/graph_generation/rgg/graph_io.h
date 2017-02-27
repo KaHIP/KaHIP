@@ -1,41 +1,23 @@
-// File:   graph_io.h
-// Author: Manuel Holtgrewe <holtgrewe@ira.uka.de>
-//
-// Routines and supporting code for loading and saving graphs.
-//
-// Functions:
-//
-//   LoadGraphCentrallyAndDistribute()
-//                           Load a graph centrally and then distribute it.
-//   LoadGraphDistributed()  Load a graph in a completely distributed manner.
-//
-//
-// Binary Distributed File Format
-// ------------------------------
-//
-// The file extension is ".daa".
-//
-// In order to read in a graph in parallel using MPI-2's parallel I/O routines,
-// we have to use a binary format.  It is structured as follows:
-//
-//   Datatype   Count   Description
-//
-//   MPI::INT *     3   Magic number, 'DAA' for Distributed Adjacency Array.
-//   MPI::INT *     1   Format version, current version is 1.
-//   MPI::INT *     1   Specifies whether or not to use weights, see below.
-//   MPI::INT *     1   Vertex count n.
-//   MPI::INT *     1   Edge count m.
-//   MPI::INT *  (n+1)  Offsets in edge head array.
-//   MPI::INT *     m   Edge heads.
-//   MPI::INT *     n   Vertex weights, if enabled in weight flag.
-//   MPI::INT *     m   Edge weights, if enabled in weight flag.
-//
-// The weight flag can have the following values:
-//
-//   00   No weights.
-//   01   Edge weights only.
-//   10   Vertex weights only.
-//   11   Both vertex and edge weights.
+/******************************************************************************
+ * graph_io.h
+ *
+ * Source of KaHIP -- Karlsruhe High Quality Graph Partitioning 
+ ******************************************************************************
+ * Copyright (C) 2017 Christian Schulz 
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *****************************************************************************/
 
 #ifndef GRAPH_IO_H
 #define GRAPH_IO_H

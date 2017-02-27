@@ -1,19 +1,23 @@
-// File:   assert.h
-// Author: Manuel Holtgrewe <holtgrewe@ira.uka.de>
-//
-// Assertions that do not kill the program but only print a warning.
-//
-// Macros:
-//
-//   ASSERT_TRUE(x)
-//   ASSERT_NEQ(left, right)
-//   ASSERT_EQ(left, right)
-//   ASSERT_LT(left, right)
-//   ASSERT_GT(left, right)
-//   ASSERT_LEQ(left, right)
-//   ASSERT_GEQ(left, right)
-//   ASSERT_BETWEEN(left, x, right)
-//   ASSERT_RANGE_GEQ(sequence, begin, end, x, i)
+/******************************************************************************
+ * macros_assertions.h
+ *
+ * Source of KaHIP -- Karlsruhe High Quality Graph Partitioning 
+ ******************************************************************************
+ * Copyright (C) 2017 Christian Schulz 
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *****************************************************************************/
 
 #ifndef ASSERT_H
 #define ASSERT_H

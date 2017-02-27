@@ -1,17 +1,23 @@
-// File:   macros_common.h
-// Author: Manuel Holtgrewe <holtgrewe@ira.uka.de>
-//
-// Common macros used in many places.
-//
-// Macros:
-//
-//   DEBUG    Iff 1 then debugging is enabled.  Default: 0.
-//   VLOG(x)  x if DEBUG, the empty string otherwise.
-//   VVLOG(x) x if DEBUG, the empty string otherwise.
-//   STR(x)   Converts the symbol x to a string literal.
-//   DISALLOW_COPY_AND_ASSIGN(TypeName)
-//                              Declare copy constructor and assignment operator
-//   DISALLOW_ASSIGN(TypeName)  Declare assignment operator.
+/******************************************************************************
+ * macros_common.h
+ *
+ * Source of KaHIP -- Karlsruhe High Quality Graph Partitioning 
+ ******************************************************************************
+ * Copyright (C) 2017 Christian Schulz 
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *****************************************************************************/
 
 #ifndef MACROS_COMMON_H 
 #define MACROS_COMMON_H
