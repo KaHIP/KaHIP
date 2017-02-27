@@ -1,2 +1,0 @@
-file /home/c_schulz/projects/coding/software_releases/KaHIPgit/parallel/modified_kahip/SConstruct,line 89:
-	Configure(confdir = .sconf_temp)

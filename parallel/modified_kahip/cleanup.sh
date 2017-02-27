@@ -10,3 +10,4 @@ scons program=label_propagation variant=optimized -j 4 -c
 
 rm -rf deploy
 rm -rf optimized
+rm config.log
