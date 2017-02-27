@@ -4,11 +4,11 @@
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
  ******************************************************************************
- * Copyright (C) 2013-2015 Christian Schulz <christian.schulz@kit.edu>
+ * Copyright (C) 2013 Christian Schulz <christian.schulz@kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 2 of the License, or (at your option)
+ * Software Foundation, either version 3 of the License, or (at your option)
  * any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -26,11 +26,14 @@
 #include "tools/quality_metrics.h"
 #include "tools/random_functions.h"
 
-exchanger::exchanger() {
+exchanger::exchanger(MPI_Comm communicator) {
         m_prev_best_objective = std::numeric_limits<EdgeWeight>::max();
 
-        int rank              = MPI::COMM_WORLD.Get_rank();
-        int comm_size         = MPI::COMM_WORLD.Get_size();
+        m_communicator = communicator;
+
+        int rank, comm_size;
+        MPI_Comm_rank( m_communicator, &rank);
+        MPI_Comm_size( m_communicator, &comm_size);
 
         m_cur_num_pushes = 0;
         if(comm_size > 2) m_max_num_pushes = ceil(log2(comm_size));
@@ -48,23 +51,33 @@ exchanger::exchanger() {
 }
 
 exchanger::~exchanger() {
-        MPI::COMM_WORLD.Barrier();
-        MPI::Status st;
-        int rank = MPI::COMM_WORLD.Get_rank();
-        while(MPI::COMM_WORLD.Iprobe(MPI::ANY_SOURCE,rank,st)) {
-                int message_length = st.Get_count(MPI_INT);
+        MPI_Barrier( m_communicator );
+        int rank;
+        MPI_Comm_rank( m_communicator, &rank);
+        
+        int flag; MPI_Status st;
+        MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, m_communicator, &flag, &st);
+        
+        while(flag) {
+                int message_length;
+                MPI_Get_count(&st, MPI_INT, &message_length);
+                 
                 int* partition_map = new int[message_length];
-                MPI::COMM_WORLD.Recv( partition_map, message_length, MPI_INT, st.Get_source(), rank); 
+                MPI_Status rst;
+                MPI_Recv( partition_map, message_length, MPI_INT, st.MPI_SOURCE, rank, m_communicator, &rst); 
+                
                 delete[] partition_map;
+                MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, m_communicator, &flag, &st);
         }
 
-        MPI::COMM_WORLD.Barrier();
+        MPI_Barrier( m_communicator );
         for( unsigned i = 0; i < m_request_pointers.size(); i++) {
-                m_request_pointers[i]->Cancel();
+                MPI_Cancel( m_request_pointers[i] );
         }
         
         for( unsigned i = 0; i < m_request_pointers.size(); i++) {
-                m_request_pointers[i]->Wait();
+                MPI_Status st;
+                MPI_Wait( m_request_pointers[i], & st );
                 delete[] m_partition_map_buffers[i];
                 delete   m_request_pointers[i];
         }
@@ -73,15 +86,17 @@ exchanger::~exchanger() {
 
 void exchanger::diversify_population( PartitionConfig & config, graph_access & G,  population & island, bool replace ) {
        
-        int rank      = MPI::COMM_WORLD.Get_rank();
-        int comm_size = MPI::COMM_WORLD.Get_size();
+        int rank, comm_size;
+        MPI_Comm_rank( m_communicator, &rank);
+        MPI_Comm_size( m_communicator, &comm_size);
+        
         std::vector<unsigned> permutation(comm_size, 0);
 
         if( rank == ROOT ) {
                 random_functions::circular_permutation(permutation); 
         }
 
-        MPI::COMM_WORLD.Bcast(&permutation[0], comm_size, MPI_INT, ROOT);
+        MPI_Bcast(&permutation[0], comm_size, MPI_INT, ROOT, m_communicator);
 
         int from = 0;
         int to   = permutation[rank];
@@ -111,7 +126,9 @@ void exchanger::diversify_population( PartitionConfig & config, graph_access & G
 }
 
 void exchanger::quick_start( PartitionConfig & config, graph_access & G, population & island ) {
-        int comm_size              = MPI::COMM_WORLD.Get_size();
+        int comm_size;
+        MPI_Comm_size( m_communicator, &comm_size);
+        
         unsigned no_of_individuals = ceil(config.mh_pool_size / (double)comm_size) - 1;
 
         std::cout <<  "creating " <<  no_of_individuals << std::endl;
@@ -147,8 +164,9 @@ void exchanger::exchange_individum( const PartitionConfig & config,  graph_acces
         out.partition_map  = partition_map;
         out.cut_edges      = new std::vector<EdgeID>();
 
-        MPI::COMM_WORLD.Sendrecv( in.partition_map , G.number_of_nodes(), MPI_INT, to, 0, 
-                                  out.partition_map, G.number_of_nodes(), MPI_INT, from, 0); 
+        MPI_Status st;
+        MPI_Sendrecv( in.partition_map , G.number_of_nodes(), MPI_INT, to, 0, 
+                      out.partition_map, G.number_of_nodes(), MPI_INT, from, 0, m_communicator, &st); 
 
         //recompute cut edges and edge cut locally
         forall_nodes(G, node) {
@@ -166,8 +184,9 @@ void exchanger::exchange_individum( const PartitionConfig & config,  graph_acces
 
 //extended push protocol -- see paper for details
 void exchanger::push_best( PartitionConfig & config, graph_access & G, population & island ) {
-        int rank       = MPI::COMM_WORLD.Get_rank();
-        int size       = MPI::COMM_WORLD.Get_size();
+        int rank, size;
+        MPI_Comm_rank( m_communicator, &rank);
+        MPI_Comm_size( m_communicator, &size);
 
         Individuum best_ind;
         island.get_best_individuum(best_ind);
@@ -207,19 +226,22 @@ void exchanger::push_best( PartitionConfig & config, graph_access & G, populatio
                 int target = rank;
                 while( target == rank && m_allready_send_to[target]) target = random_functions::nextInt(0, size-1);
 
-                MPI::Request* request = new MPI::Request;
-                *request              = MPI::COMM_WORLD.Isend( partition_map, G.number_of_nodes(), MPI_INT, target, target);
+                MPI_Request* rq = new MPI_Request;
+                MPI_Isend( partition_map, G.number_of_nodes(), MPI_INT, target, target, m_communicator, rq);
+                
 
                 m_cur_num_pushes++;
 
-                m_request_pointers.push_back( request );
+                m_request_pointers.push_back( rq );
                 m_partition_map_buffers.push_back( partition_map );
 
                 m_allready_send_to[target] = true;
         }
 
         for( unsigned i = 0; i < m_request_pointers.size(); i++) {
-                bool finished = (*m_request_pointers[i]).Test();
+                int finished = 0;
+                MPI_Status st;
+                MPI_Test( m_request_pointers[i], &finished, &st);
 
                 if(finished) {
                         std::swap(m_request_pointers[i], m_request_pointers[m_request_pointers.size()-1]);
@@ -235,16 +257,21 @@ void exchanger::push_best( PartitionConfig & config, graph_access & G, populatio
 }
 
 void exchanger::recv_incoming( PartitionConfig & config, graph_access & G, population & island ) {
-        int rank       = MPI::COMM_WORLD.Get_rank();
-        MPI::Status st;
-        while(MPI::COMM_WORLD.Iprobe(MPI::ANY_SOURCE,rank,st)) {
+        int rank;
+        MPI_Comm_rank( m_communicator, &rank);
+        
+        int flag; MPI_Status st;
+        MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, m_communicator, &flag, &st);
+        
+        while(flag) {
                 Individuum out;
                 int* partition_map = new int[G.number_of_nodes()];
                 out.partition_map  = partition_map;
                 out.cut_edges      = new std::vector<EdgeID>();
 
-                MPI::COMM_WORLD.Recv( out.partition_map, G.number_of_nodes(), MPI_INT, st.Get_source(), rank); 
-
+                MPI_Status rst;
+                MPI_Recv( out.partition_map, G.number_of_nodes(), MPI_INT, st.MPI_SOURCE, rank, m_communicator, &rst); 
+                
                 //recompute cut edges and edge cut locally
                 forall_nodes(G, node) {
                         forall_out_edges(G, e, node) {
@@ -272,7 +299,9 @@ void exchanger::recv_incoming( PartitionConfig & config, graph_access & G, popul
                         m_cur_num_pushes         = 0;
                 }
 
-                m_allready_send_to[st.Get_source()] = true; // we dont need to send it back - saves us P * 1 messages of length n
+                m_allready_send_to[st.MPI_SOURCE] = true; // we dont need to send it back - saves us P * 1 messages of length n
+
+                MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, m_communicator, &flag, &st);
         }
 }
 

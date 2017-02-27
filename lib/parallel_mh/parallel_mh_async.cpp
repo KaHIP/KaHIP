@@ -4,11 +4,11 @@
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
  ******************************************************************************
- * Copyright (C) 2013-2015 Christian Schulz <christian.schulz@kit.edu>
+ * Copyright (C) 2013 Christian Schulz <christian.schulz@kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 2 of the License, or (at your option)
+ * Software Foundation, either version 3 of the License, or (at your option)
  * any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -36,13 +36,18 @@
 #include "quality_metrics.h"
 #include "random_functions.h"
 
-parallel_mh_async::parallel_mh_async() : MASTER(0), m_time_limit(0) {
-        m_rank                  = MPI::COMM_WORLD.Get_rank();
-        m_size                  = MPI::COMM_WORLD.Get_size();
+parallel_mh_async::parallel_mh_async() : parallel_mh_async( MPI_COMM_WORLD ) {
+}
+
+parallel_mh_async::parallel_mh_async(MPI_Comm communicator) : MASTER(0), m_time_limit(0) {
         m_best_global_objective = std::numeric_limits<EdgeWeight>::max();
         m_best_cycle_objective  = std::numeric_limits<EdgeWeight>::max();
         m_rounds                = 0;
         m_termination           = false;
+        m_communicator          = communicator;
+        MPI_Comm_rank( m_communicator, &m_rank);
+        MPI_Comm_size( m_communicator, &m_size);
+
 }
 
 parallel_mh_async::~parallel_mh_async() {
@@ -51,7 +56,7 @@ parallel_mh_async::~parallel_mh_async() {
 
 void parallel_mh_async::perform_partitioning(const PartitionConfig & partition_config, graph_access & G) {
         m_time_limit      = partition_config.time_limit;
-        m_island          = new population(partition_config);
+        m_island          = new population(m_communicator, partition_config);
         m_best_global_map = new PartitionID[G.number_of_nodes()];
 
         srand(partition_config.seed*m_size+m_rank);
@@ -60,9 +65,8 @@ void parallel_mh_async::perform_partitioning(const PartitionConfig & partition_c
         PartitionConfig ini_working_config  = partition_config; 
         initialize( ini_working_config, G);
 
-        
         m_t.restart();
-        exchanger ex;
+        exchanger ex(m_communicator);
         do {
                 PartitionConfig working_config  = partition_config; 
 
@@ -92,19 +96,19 @@ void parallel_mh_async::perform_partitioning(const PartitionConfig & partition_c
                 m_rounds++;
         } while( m_t.elapsed() <= m_time_limit );
 
-        collect_best_partitioning(G);
+        collect_best_partitioning(G, partition_config);
         m_island->print();
 
         //print logfile (for convergence plots)
         if( partition_config.mh_print_log ) {
-		std::stringstream filename_stream;
+                std::stringstream filename_stream;
                 filename_stream << "log_"<<  partition_config.graph_filename <<   
-                                   "_m_rank_" <<  m_rank <<  
-                                   "_file_" <<  
-                                   "_seed_" <<  partition_config.seed <<  
-                                   "_k_" <<  partition_config.k;
+                        "_m_rank_" <<  m_rank <<  
+                        "_file_" <<  
+                        "_seed_" <<  partition_config.seed <<  
+                        "_k_" <<  partition_config.k;
 
-		std::string filename(filename_stream.str());
+                std::string filename(filename_stream.str());
                 m_island->write_log(filename);
         }
 
@@ -137,11 +141,14 @@ void parallel_mh_async::initialize(PartitionConfig & working_config, graph_acces
         if( m_rank == ROOT ) {
                 double fraction_to_spend_for_IP = (double)m_time_limit / fraction;
                 population_size                 = ceil(fraction_to_spend_for_IP / time_spend);
+
                 for( int target = 1; target < m_size; target++) {
-                        MPI::COMM_WORLD.Isend(&population_size, 1, MPI_INT, target, POPSIZE_TAG); 
+                        MPI_Request rq;
+                        MPI_Isend(&population_size, 1, MPI_INT, target, POPSIZE_TAG, m_communicator, &rq); 
                 }
         } else {
-                MPI::COMM_WORLD.Recv(&population_size, 1, MPI_INT, ROOT, POPSIZE_TAG); 
+                MPI_Status rst;
+                MPI_Recv(&population_size, 1, MPI_INT, ROOT, POPSIZE_TAG, m_communicator, &rst); 
         }
 
         population_size = std::max(3, population_size);
@@ -158,44 +165,54 @@ void parallel_mh_async::initialize(PartitionConfig & working_config, graph_acces
 
 }
 
-EdgeWeight parallel_mh_async::collect_best_partitioning(graph_access & G) {
+EdgeWeight parallel_mh_async::collect_best_partitioning(graph_access & G, const PartitionConfig & config) {
         //perform partitioning locally
-	EdgeWeight min_objective = 0;
+        EdgeWeight min_objective = 0;
         m_island->apply_fittest(G, min_objective);
 
         int best_local_objective  = min_objective;
+        int best_local_objective_m  = min_objective;
         int best_global_objective = 0; 
 
         PartitionID* best_local_map = new PartitionID[G.number_of_nodes()];
-	std::vector< NodeWeight > block_sizes(G.get_partition_count(),0);
+        std::vector< NodeWeight > block_sizes(G.get_partition_count(),0);
 
         forall_nodes(G, node) {
                 best_local_map[node] = G.getPartitionIndex(node);
-		block_sizes[G.getPartitionIndex(node)]++;
+                block_sizes[G.getPartitionIndex(node)]++;
         } endfor
 
-	NodeWeight max_domain_weight = 0;
-	for( unsigned i = 0; i < G.get_partition_count(); i++) {
-		if( block_sizes[i] > max_domain_weight ) {
-			max_domain_weight = block_sizes[i];
-		}
-	}
+        NodeWeight max_domain_weight = 0;
+        for( unsigned i = 0; i < G.get_partition_count(); i++) {
+                if( block_sizes[i] > max_domain_weight ) {
+                        max_domain_weight = block_sizes[i];
+                }
+        }
 
-        MPI::COMM_WORLD.Allreduce(&best_local_objective, &best_global_objective, 1, MPI_INT, MPI_MIN);
+        if( max_domain_weight > config.upper_bound_partition ) {
+                best_local_objective_m = std::numeric_limits< int >::max();
+        }
 
-	int my_domain_weight   = best_local_objective == best_global_objective ? 
-                                 max_domain_weight : std::numeric_limits<int>::max();
-	int best_domain_weight = max_domain_weight;
-        
-        MPI::COMM_WORLD.Allreduce(&my_domain_weight, &best_domain_weight, 1, MPI_INT, MPI_MIN);
+        MPI_Allreduce(&best_local_objective_m, &best_global_objective, 1, MPI_INT, MPI_MIN, m_communicator);
 
-	// now we know what the best objective is ... find the best balance
+        if( best_global_objective == std::numeric_limits< int >::max()) {
+                //no partition is feasible
+                MPI_Allreduce(&best_local_objective, &best_global_objective, 1, MPI_INT, MPI_MIN, m_communicator);
+        }
+
+        int my_domain_weight   = best_local_objective == best_global_objective ? 
+                max_domain_weight : std::numeric_limits<int>::max();
+        int best_domain_weight = max_domain_weight;
+
+        MPI_Allreduce(&my_domain_weight, &best_domain_weight, 1, MPI_INT, MPI_MIN, m_communicator);
+
+        // now we know what the best objective is ... find the best balance
         int bcaster = best_local_objective == best_global_objective  
-                      && my_domain_weight == best_domain_weight ? m_rank : std::numeric_limits<int>::max();
+                && my_domain_weight == best_domain_weight ? m_rank : std::numeric_limits<int>::max();
         int g_bcaster = 0;
 
-        MPI::COMM_WORLD.Allreduce(&bcaster, &g_bcaster, 1, MPI_INT, MPI_MIN);
-        MPI::COMM_WORLD.Bcast(best_local_map, G.number_of_nodes(), MPI_INT, g_bcaster);
+        MPI_Allreduce(&bcaster, &g_bcaster, 1, MPI_INT, MPI_MIN, m_communicator);
+        MPI_Bcast(best_local_map, G.number_of_nodes(), MPI_INT, g_bcaster, m_communicator);
 
         forall_nodes(G, node) {
                 G.setPartitionIndex(node, best_local_map[node]);

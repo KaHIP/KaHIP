@@ -44,7 +44,7 @@
 
 int main(int argn, char **argv) {
 
-        MPI::Init(argn, argv);    /* starts MPI */
+        MPI_Init(&argn, &argv);    /* starts MPI */
 
         PartitionConfig partition_config;
         std::string graph_filename;
@@ -97,7 +97,11 @@ int main(int argn, char **argv) {
         mh.perform_partitioning(partition_config, G);
 
         
-        int rank = MPI::COMM_WORLD.Get_rank();
+        int rank, size;
+        MPI_Comm communicator = MPI_COMM_WORLD; 
+        MPI_Comm_rank( communicator, &rank);
+        MPI_Comm_size( communicator, &size);
+
         if( rank == ROOT ) {
                 std::cout <<  "time spent for partitioning " << t.elapsed()  << std::endl;
                 std::cout <<  "time spent in neg. cycle detection " <<  cycle_search::total_time  << std::endl;
@@ -124,5 +128,5 @@ int main(int argn, char **argv) {
                 graph_io::writePartition(G, filename.str());
         }
  
-        MPI::Finalize();
+        MPI_Finalize();
 }

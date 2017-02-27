@@ -1,4 +1,7 @@
+KaHIP-1.10
+------------------------------------------------------------------------
 - bugfix to partition_to_vertex_separator program
+- remove MPI C++ wrapper since it is obsolete
 
 KaHIP-1.00
 ------------------------------------------------------------------------

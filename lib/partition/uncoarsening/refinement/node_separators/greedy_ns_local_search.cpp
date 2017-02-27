@@ -41,7 +41,7 @@ EdgeWeight greedy_ns_local_search::perform_refinement(const PartitionConfig & co
                 }
         } endfor
 
-        int max_number_of_swaps = 10;
+        //int max_number_of_swaps = 10;
         //roll forwards
         Gain gainToA = queues[0].maxValue();
         Gain gainToB = queues[1].maxValue();

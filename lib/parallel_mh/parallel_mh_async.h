@@ -4,11 +4,11 @@
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
  ******************************************************************************
- * Copyright (C) 2013-2015 Christian Schulz <christian.schulz@kit.edu>
+ * Copyright (C) 2013 Christian Schulz <christian.schulz@kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 2 of the License, or (at your option)
+ * Software Foundation, either version 3 of the License, or (at your option)
  * any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -23,6 +23,7 @@
 #ifndef PARALLEL_MH_ASYNC_HF106Y0G
 #define PARALLEL_MH_ASYNC_HF106Y0G
 
+#include <mpi.h>
 #include "data_structure/graph_access.h"
 #include "partition_config.h"
 #include "population.h"
@@ -31,12 +32,13 @@
 class parallel_mh_async {
 public:
         parallel_mh_async();
+        parallel_mh_async(MPI_Comm communicator);
         virtual ~parallel_mh_async();
 
         void perform_partitioning(const PartitionConfig & graph_partitioner_config, graph_access & G);
         void initialize(PartitionConfig & graph_partitioner_config, graph_access & G);
         EdgeWeight perform_local_partitioning(PartitionConfig & graph_partitioner_config, graph_access & G);
-        EdgeWeight collect_best_partitioning(graph_access & G);
+        EdgeWeight collect_best_partitioning(graph_access & G, const PartitionConfig & config);
         void perform_cycle_partitioning(PartitionConfig & graph_partitioner_config, graph_access & G);
 
 private:
@@ -56,6 +58,7 @@ private:
 
         //island
         population* m_island;
+        MPI_Comm m_communicator;
 };
 
 

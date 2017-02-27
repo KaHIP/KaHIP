@@ -4,11 +4,11 @@
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
  ******************************************************************************
- * Copyright (C) 2013-2015 Christian Schulz <christian.schulz@kit.edu>
+ * Copyright (C) 2013 Christian Schulz <christian.schulz@kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 2 of the License, or (at your option)
+ * Software Foundation, either version 3 of the License, or (at your option)
  * any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -36,13 +36,14 @@
 #include "timer.h"
 #include "uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
 
-population::population( const PartitionConfig & partition_config ) {
+population::population( MPI_Comm communicator, const PartitionConfig & partition_config ) {
         m_population_size    = partition_config.mh_pool_size;
         m_no_partition_calls = 0;
         m_num_NCs            = partition_config.mh_num_ncs_to_compute;
         m_num_NCs_computed   = 0;
         m_num_ENCs           = 0;
         m_time_stamp         = 0;
+        m_communicator       = communicator;
         m_global_timer.restart();
 }
 
@@ -82,7 +83,7 @@ void population::createIndividuum(const PartitionConfig & config,
                         double lb 		   = real_epsilon+0.005;
                         double ub 	           = real_epsilon+config.kabaE_internal_bal;
                         double epsilon             = random_functions::nextDouble(lb,ub);
-                        copy.upper_bound_partition = (1+epsilon)*ceil(config.work_load/(double)config.k);
+                        copy.upper_bound_partition = (1+epsilon)*ceil(config.largest_graph_weight/(double)config.k);
 
                         partitioner.perform_partitioning(copy, G);
 
@@ -271,7 +272,7 @@ void population::combine_cross(const PartitionConfig & partition_config,
         int kfactor    = random_functions::nextInt(lowerbound,4*config.k);
 
         if( config.mh_cross_combine_original_k ) {
-                MPI::COMM_WORLD.Bcast(&kfactor, 1, MPI_INT, 0);
+                MPI_Bcast(&kfactor, 1, MPI_INT, 0, m_communicator);
         }
 
         unsigned larger_imbalance = random_functions::nextInt(config.epsilon,25);
@@ -281,7 +282,7 @@ void population::combine_cross(const PartitionConfig & partition_config,
         PartitionConfig cross_config                      = config;
         cross_config.k                                    = kfactor;
         cross_config.kaffpa_perfectly_balanced_refinement = false;
-        cross_config.upper_bound_partition                = (1+epsilon)*ceil(partition_config.work_load/(double)partition_config.k);
+        cross_config.upper_bound_partition                = (1+epsilon)*ceil(partition_config.largest_graph_weight/(double)partition_config.k);
         cross_config.refinement_scheduling_algorithm      = REFINEMENT_SCHEDULING_ACTIVE_BLOCKS;
         cross_config.combine                              = false;
         cross_config.graph_allready_partitioned           = false;
@@ -431,7 +432,9 @@ void population::apply_fittest( graph_access & G, EdgeWeight & objective ) {
 }
 
 void population::print() {
-        int rank = MPI::COMM_WORLD.Get_rank();
+        int rank;
+        MPI_Comm_rank( m_communicator, &rank);
+        
         std::cout <<  "rank " <<  rank << " fingerprint ";
 
         for( unsigned i = 0; i < m_internal_population.size(); i++) {

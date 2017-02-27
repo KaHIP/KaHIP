@@ -380,8 +380,6 @@ void edge_ratings::rate_separator_r7(graph_access & G) {
 void edge_ratings::rate_realweight(graph_access & G) {
         forall_nodes(G,node) {
                 forall_out_edges(G, e, node) {
-                        NodeID target = G.getEdgeTarget(e);
-
                         EdgeRatingType rating =  G.getEdgeWeight(e);
                         G.setEdgeRating(e, rating);
                 } endfor

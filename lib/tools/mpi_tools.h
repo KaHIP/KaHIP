@@ -29,7 +29,7 @@ public:
         mpi_tools();
         virtual ~mpi_tools();
 
-        static void non_active_wait_for_root();
+        //static void non_active_wait_for_root();
 };
 
 

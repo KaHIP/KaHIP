@@ -4,11 +4,11 @@
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
  ******************************************************************************
- * Copyright (C) 2013-2015 Christian Schulz <christian.schulz@kit.edu>
+ * Copyright (C) 2013 Christian Schulz <christian.schulz@kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 2 of the License, or (at your option)
+ * Software Foundation, either version 3 of the License, or (at your option)
  * any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -24,6 +24,7 @@
 #define POPULATION_AEFH46G6
 
 #include <sstream>
+#include <mpi.h>
 
 #include "data_structure/graph_access.h"
 #include "partition_config.h"
@@ -41,7 +42,7 @@ struct ENC {
 
 class population {
         public:
-                population( const PartitionConfig & config );
+                population( MPI_Comm comm, const PartitionConfig & config );
                 virtual ~population();
 
                 void createIndividuum(const PartitionConfig & config, 
@@ -105,6 +106,8 @@ class population {
                 int m_num_NCs_computed;
                 int m_num_ENCs;
                 int m_time_stamp;
+
+                MPI_Comm m_communicator;
 
                 std::stringstream m_filebuffer_string;
                 timer   	  m_global_timer;

@@ -4,11 +4,11 @@
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
  ******************************************************************************
- * Copyright (C) 2013-2015 Christian Schulz <christian.schulz@kit.edu>
+ * Copyright (C) 2013 Christian Schulz <christian.schulz@kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 2 of the License, or (at your option)
+ * Software Foundation, either version 3 of the License, or (at your option)
  * any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
@@ -23,6 +23,8 @@
 #ifndef EXCHANGER_YPB6QKNL
 #define EXCHANGER_YPB6QKNL
 
+#include <mpi.h>
+
 #include "data_structure/graph_access.h"
 #include "parallel_mh/population.h"
 #include "partition_config.h"
@@ -30,7 +32,7 @@
 
 class exchanger {
 public:
-        exchanger();
+        exchanger( MPI_Comm communicator );
         virtual ~exchanger();
 
         void diversify_population( PartitionConfig & config, graph_access & G, population & island, bool replace );
@@ -47,12 +49,14 @@ private:
                                 Individuum & in, Individuum & out);
 
         std::vector< int* >          m_partition_map_buffers;
-        std::vector< MPI::Request* > m_request_pointers;
+        std::vector< MPI_Request* > m_request_pointers;
         std::vector<bool>            m_allready_send_to;
 
         int m_prev_best_objective;
         int m_max_num_pushes;
         int m_cur_num_pushes;
+
+        MPI_Comm m_communicator;
 
         quality_metrics m_qm;
 };
