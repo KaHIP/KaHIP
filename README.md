@@ -1,4 +1,4 @@
-KaHIP v1.00
+KaHIP v2.00
 =====
 
 The graph partitioning framework KaHIP -- Karlsruhe High Quality Partitioning.
