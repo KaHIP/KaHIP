@@ -21,3 +21,10 @@ cp ./optimized/node_separator deploy/
 cp ./interface/kaHIP_interface.h deploy/
 
 rm -rf ./optimized
+rm config.log
+
+
+echo "Now building the PARALLEL programs"
+cd parallel
+./build.sh
+cd ..

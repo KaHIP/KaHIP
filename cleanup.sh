@@ -1,5 +1,11 @@
 #!/bin/bash
 
+cd parallel/parallel_src/
+./cleanup.sh
+cd ../..
+cd parallel/modified_kahip/
+./cleanup.sh
+cd ../../
 
 scons program=kaffpa variant=optimized -j 4 -c 
 scons program=kaffpaE variant=optimized -j 4 -c 

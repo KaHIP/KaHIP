@@ -1,0 +1,2 @@
+file /home/c_schulz/projects/coding/software_releases/KaHIPgit/parallel/parallel_src/SConstruct,line 96:
+	Configure(confdir = .sconf_temp)
