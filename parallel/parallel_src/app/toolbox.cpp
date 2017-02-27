@@ -33,8 +33,6 @@
 #include "communication/dummy_operations.h"
 #include "data_structure/parallel_graph_access.h"
 #include "distributed_partitioning/distributed_partitioner.h"
-#include "graph_generation/generate_kronecker.h"
-#include "graph_generation/generate_barabasi_albert.h"
 #include "io/parallel_graph_io.h"
 #include "io/parallel_vector_io.h"
 #include "macros_assertions.h"
@@ -43,7 +41,6 @@
 #include "random_functions.h"
 #include "timer.h"
 #include "tools/distributed_quality_metrics.h"
-#include "graph_generation/generate_rgg.h"
 
 int main(int argn, char **argv) {
 

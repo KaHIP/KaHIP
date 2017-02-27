@@ -58,7 +58,7 @@ def GetEnvironment():
     print 'Illegal value for variant: %s' % env['variant']
     sys.exit(1)
   
-  if not env['program'] in ['parhip','generate_kronecker','generate_ba','edge_list_to_metis_graph','friendster_list_to_metis_graph','parallel_label_compress_reps','yahoo_to_metis','generate_rgg','parmetis_driver','graph2binary','graph2binary_external','readbgf','toolbox']:
+  if not env['program'] in ['parhip','edge_list_to_metis_graph','friendster_list_to_metis_graph','parallel_label_compress_reps','yahoo_to_metis','parmetis_driver','graph2binary','graph2binary_external','readbgf','toolbox']:
     print 'Illegal value for program: %s' % env['program']
     sys.exit(1)
 

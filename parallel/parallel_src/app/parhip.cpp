@@ -33,8 +33,6 @@
 #include "communication/dummy_operations.h"
 #include "data_structure/parallel_graph_access.h"
 #include "distributed_partitioning/distributed_partitioner.h"
-#include "graph_generation/generate_kronecker.h"
-#include "graph_generation/generate_barabasi_albert.h"
 #include "io/parallel_graph_io.h"
 #include "io/parallel_vector_io.h"
 #include "macros_assertions.h"
@@ -43,7 +41,6 @@
 #include "random_functions.h"
 #include "timer.h"
 #include "tools/distributed_quality_metrics.h"
-#include "graph_generation/generate_rgg.h"
 
 int main(int argn, char **argv) {
 
@@ -80,25 +77,6 @@ int main(int argn, char **argv) {
                 std::cout <<  "took " <<  t.elapsed()  << std::endl;
         }
 
-        //MPI_Group group, newgroup, newgroup2;
-        //int ranks[2];
-        //MPI_Comm_group( communicator, &group );
-
-        //ranks[0] = 0; ranks[1] = 1; 
-        //MPI_Group_incl( group, 2, ranks, &newgroup );
-        //ranks[0] = 2; ranks[1] = 3; 
-        //MPI_Group_incl( group, 2, ranks, &newgroup2 );
-
-        //MPI_Comm newcomm, newcomm2;
-        //MPI_Comm_create( communicator, newgroup, & newcomm);
-        //MPI_Comm_create( communicator, newgroup2, & newcomm2);
-
-        //if( rank < 2) { 
-        //communicator = newcomm;
-        //} else {
-                //communicator = newcomm2;
-        //}
-
         if( communicator != MPI_COMM_NULL) {
                 MPI_Comm_rank( communicator, &rank);
                 MPI_Comm_size( communicator, &size);
@@ -113,31 +91,10 @@ int main(int argn, char **argv) {
                 srand(partition_config.seed);
 
                 parallel_graph_access G(communicator);
-                if(partition_config.generate_rgg) {
-                        if( rank == ROOT ) std::cout <<  "generating a rgg graph"  << std::endl;
-                        t.restart();
-
-                        generator_rgg grgg;
-                        PPartitionConfig copy = partition_config;
-                        copy.seed = 1;
-                        grgg.generate(partition_config, G);
-                        if( rank == ROOT ) std::cout <<  "generation of rgg graph took " <<  t.elapsed()  << std::endl;
-                } else if(partition_config.generate_ba) {
-                        if( rank == ROOT ) std::cout <<  "generating a barabasi-albert graph"  << std::endl;
-                        t.restart();
-
-                        generate_barabasialbert gba;
-                        PPartitionConfig copy = partition_config;
-                        copy.seed = 1;
-                        gba.generate_withgraph(partition_config, G);
-
-                        if( rank == ROOT ) std::cout <<  "generation of barabasi-albert graph took " <<  t.elapsed()  << std::endl;
-                } else {
-                        parallel_graph_io::readGraphWeighted(partition_config, G, graph_filename, rank, size, communicator);
-                        //parallel_graph_io::readGraphWeightedFlexible(G, graph_filename, rank, size, communicator);
-                        if( rank == ROOT ) std::cout <<  "took " <<  t.elapsed()  << std::endl;
-                        if( rank == ROOT ) std::cout <<  "n:" <<  G.number_of_global_nodes() << " m: " <<  G.number_of_global_edges()  << std::endl;
-                }
+                parallel_graph_io::readGraphWeighted(partition_config, G, graph_filename, rank, size, communicator);
+                //parallel_graph_io::readGraphWeightedFlexible(G, graph_filename, rank, size, communicator);
+                if( rank == ROOT ) std::cout <<  "took " <<  t.elapsed()  << std::endl;
+                if( rank == ROOT ) std::cout <<  "n:" <<  G.number_of_global_nodes() << " m: " <<  G.number_of_global_edges()  << std::endl;
 
                 random_functions::setSeed(partition_config.seed);
                 parallel_graph_access::set_comm_rounds( partition_config.comm_rounds/size );

@@ -101,40 +101,12 @@ libkaffpa_parallel_async  = ['lib/parallel_mh/parallel_mh_async.cpp',
                              'lib/parallel_mh/exchange/exchanger.cpp',
                              'lib/tools/graph_communication.cpp',
                              'lib/tools/mpi_tools.cpp' ]
-
 if SYSTEM == 'Darwin':
         env['CXX'] = 'openmpicxx'
 else:
         env['CXX'] = 'mpicxx'
 
-if env['program'] == 'kaffpa':
-        env.Append(CXXFLAGS = '-DMODE_KAFFPA')
-        env.Append(CCFLAGS  = '-DMODE_KAFFPA')
-        env.Program('kaffpa', ['app/kaffpa.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
-
-if env['program'] == 'label_propagation':
-        env.Append(CXXFLAGS = '-DMODE_LABELPROPAGATION')
-        env.Append(CCFLAGS  = '-DMODE_LABELPROPAGATION')
-        env.Program('label_propagation', ['app/label_propagation.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
-
-if env['program'] == 'partition_to_vertex_separator':
-        env.Append(CXXFLAGS = '-DMODE_PARTITIONTOVERTEXSEPARATOR')
-        env.Append(CCFLAGS  = '-DMODE_PARTITIONTOVERTEXSEPARATOR')
-        env.Program('partition_to_vertex_separator', ['app/partition_to_vertex_separator.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
-
-if env['program'] == 'kaffpaE':
-        env.Append(CXXFLAGS = '-DMODE_KAFFPAE')
-        env.Append(CCFLAGS  = '-DMODE_KAFFPAE')
-
-        env.Program('kaffpaE', ['app/kaffpaE.cpp']+libkaffpa_files+libkaffpa_parallel_async, LIBS=['libargtable2','gomp'])
-
-if env['program'] == 'graphchecker':
-        env.Append(CXXFLAGS = '-DMODE_GRAPHCHECKER')
-        env.Append(CCFLAGS  = '-DMODE_GRAPHCHECKER')
-        env.Program('graphchecker', ['app/graphchecker.cpp'], LIBS=['libargtable2','gomp'])
-
 if env['program'] == 'library':
-        env['CXX'] = 'mpicxx'
         SConscript('interface/SConscript',exports='env')
 
 
