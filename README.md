@@ -8,15 +8,13 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 ## NEW in v2.0: 
 
 
-*ParHIP (Parallel High Quality Partitioning):* distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks 
+*ParHIP (Parallel High Quality Partitioning):* Our distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks.
 
-*Mapping Algorithms:* algorithms to map the blocks onto processors to minimize overall communication time
+*Mapping Algorithms:* Our new algorithms to map the blocks onto processors to minimize overall communication time based on hierarchical partitionings of the task graph and fast local search algorithms.
 
 
 ## Main project site:
 http://algo2.iti.kit.edu/documents/kahip/index.html
-
-Travis-CI Status [![Build Status](https://travis-ci.org/schulzchristian/KaHIP.svg?branch=master)](https://travis-ci.org/schulzchristian/KaHIP)
 
 Installation Notes
 =====
@@ -32,3 +30,5 @@ Once you installed the packages, just type ./compile.sh. Once you did that you c
 ./deploy/kaffpa examples/delaunay_n15.graph --k 2 --preconfiguration=strong
 
 For a description of the graph format please have a look into the manual.
+
+Travis-CI Status [![Build Status](https://travis-ci.org/schulzchristian/KaHIP.svg?branch=master)](https://travis-ci.org/schulzchristian/KaHIP)

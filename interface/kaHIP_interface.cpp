@@ -28,7 +28,7 @@
 #include "../lib/tools/quality_metrics.h"
 #include "../lib/tools/macros_assertions.h"
 #include "../lib/tools/random_functions.h"
-#include "../lib/parallel_mh/parallel_mh_async.h"
+//#include "../lib/parallel_mh/parallel_mh_async.h"
 #include "../lib/partition/uncoarsening/separator/area_bfs.h"
 #include "../lib/partition/partition_config.h"
 #include "../lib/partition/graph_partitioner.h"
