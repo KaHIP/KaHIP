@@ -6,4 +6,5 @@ scons program=$program variant=optimized_nooutput -c
 done
 
 rm -rf deploy
+rm -rf optimized*
 
