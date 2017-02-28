@@ -201,7 +201,7 @@ public:
 
         friend class ghost_node_communication;
 
-        parallel_graph_access( ) : parallel_graph_access( MPI_COMM_WORLD ) { };
+        parallel_graph_access( ) { parallel_graph_access( MPI_COMM_WORLD ); };
         parallel_graph_access( MPI_Comm communicator );
 
         virtual ~parallel_graph_access();
