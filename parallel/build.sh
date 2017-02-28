@@ -15,6 +15,6 @@ cd parallel_src/
 ./compile.sh
 cd ..
 
-cp parallel_src/optimized/g* ../deploy
-cp parallel_src/optimized/parhip* ../deploy/parhip
-cp parallel_src/optimized/toolbox* ../deploy/
+cp parallel_src/optimized_nooutput/g* ../deploy
+cp parallel_src/optimized_nooutput/parhip* ../deploy/parhip
+cp parallel_src/optimized_nooutput/toolbox* ../deploy/
