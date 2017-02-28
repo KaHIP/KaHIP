@@ -75,15 +75,20 @@ libyahootometis = [ 'lib/data_structure/parallel_graph_access.cpp',
                   ]
 
 SYSTEMNAME=platform.platform(aliased=0, terse=0)
-if "supermuc" in os.environ['MYSYSTEMNAME']:
-        env['CXX'] = 'mpiCC'
-        env['CC']  = 'mpicc'
-        env.Append(LINKFLAGS = '-openmp')
-        env.Append(CXXFLAGS = '-msse4.2 -openmp -w')
-        env.Append(CCFLAGS = '-msse4.2 -openmp -w')
-else: 
-        env['CXX'] = 'mpicxx'
-        env['CC']  = 'mpicc'
+SYSTEM = platform.uname()[0]
+if SYSTEM != 'Darwin':
+        if "supermuc" in os.environ['MYSYSTEMNAME']:
+                env['CXX'] = 'mpiCC'
+                env['CC']  = 'mpicc'
+                env.Append(LINKFLAGS = '-openmp')
+                env.Append(CXXFLAGS = '-msse4.2 -openmp -w')
+                env.Append(CCFLAGS = '-msse4.2 -openmp -w')
+        else: 
+                env['CXX'] = 'mpicxx'
+                env['CC']  = 'mpicc'
+else:
+        env['CXX'] = 'openmpicxx'
+
 
 if env['program'] == 'toolbox':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DTOOLBOX')
