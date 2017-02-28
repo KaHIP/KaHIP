@@ -468,6 +468,7 @@ public:
         /* info  */
         /* ============================================================= */
         void printMemoryUsage(std::ostream& out) const {
+#ifndef NOOUTPUT
                 out << "** approx. local memory usage on hard disk per node [MB (bytes per node)] **" << std::endl;
 
                 unsigned int memoryTotal = 0;
@@ -476,13 +477,16 @@ public:
 
                 printMemoryUsage(out, "TOTAL", memoryTotal);
                 out << std::endl;
+#endif
         }
 
         /** Prints the memory usage of one particular data structure of this UpdateableGraph. */
         unsigned int printMemoryUsage(std::ostream& out, const std::string descr, const unsigned int mem) const {
+#ifndef NOOUTPUT
                 unsigned int megaBytes = (unsigned int)((mem / (double)(1024*1024)) + 0.5);
                 unsigned int bytesPerNode = (unsigned int)((mem / (double)(m_nodes.size()-1)) + 0.5);
                 out << "   " << descr << ": " << megaBytes << " (" << bytesPerNode << ")" << std::endl;
+#endif
                 return mem;
         }
 
@@ -820,7 +824,6 @@ inline void ghost_node_communication::update_ghost_node_data( bool check_iterati
                                         (*m_send_buffers_ptr)[peID].push_back(0);
                                 }
 
-                                //std::cout << m_send_buffers[peID].size()  << std::endl;
                                 MPI_Request * request = new MPI_Request();
                                 MPI_Isend( &(*m_send_buffers_ptr)[peID][0], 
                                            (*m_send_buffers_ptr)[peID].size(), 

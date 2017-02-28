@@ -90,7 +90,7 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
                 vcycle( communicator, config, G );
 
                 if( rank == ROOT ) {
-                        std::cout <<  "log>cycle: " << m_cycle << " uncoarsening took " << m_t.elapsed()  << std::endl;
+                        PRINT(std::cout <<  "log>cycle: " << m_cycle << " uncoarsening took " << m_t.elapsed()  << std::endl;)
                 }
 #ifndef NDEBUG
                 check_labels(communicator, config, G);

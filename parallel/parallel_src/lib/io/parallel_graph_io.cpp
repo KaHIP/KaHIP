@@ -61,7 +61,6 @@ int parallel_graph_io::readGraphWeighted(PPartitionConfig & config,
                         return readGraphBinary(config, G, ss.str(), peID, comm_size, communicator);
                 } else {
                         return readGraphWeightedFlexible(G, filename, peID, comm_size, communicator);
-                        //return readGraphWeightedMETISFast(G, filename, peID, comm_size, communicator);
                 }
         }
 
@@ -107,7 +106,7 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         to = std::min(to, nmbNodes-1);
 
         ULONG local_no_nodes = to - from + 1;
-        std::cout <<  "peID " <<  peID <<  " from " <<  from <<  " to " <<  to  <<  " amount " <<  local_no_nodes << std::endl;
+        PRINT(std::cout <<  "peID " <<  peID <<  " from " <<  from <<  " to " <<  to  <<  " amount " <<  local_no_nodes << std::endl;);
 
         std::vector< std::vector< NodeID > > local_edge_lists;
         local_edge_lists.resize(local_no_nodes);

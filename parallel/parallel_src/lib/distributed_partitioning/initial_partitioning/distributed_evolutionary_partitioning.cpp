@@ -120,6 +120,13 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
 
         timer t;
         
+#ifdef NOOUTPUT
+        std::streambuf* backup = std::cout.rdbuf();
+        std::ofstream ofs;
+        ofs.open("/dev/null");
+        std::cout.rdbuf(ofs.rdbuf()); 
+#endif
+
         kaffpaE(&n, 
                 vwgt, 
                 xadj, 
@@ -138,8 +145,14 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
                 partition_map);
 
         
+
+#ifdef NOOUTPUT
+        ofs.close();
+        std::cout.rdbuf(backup);
+#endif
+
         if( rank == (int)ROOT) {
-                std::cout <<  "partitioner call took " <<  t.elapsed() << std::endl;
+                PRINT(std::cout <<  "partitioner call took " <<  t.elapsed() << std::endl;);
         }
 
 #ifndef NOOUTPUT
@@ -163,7 +176,7 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
                          
                 if( accept ) {
                         if( rank == (int)ROOT) {
-                                std::cout <<  "log>update criterion reached, updating partition"  << std::endl;
+                                PRINT(std::cout <<  "log>update criterion reached, updating partition"  << std::endl;)
 
                         }
                         forall_local_nodes(Q_bar, node) {
@@ -171,7 +184,7 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
                         } endfor
                 } else {
                         if( rank == (int)ROOT) {
-                                std::cout <<  "update criterion not reached, not updating partition"  << std::endl;
+                                 PRINT(std::cout <<  "update criterion not reached, not updating partition"  << std::endl;)
                         }
                 }
         }

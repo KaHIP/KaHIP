@@ -82,7 +82,7 @@ int main(int argn, char **argv) {
                 MPI_Comm_size( communicator, &size);
 
                 if(rank == ROOT) {
-                        std::cout <<  "log> cluster coarsening factor is set to " <<  partition_config.cluster_coarsening_factor  << std::endl;
+                        PRINT(std::cout <<  "log> cluster coarsening factor is set to " <<  partition_config.cluster_coarsening_factor  << std::endl;)
                 }
 
                 partition_config.stop_factor /= partition_config.k;
@@ -130,7 +130,6 @@ int main(int argn, char **argv) {
                 t.restart();
                 double epsilon = (partition_config.inbalance)/100.0;
                 if( partition_config.vertex_degree_weights ) {
-                        std::cout <<  "vertex "  << std::endl;
                         NodeWeight total_load = G.number_of_global_edges()+G.number_of_global_edges();
                         partition_config.number_of_overall_nodes = G.number_of_global_nodes();
                         partition_config.upper_bound_partition   = (1+epsilon)*ceil(total_load/(double)partition_config.k);
@@ -154,8 +153,8 @@ int main(int argn, char **argv) {
                 distributed_quality_metrics qm;
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
                 double balance  = qm.balance( partition_config, G, communicator );
-                double balance_load  = qm.balance_load( partition_config, G, communicator );
-                double balance_load_dist  = qm.balance_load_dist( partition_config, G, communicator );
+                PRINT(double balance_load  = qm.balance_load( partition_config, G, communicator );)
+                PRINT(double balance_load_dist  = qm.balance_load_dist( partition_config, G, communicator );)
 
                 if( rank == ROOT ) {
                         std::cout << "log>" << "=====================================" << std::endl;
@@ -164,11 +163,11 @@ int main(int argn, char **argv) {
                         std::cout <<  "log>total partitioning time elapsed " <<  running_time << std::endl;
                         std::cout <<  "log>final edge cut " <<  edge_cut  << std::endl;
                         std::cout <<  "log>final balance "  <<  balance   << std::endl;
-                        std::cout <<  "log>final balance load "  <<  balance_load   << std::endl;
-                        std::cout <<  "log>final balance load dist "  <<  balance_load_dist   << std::endl;
+                        PRINT(std::cout <<  "log>final balance load "  <<  balance_load   << std::endl;)
+                        PRINT(std::cout <<  "log>final balance load dist "  <<  balance_load_dist   << std::endl;)
                 }
-                qm.comm_vol( partition_config, G, communicator );
-                qm.comm_vol_dist( G, communicator );
+                PRINT(qm.comm_vol( partition_config, G, communicator );)
+                PRINT(qm.comm_vol_dist( G, communicator );)
 
 
 #ifndef NDEBUG

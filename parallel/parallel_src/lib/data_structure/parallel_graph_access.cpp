@@ -42,8 +42,6 @@ parallel_graph_access::parallel_graph_access( MPI_Comm communicator ) : m_num_lo
 }
 
 parallel_graph_access::~parallel_graph_access() {
-        //m_comm_rounds *= log2(log2(size))+1;
-        //m_comm_rounds *= 2;
         m_comm_rounds = std::min(m_comm_rounds, m_comm_rounds_up); 
         delete m_gnc;
         if ( m_bm ) delete m_bm;
