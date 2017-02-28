@@ -35,7 +35,7 @@ mpi_tools::~mpi_tools() {
 
 }
 
-// TODO: currently this method is for debugging purposses only
+// currently this method is for debugging purposses only
 // later on this may be a parallel io routine
 void mpi_tools::collect_and_write_labels( MPI_Comm communicator, PPartitionConfig & config, parallel_graph_access & G) {
         int rank, size;
@@ -137,7 +137,6 @@ void mpi_tools::collect_parallel_graph_to_local_graph( MPI_Comm communicator, PP
                 } endfor
         }
         
-        //TODO: potentially use Irecv
         if( rank == ROOT) {
                 for( int i = 1; i < size; i++) {
                         int flag; MPI_Status st;

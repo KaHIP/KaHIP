@@ -232,17 +232,11 @@ public:
                 // every PE has to make same amount communication iterations 
                 // we use ceil an check afterwards wether everyone has done the right 
                 // amount of communication rounds 
-                // TODO: make this pretty
-                //m_comm_rounds = std::min(m_comm_rounds, global_n/(5*size));
-
                 if( update_comm_rounds ) {
-                        //m_comm_rounds = m_comm_rounds/(log2(log2(size))+1);
-                        //m_comm_rounds = m_comm_rounds/2;
                         m_comm_rounds = std::max(m_comm_rounds, 8ULL);
                         m_gnc->set_desired_rounds(m_comm_rounds); 
                         m_gnc->set_skip_limit(ceil(n/(double)m_comm_rounds)); 
                 }
-
         };
 
         void set_range(NodeID l, NodeID r) {
@@ -311,7 +305,7 @@ public:
 
                                 // add addtional data
                                 AdditionalNonLocalNodeData add_data;
-                                // TODO: is this right? yes, but it has to be changed once we implement better load balancing 
+                                //has to be changed once we implement better load balancing 
                                 //add_data.peID     = target / m_divisor; 
                                 add_data.peID     = get_PEID_from_range_array(target);
                                 add_data.globalID = target;
@@ -529,7 +523,7 @@ private:
         NodeID m_num_ghost_nodes;
         NodeID node; //current node that is constructed
         EdgeID e;    //current edge that is constructed
-        NodeID m_num_nodes; // TODO naming
+        NodeID m_num_nodes; 
 
         NodeID m_global_n; // global number of nodes
         NodeID m_global_m; // global number of edges

@@ -288,7 +288,7 @@ int parallel_graph_io::readGraphWeightedMETISFast(parallel_graph_access & G,
 }
 // we start with the simplest version of IO 
 // where each process reads the graph sequentially
-// TODO write weighted code
+// 
 int parallel_graph_io::readGraphWeightedMETIS(parallel_graph_access & G, 
                                          std::string filename, 
                                          PEID peID, PEID comm_size, MPI_Comm communicator) {
@@ -315,6 +315,17 @@ int parallel_graph_io::readGraphWeightedMETIS(parallel_graph_access & G,
         ss >> nmbNodes;
         ss >> nmbEdges;
         ss >> ew;
+
+        if(ew == 1) {
+                std::cout <<  "io of weighted graphs not supported yet"  << std::endl;
+                exit(0);
+        } else if (ew == 11) {
+                std::cout <<  "io of weighted graphs not supported yet"  << std::endl;
+                exit(0);
+        } else if (ew == 10) {
+                std::cout <<  "io of weighted graphs not supported yet"  << std::endl;
+                exit(0);
+        }
 
         // pe p reads the lines p*ceil(n/size) to (p+1)floor(n/size) lines of that file
         ULONG from           = peID     * ceil(nmbNodes / (double)comm_size);

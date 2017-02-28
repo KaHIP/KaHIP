@@ -29,7 +29,6 @@ parallel_projection::~parallel_projection() {
                 
 }
 
-//TODO: do implement as an allToallv operation
 //issue recv before send
 void parallel_projection::parallel_project( MPI_Comm communicator, parallel_graph_access & finer, parallel_graph_access & coarser ) {
         PEID rank, size;
