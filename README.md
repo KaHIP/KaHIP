@@ -8,9 +8,9 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 ## NEW in v2.0: 
 
 
-ParHIP: distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks 
+*ParHIP:* distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks 
 
-Mapping: algorithms to map the blocks onto processors to minimize overall communication time
+*Mapping Algorithms:* algorithms to map the blocks onto processors to minimize overall communication time
 
 
 ## Main project site:
