@@ -9,7 +9,7 @@ before_script:
 
 script: 
   - scons program=kaffpa variant=optimized 
-  - cd parallel; cd modified_kahip; scons program=library variant=optimized; cp modified_kahip/optimized/libkahip.a parallel_src/extern/kaHIP_lib/; cp modified_kahip/optimized/kaHIP_interface.h parallel_src/extern/kaHIP_lib/; cd ../parallel_src/; scons program=parhip variant=optimized_nooutput; cd ../../ 
+  - cd parallel; cd modified_kahip; scons program=library variant=optimized; cd ../;  cp modified_kahip/optimized/interface/libkahip.a parallel_src/extern/kaHIP_lib/; cp modified_kahip/interface/kaHIP_interface.h parallel_src/extern/kaHIP_lib/; cd ../parallel_src/; scons program=parhip variant=optimized_nooutput; cd ../../ 
   - scons program=node_separator variant=optimized 
   - scons program=evaluator variant=optimized 
   - scons program=kaffpaE variant=optimized 
