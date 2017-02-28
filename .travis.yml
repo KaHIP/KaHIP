@@ -9,6 +9,7 @@ before_script:
 
 script: 
   - scons program=kaffpa variant=optimized 
+  - cd parallel; cd modified_kahip; scons program=library variant=optimized; cp modified_kahip/deploy/libkahip.a parallel_src/extern/kaHIP_lib/; cp modified_kahip/deploy/kaHIP_interface.h parallel_src/extern/kaHIP_lib/; cd ../parallel_src/; scons program=parhip variant=optimized_nooutput; cd ../../ 
   - scons program=node_separator variant=optimized 
   - scons program=evaluator variant=optimized 
   - scons program=kaffpaE variant=optimized 
@@ -16,4 +17,3 @@ script:
   - scons program=label_propagation variant=optimized 
   - scons program=library variant=optimized 
   - scons program=partition_to_vertex_separator variant=optimized 
-  - cd parallel; ./build.sh; cd ..
