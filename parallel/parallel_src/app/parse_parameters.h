@@ -35,41 +35,31 @@ int parse_parameters(int argn, char **argv,
 
         // Setup argtable parameters.
         struct arg_lit *help                           = arg_lit0(NULL, "help","Print help.");
-        struct arg_str *filename                       = arg_str0(NULL, NULL, "FILE", "Path to graph file to partition.");
+        struct arg_str *filename                       = arg_str1(NULL, NULL, "FILE", "Path to graph file to partition.");
         struct arg_str *input_partition_filename       = arg_str1(NULL, "input_partition", "FILE", "Path to partition file to convert.");
         struct arg_int *user_seed                      = arg_int0(NULL, "seed", NULL, "Seed to use for the PRNG.");
         struct arg_int *k                              = arg_int1(NULL, "k", NULL, "Number of blocks to partition the graph.");
         struct arg_int *k_opt                          = arg_int0(NULL, "k", NULL, "Number of blocks to partition the graph.");
-        struct arg_int *inbalance                      = arg_int0(NULL, "inbalance", NULL, "Desired balance. Default: 3 (%).");
+        struct arg_int *inbalance                      = arg_int0(NULL, "imbalance", NULL, "Desired balance. Default: 3 (%).");
         struct arg_int *comm_rounds                    = arg_int0(NULL, "comm_rounds", NULL, "Number of communication rounds per complete graph iteration.");
         struct arg_dbl *cluster_coarsening_factor      = arg_dbl0(NULL, "cluster_coarsening_factor", NULL, "The coarsening factor basically involes a bound on the block weights.");
         struct arg_int *stop_factor                    = arg_int0(NULL, "stop_factor", NULL, "Stop factor l to stop coarsening if total num vert <= lk.");
         struct arg_int *evolutionary_time_limit        = arg_int0(NULL, "evolutionary_time_limit", NULL, "Time limit for the evolutionary algorithm.");
 #ifndef TOOLBOX
-        struct arg_lit *enable_generator               = arg_lit0(NULL, "generate_kronecker","Generate kronecker graph.");
-        struct arg_lit *enable_generator_rgg           = arg_lit0(NULL, "generate_rgg","Generate rgg graph.");
 #endif
-        struct arg_lit *enable_generator_barabasi_albert = arg_lit0(NULL, "generate_ba","Generate barabasi albert graph.");
-        struct arg_int *log_num_vert                   = arg_int0(NULL, "generator_log_vertices", NULL, "Log number of vertices of the generated graph.");
-        struct arg_int *edge_factor                    = arg_int0(NULL, "generator_edge_factor", NULL, "Number of edges of the generated kronecker graph m  = edgefactor * 2^log_num_vertices");
         struct arg_int *label_iterations_coarsening    = arg_int0(NULL, "label_iterations_coarsening", NULL, "Number of label propagation iterations during coarsening.");
         struct arg_int *label_iterations_refinement    = arg_int0(NULL, "label_iterations_refinement", NULL, "Number of label propagation iterations during refinement.");
         struct arg_int *num_tries                      = arg_int0(NULL, "num_tries", NULL, "Number of repetitions to perform.");
         struct arg_int *binary_io_window_size 	       = arg_int0(NULL, "binary_io_window_size", NULL, "Binary IO window size.");
         struct arg_rex *initial_partitioning_algorithm = arg_rex0(NULL, "initial_partitioning_algorithm", "^(kaffpaEstrong|kaffpaEeco|kaffpaEfast|fastsocial|ecosocial|strongsocial|random)$", "PARTITIONER", REG_EXTENDED, "Initial partitioning algorithm to use. One of {kaffpaEstrong, kaffpaEeco, kaffpaEfast, fastsocial, ecosocial, strongsocial, random)." );
         struct arg_int *num_vcycles                    = arg_int0(NULL, "num_vcycles", NULL, "Number of vcycles to perform.");
-        struct arg_int *k_deg                          = arg_int0(NULL, "k_deg", NULL, "Compute degrees of the first k vertices.");
-        struct arg_int *barabasi_albert_mindegree      = arg_int0(NULL, "barabasi_albert_mindegree", NULL, "Min degree in Barabasi Albert graph generator.");
         struct arg_lit *no_refinement_in_last_iteration= arg_lit0(NULL, "no_refinement_in_last_iteration","No local search during last v-cycle.");
-        struct arg_lit *vertex_degree_weights          = arg_lit0(NULL, "vertex_degree_weights","Use 1+deg(v) as vertex weights.");
-        struct arg_lit *disable_compute_degrees        = arg_lit0(NULL, "disable_compute_degrees","Disable computation of degrees in barabasi albert generation.");
-        struct arg_lit *kronecker_internal_only        = arg_lit0(NULL, "kronecker_internal_only","Only do the external source part of kronecker generation.");
         struct arg_lit *converter_evaluate             = arg_lit0(NULL, "evaluate","Enable this tag the partition to be evaluated.");
         struct arg_lit *save_partition		       = arg_lit0(NULL, "save_partition","Enable this tag if you want to store the partition to disk.");
         struct arg_lit *save_partition_binary	       = arg_lit0(NULL, "save_partition_binary","Enable this tag if you want to store the partition to disk in a binary format.");
-        struct arg_lit *generate_ba_32bit              = arg_lit0(NULL, "generate_ba_32bit","Generate using 32bit types.");
+        struct arg_lit *vertex_degree_weights          = arg_lit0(NULL, "vertex_degree_weights","Use 1+deg(v) as vertex weights.");
         struct arg_rex *node_ordering                  = arg_rex0(NULL, "node_ordering", "^(random|degree|leastghostnodesfirst_degree|degree_leastghostnodesfirst)$", "VARIANT", REG_EXTENDED, "Type of node ordering to use for the clustering algorithm. (Default: degree) [random|degree|leastghostnodesfirst_degree|degree_leastghostnodesfirst]." );
-        struct arg_rex *preconfiguration               = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|ultrafast)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: fast) [strong|eco|fast|ultrafast]." );
+        struct arg_rex *preconfiguration               = arg_rex1(NULL, "preconfiguration", "^(ecosocial|fastsocial|ultrafastsocial|ecomesh|fastmesh|ultrafastmesh)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: fast) [ecosocial|fastsocial|ultrafastsocial|ecomesh|fastmesh|ultrafastmesh]." );
         struct arg_dbl *ht_fill_factor                 = arg_dbl0(NULL, "ht_fill_factor", NULL, "");
         struct arg_int *n                              = arg_int0(NULL, "n", NULL, "");
         struct arg_end *end                            = arg_end(100);
@@ -77,18 +67,8 @@ int parse_parameters(int argn, char **argv,
         // Define argtable.
         void* argtable[] = {
 #ifdef PARALLEL_LABEL_COMPRESSION
-                help, filename, user_seed, k, inbalance, preconfiguration,
-                cluster_coarsening_factor,  label_iterations_coarsening, stop_factor,
-                initial_partitioning_algorithm,
-                evolutionary_time_limit, label_iterations_refinement,  
-                enable_generator, enable_generator_rgg, enable_generator_barabasi_albert, log_num_vert, edge_factor, comm_rounds, num_vcycles, num_tries, node_ordering, no_refinement_in_last_iteration, ht_fill_factor, 
-		binary_io_window_size, save_partition, save_partition_binary, barabasi_albert_mindegree, vertex_degree_weights,
-#elif defined KRONECKER_GENERATOR_PROGRAM
-                help, filename, user_seed, log_num_vert, edge_factor, kronecker_internal_only, n,
-#elif defined RGG_GENERATOR_PROGRAM
-                help, filename, user_seed, log_num_vert,
-#elif defined BA_GENERATOR_PROGRAM
-                help, filename, user_seed, log_num_vert, barabasi_albert_mindegree, disable_compute_degrees, k_deg, generate_ba_32bit, n,
+                help, filename, user_seed, k, inbalance, preconfiguration, vertex_degree_weights,
+		save_partition, save_partition_binary,
 #elif defined TOOLBOX 
                 help, filename, k_opt, input_partition_filename, save_partition, save_partition_binary, converter_evaluate,
 #endif 
@@ -138,14 +118,6 @@ int parse_parameters(int argn, char **argv,
 
 
 #ifdef PARALLEL_LABEL_COMPRESSION
-        if(enable_generator_rgg->count > 0) {
-                partition_config.generate_rgg = true; 
-        } 
-
-        if(enable_generator_barabasi_albert->count > 0) {
-                partition_config.generate_ba = true;
-        }
-
         if(filename->count > 0) {
                 graph_filename = filename->sval[0];
         } else {
@@ -165,58 +137,25 @@ int parse_parameters(int argn, char **argv,
         }
 
         if(preconfiguration->count > 0) {
-                if(strcmp("strong", preconfiguration->sval[0]) == 0) {
-                        cfg.strong(partition_config);
-                } else if (strcmp("eco", preconfiguration->sval[0]) == 0) {
+                if (strcmp("ecosocial", preconfiguration->sval[0]) == 0) {
                         cfg.eco(partition_config);
-                } else if (strcmp("fast", preconfiguration->sval[0]) == 0) {
+                } else if (strcmp("fastsocial", preconfiguration->sval[0]) == 0) {
                         cfg.fast(partition_config);
-                } else if (strcmp("ultrafast", preconfiguration->sval[0]) == 0) {
+                } else if (strcmp("ultrafastsocial", preconfiguration->sval[0]) == 0) {
                         cfg.ultrafast(partition_config);
+                } else if (strcmp("ecomesh", preconfiguration->sval[0]) == 0) {
+                        cfg.eco(partition_config);
+                        partition_config.cluster_coarsening_factor = 20000;
+                } else if (strcmp("fastmesh", preconfiguration->sval[0]) == 0) {
+                        cfg.fast(partition_config);
+                        partition_config.cluster_coarsening_factor = 20000;
+                } else if (strcmp("ultrafastmesh", preconfiguration->sval[0]) == 0) {
+                        cfg.ultrafast(partition_config);
+                        partition_config.cluster_coarsening_factor = 20000;
                 } else {
                         fprintf(stderr, "Invalid preconfconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);
                 }
-        }
-
-        // later on this will be a configuration of the algorithm -- for mesh type graphs
-        if(graph_filename.find("del") != std::string::npos) {
-                partition_config.cluster_coarsening_factor = 20000;
-        }
-        if(graph_filename.find("kron") != std::string::npos) {
-                // to comply with parmetis
-                partition_config.cluster_coarsening_factor = 4;
-                partition_config.label_iterations_coarsening = 4;
-                partition_config.label_iterations_refinement = 3;
-                partition_config.inbalance = 26;
-                partition_config.epsilon = 26;
-                partition_config.stop_factor = 34000;
-                partition_config.eco = false;
-        }
-        if(graph_filename.find("bubbles") != std::string::npos) {
-                partition_config.cluster_coarsening_factor = 20000;
-        }
-        if(graph_filename.find("nlpkkt") != std::string::npos) {
-                partition_config.cluster_coarsening_factor = 20000;
-        }
-        if(graph_filename.find("packing") != std::string::npos) {
-                partition_config.cluster_coarsening_factor = 20000;
-        }
-        if(graph_filename.find("dewiki") != std::string::npos) {
-                partition_config.cluster_coarsening_factor = 20000;
-        }
-        if(graph_filename.find("enwiki") != std::string::npos) {
-                partition_config.cluster_coarsening_factor = 20000;
-        }
-        if(graph_filename.find("channel") != std::string::npos) {
-                partition_config.cluster_coarsening_factor = 20000;
-        }
-        if(graph_filename.find("rgg") != std::string::npos) {
-                partition_config.cluster_coarsening_factor = 20000;
-        }
-
-        if(enable_generator_barabasi_albert->count > 0) {
-                partition_config.generate_ba = true;
         }
 
         if(vertex_degree_weights->count > 0) {
@@ -235,14 +174,6 @@ int parse_parameters(int argn, char **argv,
 		partition_config.save_partition_binary = true;
 	}
 
-        if(generate_ba_32bit->count > 0) {
-                partition_config.generate_ba_32bit = true;
-        }
-
-        if(kronecker_internal_only->count > 0) {
-                partition_config.kronecker_internal_only = true;
-        }
-
         if(n->count > 0) {
                 partition_config.n = pow(10,n->ival[0]);
         }
@@ -251,33 +182,12 @@ int parse_parameters(int argn, char **argv,
                 partition_config.epsilon = inbalance->ival[0];
         }
 
-        if(barabasi_albert_mindegree->count > 0) {
-                partition_config.barabasi_albert_mindegree = barabasi_albert_mindegree->ival[0];
-        }
-
         if(num_tries->count > 0) {
                 partition_config.num_tries = num_tries->ival[0];
         }
 
-        if(k_deg->count > 0) {
-                partition_config.compute_degree_sequence_k_first = true;
-                partition_config.k_deg = k_deg->ival[0];
-        }
-
-        if(disable_compute_degrees->count > 0) {
-                partition_config.compute_degree_sequence_ba = false;
-        }
-
         if (user_seed->count > 0) {
                 partition_config.seed = user_seed->ival[0];
-        }
-
-        if (log_num_vert->count > 0) {
-                partition_config.log_num_verts = log_num_vert->ival[0];
-        }
-
-        if (edge_factor->count > 0) {
-                partition_config.edge_factor = edge_factor->ival[0];
         }
 
         if (binary_io_window_size->count > 0) {
