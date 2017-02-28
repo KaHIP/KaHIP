@@ -3,6 +3,7 @@ KaHIP-2.00
 - bugfix to partition_to_vertex_separator program
 - remove MPI C++ wrapper since it is obsolete
 - added ParHIP -- the parallel high quality graph partitioner designed for hierarchically structured networks such as web graphs or social networks
+- added mapping algorithms that map the task graph (quotient graph) onto a processor graph defined by a computer hierarchy 
 
 KaHIP-1.00
 ------------------------------------------------------------------------
