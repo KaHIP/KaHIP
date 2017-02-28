@@ -175,13 +175,13 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
                 }
         }
 
-        if( edge_counter != nmbEdges ) {
+        if( edge_counter != (EdgeID)nmbEdges ) {
                 std::cout <<  "number of specified edges mismatch"  << std::endl;
                 std::cout <<  edge_counter <<  " " <<  nmbEdges  << std::endl;
                 exit(0);
         }
 
-        if( node_counter != nmbNodes) {
+        if( node_counter != (NodeID)nmbNodes) {
                 std::cout <<  "number of specified nodes mismatch"  << std::endl;
                 std::cout <<  node_counter <<  " " <<  nmbNodes  << std::endl;
                 exit(0);

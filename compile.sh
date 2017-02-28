@@ -1,8 +1,18 @@
 #!/bin/bash
 
+NCORES=4
+unamestr=`uname`
+if [[ "$unamestr" == "Linux" ]]; then
+        NCORES=`grep -c ^processor /proc/cpuinfo`
+fi
+
+if [[ "$unamestr" == "Darwin" ]]; then
+        NCORES=`sysctl -n hw.ncpu`
+fi
+
 rm -rf deploy
 for program in node_separator kaffpa evaluator kaffpaE graphchecker label_propagation partition_to_vertex_separator library ; do 
-scons program=$program variant=optimized -j 4 
+scons program=$program variant=optimized -j $NCORES 
 if [ "$?" -ne "0" ]; then 
         echo "compile error in $program. exiting."
         exit
