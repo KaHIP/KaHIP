@@ -11,7 +11,7 @@ if [[ "$unamestr" == "Darwin" ]]; then
 fi
 
 for program in parhip graph2binary graph2binary_external toolbox; do 
-scons program=$program variant=optimized -j $NCORES 
+scons program=$program variant=optimized_nooutput -j $NCORES 
 if [ "$?" -ne "0" ]; then 
         echo "compile error in $program. exiting."
         exit

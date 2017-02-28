@@ -16,3 +16,4 @@ script:
   - scons program=label_propagation variant=optimized 
   - scons program=library variant=optimized 
   - scons program=partition_to_vertex_separator variant=optimized 
+  - cd parallel; ./build.sh; cd ..
