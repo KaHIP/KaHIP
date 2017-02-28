@@ -84,8 +84,6 @@ if "supermuc" in os.environ['MYSYSTEMNAME']:
 else: 
         env['CXX'] = 'mpicxx'
         env['CC']  = 'mpicc'
-        env.Append(CXXFLAGS = '-msse4.2')
-        env.Append(CCFLAGS = '-msse4.2')
 
 if env['program'] == 'toolbox':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DTOOLBOX')

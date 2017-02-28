@@ -77,15 +77,9 @@ env.Append(CPPPATH=['./lib/tools'])
 env.Append(CPPPATH=['./lib/partition'])
 env.Append(CPPPATH=['./lib/io'])
 env.Append(CPPPATH=['./lib/partition/uncoarsening/refinement/quotient_graph_refinement/flow_refinement/'])
-env.Append(LIBPATH=['../extern/argtable-2.10/lib'])
-env.Append(CPPPATH=['../extern/argtable-2.10/include'])
 env.Append(LIBPATH=['../extern/kaHIP_lib/'])
 env.Append(CPPPATH=['../extern/kaHIP_lib/'])
-env.Append(CPPPATH=['./extern/parmetis-4.0.3/metis/include/'])
 env.Append(CPPPATH=['../lib'])
-env.Append(CPPPATH=['../lib/graph_generation/rgg/'])
-env.Append(CPPPATH=['./lib/graph_generation/rgg/'])
-env.Append(CPPPATH=['./lib/graph_generation/barabasi_albert/'])
 env.Append(CPPPATH=['../lib/tools'])
 env.Append(CPPPATH=['../lib/partition'])
 env.Append(CPPPATH=['../lib/io'])
@@ -100,6 +94,13 @@ if SYSTEM == 'Darwin':
         env.Append(LIBPATH=['/opt/local/lib/'])
         # homebrew related paths
         env.Append(LIBPATH=['/usr/local/lib/'])
+        env.Append(LIBPATH=['../extern/argtable-2.10/maclib'])
+        env.Append(LIBPATH=['./extern/argtable-2.10/maclib'])
+else:
+        env.Append(LIBPATH=['../extern/argtable-2.10/lib'])
+        env.Append(LIBPATH=['./extern/argtable-2.10/lib'])
+        env.Append(LIBPATH=['../../extern/argtable-2.10/lib'])
+
 
 #by D. Luxen
 #if not conf.CheckLibWithHeader('argtable2', 'argtable2.h', 'CXX'):
@@ -113,7 +114,7 @@ if SYSTEM == 'Darwin':
 env.Append(CXXFLAGS = '-fopenmp')
 # Apply variant specific settings.
 if env['variant'] == 'optimized':
-  env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x -Wall -Wno-literal-suffix -msse4.2 -ffast-math -Wno-unused-result')
+  env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x -Wall -Wno-literal-suffix -ffast-math -Wno-unused-result')
   env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -ffast-math -Wno-unused-result')
 elif env['variant'] == 'optimized_nooutput':
   # A little bit more output on the console
