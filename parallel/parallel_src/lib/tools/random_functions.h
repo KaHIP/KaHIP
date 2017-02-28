@@ -149,12 +149,6 @@ class random_functions {
                         return (bool) A(m_mt); 
                 }
 
-
-                //static unsigned nextInt(unsigned int lb, unsigned int rb) {
-                        //std::tr1::uniform_int<unsigned int> A(lb,rb);
-                        //return A(m_mt); 
-                //}
-
                 //including lb and rb
                 template<typename sometype>
                         static sometype nextInt(sometype lb, sometype rb) {

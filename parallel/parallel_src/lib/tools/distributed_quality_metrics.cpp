@@ -85,11 +85,6 @@ NodeWeight distributed_quality_metrics::local_max_block_weight( PPartitionConfig
 
         forall_local_nodes(G, n) {
                 PartitionID curPartition     = partition_map[n];
-                if( curPartition >= config.k ) {
-                        std::cout <<  "problem"  << std::endl;
-                        std::cout <<  curPartition  << std::endl;
-                        exit(0);
-                }
                 block_weights[curPartition] += G.getNodeWeight(n);
                 graph_vertex_weight   += G.getNodeWeight(n);
         } endfor

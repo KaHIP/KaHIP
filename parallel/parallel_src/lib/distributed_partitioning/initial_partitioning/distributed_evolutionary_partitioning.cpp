@@ -140,13 +140,6 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
         
         if( rank == (int)ROOT) {
                 std::cout <<  "partitioner call took " <<  t.elapsed() << std::endl;
-                //parallel_graph_io io;
-                //io.writeGraphWeightedSequentially(Q_bar, "outputgraph");
-                //exit(0);
-                //forall_local_nodes(Q_bar, node) {
-                        //std::cout <<  partition_map[node]  << std::endl;
-                //} endfor
-                
         }
 
 #ifndef NOOUTPUT

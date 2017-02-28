@@ -270,51 +270,6 @@ void mpi_tools::alltoallv( void * sendbuf,
                               recvbuf, rbktsize, rdispl, MPI_UNSIGNED_LONG_LONG, communicator);
         } else {
                 if( rank == ROOT ) { std::cout <<  "special case all to all with counts > sizeof(int)! not tested yet!"  << std::endl; exit(0);}
-
-                // fall back algorithm that floods the network
-                //bool communication_finished = false;
-                //while ( !communication_finished ) {
-                        //for( int peID = 0; peID < size; peID++) {
-                                //int sendcnt =  (int) std::min(sendcounts[peID], (ULONG)std::numeric_limits< int >::max());
-
-                                //MPI_Request rq; int tag = rank;
-
-                                //MPI_Isend( (void*)(sendbuf+displs[peID]*sizeof(ULONG)), sendcnt, MPI_UNSIGNED_LONG_LONG_LONG, ROOT, tag, communicator, &rq);
-                                
-                                //displs[peID]     += sendcnt;
-                                //sendcounts[peID] -= sendcnt; // adjust send counts and displacements etc..
-                        //}
-
-                        //// check wether we are done
-                        //communication_finished = true;
-                        //for( int peID = 0; peID < size; peID++) {
-                                //if( sendcounts[peID] > 0 ) {communication_finished = false; break;}
-                        //}
-
-                        //int counter = 0;
-                        //while( counter < size - 1) {
-                                //// wait for incomming message of an adjacent processor
-                                //int flag; MPI_Status st;
-                                //MPI_Iprobe(MPI_ANY_SOURCE, rank, communicator, &flag, &st);
-                                
-                                //while( flag ) {
-                                        //PEID peID = st.MPI_SOURCE;
-                                        //int recvcnt =  (int) std::min(recvcounts[peID], (ULONG)std::numeric_limits< int >::max());
-                                        //MPI_Status rst;
-                                        //MPI_Recv( recvbuf+rdispls[peID]*sizeof(ULONG), recvcnt, MPI_UNSIGNED_LONG_LONG_LONG, st.MPI_SOURCE, st.MPI_TAG, communicator, &rst); 
-                                        
-                                        //counter++;
-                                        
-                                        //rdispls[peID]    += recvcnt;
-                                        //recvcounts[peID] -= recvcnt;
-
-                                        //MPI_Iprobe(MPI_ANY_SOURCE, rank, communicator, &flag, &st);
-                                //}
-                        //}
-                        //if( !communication_finished && rank == ROOT) {
-                                //std::cout <<  "communicating more than sizeof(int) elements, next round"  << std::endl;
-                        //}
-                //}
         }
 }
 

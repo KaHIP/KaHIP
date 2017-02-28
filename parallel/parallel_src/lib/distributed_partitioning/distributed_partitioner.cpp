@@ -125,8 +125,6 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
 
                 if( rank == ROOT && config.eco ) {
                         config.cluster_coarsening_factor = m_cf[m_cur_rnd_choice++];
-                        ////config.stop_factor = m_sf[m_cur_rnd_choice];
-                        ////config.label_iterations_coarsening = m_lic[m_cur_rnd_choice++];
                 }
 
                 if(config.eco) {
@@ -135,13 +133,6 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
                         std::cout << "cf " << config.cluster_coarsening_factor  << std::endl;
                 }
                 config.evolutionary_time_limit = 0;
-                //MPI_Bcast(&(config.stop_factor), 1, MPI_INT, ROOT, communicator);
-                //MPI_Bcast(&(config.label_iterations_coarsening), 1, MPI_INT, ROOT, communicator);
-                //if( cycle % 2 == 0 ) {
-                        //config.cluster_coarsening_factor = 20000;
-                //} else {
-                        //config.cluster_coarsening_factor = 20;
-                //}
                 elapsed += t.elapsed();
                 MPI_Barrier(communicator);
                 
@@ -174,7 +165,6 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         m_level++;
         config.label_iterations = config.label_iterations_coarsening;
         config.total_num_labels = G.number_of_global_nodes();
-        //config.upper_bound_cluster = std::min(config.upper_bound_partition/config.cluster_coarsening_factor, 1000*m_total_graph_weight/G.number_of_global_nodes());
         //
         config.upper_bound_cluster = config.upper_bound_partition/(1.0*config.cluster_coarsening_factor);
         G.init_balance_management( config );
