@@ -67,9 +67,9 @@ libkaffpa_files = [   '..//lib/data_structure/graph_hierarchy.cpp',
                       '..//lib/partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.cpp',
                       '..//lib/parallel_mh/galinier_combine/gal_combine.cpp',
                       '..//lib/parallel_mh/galinier_combine/construct_partition.cpp',
-                      '..//lib/parallel_mh/parallel_mh_async.cpp',
-                      '..//lib/parallel_mh/population.cpp',
-                      '..//lib/parallel_mh/exchange/exchanger.cpp',
+                      #'..//lib/parallel_mh/parallel_mh_async.cpp',
+                      #'..//lib/parallel_mh/population.cpp',
+                      #'..//lib/parallel_mh/exchange/exchanger.cpp',
                       '..//lib/partition/uncoarsening/refinement/tabu_search/tabu_search.cpp'
                       ]
 
