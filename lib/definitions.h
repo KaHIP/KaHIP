@@ -58,6 +58,8 @@ typedef long FlowType;
 const EdgeID UNDEFINED_EDGE            = std::numeric_limits<EdgeID>::max();
 const NodeID NOTMAPPED                 = std::numeric_limits<EdgeID>::max();
 const NodeID UNDEFINED_NODE            = std::numeric_limits<NodeID>::max();
+const NodeID UNASSIGNED                = std::numeric_limits<NodeID>::max();
+const NodeID ASSIGNED                  = std::numeric_limits<NodeID>::max()-1;
 const PartitionID INVALID_PARTITION    = std::numeric_limits<PartitionID>::max();
 const PartitionID BOUNDARY_STRIPE_NODE = std::numeric_limits<PartitionID>::max();
 const int NOTINQUEUE 		       = std::numeric_limits<int>::max();
@@ -165,6 +167,35 @@ typedef enum {
         RANDOM_NODEORDERING, 
         DEGREE_NODEORDERING
 } NodeOrderingType;
+
+typedef enum {
+        NSQUARE, 
+        NSQUAREPRUNED, 
+        COMMUNICATIONGRAPH
+} LsNeighborhoodType;
+
+typedef enum {
+        MAP_CONST_RANDOM, 
+        MAP_CONST_IDENTITY,
+        MAP_CONST_OLDGROWING,
+        MAP_CONST_OLDGROWING_FASTER,
+        MAP_CONST_OLDGROWING_MATRIX,
+        MAP_CONST_FASTHIERARCHY_BOTTOMUP,
+        MAP_CONST_FASTHIERARCHY_TOPDOWN
+} ConstructionAlgorithm;
+
+typedef enum {
+        DIST_CONST_RANDOM, 
+        DIST_CONST_IDENTITY,
+        DIST_CONST_HIERARCHY,
+        DIST_CONST_HIERARCHY_ONLINE
+} DistanceConstructionAlgorithm;
+
+typedef enum {
+        PRE_CONFIG_MAPPING_FAST, 
+        PRE_CONFIG_MAPPING_ECO,
+        PRE_CONFIG_MAPPING_STRONG
+} PreConfigMapping;
 
 
 #endif

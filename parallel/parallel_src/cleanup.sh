@@ -7,4 +7,5 @@ done
 
 rm -rf deploy
 rm -rf optimized*
+rm config.log
 

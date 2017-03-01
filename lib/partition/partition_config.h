@@ -377,6 +377,29 @@ struct PartitionConfig
 
         int grow_target;
 
+        //=======================================
+        //===============QAP=====================
+        //=======================================
+
+        int communication_neighborhood_dist;
+
+        LsNeighborhoodType ls_neighborhood;
+
+        ConstructionAlgorithm construction_algorithm;
+
+        DistanceConstructionAlgorithm distance_construction_algorithm;
+
+        std::vector< int > group_sizes;
+
+        std::vector< int > distances;
+
+	int search_space_s;
+
+        PreConfigMapping preconfiguration_mapping;
+
+        int max_recursion_levels_construction; 
+
+        bool enable_mapping;
 
         //=======================================
         //===============Shared Mem OMP==========

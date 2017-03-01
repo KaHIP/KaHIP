@@ -224,3 +224,5 @@ EdgeWeight quality_metrics::objective(const PartitionConfig & config, graph_acce
                 return edge_cut(G, partition_map);
         }
 }
+
+

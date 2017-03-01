@@ -23,6 +23,8 @@
 #ifndef NORMAL_MATRIX_DAUJ4JMM
 #define NORMAL_MATRIX_DAUJ4JMM
 
+#include <vector>
+#include <iostream>
 #include "matrix.h"
 
 class normal_matrix : public matrix {
@@ -51,6 +53,18 @@ public:
                 }
                 m_internal_matrix[x][y] = value;
         };
+
+        inline unsigned int get_x_dim() {return m_dim_x;};
+        inline unsigned int get_y_dim() {return m_dim_y;};
+
+        void print() {
+                for( unsigned int i = 0; i < get_x_dim(); i++) {
+                        for( unsigned int j = 0; j < get_y_dim(); j++) {
+                                std::cout <<  get_xy(i,j) << " ";
+                        }
+                        std::cout <<  ""  << std::endl;
+                }
+        }
 
 private:
         std::vector< std::vector<int> > m_internal_matrix;

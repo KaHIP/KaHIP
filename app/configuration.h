@@ -463,6 +463,26 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.sep_full_boundary_ip          = false;
         partition_config.sep_edge_rating_during_ip     = SEPARATOR_MULTX;
 
+        partition_config.enable_mapping                    = false;
+        partition_config.ls_neighborhood                   = COMMUNICATIONGRAPH;
+        partition_config.communication_neighborhood_dist   = 10;
+        partition_config.construction_algorithm            = MAP_CONST_FASTHIERARCHY_TOPDOWN;
+        partition_config.distance_construction_algorithm   = DIST_CONST_HIERARCHY;
+        partition_config.search_space_s                    = 64;
+        partition_config.preconfiguration_mapping          = PRE_CONFIG_MAPPING_ECO;
+        partition_config.max_recursion_levels_construction = std::numeric_limits< int >::max();
+
+
+        partition_config.group_sizes.push_back(4);
+        partition_config.group_sizes.push_back(8);
+        partition_config.group_sizes.push_back(8);
+
+        partition_config.distances.push_back(1);
+        partition_config.distances.push_back(10);
+        partition_config.distances.push_back(100);
+
+
+
 }
 
 inline void configuration::standardsnw( PartitionConfig & partition_config ) {

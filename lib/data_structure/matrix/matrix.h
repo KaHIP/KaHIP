@@ -31,6 +31,9 @@ public:
 
         virtual int  get_xy(unsigned int x, unsigned int y)            = 0;
         virtual void set_xy(unsigned int x, unsigned int y, int value) = 0;
+
+        virtual unsigned int get_x_dim() = 0;
+        virtual unsigned int get_y_dim() = 0;
 };
 
 

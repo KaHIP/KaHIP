@@ -106,10 +106,19 @@ libkaffpa_parallel_async  = ['lib/parallel_mh/parallel_mh_async.cpp',
                              'lib/tools/graph_communication.cpp',
                              'lib/tools/mpi_tools.cpp' ]
 
+libmapping                = ['lib/mapping/local_search_mapping.cpp',
+                             'lib/mapping/full_search_space.cpp',
+                             'lib/mapping/full_search_space_pruned.cpp',
+                             'lib/mapping/communication_graph_search_space.cpp',
+                             'lib/mapping/fast_construct_mapping.cpp',
+                             'lib/mapping/construct_distance_matrix.cpp',
+                             'lib/mapping/mapping_algorithms.cpp',
+                             'lib/mapping/construct_mapping.cpp' ]
+
 if env['program'] == 'kaffpa':
         env.Append(CXXFLAGS = '-DMODE_KAFFPA')
         env.Append(CCFLAGS  = '-DMODE_KAFFPA')
-        env.Program('kaffpa', ['app/kaffpa.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
+        env.Program('kaffpa', ['app/kaffpa.cpp']+libkaffpa_files+libmapping, LIBS=['libargtable2','gomp'])
 
 if env['program'] == 'evaluator':
         env.Append(CXXFLAGS = '-DMODE_EVALUATOR')

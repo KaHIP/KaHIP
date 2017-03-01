@@ -86,6 +86,25 @@ class random_functions {
                                 }               
                         }
 
+                static void permutate_vector_good(std::vector<std::pair< NodeID, NodeID >> & vec) {
+
+                        unsigned int size = vec.size();
+                        if(size < 4) return;
+
+                        std::uniform_int_distribution<unsigned int> A(0,size - 4);
+                        std::uniform_int_distribution<unsigned int> B(0,size - 4);
+
+                        for( unsigned int i = 0; i < size; i++) {
+                                unsigned int posA = A(m_mt);
+                                unsigned int posB = B(m_mt);
+                                std::swap(vec[posA], vec[posB]); 
+                                std::swap(vec[posA+1], vec[posB+1]); 
+                                std::swap(vec[posA+2], vec[posB+2]); 
+                                std::swap(vec[posA+3], vec[posB+3]); 
+
+                        } 
+                }
+
                 template<typename sometype>
                         static void permutate_vector_good(std::vector<sometype> & vec, bool init) {
                                 if(init) {

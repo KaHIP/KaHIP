@@ -336,3 +336,31 @@ EdgeWeight quality_metrics::objective(const PartitionConfig & config, graph_acce
                 return edge_cut(G, partition_map);
         }
 }
+
+NodeWeight quality_metrics::total_qap(graph_access & C, matrix & D, std::vector< NodeID > & rank_assign) {
+        NodeWeight total_volume = 0;
+        forall_nodes(C, node) {
+                forall_out_edges(C, e, node) {
+                        NodeID target           = C.getEdgeTarget(e);
+                        NodeWeight comm_vol     = C.getEdgeWeight(e);
+                        NodeID perm_rank_node   = rank_assign[node];
+                        NodeID perm_rank_target = rank_assign[target];
+                        NodeWeight cur_vol      = comm_vol*D.get_xy(perm_rank_node, perm_rank_target);
+                        total_volume           += cur_vol; 
+                } endfor
+        } endfor
+        return total_volume;
+}
+
+NodeWeight quality_metrics::total_qap(matrix & C, matrix & D, std::vector< NodeID > & rank_assign) {
+        NodeWeight total_volume = 0;
+        for( unsigned int i = 0; i < C.get_x_dim(); i++) {
+                for( unsigned int j = 0; j < C.get_y_dim(); j++) {
+                        NodeID perm_rank_node      = rank_assign[i];
+                        NodeID perm_rank_target    = rank_assign[j];
+                        total_volume += C.get_xy(i,j)*D.get_xy(perm_rank_node, perm_rank_target);
+                }
+        }
+        return total_volume;
+}
+

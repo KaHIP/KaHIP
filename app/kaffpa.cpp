@@ -30,8 +30,11 @@
 
 #include "balance_configuration.h"
 #include "data_structure/graph_access.h"
+#include "data_structure/matrix/normal_matrix.h"
+#include "data_structure/matrix/online_distance_matrix.h"
 #include "graph_io.h"
 #include "macros_assertions.h"
+#include "mapping/mapping_algorithms.h"
 #include "parse_parameters.h"
 #include "partition/graph_partitioner.h"
 #include "partition/partition_config.h"
@@ -48,12 +51,12 @@ int main(int argn, char **argv) {
         bool is_graph_weighted = false;
         bool suppress_output   = false;
         bool recursive         = false;
-       
+
         int ret_code = parse_parameters(argn, argv, 
-                                        partition_config, 
-                                        graph_filename, 
-                                        is_graph_weighted, 
-                                        suppress_output, recursive); 
+                        partition_config, 
+                        graph_filename, 
+                        is_graph_weighted, 
+                        suppress_output, recursive); 
 
         if(ret_code) {
                 return 0;
@@ -72,9 +75,9 @@ int main(int argn, char **argv) {
         timer t;
         graph_io::readGraphWeighted(G, graph_filename);
         std::cout << "io time: " << t.elapsed()  << std::endl;
-       
+
         G.set_partition_count(partition_config.k); 
- 
+
         balance_configuration bc;
         bc.configurate_balance( partition_config, G);
 
@@ -120,17 +123,80 @@ int main(int argn, char **argv) {
                 cycle_refinement cr;
                 cr.perform_refinement(partition_config, G, boundary);
         }
-        // ******************************* done partitioning *****************************************       
         ofs.close();
         std::cout.rdbuf(backup);
         std::cout <<  "time spent for partitioning " << t.elapsed()  << std::endl;
-       
+
+        int qap = 0;
+        if(partition_config.enable_mapping) {
+                std::cout <<  "performing mapping!"  << std::endl;
+                //check if k is a power of 2 
+                bool power_of_two = (partition_config.k & (partition_config.k-1)) == 0;
+                std::vector< NodeID > perm_rank(partition_config.k);
+                graph_access C;
+                complete_boundary boundary(&G);
+                boundary.build();
+                boundary.getUnderlyingQuotientGraph(C);
+
+                forall_nodes(C, node) {
+                        C.setNodeWeight(node, 1);
+                } endfor
+
+                if(!power_of_two ) {
+                       t.restart();
+
+
+                        mapping_algorithms ma;
+                        if( partition_config.distance_construction_algorithm != DIST_CONST_HIERARCHY_ONLINE) {
+                                normal_matrix D(partition_config.k, partition_config.k);
+                                ma.construct_a_mapping(partition_config, C, D, perm_rank);
+                                std::cout <<  "time spent for mapping " << t.elapsed()  << std::endl;
+                                qap = qm.total_qap(C, D, perm_rank );
+                        } else {
+                                online_distance_matrix D(partition_config.k, partition_config.k);
+                                D.setPartitionConfig(partition_config);
+                                ma.construct_a_mapping(partition_config, C, D, perm_rank);
+                                std::cout <<  "time spent for mapping " << t.elapsed()  << std::endl;
+                                qap = qm.total_qap(C, D, perm_rank );
+                        }
+                } else {
+                        std::cout <<  "number of processors is a power of two, so no mapping algorithm is performed (identity is best)"  << std::endl;
+                        std::cout <<  "time spent for mapping " << 0 << std::endl;
+                        for( unsigned i = 0; i < perm_rank.size(); i++) {
+                                perm_rank[i] = i;
+                        }
+
+                        online_distance_matrix D(partition_config.k, partition_config.k);
+                        D.setPartitionConfig(partition_config);
+                        qap = qm.total_qap(C, D, perm_rank );
+                }
+
+                // solution check 
+                std::vector< NodeID > tbsorted = perm_rank;
+                std::sort( tbsorted.begin(), tbsorted.end() );
+                for( unsigned int i = 0; i < tbsorted.size(); i++) {
+                        if( tbsorted[i] != i ) {
+                                std::cout <<  "solution is NOT a permutation. Please report this."  << std::endl;
+                                std::cout <<  tbsorted[i] <<  " " << i   << std::endl;
+                                exit(0);
+                        }
+                }
+
+                forall_nodes(G, node) {
+                        G.setPartitionIndex(node, perm_rank[G.getPartitionIndex(node)]);
+                } endfor
+        }
+
+
+        // ******************************* done partitioning *****************************************       
+
         // output some information about the partition that we have computed 
         std::cout << "cut \t\t"         << qm.edge_cut(G)                 << std::endl;
         std::cout << "finalobjective  " << qm.edge_cut(G)                 << std::endl;
         std::cout << "bnd \t\t"         << qm.boundary_nodes(G)           << std::endl;
         std::cout << "balance \t"       << qm.balance(G)                  << std::endl;
         std::cout << "max_comm_vol \t"  << qm.max_communication_volume(G) << std::endl;
+        if(partition_config.enable_mapping) std::cout <<  "quadratic assignment objective J(C,D,Pi') = " << qap << std::endl;
 
         // write the partition to the disc 
         std::stringstream filename;
@@ -141,5 +207,5 @@ int main(int argn, char **argv) {
         }
 
         graph_io::writePartition(G, filename.str());
-        
+
 }

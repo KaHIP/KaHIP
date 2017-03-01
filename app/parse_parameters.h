@@ -164,6 +164,15 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *sep_loc_fm_no_snodes                 = arg_int0(NULL, "sep_loc_fm_no_snodes", NULL, "Number of FM repetitions during uncoarsening on each level.");
         struct arg_int *sep_num_vert_stop                    = arg_int0(NULL, "sep_num_vert_stop", NULL, "Number of vertices to stop coarsening at.");
         struct arg_rex *sep_edge_rating_during_ip            = arg_rex0(NULL, "sep_edge_rating_during_ip", "^(weight|expansionstar|expansionstar2|expansionstar2deg|punch|expansionstar2algdist|expansionstar2algdist2|algdist|algdist2|sepmultx|sepaddx|sepmax|seplog|r1|r2|r3|r4|r5|r6|r7|r8)$", "RATING", REG_EXTENDED, "Edge rating to use. One of {weight, expansionstar, expansionstar2, punch, sepmultx, sepaddx, sepmax, seplog, " " expansionstar2deg}. Default: weight"  );
+
+        //mapping stuff
+        //
+        //
+        struct arg_lit *enable_mapping                       = arg_lit0(NULL, "enable_mapping", "Enable mapping algorithms to map quotient graph onto processor graph defined by hierarchy and distance options. (Default: disabled)");
+        struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for num cores per PE, num PEs per rack, ... and so forth.");
+        struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
+        struct arg_lit *online_distances                     = arg_lit0(NULL, "online_distances", "Do not store processor distances in a matrix, but do recomputation. (Default: disabled)");
+
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -202,6 +211,10 @@ int parse_parameters(int argn, char **argv,
                 time_limit, 
                 enforce_balance, 
 		balance_edges,
+                enable_mapping,
+                hierarchy_parameter_string, 
+                distance_parameter_string,
+                online_distances,
                 filename_output, 
 #elif defined MODE_EVALUATOR
                 k,   
@@ -341,6 +354,52 @@ int parse_parameters(int argn, char **argv,
                         exit(0);
                 }
 #endif
+        }
+
+        if(enable_mapping->count > 0) {
+                partition_config.enable_mapping = true;
+                if(!hierarchy_parameter_string->count) {
+                        std::cout <<  "Please specify the hierarchy using the --hierarchy_parameter_string option."  << std::endl;
+                        exit(0);
+                }
+
+                if(!distance_parameter_string->count) {
+                        std::cout <<  "Please specify the distances using the --distance_parameter_string option."  << std::endl;
+                        exit(0);
+                }
+        }
+
+        if(hierarchy_parameter_string->count) {
+                std::istringstream f(hierarchy_parameter_string->sval[0]);
+                std::string s;    
+                partition_config.group_sizes.clear();
+                while (getline(f, s, ':')) {
+                        partition_config.group_sizes.push_back(stoi(s));
+                }       
+
+                PartitionID old_k = partition_config.k;
+                partition_config.k = 1; // recompute k 
+                for( unsigned int i = 0; i < partition_config.group_sizes.size(); i++) {
+                        partition_config.k *= partition_config.group_sizes[i];
+                }
+                if( old_k != partition_config.k ) {
+                        std::cout <<  "number of processors defined through specified hierarchy does not match k!"  << std::endl;
+                        std::cout <<  "please specify k as " << partition_config.k  << std::endl;
+                        exit(0);
+                }
+        }
+
+        if(distance_parameter_string->count) {
+                std::istringstream f(distance_parameter_string->sval[0]);
+                std::string s;    
+                partition_config.distances.clear();
+                while (getline(f, s, ':')) {
+                        partition_config.distances.push_back(stoi(s));
+                }       
+        }
+
+        if(online_distances->count > 0) {
+                partition_config.distance_construction_algorithm = DIST_CONST_HIERARCHY_ONLINE;
         }
 
         if(filename_output->count > 0) {
