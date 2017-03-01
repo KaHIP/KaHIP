@@ -143,9 +143,7 @@ int main(int argn, char **argv) {
                 } endfor
 
                 if(!power_of_two ) {
-                       t.restart();
-
-
+                        t.restart();
                         mapping_algorithms ma;
                         if( partition_config.distance_construction_algorithm != DIST_CONST_HIERARCHY_ONLINE) {
                                 normal_matrix D(partition_config.k, partition_config.k);
@@ -186,10 +184,7 @@ int main(int argn, char **argv) {
                         G.setPartitionIndex(node, perm_rank[G.getPartitionIndex(node)]);
                 } endfor
         }
-
-
         // ******************************* done partitioning *****************************************       
-
         // output some information about the partition that we have computed 
         std::cout << "cut \t\t"         << qm.edge_cut(G)                 << std::endl;
         std::cout << "finalobjective  " << qm.edge_cut(G)                 << std::endl;

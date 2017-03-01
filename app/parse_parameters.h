@@ -25,6 +25,7 @@
 #define PARSE_PARAMETERS_GPJMGSM8
 
 #include <omp.h>
+#include <sstream>
 #include "configuration.h"
 
 int parse_parameters(int argn, char **argv, 

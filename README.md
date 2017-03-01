@@ -1,4 +1,4 @@
-KaHIP v2.0 (prerelease)
+KaHIP v2.0 (prerelease, beta)
 =====
 
 The graph partitioning framework KaHIP -- Karlsruhe High Quality Partitioning.
@@ -10,7 +10,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 *ParHIP (Parallel High Quality Partitioning):* Our distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks.
 
-*Mapping Algorithms:* Our new algorithms to map the blocks onto processors to minimize overall communication time based on hierarchical partitionings of the task graph and fast local search algorithms.(not integrated yet)
+*Mapping Algorithms:* Our new algorithms to map the blocks onto processors to minimize overall communication time based on hierarchical partitionings of the task graph and fast local search algorithms.
 
 
 ## Main project site:
