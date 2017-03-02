@@ -201,7 +201,18 @@ public:
 
         friend class ghost_node_communication;
 
-        parallel_graph_access( ) { parallel_graph_access( MPI_COMM_WORLD ); };
+        parallel_graph_access( ) : m_num_local_nodes(0), 
+                                     from(0), 
+                                     to(0),
+                                     m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL)  { 
+                                             m_communicator = MPI_COMM_WORLD;
+                                             MPI_Comm_rank( m_communicator, &rank);
+                                             MPI_Comm_size( m_communicator, &size);
+
+                                             m_gnc = new ghost_node_communication(m_communicator);
+                                             m_gnc->setGraphReference(this);
+                                     };
+
         parallel_graph_access( MPI_Comm communicator );
 
         virtual ~parallel_graph_access();
