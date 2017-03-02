@@ -37,12 +37,11 @@
 #include "random_functions.h"
 
 parallel_mh_async::parallel_mh_async() : MASTER(0), m_time_limit(0) {
-        m_communicator          = MPI_COMM_WORLD;
         m_best_global_objective = std::numeric_limits<EdgeWeight>::max();
         m_best_cycle_objective  = std::numeric_limits<EdgeWeight>::max();
         m_rounds                = 0;
         m_termination           = false;
-        m_communicator          = communicator;
+        m_communicator          = MPI_COMM_WORLD;
         MPI_Comm_rank( m_communicator, &m_rank);
         MPI_Comm_size( m_communicator, &m_size);
 }
