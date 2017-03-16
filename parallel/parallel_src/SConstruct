@@ -113,20 +113,39 @@ else:
 #
 env.Append(CXXFLAGS = '-fopenmp')
 # Apply variant specific settings.
-if env['variant'] == 'optimized':
-  env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x -Wall -Wno-literal-suffix -ffast-math -Wno-unused-result')
-  env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -ffast-math -Wno-unused-result')
-elif env['variant'] == 'optimized_nooutput':
-  # A little bit more output on the console
-  env.Append(CXXFLAGS = ' -DNDEBUG -DNOOUTPUT -funroll-loops -Wall -fno-stack-limit -O3 -std=c++0x -ffast-math')
-  env.Append(CCFLAGS  = '-O3  -DNDEBUG -DNOOUTPUT -DKAFFPAOUTPUT -ffast-math')
-elif env['variant'] == 'debug':
-  # A little bit more output on the console
-  env.Append(CXXFLAGS = '-Wall -fno-stack-limit -g -pg -std=c++0x')
-  env.Append(CCFLAGS  = '-g -pg  -std=c++0x')
+#
+
+if "clang" in env['CC'] or "clang" in env['CXX']:
+        if env['variant'] == 'optimized':
+                  env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops  -O3 -std=c++0x -Wall -Wno-literal-suffix -ffast-math -Wno-unused-result')
+                  env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -ffast-math -Wno-unused-result')
+        elif env['variant'] == 'optimized_nooutput':
+          # A little bit more output on the console
+          env.Append(CXXFLAGS = ' -DNDEBUG -DNOOUTPUT -funroll-loops -Wall -O3 -std=c++0x -ffast-math')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -DNOOUTPUT -DKAFFPAOUTPUT -ffast-math')
+        elif env['variant'] == 'debug':
+          # A little bit more output on the console
+          env.Append(CXXFLAGS = '-Wall -g -pg -std=c++0x')
+          env.Append(CCFLAGS  = '-g -pg  -std=c++0x')
+        else:
+          env.Append(CXXFLAGS = ' -DNDEBUG -Wall -funroll-loops -O3')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops  ')
+
 else:
-  env.Append(CXXFLAGS = ' -DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3')
-  env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops  ')
+        if env['variant'] == 'optimized':
+          env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x -Wall -Wno-literal-suffix -ffast-math -Wno-unused-result')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -ffast-math -Wno-unused-result')
+        elif env['variant'] == 'optimized_nooutput':
+          # A little bit more output on the console
+          env.Append(CXXFLAGS = ' -DNDEBUG -DNOOUTPUT -funroll-loops -Wall -fno-stack-limit -O3 -std=c++0x -ffast-math')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -DNOOUTPUT -DKAFFPAOUTPUT -ffast-math')
+        elif env['variant'] == 'debug':
+          # A little bit more output on the console
+          env.Append(CXXFLAGS = '-Wall -fno-stack-limit -g -pg -std=c++0x')
+          env.Append(CCFLAGS  = '-g -pg  -std=c++0x')
+        else:
+          env.Append(CXXFLAGS = ' -DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops  ')
 
 # Execute the SConscript.
 SConscript('SConscript', exports=['env'],variant_dir=env['variant'], duplicate=False)

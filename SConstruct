@@ -112,20 +112,36 @@ else:
 #
 #
 env.Append(CXXFLAGS = '-fopenmp')
-# Apply variant specific settings.
-if env['variant'] == 'optimized':
-  env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x')
-  env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -std=c++0x')
-elif env['variant'] == 'optimized_output':
-  # A little bit more output on the console
-  env.Append(CXXFLAGS = ' -DNDEBUG -funroll-loops -Wall -fno-stack-limit -O3 -std=c++0x')
-  env.Append(CCFLAGS  = '-O3  -DNDEBUG -DKAFFPAOUTPUT  -std=c++0x')
+
+if "clang" in env['CC'] or "clang" in env['CXX']:
+        if env['variant'] == 'optimized':
+          env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops -O3 -std=c++0x')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -std=c++0x')
+        elif env['variant'] == 'optimized_output':
+          # A little bit more output on the console
+          env.Append(CXXFLAGS = ' -DNDEBUG -funroll-loops -Wall -O3 -std=c++0x')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -DKAFFPAOUTPUT  -std=c++0x')
+        else:
+          env.Append(CXXFLAGS = ' -DNDEBUG -Wall -funroll-loops -O3 -std=c++0x')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -std=c++0x ')
+          if SYSTEM != 'Darwin':
+                env.Append(CXXFLAGS = '-march=native')
+                env.Append(CCFLAGS  = '-march=native')
+
 else:
-  env.Append(CXXFLAGS = ' -DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x')
-  env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -std=c++0x ')
-  if SYSTEM != 'Darwin':
-        env.Append(CXXFLAGS = '-march=native')
-        env.Append(CCFLAGS  = '-march=native')
+        if env['variant'] == 'optimized':
+          env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -std=c++0x')
+        elif env['variant'] == 'optimized_output':
+          # A little bit more output on the console
+          env.Append(CXXFLAGS = ' -DNDEBUG -funroll-loops -Wall -fno-stack-limit -O3 -std=c++0x')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -DKAFFPAOUTPUT  -std=c++0x')
+        else:
+          env.Append(CXXFLAGS = ' -DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -std=c++0x ')
+          if SYSTEM != 'Darwin':
+                env.Append(CXXFLAGS = '-march=native')
+                env.Append(CCFLAGS  = '-march=native')
 
 # Execute the SConscript.
 SConscript('SConscript', exports=['env'],variant_dir=env['variant'], duplicate=False)
