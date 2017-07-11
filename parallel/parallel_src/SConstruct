@@ -133,12 +133,12 @@ if "clang" in env['CC'] or "clang" in env['CXX']:
 
 else:
         if env['variant'] == 'optimized':
-          env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x -Wall -Wno-literal-suffix -ffast-math -Wno-unused-result')
-          env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -ffast-math -Wno-unused-result')
+          env.Append(CXXFLAGS = '-DNDEBUG -Wall -funroll-loops  -fno-stack-limit -O3 -std=c++0x -Wall -Wno-literal-suffix -ffast-math -Wno-unused-result -fpermissive')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -funroll-loops -ffast-math -Wno-unused-result -fpermissive')
         elif env['variant'] == 'optimized_nooutput':
           # A little bit more output on the console
-          env.Append(CXXFLAGS = ' -DNDEBUG -DNOOUTPUT -funroll-loops -Wall -fno-stack-limit -O3 -std=c++0x -ffast-math')
-          env.Append(CCFLAGS  = '-O3  -DNDEBUG -DNOOUTPUT -DKAFFPAOUTPUT -ffast-math')
+          env.Append(CXXFLAGS = ' -DNDEBUG -DNOOUTPUT -funroll-loops -Wall -fno-stack-limit -O3 -std=c++0x -ffast-math -fpermissive')
+          env.Append(CCFLAGS  = '-O3  -DNDEBUG -DNOOUTPUT -DKAFFPAOUTPUT -ffast-math -fpermissive')
         elif env['variant'] == 'debug':
           # A little bit more output on the console
           env.Append(CXXFLAGS = '-Wall -fno-stack-limit -g -pg -std=c++0x')
