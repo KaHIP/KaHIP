@@ -148,7 +148,7 @@ void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig 
                if(num_blocks_rhs > 1) {
                        rec_config.k = num_blocks_rhs;
                        rec_config.largest_graph_weight = weight_rhs_block;
-                       rec_config.work_load            = weight_lhs_block;
+                       rec_config.work_load            = weight_rhs_block;
                        perform_recursive_partitioning_internal( rec_config, extracted_block_rhs, new_lb_rhs, ub);
 
                        forall_nodes(extracted_block_rhs, node) {
