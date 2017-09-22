@@ -58,7 +58,7 @@ void dummy_operations::run_collective_dummy_operations() {
                 MPI_Comm_rank( MPI_COMM_WORLD, &x);
                 
                 int y = 0;
-                MPI_Allreduce(&x, &y, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD);
+                MPI_Allreduce(&x, &y, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
         }
 
         // Dummy Prefix Sum
@@ -66,7 +66,7 @@ void dummy_operations::run_collective_dummy_operations() {
                 int x  = 1;
                 int y  = 0;
 
-                MPI_Scan(&x, &y, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD); 
+                MPI_Scan(&x, &y, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD); 
         }
 
         // Run Alltoallv.
@@ -80,8 +80,8 @@ void dummy_operations::run_collective_dummy_operations() {
                 for (int i = 0, iend = sdispls.size(); i < iend; ++i) {
                         sdispls[i] = rdispls[i] = i;
                 }
-                MPI_Alltoallv(&snd[0], &scounts[0], &sdispls[0], MPI_INTEGER,
-                              &rcv[0], &rcounts[0], &rdispls[0], MPI_INTEGER, MPI_COMM_WORLD);
+                MPI_Alltoallv(&snd[0], &scounts[0], &sdispls[0], MPI_INT,
+                              &rcv[0], &rcounts[0], &rdispls[0], MPI_INT, MPI_COMM_WORLD);
         }
         
 
