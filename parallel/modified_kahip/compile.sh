@@ -1,20 +1,20 @@
-#!/bin/bash
+#!/bin/sh
 
-rm -rf deploy
-NCORES=4
-unamestr=`uname`
-if [[ "$unamestr" == "Linux" ]]; then
-        NCORES=`grep -c ^processor /proc/cpuinfo`
-fi
+# Compile using all cores
+case "$(uname)" in
+    Linux)  NCORES=$(grep -c ^processor /proc/cpuinfo);;
+    Darwin) NCORES=$(sysctl -n hw.ncpu) ;;
+    *)      NCORES=4 ;;
+esac
 
-if [[ "$unamestr" == "Darwin" ]]; then
-        NCORES=`sysctl -n hw.ncpu`
-fi
+echo "compile with $NCORES cores"
+
 scons program=library variant=optimized -j $NCORES
 
+rm -rf deploy
 mkdir deploy
-cp ./optimized/interface/lib* deploy/
-cp ./interface/kaHIP_interface.h deploy/
+cp ./optimized/interface/lib* deploy
+cp ./interface/kaHIP_interface.h deploy
 
 rm -rf ./optimized
 rm config.log

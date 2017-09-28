@@ -1,12 +1,17 @@
-#!/bin/bash
+#!/bin/sh
 
-
-scons program=kaffpa variant=optimized -j 4 -c 
-scons program=kaffpaE variant=optimized -j 4 -c 
-scons program=partition_to_vertex_separator variant=optimized -j 4 -c
-scons program=library variant=optimized -j 4 -c
-scons program=graphchecker variant=optimized -j 4 -c
-scons program=label_propagation variant=optimized -j 4 -c
+NCORES=4
+for program in \
+    kaffpa \
+    kaffpaE \
+    partition_to_vertex_separator \
+    library \
+    graphchecker \
+    label_propagation \
+    ;
+do
+    scons program=$program variant=optimized -c -j $NCORES
+done
 
 rm -rf deploy
 rm -rf optimized
