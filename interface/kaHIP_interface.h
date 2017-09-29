@@ -1,5 +1,5 @@
 /******************************************************************************
- * kaffpa_interface.h 
+ * kaffpa_interface.h
  *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
@@ -26,6 +26,35 @@
 
 #ifdef __cplusplus
 
+#include <string>
+#include <map>
+#include <vector>
+#define KAFFPA_CPP_INTERFACE
+
+// same data structures as in metis
+// edgecut and part are output parameters
+// part has to be an array of n ints
+//
+// sizing may contain "hierarchy" or "distance" parameters
+//
+void kaffpa_cpp
+(
+    int* n,
+    int* vwgt,
+    int* xadj,
+    int* adjcwgt,
+    int* adjncy,
+    int* nparts,
+    double* imbalance,
+    bool suppress_output,
+    int seed,
+    int mode,
+    int* edgecut,
+    int* part,
+    std::map<std::string, std::vector<int>> sizing = std::map<std::string, std::vector<int>>()
+);
+
+
 extern "C"
 {
 #endif
@@ -37,24 +66,24 @@ const int FASTSOCIAL     = 3;
 const int ECOSOCIAL      = 4;
 const int STRONGSOCIAL   = 5;
 
-// same data structures as in metis 
+// same data structures as in metis
 // edgecut and part are output parameters
 // part has to be an array of n ints
-void kaffpa(int* n, int* vwgt, int* xadj, 
-                   int* adjcwgt, int* adjncy, int* nparts, 
-                   double* imbalance,  bool suppress_output, int seed, int mode, 
+void kaffpa(int* n, int* vwgt, int* xadj,
+                   int* adjcwgt, int* adjncy, int* nparts,
+                   double* imbalance,  bool suppress_output, int seed, int mode,
                    int* edgecut, int* part);
 
 // balance constraint on nodes and edges
-void kaffpa_balance_NE(int* n, int* vwgt, int* xadj, 
-                int* adjcwgt, int* adjncy, int* nparts, 
+void kaffpa_balance_NE(int* n, int* vwgt, int* xadj,
+                int* adjcwgt, int* adjncy, int* nparts,
                 double* imbalance,  bool suppress_output, int seed, int mode,
                 int* edgecut, int* part);
 
-void node_separator(int* n, int* vwgt, int* xadj, 
-                    int* adjcwgt, int* adjncy, int* nparts, 
+void node_separator(int* n, int* vwgt, int* xadj,
+                    int* adjcwgt, int* adjncy, int* nparts,
                     double* imbalance,  bool suppress_output, int seed, int mode,
-                    int* num_separator_vertices, int** separator); 
+                    int* num_separator_vertices, int** separator);
 
 #ifdef __cplusplus
 }

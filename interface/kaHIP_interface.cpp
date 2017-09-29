@@ -104,7 +104,109 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
         cout.rdbuf(backup);
 }
 
-void kaffpa(int* n, 
+
+void kaffpa_cpp
+(
+    int* n,
+    int* vwgt,
+    int* xadj,
+    int* adjcwgt,
+    int* adjncy,
+    int* nparts,
+    double* imbalance,
+    bool suppress_output,
+    int seed,
+    int mode,
+    int* edgecut,
+    int* part,
+    std::map<std::string, std::vector<int>> sizing
+)
+{
+    configuration cfg;
+    PartitionConfig partition_config;
+    partition_config.k = *nparts;
+
+    switch( mode ) {
+        case FAST:
+            cfg.fast(partition_config);
+            break;
+        case ECO:
+            cfg.eco(partition_config);
+            break;
+        case STRONG:
+            cfg.strong(partition_config);
+            break;
+        case FASTSOCIAL:
+            cfg.fastsocial(partition_config);
+            break;
+        case ECOSOCIAL:
+            cfg.ecosocial(partition_config);
+            break;
+        case STRONGSOCIAL:
+            cfg.strongsocial(partition_config);
+            break;
+        default:
+            cfg.eco(partition_config);
+            break;
+    }
+
+    std::map<std::string, std::vector<int>>::const_iterator iter;
+
+    iter = sizing.find("hierarchy");
+    if (iter != sizing.end())
+    {
+        partition_config.group_sizes = iter->second;
+
+        // Verify sizing
+        PartitionID expected_k = 1;
+
+        for ( unsigned int i = 0; i < partition_config.group_sizes.size(); ++i) {
+            expected_k *= partition_config.group_sizes[i];
+        }
+
+        // Could throw or something, but instead we will simply ignore invalid group sizing
+        if (expected_k != partition_config.k)
+        {
+            std::cout
+                <<  "number of processors defined through specified hierarchy does not match k!\n"
+                <<  "please specify k as " << expected_k << "\nignoring \"hierarchy\" sizing" << std::endl;
+
+            partition_config.group_sizes.clear();
+        }
+
+        // Feedback for debugging that the information has been passed
+        #if 1
+        std::cout<< "hierarchy-sizing:";
+        for (unsigned int i = 0; i < partition_config.group_sizes.size(); ++i)
+        {
+            std::cout<< " " << partition_config.group_sizes[i];
+        }
+        std::cout<< std::endl;
+        #endif
+    }
+
+    iter = sizing.find("distance");
+    if (iter != sizing.end())
+    {
+        partition_config.distances = iter->second;
+
+        // Feedback for debugging that the information has been passed
+        #if 1
+        std::cout<< "distance-param:";
+        for (unsigned int i = 0; i < partition_config.distances.size(); ++i)
+        {
+            std::cout<< " " << partition_config.distances[i];
+        }
+        std::cout << std::endl;
+        #endif
+    }
+
+    partition_config.seed = seed;
+    internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
+}
+
+
+void kaffpa(int* n,
                    int* vwgt, 
                    int* xadj, 
                    int* adjcwgt, 
