@@ -36,16 +36,20 @@
 
 using namespace std;
 
-void internal_build_graph( PartitionConfig & partition_config, 
-                           int* n, 
-                           int* vwgt, 
-                           int* xadj, 
-                           int* adjcwgt, 
-                           int* adjncy,
-                           graph_access & G) {
-        G.build_from_metis(*n, xadj, adjncy); 
-        G.set_partition_count(partition_config.k); 
- 
+void internal_build_graph
+(
+    PartitionConfig & partition_config,
+    const int n,
+    const int* vwgt,
+    const int* xadj,
+    const int* adjcwgt,
+    const int* adjncy,
+    graph_access & G
+)
+{
+        G.build_from_metis(n, xadj, adjncy);
+        G.set_partition_count(partition_config.k);
+
         srand(partition_config.seed);
         random_functions::setSeed(partition_config.seed);
        
@@ -73,18 +77,20 @@ void internal_build_graph( PartitionConfig & partition_config,
 }
 
 
-void internal_kaffpa_call(PartitionConfig & partition_config, 
-                          bool suppress_output, 
-                          int* n, 
-                          int* vwgt, 
-                          int* xadj, 
-                          int* adjcwgt, 
-                          int* adjncy, 
-                          int* nparts, 
-                          double* imbalance, 
-                          int* edgecut, 
-                          int* part) {
-
+void internal_kaffpa_call
+(
+    PartitionConfig & partition_config,
+    bool suppress_output,
+    const int n,
+    const int* vwgt,
+    const int* xadj,
+    const int* adjcwgt,
+    const int* adjncy,
+    const double imbalance,
+    int* edgecut,
+    int* part
+)
+{
         streambuf* backup = cout.rdbuf();
         ofstream ofs;
         ofs.open("/dev/null");
@@ -92,7 +98,7 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
                cout.rdbuf(ofs.rdbuf()); 
         }
 
-        partition_config.imbalance = 100*(*imbalance);
+        partition_config.imbalance = 100*(imbalance);
         graph_access G;     
         internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
 
@@ -115,18 +121,22 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
 
 
 
-void kaffpa(int* n, 
-                   int* vwgt, 
-                   int* xadj, 
-                   int* adjcwgt, 
-                   int* adjncy, 
-                   int* nparts, 
-                   double* imbalance, 
-                   bool suppress_output, 
-                   int seed,
-                   int mode,
-                   int* edgecut, 
-                   int* part) {
+void kaffpa
+(
+    const int* n,
+    const int* vwgt,
+    const int* xadj,
+    const int* adjcwgt,
+    const int* adjncy,
+    const int* nparts,
+    const double* imbalance,
+    bool suppress_output,
+    int seed,
+    int mode,
+    int* edgecut,
+    int* part
+)
+{
         configuration cfg;
         PartitionConfig partition_config;
         partition_config.k = *nparts;
@@ -157,21 +167,37 @@ void kaffpa(int* n,
         }
 
         partition_config.seed = seed;
-        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
+        internal_kaffpa_call
+        (
+            partition_config,
+            suppress_output,
+            *n,
+            vwgt,
+            xadj,
+            adjcwgt,
+            adjncy,
+            *imbalance,
+            edgecut,
+            part
+        );
 }
 
 
-void internal_nodeseparator_call(PartitionConfig & partition_config, 
-                          bool suppress_output, 
-                          int* n, 
-                          int* vwgt, 
-                          int* xadj, 
-                          int* adjcwgt, 
-                          int* adjncy, 
-                          int* nparts, 
-                          double* imbalance, 
-                          int* num_nodeseparator_vertices, 
-                          int** separator) {
+void internal_nodeseparator_call
+(
+    PartitionConfig & partition_config,
+    bool suppress_output,
+    const int n,
+    const int* vwgt,
+    const int* xadj,
+    const int* adjcwgt,
+    const int* adjncy,
+    const double imbalance,
+    int mode,
+    int* num_nodeseparator_vertices,
+    int** separator
+)
+{
 
         //first perform std partitioning using KaFFPa
         streambuf* backup = cout.rdbuf();
@@ -181,8 +207,9 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
                cout.rdbuf(ofs.rdbuf()); 
         }
 
-        partition_config.imbalance = 100*(*imbalance);
-        graph_access G;     
+        // partition_config.k : already set by the caller
+        partition_config.imbalance = 100*(imbalance);
+        graph_access G;
         internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
 
         
@@ -209,18 +236,22 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
 }
 
 
-void node_separator(int* n, 
-                          int* vwgt, 
-                          int* xadj, 
-                          int* adjcwgt, 
-                          int* adjncy, 
-                          int* nparts, 
-                          double* imbalance, 
-                          bool suppress_output, 
-                          int seed,
-                          int mode,
-                          int* num_separator_vertices, 
-                          int** separator) {
+void node_separator
+(
+    const int* n,
+    const int* vwgt,
+    const int* xadj,
+    const int* adjcwgt,
+    const int* adjncy,
+    const int* nparts,
+    const double* imbalance,
+    bool suppress_output,
+    int seed,
+    int mode,
+    int* num_separator_vertices,
+    int** separator
+)
+{
         configuration cfg;
         PartitionConfig partition_config;
         partition_config.k = *nparts;
@@ -250,27 +281,43 @@ void node_separator(int* n,
         }
         partition_config.seed = seed;
 
-        internal_nodeseparator_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, num_separator_vertices, separator);
+        internal_nodeseparator_call
+        (
+            partition_config,
+            suppress_output,
+            *n,
+            vwgt,
+            xadj,
+            adjcwgt,
+            adjncy,
+            *imbalance,
+            mode,
+            num_separator_vertices,
+            separator
+        );
 }
 
 
-void kaffpaE(int* n, 
-                   int* vwgt, 
-                   int* xadj, 
-                   int* adjcwgt, 
-                   int* adjncy, 
-                   int* nparts, 
-                   double* imbalance, 
-                   bool suppress_output, 
-                   bool graph_partitioned, 
-                   int time_limit,
-                   int seed,
-                   int mode, // 0 == strong, 1 == eco, 2 == fast
-                   MPI_Comm communicator, 
-                   int* edgecut, 
-                   double* balance,
-                   int* part) {
-
+void kaffpaE
+(
+    const int* n,
+    const int* vwgt,
+    const int* xadj,
+    const int* adjcwgt,
+    const int* adjncy,
+    const int* nparts,
+    const double* imbalance,
+    bool suppress_output,
+    bool graph_partitioned,
+    int time_limit,
+    int seed,
+    int mode, // 0 == strong, 1 == eco, 2 == fast
+    MPI_Comm communicator,
+    int* edgecut,
+    double* balance,
+    int* part
+)
+{
         configuration cfg;
         PartitionConfig partition_config;
         partition_config.k = *nparts;
@@ -311,7 +358,7 @@ void kaffpaE(int* n,
         partition_config.kabapE = false;
 
         graph_access G;     
-        internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
+        internal_build_graph( partition_config, *n, vwgt, xadj, adjcwgt, adjncy, G);
 
         partition_config.kway_adaptive_limits_beta  = log(partition_config.largest_graph_weight);
 

@@ -218,8 +218,8 @@ class graph_access {
                 int* UNSAFE_metis_style_vwgt_array();
                 int* UNSAFE_metis_style_adjwgt_array();
 
-                int build_from_metis(int n, int* xadj, int* adjncy);
-                int build_from_metis_weighted(int n, int* xadj, int* adjncy, int * vwgt, int* adjwgt);
+                int build_from_metis(int n, const int* xadj, const int* adjncy);
+                int build_from_metis_weighted(int n, const int* xadj, const int* adjncy, const int* vwgt, const int* adjwgt);
 
                 //void set_node_queue_index(NodeID node, Count queue_index); 
                 //Count get_node_queue_index(NodeID node);
@@ -447,7 +447,7 @@ inline void graph_access::set_partition_count(PartitionID count) {
         m_partition_count = count;
 }
 
-inline int graph_access::build_from_metis(int n, int* xadj, int* adjncy) {
+inline int graph_access::build_from_metis(int n, const int* xadj, const int* adjncy) {
         graphref = new basicGraph();
         start_construction(n, xadj[n]);
 
@@ -467,7 +467,7 @@ inline int graph_access::build_from_metis(int n, int* xadj, int* adjncy) {
         return 0;
 }
 
-inline int graph_access::build_from_metis_weighted(int n, int* xadj, int* adjncy, int * vwgt, int* adjwgt) {
+inline int graph_access::build_from_metis_weighted(int n, const int* xadj, const int* adjncy, const int* vwgt, const int* adjwgt) {
         graphref = new basicGraph();
         start_construction(n, xadj[n]);
 
