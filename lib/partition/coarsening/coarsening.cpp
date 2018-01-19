@@ -79,7 +79,8 @@ void coarsening::perform_coarsening(const PartitionConfig & partition_config, gr
                 NodePermutationMap permutation;
 
                 coarsening_config.configure_coarsening(copy_of_partition_config, &edge_matcher, level);
-                rating.rate(*finer, level);
+                if( partition_config.matching_type != CLUSTER_COARSENING) 
+                        rating.rate(*finer, level);
 
                 edge_matcher->match(copy_of_partition_config, *finer, edge_matching, 
                                     *coarse_mapping, no_of_coarser_vertices, permutation);
