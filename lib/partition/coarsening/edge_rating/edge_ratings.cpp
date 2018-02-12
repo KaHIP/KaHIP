@@ -47,7 +47,6 @@ void edge_ratings::rate(graph_access & G, unsigned level) {
                         rate_inner_outer(G);
 
         } else if(partition_config.matching_type != MATCHING_RANDOM) {
-                std::cout <<  "computing rating"  << std::endl;
                 switch(partition_config.edge_rating) {
                         case EXPANSIONSTAR:
                                 rate_expansion_star(G);
