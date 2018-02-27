@@ -87,7 +87,6 @@ int multitry_kway_fm::perform_refinement_around_parts(PartitionConfig & config, 
                                                       unsigned alpha, 
                                                       PartitionID & lhs, PartitionID & rhs, 
                                                       std::unordered_map<PartitionID, PartitionID> & touched_blocks) {
-        //commons = kway_graph_refinement_commons::getInstance(config);
         if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
 
         unsigned tmp_alpha                = config.kway_adaptive_limits_alpha;
@@ -129,7 +128,6 @@ int multitry_kway_fm::start_more_locallized_search(PartitionConfig & config, gra
                                                    std::vector<NodeID> & todolist) {
 
         random_functions::permutate_vector_good(todolist, false);
-        //commons = kway_graph_refinement_commons::getInstance(config);
         if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
         
         kway_graph_refinement_core refinement_core;
