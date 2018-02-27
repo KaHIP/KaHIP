@@ -34,7 +34,7 @@
 
 class greedy_neg_cycle {
 public:
-        greedy_neg_cycle();
+        greedy_neg_cycle( PartitionConfig & partition_config );
         virtual ~greedy_neg_cycle();
 
         EdgeWeight shortest_path_rebalance(PartitionConfig & partition_config, 
@@ -60,6 +60,7 @@ private:
                              edge_movements & em); 
 
         problem_factory m_pf;
+        kway_graph_refinement_commons* commons;
 
 };
 
@@ -185,7 +186,6 @@ inline void greedy_neg_cycle::init_gains_new( PartitionConfig & partition_config
                                               complete_boundary & boundary, 
                                               edge_movements & em) {
 
-        kway_graph_refinement_commons* commons = kway_graph_refinement_commons::getInstance( partition_config );
         std::vector<bool>   blocked(G.number_of_nodes(), false);
         std::vector<NodeID> movements(G.number_of_edges(), 0);
 
@@ -250,7 +250,6 @@ inline void greedy_neg_cycle::init_gains( PartitionConfig & partition_config,
                                           complete_boundary & boundary, 
                                           edge_movements & em) {
 
-        kway_graph_refinement_commons* commons = kway_graph_refinement_commons::getInstance( partition_config );
         std::vector<bool>   blocked(G.number_of_nodes(), false);
         std::vector<NodeID> movements(G.number_of_edges(), 0);
         NodeID max_gainer;

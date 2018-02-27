@@ -31,17 +31,18 @@
 #include "uncoarsening/refinement/quotient_graph_refinement/2way_fm_refinement/vertex_moved_hashtable.h"
 
 multitry_kway_fm::multitry_kway_fm() {
+        commons = NULL;
 }
 
 multitry_kway_fm::~multitry_kway_fm() {
-
+        if( commons != NULL) delete commons;
 }
 
 int multitry_kway_fm::perform_refinement(PartitionConfig & config, graph_access & G, 
                                          complete_boundary & boundary, unsigned rounds, 
                                          bool init_neighbors, unsigned alpha) {
         
-        commons = kway_graph_refinement_commons::getInstance(config);
+        if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
         
         unsigned tmp_alpha                = config.kway_adaptive_limits_alpha;
         KWayStopRule tmp_stop             = config.kway_stop_rule;
@@ -86,7 +87,8 @@ int multitry_kway_fm::perform_refinement_around_parts(PartitionConfig & config, 
                                                       unsigned alpha, 
                                                       PartitionID & lhs, PartitionID & rhs, 
                                                       std::unordered_map<PartitionID, PartitionID> & touched_blocks) {
-        commons = kway_graph_refinement_commons::getInstance(config);
+        //commons = kway_graph_refinement_commons::getInstance(config);
+        if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
 
         unsigned tmp_alpha                = config.kway_adaptive_limits_alpha;
         KWayStopRule tmp_stop             = config.kway_stop_rule;
@@ -127,7 +129,8 @@ int multitry_kway_fm::start_more_locallized_search(PartitionConfig & config, gra
                                                    std::vector<NodeID> & todolist) {
 
         random_functions::permutate_vector_good(todolist, false);
-        commons = kway_graph_refinement_commons::getInstance(config);
+        //commons = kway_graph_refinement_commons::getInstance(config);
+        if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
         
         kway_graph_refinement_core refinement_core;
         int local_step_limit = 0;

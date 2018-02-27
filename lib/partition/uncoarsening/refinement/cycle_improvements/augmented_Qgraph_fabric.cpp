@@ -270,7 +270,7 @@ bool augmented_Qgraph_fabric::construct_local_searches_on_qgraph_edge( Partition
                 return false; 
         }
 
-        commons = kway_graph_refinement_commons::getInstance(config);
+        //commons = kway_graph_refinement_commons::getInstance(config);
         for( unsigned i = 0; i < 1; i++) {
 
                 if(lhs_boundary.size() == 0) return false;
@@ -307,7 +307,7 @@ void augmented_Qgraph_fabric::directed_more_locallized_search(PartitionConfig & 
                                                    PartitionID & lhs, PartitionID & rhs,
                                                    NodeID start_node, unsigned & number_of_swaps, pairwise_local_search & pls) {
 
-        commons = kway_graph_refinement_commons::getInstance(config);
+        //commons = kway_graph_refinement_commons::getInstance(config);
         EdgeWeight max_degree = G.getMaxDegree();
         refinement_pq* queue  = new bucket_pq(max_degree);
 
@@ -385,7 +385,7 @@ void augmented_Qgraph_fabric::more_locallized_search(PartitionConfig & config, g
                                                    PartitionID & lhs, PartitionID & rhs,
                                                    NodeID start_node, unsigned & number_of_swaps, pairwise_local_search & pls) {
 
-        commons = kway_graph_refinement_commons::getInstance(config);
+        //commons = kway_graph_refinement_commons::getInstance(config);
         refinement_pq* queue_lhs = NULL;
         refinement_pq* queue_rhs = NULL;
         EdgeWeight max_degree = G.getMaxDegree();

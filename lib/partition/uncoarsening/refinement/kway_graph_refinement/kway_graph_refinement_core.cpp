@@ -29,11 +29,11 @@
 #include "quality_metrics.h"
 #include "random_functions.h"
 
-kway_graph_refinement_core::kway_graph_refinement_core() {
+kway_graph_refinement_core::kway_graph_refinement_core() : commons (NULL){
 }
 
 kway_graph_refinement_core::~kway_graph_refinement_core() {
-
+        if( commons != NULL)  delete commons;
 }
 EdgeWeight kway_graph_refinement_core::single_kway_refinement_round(PartitionConfig & config, 
                                                                     graph_access & G, 
@@ -68,7 +68,8 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
                                                                     bool compute_touched_partitions,
                                                                     std::unordered_map<PartitionID, PartitionID> &  touched_blocks) {
 
-        commons = kway_graph_refinement_commons::getInstance(config);
+        if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
+
         refinement_pq* queue = NULL;
         if(config.use_bucket_queues) {
                 EdgeWeight max_degree = G.getMaxDegree();

@@ -45,10 +45,6 @@ class kway_graph_refinement : public refinement {
                                        graph_access & G, 
                                        complete_boundary & boundary,  
                                        boundary_starting_nodes & start_nodes);
-                
-        private:
-                
-                kway_graph_refinement_commons* commons;
 };
 
 #endif /* end of include guard: KWAY_GRAPH_REFINEMENT_PVGY97EW */

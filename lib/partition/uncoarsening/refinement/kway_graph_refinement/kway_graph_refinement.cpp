@@ -33,13 +33,11 @@ kway_graph_refinement::kway_graph_refinement() {
 }
 
 kway_graph_refinement::~kway_graph_refinement() {
-
 }
 
 EdgeWeight kway_graph_refinement::perform_refinement(PartitionConfig & config, graph_access & G, 
                                                      complete_boundary & boundary) {
 
-        commons = kway_graph_refinement_commons::getInstance(config);
         kway_graph_refinement_core refinement_core;
         
         EdgeWeight overall_improvement = 0;

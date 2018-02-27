@@ -79,12 +79,12 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
                           int* edgecut, 
                           int* part) {
 
-        streambuf* backup = cout.rdbuf();
-        ofstream ofs;
-        ofs.open("/dev/null");
-        if(suppress_output) {
-               cout.rdbuf(ofs.rdbuf()); 
-        }
+        //streambuf* backup = cout.rdbuf();
+        //ofstream ofs;
+        //ofs.open("/dev/null");
+        //if(suppress_output) {
+               //cout.rdbuf(ofs.rdbuf()); 
+        //}
 
         partition_config.imbalance = 100*(*imbalance);
         graph_access G;     
@@ -100,8 +100,8 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
         quality_metrics qm;
         *edgecut = qm.edge_cut(G);
 
-        ofs.close();
-        cout.rdbuf(backup);
+        //ofs.close();
+        //cout.rdbuf(backup);
 }
 
 void kaffpa(int* n, 

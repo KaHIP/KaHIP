@@ -34,6 +34,7 @@
 class kway_graph_refinement_commons  {
         public:
 
+                kway_graph_refinement_commons( PartitionConfig & config );
                 virtual ~kway_graph_refinement_commons();
 
                 void init( PartitionConfig & config );
@@ -52,12 +53,9 @@ class kway_graph_refinement_commons  {
                                      EdgeWeight & int_degree,
                                      EdgeWeight & ext_degree);
 
-                static kway_graph_refinement_commons* getInstance( PartitionConfig & config );
-
                 inline unsigned getUnderlyingK();
 
         private:
-                kway_graph_refinement_commons( );
 
                 //for efficient computation of internal and external degrees
                 struct round_struct {
@@ -65,14 +63,9 @@ class kway_graph_refinement_commons  {
                         EdgeWeight local_degree;
                 };
 
-                static 
-                std::vector<kway_graph_refinement_commons*>* m_instances;
                 std::vector<round_struct>                    m_local_degrees;
                 unsigned                                     m_round;
 };
-
-
-
 
 inline unsigned kway_graph_refinement_commons::getUnderlyingK() {
         return m_local_degrees.size();

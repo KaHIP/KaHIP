@@ -58,15 +58,15 @@ void initial_partition_bipartition::initial_partition( const PartitionConfig & c
 	}
 
 
-        std::streambuf* backup = std::cout.rdbuf();
-        std::ofstream ofs;
-        ofs.open("/dev/null");
-        std::cout.rdbuf(ofs.rdbuf()); 
+        //std::streambuf* backup = std::cout.rdbuf();
+        //std::ofstream ofs;
+        //ofs.open("/dev/null");
+        //std::cout.rdbuf(ofs.rdbuf()); 
 
         gp.perform_recursive_partitioning(rec_config, G); 
 
-        ofs.close();
-        std::cout.rdbuf(backup);
+        //ofs.close();
+        //std::cout.rdbuf(backup);
 
         forall_nodes(G, n) {
                 partition_map[n] =  G.getPartitionIndex(n);
