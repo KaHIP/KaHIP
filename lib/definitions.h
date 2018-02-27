@@ -31,6 +31,13 @@
 #include "macros_assertions.h"
 #include "stdio.h"
 
+
+#ifdef ENABLEASSERT 
+        #define EA_ASSERT(x) x
+#else
+        #define EA_ASSERT(x) do {} while (false);
+#endif
+
 // allows us to disable most of the output during partitioning
 #ifdef KAFFPAOUTPUT
         #define PRINT(x) x
