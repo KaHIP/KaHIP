@@ -158,6 +158,8 @@ void parallel_mh_async::initialize(PartitionConfig & working_config, graph_acces
                 MPI_Recv(&population_size, 1, MPI_INT, ROOT, POPSIZE_TAG, m_communicator, &rst); 
         }
 
+        MPI_Barrier(MPI_COMM_WORLD);
+
         population_size = std::max(3, population_size);
         if(working_config.mh_easy_construction) {
                 population_size = std::min(50, population_size);
