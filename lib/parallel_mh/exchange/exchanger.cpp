@@ -224,12 +224,15 @@ void exchanger::push_best( PartitionConfig & config, graph_access & G, populatio
                 } endfor
 
                 int target = rank;
-                while( target == rank && m_allready_send_to[target]) target = random_functions::nextInt(0, size-1);
+                while( m_allready_send_to[target] ) {
+                        //while (target == rank) { // m_allready_send_to[rank] always true
+                                target = random_functions::nextInt(0, size-1);
+                        //}
+                }
 
                 MPI_Request* rq = new MPI_Request;
                 MPI_Isend( partition_map, G.number_of_nodes(), MPI_INT, target, target, m_communicator, rq);
                 
-
                 m_cur_num_pushes++;
 
                 m_request_pointers.push_back( rq );
