@@ -652,8 +652,8 @@ int parallel_graph_io::writeGraphParallelSimple(parallel_graph_access & G,
                 forall_local_nodes(G, node) {
                         forall_out_edges(G, e, node) {
                                 f << (G.getGlobalID(G.getEdgeTarget(e))+1) << " " ;
-                        } endfor 
-                        f <<  std::endl;
+                        } endfor
+                        f <<  "\n";
                 } endfor
 
                 f.close();
@@ -669,7 +669,7 @@ int parallel_graph_io::writeGraphParallelSimple(parallel_graph_access & G,
                                 forall_out_edges(G, e, node) {
                                         f <<  (G.getGlobalID(G.getEdgeTarget(e))+1) << " " ;
                                 } endfor 
-                                f <<  std::endl;
+                                f <<  "\n";
                         } endfor
                         f.close();
                 }
