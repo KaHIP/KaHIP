@@ -40,7 +40,7 @@ int graph_io::writeGraphWeighted(graph_access & G, std::string filename) {
                 forall_out_edges(G, e, node) {
                         f << " " <<   (G.getEdgeTarget(e)+1) <<  " " <<  G.getEdgeWeight(e) ;
                 } endfor 
-                f <<  std::endl;
+                f <<  "\n";
         } endfor
 
         f.close();
@@ -55,7 +55,7 @@ int graph_io::writeGraph(graph_access & G, std::string filename) {
                 forall_out_edges(G, e, node) {
                         f <<   (G.getEdgeTarget(e)+1) << " " ;
                 } endfor 
-                f <<  std::endl;
+                f <<  "\n";
         } endfor
 
         f.close();
@@ -211,7 +211,7 @@ void graph_io::writePartition(graph_access & G, std::string filename) {
         std::cout << "writing partition to " << filename << " ... " << std::endl;
 
         forall_nodes(G, node) {
-                f << G.getPartitionIndex(node) <<  std::endl;
+                f << G.getPartitionIndex(node) <<  "\n";
         } endfor
 
         f.close();
