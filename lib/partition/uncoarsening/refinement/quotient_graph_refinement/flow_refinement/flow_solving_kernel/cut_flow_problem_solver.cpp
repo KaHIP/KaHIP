@@ -145,19 +145,25 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
 
         ////connect source_dummy to outer boundary nodes
         for(unsigned i = 0; i < outer_lhs_boundary.size(); i++) {
-          const NodeID targetID = outer_lhs_boundary[i]; //new id in flow network
-          bool edge_added = false;
+          const NodeID inner_lhs_node = outer_lhs_boundary[i]; //new id in flow network
+          bool source_edge_added = false;
+          bool sink_edge_added = false;
           // FlowType w = 0;
-          forall_out_edges(G, e, new_to_old_ids[targetID]) {
+          forall_out_edges(G, e, new_to_old_ids[inner_lhs_node]) {
             if(G.getPartitionIndex(G.getEdgeTarget(e)) == lhs)  {
               // block of nodes inside the flow problem was set to BOUNDARY_STRIPE_NODE
-              if (!edge_added) {
-                fG.new_edge(source_dummy, targetID, G.getEdgeWeight(e));
-                // w += G.getEdgeWeight(e);
-                edge_added = true;
+              if (!source_edge_added) {
+                fG.new_edge(source_dummy, inner_lhs_node, G.getEdgeWeight(e));
+                source_edge_added = true;
               } else {
                 fG.increaseCapacity(source_dummy, G.getEdgeWeight(e));
-                // w += G.getEdgeWeight(e);
+              }
+            } else if (G.getPartitionIndex(G.getEdgeTarget(e)) == rhs) {
+              if (!sink_edge_added) {
+                fG.new_edge(inner_lhs_node, sink_dummy, G.getEdgeWeight(e));
+                sink_edge_added = true;
+              } else {
+                fG.increaseCapacity(inner_lhs_node, G.getEdgeWeight(e));
               }
             }
           } endfor
@@ -172,19 +178,25 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
 
         ////connect outer boundary nodes to sink_dummy
         for(unsigned i = 0; i < outer_rhs_boundary.size(); i++) {
-          NodeID sourceID = outer_rhs_boundary[i]; //new id in flow network
-          bool edge_added = false;
+          NodeID inner_rhs_node = outer_rhs_boundary[i]; //new id in flow network
+          bool sink_edge_added = false;
+          bool source_edge_added = false;
           // FlowType w = 0;
-          forall_out_edges(G, e, new_to_old_ids[sourceID]) {
+          forall_out_edges(G, e, new_to_old_ids[inner_rhs_node]) {
             if(G.getPartitionIndex(G.getEdgeTarget(e)) == rhs)  {
               // block of nodes inside the flow problem was set to BOUNDARY_STRIPE_NODE
-               if (!edge_added) {
-                 fG.new_edge(sourceID, sink_dummy, G.getEdgeWeight(e));
-                 // w += G.getEdgeWeight(e);
-                 edge_added = true;
+               if (!sink_edge_added) {
+                 fG.new_edge(inner_rhs_node, sink_dummy, G.getEdgeWeight(e));
+                 sink_edge_added = true;
                } else {
-                 fG.increaseCapacity(sourceID, G.getEdgeWeight(e));
-                 // w += G.getEdgeWeight(e);
+                 fG.increaseCapacity(inner_rhs_node, G.getEdgeWeight(e));
+               }
+            } else if(G.getPartitionIndex(G.getEdgeTarget(e)) == lhs)  {
+              if (!source_edge_added) {
+                fG.new_edge(source_dummy, inner_rhs_node, G.getEdgeWeight(e));
+                 sink_edge_added = true;
+               } else {
+                 fG.increaseCapacity(source_dummy, G.getEdgeWeight(e));
                }
             }
           }endfor
