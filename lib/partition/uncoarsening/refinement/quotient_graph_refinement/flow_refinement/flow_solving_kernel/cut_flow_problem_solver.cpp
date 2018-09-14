@@ -109,12 +109,9 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                          lhs, rhs, outer_lhs_boundary, outer_rhs_boundary);
         
         if(outer_lhs_boundary.size() == 0 || outer_rhs_boundary.size() == 0) return false;
-        //+source and target, and dummy nodes decoupling source/target from boundary nodes
-        NodeID n = lhs_boundary_stripe.size() + rhs_boundary_stripe.size() + 4;
+        NodeID n = lhs_boundary_stripe.size() + rhs_boundary_stripe.size() + 2; //+source and target
         fG.start_construction(n);
 
-        NodeID source_dummy = n-4;
-        NodeID sink_dummy = n-3;
         NodeID source = n-2;
         NodeID sink   = n-1;
         idx = 0;
@@ -155,15 +152,15 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
               // block of nodes inside the flow problem was set to BOUNDARY_STRIPE_NODE
               source_flow += G.getEdgeWeight(e);
               if (!source_edge_added) {
-                fG.new_edge(source_dummy, inner_lhs_node, G.getEdgeWeight(e));
+                fG.new_edge(source, inner_lhs_node, G.getEdgeWeight(e));
                 source_edge_added = true;
               } else {
-                fG.increaseCapacity(source_dummy, G.getEdgeWeight(e));
+                fG.increaseCapacity(source, G.getEdgeWeight(e));
               }
             } else if (G.getPartitionIndex(G.getEdgeTarget(e)) == rhs) {
               sink_flow += G.getEdgeWeight(e);
               if (!sink_edge_added) {
-                fG.new_edge(inner_lhs_node, sink_dummy, G.getEdgeWeight(e));
+                fG.new_edge(inner_lhs_node, sink, G.getEdgeWeight(e));
                 sink_edge_added = true;
               } else {
                 fG.increaseCapacity(inner_lhs_node, G.getEdgeWeight(e));
@@ -171,19 +168,19 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
             }
           } endfor
                 //ASSERT
-           if (source_edge_added && fG.getEdgeTarget(source_dummy, fG.get_first_invalid_edge(source_dummy) - 1) != inner_lhs_node) {
+           if (source_edge_added && fG.getEdgeTarget(source, fG.get_first_invalid_edge(source) - 1) != inner_lhs_node) {
              std::cout << "LHS source_dummy -> node inconsistent" << std::endl;
-             std::cout << source_dummy <<  " -> " << inner_lhs_node << std::endl;
+             std::cout << source <<  " -> " << inner_lhs_node << std::endl;
              std::exit(0);
            }
-          if (sink_edge_added && fG.getEdgeTarget(inner_lhs_node, fG.get_first_invalid_edge(inner_lhs_node) - 1) != sink_dummy) {
+          if (sink_edge_added && fG.getEdgeTarget(inner_lhs_node, fG.get_first_invalid_edge(inner_lhs_node) - 1) != sink) {
              std::cout << "LHS node -> sink_dummy inconsistent" << std::endl;
-             std::cout << inner_lhs_node  <<  " -> " << sink_dummy << std::endl;
+             std::cout << inner_lhs_node  <<  " -> " << sink << std::endl;
              std::exit(0);
            }
-           if (source_edge_added && fG.getEdgeCapacity(source_dummy, fG.get_first_invalid_edge(source_dummy) - 1) != source_flow) {
-             std::cout << "error LHS source flow: " << source_dummy
-                       << " " << fG.getEdgeCapacity(source_dummy, fG.get_first_invalid_edge(source_dummy) - 1)
+           if (source_edge_added && fG.getEdgeCapacity(source, fG.get_first_invalid_edge(source) - 1) != source_flow) {
+             std::cout << "error LHS source flow: " << source
+                       << " " << fG.getEdgeCapacity(source, fG.get_first_invalid_edge(source) - 1)
                        << " "<< source_flow << std::endl;
              std::exit(0);
            }
@@ -208,7 +205,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
               // block of nodes inside the flow problem was set to BOUNDARY_STRIPE_NODE
               sink_flow += G.getEdgeWeight(e);
                if (!sink_edge_added) {
-                 fG.new_edge(inner_rhs_node, sink_dummy, G.getEdgeWeight(e));
+                 fG.new_edge(inner_rhs_node, sink, G.getEdgeWeight(e));
                  sink_edge_added = true;
                } else {
                  fG.increaseCapacity(inner_rhs_node, G.getEdgeWeight(e));
@@ -216,22 +213,22 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
             } else if(G.getPartitionIndex(G.getEdgeTarget(e)) == lhs)  {
               source_flow += G.getEdgeWeight(e);
               if (!source_edge_added) {
-                fG.new_edge(source_dummy, inner_rhs_node, G.getEdgeWeight(e));
+                fG.new_edge(source, inner_rhs_node, G.getEdgeWeight(e));
                  source_edge_added = true;
                } else {
-                 fG.increaseCapacity(source_dummy, G.getEdgeWeight(e));
+                 fG.increaseCapacity(source, G.getEdgeWeight(e));
                }
             }
           }endfor
           //// ASSERT
-          if (sink_edge_added && fG.getEdgeTarget(inner_rhs_node, fG.get_first_invalid_edge(inner_rhs_node) - 1) != sink_dummy) {
+          if (sink_edge_added && fG.getEdgeTarget(inner_rhs_node, fG.get_first_invalid_edge(inner_rhs_node) - 1) != sink) {
              std::cout << "RHS node -> sink_dummy inconsistent" << std::endl;
-             std::cout << inner_rhs_node <<  " -> " << sink_dummy << std::endl;
+             std::cout << inner_rhs_node <<  " -> " << sink << std::endl;
              std::exit(0);
            }
-          if (source_edge_added && fG.getEdgeTarget(source_dummy, fG.get_first_invalid_edge(source_dummy) - 1) != inner_rhs_node) {
+          if (source_edge_added && fG.getEdgeTarget(source, fG.get_first_invalid_edge(source) - 1) != inner_rhs_node) {
              std::cout << "RHS source_dummy -> node inconsistent" << std::endl;
-             std::cout << source_dummy  <<  " -> " << inner_rhs_node << std::endl;
+             std::cout << source  <<  " -> " << inner_rhs_node << std::endl;
              std::exit(0);
            }
            if (sink_edge_added && fG.getEdgeCapacity(inner_rhs_node, fG.get_first_invalid_edge(inner_rhs_node) - 1) != sink_flow) {
@@ -240,19 +237,13 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                        << " "<< sink_flow << std::endl;
              std::exit(0);
            }
-          if (source_edge_added && fG.getEdgeCapacity(source_dummy, fG.get_first_invalid_edge(source_dummy) - 1) != source_flow) {
-             std::cout << "error RHS source_flow: " << source_dummy
-                       << " " << fG.getEdgeCapacity(source_dummy, fG.get_first_invalid_edge(source_dummy) - 1)
+          if (source_edge_added && fG.getEdgeCapacity(source, fG.get_first_invalid_edge(source) - 1) != source_flow) {
+             std::cout << "error RHS source_flow: " << source
+                       << " " << fG.getEdgeCapacity(source, fG.get_first_invalid_edge(source) - 1)
                        << " "<< source_flow << std::endl;
              std::exit(0);
            }
         }
-
-        ////connect dummies to source and sink
-        FlowType max_capacity = std::numeric_limits<FlowType>::max();
-        fG.new_edge(source, source_dummy, max_capacity);
-        fG.new_edge(sink_dummy, sink, max_capacity);
-
         return true;
 }
 
@@ -274,8 +265,6 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
         if(!do_sth) return initial_cut;
 
         push_relabel pr;
-        NodeID source_dummy = fG.number_of_nodes()-4;
-        NodeID sink_dummy = fG.number_of_nodes()-3;
         NodeID source = fG.number_of_nodes()-2;
         NodeID sink   = fG.number_of_nodes()-1;
         std::vector< NodeID > source_set;
@@ -288,7 +277,7 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
 
         if(!config.most_balanced_minimum_cuts) {
                 forall_nodes(fG, node) {
-                        if(new_rhs_flag[node] && node < fG.number_of_nodes()-4) {
+                        if(new_rhs_flag[node] && node < fG.number_of_nodes()-2) {
                                 new_rhs_nodes.push_back(node);
                         }
                 } endfor
@@ -299,7 +288,7 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                 forall_nodes(fG, node) {
                         NodeID node = residualGraph.new_node(); // for each node here create a new node 
 
-                        if( node < fG.number_of_nodes() -4 ) {
+                        if( node < fG.number_of_nodes() - 2 ) {
                                 residualGraph.setNodeWeight( node, G.getNodeWeight(new_to_old_ids[node]));
                         }
 
@@ -322,8 +311,6 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
 
                 residualGraph.setNodeWeight(source, 0);
                 residualGraph.setNodeWeight(sink, 0);
-                residualGraph.setNodeWeight(source_dummy, 0);
-                residualGraph.setNodeWeight(sink_dummy, 0);
                 residualGraph.finish_construction();
                 NodeWeight average_partition_weight = ceil(config.work_load / config.k);
                 NodeWeight perfect_rhs_stripe_weight = abs((int)average_partition_weight - (int)rhs_part_weight+(int) rhs_stripe_weight);
