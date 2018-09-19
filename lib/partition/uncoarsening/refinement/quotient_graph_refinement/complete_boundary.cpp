@@ -37,6 +37,60 @@ complete_boundary::complete_boundary(graph_access * G) {
 complete_boundary::~complete_boundary() {
 }
 
+void complete_boundary::updatePeripheralCutEdges(NodeID node, boundary_pair * pair) {
+  graph_access & G = *m_graph_ref;
+        PartitionID to   = m_graph_ref->getPartitionIndex(node);
+        PartitionID from = to == pair->lhs ? pair->rhs : pair->lhs;
+        ASSERT_NEQ(from, to);
+        forall_out_edges(G, e, node) {
+                NodeID target = G.getEdgeTarget(e);
+                PartitionID targetPartition = G.getPartitionIndex(target);
+                EdgeWeight edge_weight = G.getEdgeWeight(e);
+
+                if (targetPartition != from && targetPartition != to){
+                //   bool target_is_still_incident_to_from = false;
+                //   //this should only be delete if there is other incident partition
+                //   forall_out_edges(G, t_e, target) {
+                //     NodeID targets_target = G.getEdgeTarget(t_e);
+                //     NodeID targets_target_partition = G.getPartitionIndex(targets_target);
+                //     if(targets_target_partition == from) {
+                //       //since partition index of node is to it cant be node, and this edge is
+                //       //a widness that target can remain in this boundary
+                //       target_is_still_incident_to_from = true;
+                //       break;
+                //     }
+                //   } endfor
+
+                        boundary_pair delete_bp;
+                  delete_bp.k   = m_graph_ref->get_partition_count();
+                  delete_bp.lhs = from;
+                  delete_bp.rhs = targetPartition;
+                  // deleteNode(node, from, &delete_bp);
+
+                  // if (!target_is_still_incident_to_from) {
+                  //    deleteNode(target, targetPartition, &delete_bp);
+                  // }
+
+                  boundary_pair insert_bp;
+                  insert_bp.k   = m_graph_ref->get_partition_count();
+                  insert_bp.lhs = to;
+                  insert_bp.rhs = targetPartition;
+
+                  // insert(node, to, &insert_bp);
+                  // insert(target, targetPartition, &insert_bp);
+
+                  m_pairs[delete_bp].edge_cut -= edge_weight;
+                  m_pairs[insert_bp].edge_cut += edge_weight;
+
+
+                  }
+        } endfor
+
+}
+
+
+
+
 void complete_boundary::postMovedBoundaryNodeUpdates(NodeID node, boundary_pair * pair, 
                                                      bool update_edge_cuts, bool update_all_boundaries) {
 
@@ -44,12 +98,13 @@ void complete_boundary::postMovedBoundaryNodeUpdates(NodeID node, boundary_pair 
         PartitionID to   = m_graph_ref->getPartitionIndex(node);
         PartitionID from = to == pair->lhs ? pair->rhs : pair->lhs;
         ASSERT_NEQ(from, to);
-
         //First delete this node from all incidient partition boudnary and decreas the edgecut (from, target_partition != to)
         //then insert it in the right target
         forall_out_edges(G, e, node) {
+
                 NodeID target = G.getEdgeTarget(e);
                 PartitionID targetPartition = G.getPartitionIndex(target);
+
 
                 if(update_all_boundaries || targetPartition != to ) {
                         //delete 
@@ -75,6 +130,8 @@ void complete_boundary::postMovedBoundaryNodeUpdates(NodeID node, boundary_pair 
                                         }
                                 } endfor
 
+                                      // std::cout << "target is still incident to lhs" <<  target_is_still_incident << std::endl;
+
                                 if(!target_is_still_incident)
                                         deleteNode(target, targetPartition, &delete_bp);
 
@@ -99,7 +156,7 @@ void complete_boundary::postMovedBoundaryNodeUpdates(NodeID node, boundary_pair 
                         }
                 } 
         } endfor
-}      
+}
 
 void complete_boundary::balance_singletons(const PartitionConfig & config, graph_access & G) {
         for( unsigned i = 0; i < m_singletons.size(); i++) {

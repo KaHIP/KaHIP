@@ -86,7 +86,6 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                                              std::vector<NodeID> & rhs_boundary_stripe,
                                              std::vector<NodeID> & new_to_old_ids,              
                                              flow_graph & fG) {
-
         //building up the graph as in parse.h of hi_pr code
         NodeID idx = 0;
         new_to_old_ids.resize(lhs_boundary_stripe.size() + rhs_boundary_stripe.size());
@@ -167,30 +166,21 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
               }
             }
           } endfor
-                //ASSERT
-           if (source_edge_added && fG.getEdgeTarget(source, fG.get_first_invalid_edge(source) - 1) != inner_lhs_node) {
-             std::cout << "LHS source_dummy -> node inconsistent" << std::endl;
-             std::cout << source <<  " -> " << inner_lhs_node << std::endl;
-             std::exit(0);
-           }
-          if (sink_edge_added && fG.getEdgeTarget(inner_lhs_node, fG.get_first_invalid_edge(inner_lhs_node) - 1) != sink) {
-             std::cout << "LHS node -> sink_dummy inconsistent" << std::endl;
-             std::cout << inner_lhs_node  <<  " -> " << sink << std::endl;
-             std::exit(0);
-           }
-           if (source_edge_added && fG.getEdgeCapacity(source, fG.get_first_invalid_edge(source) - 1) != source_flow) {
-             std::cout << "error LHS source flow: " << source
-                       << " " << fG.getEdgeCapacity(source, fG.get_first_invalid_edge(source) - 1)
-                       << " "<< source_flow << std::endl;
-             std::exit(0);
-           }
-          if (sink_edge_added && fG.getEdgeCapacity(inner_lhs_node, fG.get_first_invalid_edge(inner_lhs_node) - 1) != sink_flow) {
-             std::cout << "error LHS sink_flow: " << inner_lhs_node
-                       << " " << fG.getEdgeCapacity(inner_lhs_node, fG.get_first_invalid_edge(inner_lhs_node) - 1)
-                       << " "<< sink_flow << std::endl;
-             std::exit(0);
-           }
-        }
+          //       std::vector<bool> seen(G.get_partition_count(), false);
+          //       forall_out_edges(G, e, new_to_old_ids[inner_lhs_node]) {
+          //   if(G.getPartitionIndex(G.getEdgeTarget(e)) != rhs &&
+          //      G.getPartitionIndex(G.getEdgeTarget(e)) != lhs &&
+          //      G.getPartitionIndex(G.getEdgeTarget(e)) != BOUNDARY_STRIPE_NODE &&
+          //      !seen[G.getPartitionIndex(G.getEdgeTarget(e))]) {
+          //     // std::cout << "lhs: " <<  lhs << std::endl;
+          //     // std::cout << "rhs: " <<  rhs << std::endl;
+          //     std::cout << new_to_old_ids[inner_lhs_node] << "[inner_lhs] incident to block " << G.getPartitionIndex(G.getEdgeTarget(e)) << std::endl;;
+          //     seen[G.getPartitionIndex(G.getEdgeTarget(e))] = true;
+          //     // fG.new_edge(source, inner_lhs_node, std::numeric_limits<FlowType>::max());
+          //     // break;
+          //   }
+          // } endfor
+                }
 
 
         ////connect outer boundary nodes to sink_dummy
@@ -220,30 +210,21 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                }
             }
           }endfor
-          //// ASSERT
-          if (sink_edge_added && fG.getEdgeTarget(inner_rhs_node, fG.get_first_invalid_edge(inner_rhs_node) - 1) != sink) {
-             std::cout << "RHS node -> sink_dummy inconsistent" << std::endl;
-             std::cout << inner_rhs_node <<  " -> " << sink << std::endl;
-             std::exit(0);
-           }
-          if (source_edge_added && fG.getEdgeTarget(source, fG.get_first_invalid_edge(source) - 1) != inner_rhs_node) {
-             std::cout << "RHS source_dummy -> node inconsistent" << std::endl;
-             std::cout << source  <<  " -> " << inner_rhs_node << std::endl;
-             std::exit(0);
-           }
-           if (sink_edge_added && fG.getEdgeCapacity(inner_rhs_node, fG.get_first_invalid_edge(inner_rhs_node) - 1) != sink_flow) {
-             std::cout << "error RHS sink flow: " << inner_rhs_node
-                       << " " << fG.getEdgeCapacity(inner_rhs_node, fG.get_first_invalid_edge(inner_rhs_node) - 1)
-                       << " "<< sink_flow << std::endl;
-             std::exit(0);
-           }
-          if (source_edge_added && fG.getEdgeCapacity(source, fG.get_first_invalid_edge(source) - 1) != source_flow) {
-             std::cout << "error RHS source_flow: " << source
-                       << " " << fG.getEdgeCapacity(source, fG.get_first_invalid_edge(source) - 1)
-                       << " "<< source_flow << std::endl;
-             std::exit(0);
-           }
-        }
+           //     std::vector<bool> seen(G.get_partition_count(), false);
+          //      forall_out_edges(G, e, new_to_old_ids[inner_rhs_node]) {
+          //   if(G.getPartitionIndex(G.getEdgeTarget(e)) != rhs &&
+          //      G.getPartitionIndex(G.getEdgeTarget(e)) != lhs &&
+          //      G.getPartitionIndex(G.getEdgeTarget(e)) != BOUNDARY_STRIPE_NODE &&
+          //      !seen[G.getPartitionIndex(G.getEdgeTarget(e))]) {
+          //     // fG.new_edge(inner_rhs_node, sink, std::numeric_limits<FlowType>::max());
+          //     // std::cout << "lhs: " <<  lhs << std::endl;
+          //     // std::cout << "rhs: " <<  rhs << std::endl;
+          //     std::cout << new_to_old_ids[inner_rhs_node] << " [inner rhs] incident to block " << G.getPartitionIndex(G.getEdgeTarget(e)) << std::endl;;
+          //     seen[G.getPartitionIndex(G.getEdgeTarget(e))] = true;
+          //     // break;
+          //   }
+          // } endfor
+                }
         return true;
 }
 

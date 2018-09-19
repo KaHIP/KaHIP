@@ -68,7 +68,8 @@ class two_way_flow_refinement : public two_way_refinement {
                                                          NodeWeight & lhs_stripe_weight, 
                                                          NodeWeight & rhs_stripe_weight, 
                                                          std::vector<NodeID> & new_to_old_ids,
-                                                         std::vector<NodeID> & new_rhs_nodes); 
+                                                         std::vector<NodeID> & new_rhs_nodes,
+                                                         std::vector<PartitionID>& old_part_ids);
 
 
 };
