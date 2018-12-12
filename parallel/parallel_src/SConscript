@@ -74,6 +74,10 @@ libyahootometis = [ 'lib/data_structure/parallel_graph_access.cpp',
                       'lib/data_structure/balance_management_coarsening.cpp'
                   ]
 
+libdspacfiles = [ 'lib/dspac/dspac.cpp',
+                  'lib/dspac/edge_balanced_graph_io.cpp'
+                ]
+
 SYSTEMNAME=platform.platform(aliased=0, terse=0)
 SYSTEM = platform.uname()[0]
 if SYSTEM != 'Darwin':
@@ -138,3 +142,8 @@ if env['program'] == 'yahoo_to_metis':
         env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM')
                 
         env.Program('yahoo_to_metis', ['app/yahoo_to_metis.cpp']+libyahootometis, LIBS=['libargtable2','gomp'])
+
+if env['program'] == 'dspac':
+        env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION')
+        env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION')
+        env.Program('dspac', ['app/dspac.cpp']+libparallel_files+libdspacfiles, LIBS=['libargtable2','libkahip','gomp','mpi'])

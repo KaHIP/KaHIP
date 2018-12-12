@@ -267,6 +267,18 @@ public:
                 m_range_array = vertex_dist;
         };
 
+        std::vector<NodeID> &get_range_array() {
+                return m_range_array;
+        };
+
+        void set_edge_range_array(const std::vector<EdgeID> &edge_range_array) {
+                m_edge_range_array = edge_range_array;
+        };
+
+        std::vector<EdgeID> &get_edge_range_array() {
+                return m_edge_range_array;
+        };
+
         PEID get_PEID_from_range_array(NodeID node) {
                 // TODO optimize with binary search
                 for( PEID peID = 1; peID < (PEID)m_range_array.size(); peID++) {
@@ -522,7 +534,8 @@ private:
 
         // stores the ranges for which a processor is responsible for
         // m_range_array[i]= starting position of PE i
-        std::vector<NodeID>                     m_range_array; 
+        std::vector<NodeID>                     m_range_array;
+        std::vector<EdgeID>                     m_edge_range_array;
 
         std::unordered_map<NodeID, NodeID> m_global_to_local_id;
 
