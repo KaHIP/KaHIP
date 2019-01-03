@@ -35,7 +35,7 @@ For a description of the graph format please have a look into the manual.
 
 Travis-CI Status [![Build Status](https://travis-ci.org/schulzchristian/KaHIP.svg?branch=master)](https://travis-ci.org/schulzchristian/KaHIP)
 
-Project Contributors (sorted alphabetically by last name)
+Project Contributors (sorted by last name)
 =====
 Yaroslav Akhremtsev
 
