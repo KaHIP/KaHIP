@@ -1,3 +1,9 @@
+KaHIP-2.10
+------------------------------------------------------------------------
+- added edge partitioning algorithms
+- basic 64bit support for edges
+- switched to MIT licence
+
 KaHIP-2.00
 ------------------------------------------------------------------------
 - bugfix to partition_to_vertex_separator program
