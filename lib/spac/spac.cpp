@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
-//#undef NDEBUG
 #include "spac.h"
 
 spac::spac(graph_access &input_graph, EdgeWeight infinity)
@@ -33,7 +32,7 @@ graph_access &spac::construct_split_graph() {
     NodeID number_of_deg1_vertices = 0;
     NodeID number_of_deg2_vertices = 0;
     for (NodeID v = 0; v < m_input_graph.number_of_nodes(); ++v) {
-        NodeID deg = m_input_graph.getNodeDegree(v);
+        //NodeID deg = m_input_graph.getNodeDegree(v);
 
         if (m_input_graph.getNodeDegree(v) == 1) {
             ++number_of_deg1_vertices;
@@ -206,12 +205,16 @@ void spac::find_reverse_edges() {
                 continue;
             }
 
+#ifndef NDEBUG
             bool found_reverse_edge = false;
+#endif
             for (EdgeID e_vu = m_input_graph.get_first_edge(v); e_vu < m_input_graph.get_first_invalid_edge(v); ++e_vu) {
                 if (m_input_graph.getEdgeTarget(e_vu) == u) {
                     m_reverse_edge[e_uv] = e_vu;
                     m_reverse_edge[e_vu] = e_uv;
+#ifndef NDEBUG
                     found_reverse_edge = true;
+#endif
                     break;
                 }
             }

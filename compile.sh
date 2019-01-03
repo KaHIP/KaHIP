@@ -28,7 +28,7 @@ cp ./optimized/graphchecker deploy/
 cp ./optimized/partition_to_vertex_separator deploy/
 cp ./optimized/interface/lib* deploy/
 cp ./optimized/node_separator deploy/
-cp ./optimized/spac deploy/
+cp ./optimized/edge_partitioning deploy/
 cp ./interface/kaHIP_interface.h deploy/
 
 rm -rf ./optimized

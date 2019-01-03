@@ -176,4 +176,4 @@ if env['program'] == 'library':
 if env['program'] == 'spac':
         env.Append(CXXFLAGS = '-DMODE_KAFFPA')
         env.Append(CCFLAGS  = '-DMODE_KAFFPA')
-        env.Program('spac', ['app/spac.cpp']+libkaffpa_files+libmapping+libspac_files, LIBS=['libargtable2','gomp'])
+        env.Program('edge_partitioning', ['app/spac.cpp']+libkaffpa_files+libmapping+libspac_files, LIBS=['libargtable2','gomp'])

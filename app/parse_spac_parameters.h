@@ -38,6 +38,7 @@ int parse_spac_parameters(int argn, char **argv, PartitionConfig &partition_conf
 
     struct arg_lit *help = arg_lit0(NULL, "help", "Print help.");
     struct arg_str *filename = arg_strn(NULL, NULL, "FILE", 1, 1, "Path to graph file to partition.");
+    struct arg_str *filename_output = arg_str0(NULL, "output_filename", NULL, "Specify the name of the output file (that contains the partition).");
     struct arg_int *k = arg_int1(NULL, "k", NULL, "Number of blocks to partition the graph.");
     struct arg_int *seed = arg_int0(NULL, "seed", NULL, "Seed to use for PRNG.");
     struct arg_rex *preconfiguration = arg_rex1(NULL, "preconfiguration", "^(strong|eco|fast|fastsocial|ecosocial|strongsocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fastsocial|ecosocial|strongsocial]." );
@@ -45,7 +46,7 @@ int parse_spac_parameters(int argn, char **argv, PartitionConfig &partition_conf
     struct arg_end *end = arg_end(100);
 
     void *argtable[] = {
-            help, filename, k, seed, preconfiguration, infinity, end
+            help, filename, k, seed, preconfiguration, infinity, filename_output, end
     };
 
     // Parse arguments.
@@ -105,6 +106,10 @@ int parse_spac_parameters(int argn, char **argv, PartitionConfig &partition_conf
         spac_config.infinity = infinity->ival[0];
     } else {
         spac_config.infinity = 1000;
+    }
+
+    if(filename_output->count > 0) {
+            partition_config.filename_output = filename_output->sval[0];
     }
 
     return 0;

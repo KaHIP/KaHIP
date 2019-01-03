@@ -50,10 +50,10 @@ int main(int argn, char **argv) {
         return 0;
     }
 
-    std::cout << "graph: " << graph_filename << "\n"
-              << "infinity edge weight: " << spac_config.infinity << "\n"
-              << "seed: " << partition_config.seed << "\n"
-              << "k: " << partition_config.k << std::endl;
+    //std::cout << "graph: " << graph_filename << "\n"
+              //<< "infinity edge weight: " << spac_config.infinity << "\n"
+              //<< "seed: " << partition_config.seed << "\n"
+              //<< "k: " << partition_config.k << std::endl;
 
     timer t;
 
@@ -86,8 +86,16 @@ int main(int argn, char **argv) {
     splitter.fix_cut_dominant_edges();
     std::vector <PartitionID> edge_partition = splitter.project_partition();
     unsigned vertex_cut = splitter.calculate_vertex_cut(edge_partition);
-    std::cout << "evaluation took " << t.elapsed() << "\n"
-              << "vertex cut: " << vertex_cut << std::endl;
+    std::cout << "vertex cut: " << vertex_cut << std::endl;
+
+    std::stringstream filename;
+    if(!partition_config.filename_output.compare("")) {
+            filename << "tmpedgepartition" << partition_config.k;
+    } else {
+            filename << partition_config.filename_output;
+    }
+    graph_io::writeVector(edge_partition, filename.str());
+
     return 0;
 }
 

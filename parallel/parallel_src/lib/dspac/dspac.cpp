@@ -38,7 +38,9 @@ void dspac::internal_construct(parallel_graph_access &split_graph) {
     MPI_Comm_size(m_comm, &size);
     MPI_Comm_rank(m_comm, &rank);
     const NodeID n = m_input_graph.number_of_global_nodes();
+#ifndef NDEBUG
     const NodeID m = m_input_graph.number_of_global_edges();
+#endif
 
     timer construction_timer;
 
@@ -272,6 +274,7 @@ void dspac::internal_construct(parallel_graph_access &split_graph) {
  * @return Pointless bool so that the method call can be used as expression.
  */
 bool dspac::assert_sanity_checks(parallel_graph_access &split_graph) {
+#ifndef NDEBUG
     assert(split_graph.number_of_local_nodes() == m_input_graph.number_of_local_edges());
     for (NodeID v = 0; v < split_graph.number_of_local_nodes(); ++v) {
         // isolated vertices should be removed for now
@@ -348,6 +351,7 @@ bool dspac::assert_sanity_checks(parallel_graph_access &split_graph) {
             }
         }
     }
+#endif
     return true;
 }
 
@@ -356,6 +360,7 @@ bool dspac::assert_sanity_checks(parallel_graph_access &split_graph) {
  * @return Pointless bool so that the method call can be used as expression.
  */
 bool dspac::assert_adjacency_lists_sorted() {
+#ifndef NDEBUG
     for (NodeID v = 0; v < m_input_graph.number_of_local_nodes(); ++v) {
         if (m_input_graph.getNodeDegree(v) == 0) {
             continue;
@@ -369,6 +374,7 @@ bool dspac::assert_adjacency_lists_sorted() {
             assert(cur <= m_input_graph.getGlobalID(u));
         }
     }
+#endif
     return true;
 }
 

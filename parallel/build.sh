@@ -15,6 +15,7 @@ cd parallel_src/
 ./compile.sh
 cd ..
 
+cp parallel_src/optimized_nooutput/dsp* ../deploy/distributed_edge_partitioning
 cp parallel_src/optimized_nooutput/g* ../deploy
 cp parallel_src/optimized_nooutput/parhip* ../deploy/parhip
 cp parallel_src/optimized_nooutput/toolbox* ../deploy/
