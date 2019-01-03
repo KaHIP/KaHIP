@@ -1,3 +1,9 @@
+/*
+* Source of KaHIP -- Karlsruhe High Quality Partitioning.
+* Author: Daniel Seemaier <daniel.seemaier@student.kit.edu>
+* Christian Schulz <christian.schulz.phone@gmail.com>
+* */
+
 #ifndef KAHIP_PARSE_DSPAC_PARAMETERS_H
 #define KAHIP_PARSE_DSPAC_PARAMETERS_H
 

@@ -71,8 +71,8 @@ def GetEnvironment():
 # Get the common environment.
 env = GetEnvironment()
 
-env.Append(CPPPATH=['../extern/argtable-2.10/include'])
-env.Append(CPPPATH=['./extern/argtable-2.10/include'])
+env.Append(CPPPATH=['../extern/argtable3-3.0.3/'])
+env.Append(CPPPATH=['./extern/argtable3-3.0.3/'])
 env.Append(CPPPATH=['./lib'])
 env.Append(CPPPATH=['./app'])
 env.Append(CPPPATH=['./lib/tools'])
@@ -95,8 +95,8 @@ if SYSTEM == 'Darwin':
         # homebrew related paths
         env.Append(LIBPATH=['/usr/local/lib/'])
         env.Append(LIBPATH=['/usr/local/lib/openmpi/'])
-        env.Append(LIBPATH=['../extern/argtable-2.10/maclib'])
-        env.Append(LIBPATH=['./extern/argtable-2.10/maclib'])
+        #env.Append(LIBPATH=['../extern/argtable3-2.10/maclib'])
+        #env.Append(LIBPATH=['./extern/argtable-2.10/maclib'])
 else:
         env.Append(LIBPATH=['../extern/argtable-2.10/lib'])
         env.Append(LIBPATH=['./extern/argtable-2.10/lib'])

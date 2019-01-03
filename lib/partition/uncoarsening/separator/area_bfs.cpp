@@ -1,5 +1,5 @@
 //
-// Author: Christian Schulz <christian.schulz@kit.edu>
+// Author: Christian Schulz <christian.schulz.phone@gmail.com>
 // 
 
 #include "area_bfs.h"

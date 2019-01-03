@@ -1,6 +1,7 @@
-//
-// Author: Christian Schulz <christian.schulz@kit.edu>
-// 
+/*
+* Source of KaHIP -- Karlsruhe High Quality Partitioning.
+* Christian Schulz <christian.schulz.phone@gmail.com>
+*/ 
 
 #ifndef AREA_BFS_OD13WIZM
 #define AREA_BFS_OD13WIZM

@@ -1,5 +1,5 @@
 //
-// Author: Christian Schulz <christian.schulz@kit.edu>
+// Author: Christian Schulz <christian.schulz.phone@gmail.com>
 // 
 
 #ifndef INITIAL_NODE_SEPARATOR_VR5EPEO6

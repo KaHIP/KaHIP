@@ -1,5 +1,5 @@
 //
-// Author: Christian Schulz <christian.schulz@kit.edu>
+// Author: Christian Schulz <christian.schulz.phone@gmail.com>
 // 
 
 #ifndef LOCALIZED_FM_NS_LOCAL_SEARCH_PY14MVLH

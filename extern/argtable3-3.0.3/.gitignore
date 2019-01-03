@@ -1,0 +1,6 @@
+# except for .gitignore
+!.gitignore
+
+build/
+examples/bin/
+tests/bin/

@@ -1,5 +1,5 @@
 //
-// Author: Christian Schulz <christian.schulz@kit.edu>
+// Author: Christian Schulz <christian.schulz.phone@gmail.com>
 // 
 
 #include <fstream>
@@ -9,7 +9,6 @@
 #include "tools/random_functions.h"
 #include "partition/uncoarsening/separator/vertex_separator_algorithm.h"
 #include "partition/uncoarsening/refinement/node_separators/fm_ns_local_search.h"
-
 
 initial_node_separator::initial_node_separator() {
                 
