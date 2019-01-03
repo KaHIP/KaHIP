@@ -13,6 +13,7 @@ scons program=partition_to_vertex_separator variant=optimized -j 4 -c
 scons program=library variant=optimized -j 4 -c
 scons program=graphchecker variant=optimized -j 4 -c
 scons program=label_propagation variant=optimized -j 4 -c
+scons program=spac variant=optimized -j 4 -c
 
 cd parallel/parallel_src/
 ./cleanup.sh

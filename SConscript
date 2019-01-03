@@ -115,6 +115,8 @@ libmapping                = ['lib/mapping/local_search_mapping.cpp',
                              'lib/mapping/mapping_algorithms.cpp',
                              'lib/mapping/construct_mapping.cpp' ]
 
+libspac_files = ['lib/spac/spac.cpp']
+
 if env['program'] == 'kaffpa':
         env.Append(CXXFLAGS = '-DMODE_KAFFPA')
         env.Append(CCFLAGS  = '-DMODE_KAFFPA')
@@ -170,3 +172,8 @@ if env['program'] == 'library':
         env.Append(CXXFLAGS = '-fPIC')
         env.Append(CCFLAGS  = '-fPIC')
         SConscript('interface/SConscript',exports='env')
+
+if env['program'] == 'spac':
+        env.Append(CXXFLAGS = '-DMODE_KAFFPA')
+        env.Append(CCFLAGS  = '-DMODE_KAFFPA')
+        env.Program('spac', ['app/spac.cpp']+libkaffpa_files+libmapping+libspac_files, LIBS=['libargtable2','gomp'])
