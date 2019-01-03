@@ -38,12 +38,21 @@ Travis-CI Status [![Build Status](https://travis-ci.org/schulzchristian/KaHIP.sv
 Project Contributors (sorted alphabetically by last name)
 =====
 Yaroslav Akhremtsev
+
 Roland Glantz
+
 Henning Meyerhenke
+
 Ilya Safro
+
 Peter Sanders
+
 Sebastian Schlag
+
 Christian Schulz (maintainer)
+
 Daniel Seemaier
+
 Darren Strash
+
 Jesper Larsson Träff
