@@ -33,6 +33,7 @@ def GetEnvironment():
   """
   opts = Variables()
   opts.Add('variant', 'the variant to build, optimized or optimized with output', 'optimized')
+  opts.Add('mode', 'the mode for the size of the number of edges possible', '32bit')
   opts.Add('program', 'program or interface to compile', 'kaffpa')
 
   env = Environment(options=opts, ENV=os.environ)
@@ -42,6 +43,10 @@ def GetEnvironment():
   
   if not env['program'] in ['kaffpa', 'kaffpaE', 'partition_to_vertex_separator','improve_vertex_separator','library','graphchecker','label_propagation','evaluator','node_separator','spac']:
     print 'Illegal value for program: %s' % env['program']
+    sys.exit(1)
+
+  if not env['mode'] in ['32bit','64bit']:
+    print 'Illegal value for mode: %s' % env['mode']
     sys.exit(1)
 
   # Special configuration for 64 bit machines.
@@ -123,6 +128,10 @@ else:
           if SYSTEM != 'Darwin':
                 env.Append(CXXFLAGS = '-march=native')
                 env.Append(CCFLAGS  = '-march=native')
+
+if env['mode'] == '64bit':
+        env.Append(CXXFLAGS = '-DMODE64BITEDGES')
+        env.Append(CCFLAGS  = '-DMODE64BITEDGES')
 
 # Execute the SConscript.
 SConscript('SConscript', exports=['env'],variant_dir=env['variant'], duplicate=False)

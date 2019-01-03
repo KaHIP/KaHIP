@@ -49,7 +49,7 @@ class contraction {
                 // visits an edge in G (and auxillary graph) and updates/creates and edge in coarser graph 
                 void visit_edge(graph_access & G, 
                                 graph_access & coarser,
-                                std::vector<NodeID> & edge_positions,
+                                std::vector<EdgeID> & edge_positions,
                                 const NodeID coarseNode,
                                 const EdgeID e,
                                 const std::vector<NodeID> & new_edge_targets) const;
@@ -59,7 +59,7 @@ class contraction {
 
 inline void contraction::visit_edge(graph_access & G, 
                 graph_access & coarser,
-                std::vector<NodeID> & edge_positions,
+                std::vector<EdgeID> & edge_positions,
                 const NodeID coarseNode,
                 const EdgeID e,
                 const std::vector<NodeID> & new_edge_targets) const {
