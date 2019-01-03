@@ -652,8 +652,8 @@ int parallel_graph_io::writeGraphParallelSimple(parallel_graph_access & G,
                 forall_local_nodes(G, node) {
                         forall_out_edges(G, e, node) {
                                 f << (G.getGlobalID(G.getEdgeTarget(e))+1) << " " ;
-                        } endfor 
-                        f <<  std::endl;
+                        } endfor
+                        f <<  "\n";
                 } endfor
 
                 f.close();
@@ -669,7 +669,7 @@ int parallel_graph_io::writeGraphParallelSimple(parallel_graph_access & G,
                                 forall_out_edges(G, e, node) {
                                         f <<  (G.getGlobalID(G.getEdgeTarget(e))+1) << " " ;
                                 } endfor 
-                                f <<  std::endl;
+                                f <<  "\n";
                         } endfor
                         f.close();
                 }
@@ -695,7 +695,7 @@ int parallel_graph_io::writeGraphWeightedParallelSimple(parallel_graph_access & 
                         forall_out_edges(G, e, node) {
                                 f << " " <<   (G.getGlobalID(G.getEdgeTarget(e))+1) <<  " " <<  G.getEdgeWeight(e) ;
                         } endfor 
-                        f <<  std::endl;
+                        f <<  "\n";
                 } endfor
 
                 f.close();
@@ -712,7 +712,7 @@ int parallel_graph_io::writeGraphWeightedParallelSimple(parallel_graph_access & 
                                 forall_out_edges(G, e, node) {
                                         f << " " <<   (G.getGlobalID(G.getEdgeTarget(e))+1) <<  " " <<  G.getEdgeWeight(e) ;
                                 } endfor 
-                                f <<  std::endl;
+                                f <<  "\n";
                         } endfor
                         f.close();
                 }
@@ -732,7 +732,7 @@ int parallel_graph_io::writeGraphWeightedSequentially(complete_graph_access & G,
                 forall_out_edges(G, e, node) {
                         f << " " <<   (G.getEdgeTarget(e)+1) <<  " " <<  G.getEdgeWeight(e) ;
                 } endfor 
-                f <<  std::endl;
+                f <<  "\n";
         } endfor
 
         f.close();
@@ -746,7 +746,7 @@ int parallel_graph_io::writeGraphSequentially(complete_graph_access & G, std::of
                 forall_out_edges(G, e, node) {
                         f << " " <<   (G.getEdgeTarget(e)+1)  ;
                 } endfor 
-                f <<  std::endl;
+                f <<  "\n";
         } endfor
         return 0;
 }
