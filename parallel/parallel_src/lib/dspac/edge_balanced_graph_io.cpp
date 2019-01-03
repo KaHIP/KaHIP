@@ -5,6 +5,8 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
+#include <algorithm>
+
 #include "edge_balanced_graph_io.h"
 
 static constexpr ULONG FILE_TYPE_VERSION = 3;
@@ -146,6 +148,7 @@ void edge_balanced_graph_io::read_binary_graph_edge_balanced(parallel_graph_acce
                 G.setSecondPartitionIndex(node, 0);
 
                 NodeID degree = (vertexOffsets[i + 1] - vertexOffsets[i]) / sizeof(ULONG);
+                std::sort(edges + pos, edges + pos + degree);
                 for (ULONG j = 0; j < degree; ++j, ++pos) {
                     NodeID target = edges[pos];
                     EdgeID edge = G.new_edge(node, target);
