@@ -26,11 +26,12 @@ int parse_dspac_parameters(int argn, char **argv, PPartitionConfig &partition_co
     struct arg_int *seed = arg_int0(NULL, "seed", NULL, "Seed to use for PRNG.");
     struct arg_int *infinity = arg_int0(NULL, "infinity", NULL, "Infinity edge weight. Default: 1000000");
     struct arg_rex *preconfiguration = arg_rex1(NULL, "preconfiguration", "^(ecosocial|fastsocial|ultrafastsocial|ecomesh|fastmesh|ultrafastmesh)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: fast) [ecosocial|fastsocial|ultrafastsocial|ecomesh|fastmesh|ultrafastmesh]." );
+    struct arg_int *imbalance = arg_int0(NULL, "imbalance", NULL, "Desired imbalance. Default: 3%");
     struct arg_end *end = arg_end(100);
 
     // Define argtable.
     void *argtable[] = {
-            help, filename, k, seed, infinity, preconfiguration, end
+            help, filename, k, seed, infinity, preconfiguration, imbalance, end
     };
 
     // Parse arguments.
@@ -78,6 +79,11 @@ int parse_dspac_parameters(int argn, char **argv, PPartitionConfig &partition_co
         partition_config.seed = seed->ival[0];
     } else {
         partition_config.seed = 0;
+    }
+
+    if (imbalance->count > 0) {
+        partition_config.epsilon = imbalance->ival[0];
+        partition_config.inbalance = imbalance->ival[0];
     }
 
     if (infinity->count > 0) {

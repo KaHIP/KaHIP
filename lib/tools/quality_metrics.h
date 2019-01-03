@@ -32,6 +32,7 @@ public:
         double balance(graph_access & G);
         double balance_edges(graph_access & G);
         double balance_separator(graph_access & G);
+        double edge_balance(graph_access &G, const std::vector<PartitionID> &edge_partition);
 
         NodeWeight total_qap(graph_access & C, matrix & D, std::vector< NodeID > & rank_assign);
         NodeWeight total_qap(matrix & C, matrix & D, std::vector< NodeID > & rank_assign);

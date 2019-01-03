@@ -69,9 +69,13 @@ int main(int argn, char **argv) {
     // evaluate edge partition
     t.restart();
     splitter.fix_cut_dominant_edges();
-    std::vector <PartitionID> edge_partition = splitter.project_partition();
+    std::vector<PartitionID> edge_partition = splitter.project_partition();
     unsigned vertex_cut = splitter.calculate_vertex_cut(edge_partition);
     std::cout << "vertex cut: " << vertex_cut << std::endl;
+
+    quality_metrics qm;
+    input_graph.set_partition_count(partition_config.k);
+    std::cout << "balance: " << qm.edge_balance(input_graph, edge_partition) << std::endl;
 
     std::stringstream filename;
     if(!partition_config.filename_output.compare("")) {

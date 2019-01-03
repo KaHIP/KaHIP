@@ -287,6 +287,31 @@ double quality_metrics::balance(graph_access& G) {
         return percentage;
 }
 
+double quality_metrics::edge_balance(graph_access &G, const std::vector<PartitionID> &edge_partition) {
+    std::vector<PartitionID> part_weights(G.get_partition_count(), 0);
+
+    double overallWeight = 0;
+
+    forall_edges(G, e) {
+        PartitionID curPartition = edge_partition[e];
+        ++part_weights[curPartition];
+        ++overallWeight;
+    } endfor
+
+    double balance_part_weight = ceil(overallWeight / (double)G.get_partition_count());
+    double cur_max             = -1;
+
+    forall_blocks(G, p) {
+        double cur = part_weights[p];
+        if (cur > cur_max) {
+            cur_max = cur;
+        }
+    } endfor
+
+    double percentage = cur_max/balance_part_weight;
+    return percentage;
+}
+
 double quality_metrics::balance_edges(graph_access& G) {
         std::vector<PartitionID> part_weights(G.get_partition_count(), 0);
 
