@@ -34,3 +34,16 @@ Once you installed the packages, just type ./compile.sh. Once you did that you c
 For a description of the graph format please have a look into the manual.
 
 Travis-CI Status [![Build Status](https://travis-ci.org/schulzchristian/KaHIP.svg?branch=master)](https://travis-ci.org/schulzchristian/KaHIP)
+
+Project Contributors (sorted alphabetically by last name)
+=====
+Yaroslav Akhremtsev
+Roland Glantz
+Henning Meyerhenke
+Ilya Safro
+Peter Sanders
+Sebastian Schlag
+Christian Schulz (maintainer)
+Daniel Seemaier
+Darren Strash
+Jesper Larsson Träff
