@@ -452,7 +452,7 @@ public:
         };
 
         //methods for local nodes only
-        PEID getGlobalID(NodeID node);
+        NodeID getGlobalID(NodeID node);
 
         // these functions should only be called if the graph completely resides on the current PE
         // they are for the call to KaFFPaE
@@ -691,7 +691,7 @@ inline PEID parallel_graph_access::getTargetPE(NodeID node) {
 }
 
 //function should only be called for local nodes
-inline PEID parallel_graph_access::getGlobalID(NodeID node) {
+inline NodeID parallel_graph_access::getGlobalID(NodeID node) {
         if( is_local_node(node) ) {
                 return from + node;
         } else {
