@@ -86,49 +86,49 @@ else:
 if env['program'] == 'toolbox':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DTOOLBOX')
         env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DTOOLBOX')
-        env.Program('toolbox', ['app/toolbox.cpp']+libparallel_files, LIBS=['libargtable2','libkahip','gomp','mpi'])
+        env.Program('toolbox', ['app/toolbox.cpp']+libparallel_files, LIBS=['libkahip','gomp','mpi'])
 
 
 if env['program'] == 'parhip':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION')
         env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION')
-        env.Program('parhip', ['app/parhip.cpp']+libparallel_files, LIBS=['libargtable2','libkahip','gomp','mpi'])
+        env.Program('parhip', ['app/parhip.cpp']+libparallel_files, LIBS=['libkahip','gomp','mpi'])
 
 if env['program'] == 'graph2binary':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION -DGRAPH2DGF')
         env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION -DGRAPH2DGF')
-        env.Program('graph2binary', ['app/graph2binary.cpp']+libgraph2bgffiles, LIBS=['libargtable2','gomp'])
+        env.Program('graph2binary', ['app/graph2binary.cpp']+libgraph2bgffiles, LIBS=['gomp'])
 
 if env['program'] == 'graph2binary_external':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION -DGRAPH2DGF')
         env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION -DGRAPH2DGF')
-        env.Program('graph2binary_external', ['app/graph2binary_external.cpp']+libgraph2bgffiles, LIBS=['libargtable2','gomp'])
+        env.Program('graph2binary_external', ['app/graph2binary_external.cpp']+libgraph2bgffiles, LIBS=['gomp'])
 
 if env['program'] == 'readbgf':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION')
         env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION')
-        env.Program('readbgf', ['app/readbgf.cpp']+libgraph2bgffiles, LIBS=['libargtable2','libkahip','gomp'])
+        env.Program('readbgf', ['app/readbgf.cpp']+libgraph2bgffiles, LIBS=['libkahip','gomp'])
 
 if env['program'] == 'edge_list_to_metis_graph':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM')
         env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM')
                 
-        env.Program('edge_list_to_metis_graph', ['app/edge_list_to_metis_graph.cpp']+libedgelistfiles, LIBS=['libargtable2','gomp'])
+        env.Program('edge_list_to_metis_graph', ['app/edge_list_to_metis_graph.cpp']+libedgelistfiles, LIBS=['gomp'])
 
 if env['program'] == 'friendster_list_to_metis_graph':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM')
         env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM')
                 
-        env.Program('friendster_list_to_metis_graph', ['app/friendster_list_to_metis_graph.cpp']+libedgelistfiles, LIBS=['libargtable2','gomp'])
+        env.Program('friendster_list_to_metis_graph', ['app/friendster_list_to_metis_graph.cpp']+libedgelistfiles, LIBS=['gomp'])
 
 
 if env['program'] == 'yahoo_to_metis':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM')
         env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM')
                 
-        env.Program('yahoo_to_metis', ['app/yahoo_to_metis.cpp']+libyahootometis, LIBS=['libargtable2','gomp'])
+        env.Program('yahoo_to_metis', ['app/yahoo_to_metis.cpp']+libyahootometis, LIBS=['gomp'])
 
 if env['program'] == 'dspac':
         env.Append(CXXFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION')
         env.Append(CCFLAGS = '-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION')
-        env.Program('dspac', ['app/dspac.cpp']+libparallel_files+libdspacfiles, LIBS=['libargtable2','libkahip','gomp','mpi'])
+        env.Program('dspac', ['app/dspac.cpp']+libparallel_files+libdspacfiles, LIBS=['libkahip','gomp','mpi'])

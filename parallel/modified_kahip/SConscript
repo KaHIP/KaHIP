@@ -94,10 +94,10 @@ if env['program'] == 'library':
         SConscript('interface/SConscript',exports='env')
 
 
-if env['program'] == 'interfacetest':
-        env['CXX'] = 'mpicxx'
-        env.Append(CXXFLAGS = '-DMODE_KAFFPA')
-        env.Append(CCFLAGS  = '-DMODE_KAFFPA')
-        env.Program('interface_test', ['app/interface_test.cpp','interface/kaHIP_interface.cpp']+libkaffpa_files, LIBS=['libargtable2','gomp'])
+#if env['program'] == 'interfacetest':
+        #env['CXX'] = 'mpicxx'
+        #env.Append(CXXFLAGS = '-DMODE_KAFFPA')
+        #env.Append(CCFLAGS  = '-DMODE_KAFFPA')
+        #env.Program('interface_test', ['app/interface_test.cpp','interface/kaHIP_interface.cpp']+libkaffpa_files, LIBS=['gomp'])
 
 

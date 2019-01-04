@@ -84,15 +84,7 @@ if SYSTEM == 'Darwin':
         env.Append(LIBPATH=['/usr/local/lib/openmpi/'])
         #env.Append(LIBPATH=['../extern/argtable3-2.10/maclib'])
         #env.Append(LIBPATH=['./extern/argtable-2.10/maclib'])
-else:
-        env.Append(LIBPATH=['../extern/argtable-2.10/lib'])
-        env.Append(LIBPATH=['./extern/argtable-2.10/lib'])
-        env.Append(LIBPATH=['../../extern/argtable-2.10/lib'])
 
-#by D. Luxen
-#if not conf.CheckLibWithHeader('argtable2', 'argtable2.h', 'CXX'):
-        #print "argtable library not found. Exiting"
-        #Exit(-1)
 #if not conf.CheckCXXHeader('mpi.h'):
         #print "openmpi header not found. Exiting"
         #Exit(-1)

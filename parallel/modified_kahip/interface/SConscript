@@ -72,5 +72,5 @@ env.Append(LIBPATH=['./optimized'])
 env.Append(LIBPATH=['./debug'])
 env.Append(LIBPATH=['../interface/'])
 
-env.Library('libkahip', ['kaHIP_interface.cpp']+libkaffpa_files, LIBS=['libargtable2.a','gomp'])
+env.Library('libkahip', ['kaHIP_interface.cpp']+libkaffpa_files, LIBS=['gomp'])
 
