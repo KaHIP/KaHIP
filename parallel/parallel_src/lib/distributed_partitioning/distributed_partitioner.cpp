@@ -116,7 +116,7 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
                 if(config.eco) {
                         MPI_Bcast(&(config.cluster_coarsening_factor), 1, MPI_DOUBLE, ROOT, communicator);
                         
-                        std::cout << "cf " << config.cluster_coarsening_factor  << std::endl;
+                        //std::cout << "cf " << config.cluster_coarsening_factor  << std::endl;
                 }
                 config.evolutionary_time_limit = 0;
                 elapsed += t.elapsed();
