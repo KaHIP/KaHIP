@@ -38,5 +38,5 @@ if env['program'] == 'interfacetest':
         env['CXX'] = 'mpicxx'
         env.Append(CXXFLAGS = '-DMODE_KAFFPA')
         env.Append(CCFLAGS  = '-DMODE_KAFFPA')
-        env.Program('interface_test', ['interface_test.cpp','../../extern/argtable3-3.0.3/argtable3.c'], LIBS=['kahip', 'gomp'])
+        env.Program('interface_test', ['interface_test.cpp','../../../extern/argtable3-3.0.3/argtable3.c'], LIBS=['kahip', 'gomp'])
 

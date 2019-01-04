@@ -70,6 +70,9 @@ def GetEnvironment():
 env = GetEnvironment()
 
 env.Append(LIBPATH=['./'])
+env.Append(LIBPATH=['../../../deploy'])
+env.Append(CPPPATH=['../../extern/argtable3-3.0.3/'])
+env.Append(CPPPATH=['../../../extern/argtable3-3.0.3/'])
 
 conf = Configure(env)
 
