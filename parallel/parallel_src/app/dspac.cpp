@@ -112,6 +112,17 @@ int main(int argn, char **argv) {
                   << "vertex cut: " << vertex_cut << std::endl;
     }
 
+    if( partition_config.save_partition ) {
+            parallel_vector_io pvio;
+            std::string filename("tmpedgepartition.txtp");
+            pvio.writePartitionSimpleParallel(split_graph, filename);
+    }
+
+    if( partition_config.save_partition_binary ) {
+            parallel_vector_io pvio;
+            std::string filename("tmpedgepartition.binp");
+            pvio.writePartitionBinaryParallelPosix(partition_config, split_graph, filename);
+    }
 
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
