@@ -8,5 +8,7 @@ if [ "$?" -ne "0" ]; then
         exit
 fi
 done
+cd interface;
+scons variant=optimized -j 16
 
 rm config.log

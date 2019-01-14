@@ -39,3 +39,5 @@ echo "Now building the PARALLEL programs"
 cd parallel
 ./build.sh
 cd ..
+cp parallel/parallel_src/interface/optimized/lib* deploy/
+cp parallel/parallel_src/interface/parhip_interface.h deploy/
