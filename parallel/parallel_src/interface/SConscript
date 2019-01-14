@@ -1,0 +1,34 @@
+# The main SConscript for the interface.
+#
+
+Import('env')
+
+# Build a library from the code in lib/.
+libparallel_files = [ '../../lib/data_structure/parallel_graph_access.cpp',
+                      '../../lib/data_structure/balance_management.cpp',
+                      '../../lib/data_structure/balance_management_refinement.cpp',
+                      '../../lib/data_structure/balance_management_coarsening.cpp',
+                      '../../lib/parallel_label_compress/node_ordering.cpp',
+                      '../../lib/parallel_contraction_projection/parallel_contraction.cpp',
+                      '../../lib/parallel_contraction_projection/parallel_block_down_propagation.cpp',
+                      '../../lib/parallel_contraction_projection/parallel_projection.cpp',
+                      '../../lib/distributed_partitioning/distributed_partitioner.cpp',
+                      '../../lib/distributed_partitioning/initial_partitioning/initial_partitioning.cpp',
+                      '../../lib/distributed_partitioning/initial_partitioning/distributed_evolutionary_partitioning.cpp',
+                      '../../lib/distributed_partitioning/initial_partitioning/random_initial_partitioning.cpp',
+                      '../../lib/communication/mpi_tools.cpp',
+                      '../../lib/communication/dummy_operations.cpp',
+                      '../../lib/io/parallel_graph_io.cpp',
+                      '../../lib/io/parallel_vector_io.cpp',
+                      '../../lib/tools/random_functions.cpp',
+                      '../../lib/tools/distributed_quality_metrics.cpp'
+                       ]
+
+
+env.Append(LIBPATH=['./optimized'])
+env.Append(LIBPATH=['./debug'])
+env.Append(LIBPATH=['../interface/'])
+
+
+env.Library('libparhip', ['parhip_interface.cpp']+libparallel_files, LIBS=['libkahip','gomp','mpi'])
+
