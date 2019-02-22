@@ -71,19 +71,19 @@ env.Append(CPPPATH=['../../../lib/partition/uncoarsening/refinement/quotient_gra
 
 # Apply variant specific settings.
 if env['variant'] == 'optimized':
-  env.Append(CXXFLAGS = '-g0 -O3  -DNDEBUG -funroll-loops -Wextra -Wall -Winline -fno-stack-limit -static  -Wno-unused-parameter -Wno-inline')
+  env.Append(CXXFLAGS = '-g0 -O3  -DNDEBUG -funroll-loops -Wextra -Wall -Winline -fno-stack-limit -static  -Wno-unused-parameter -Wno-inline -std=c++11')
   env.Append(CCFLAGS = '-g0 -O3  -DNDEBUG')
 elif env['variant'] == 'pdebug':
   # Optimized with debug symbols for profiling.
-  env.Append(CXXFLAGS = '-g -pg  -Wall -Winline')
+  env.Append(CXXFLAGS = '-g -pg  -Wall -Winline -std=c++11')
   env.Append(CCFLAGS = '-g -pg ')
 elif env['variant'] == 'profilingoptimized':
   # Optimized with debug symbols and assertions.
-  env.Append(CXXFLAGS = '-pg -g -O0 -DSPEEDPROFILING -fno-stack-limit -Wall -Winline')
+  env.Append(CXXFLAGS = '-pg -g -O0 -DSPEEDPROFILING -fno-stack-limit -Wall -Winline -std=c++11')
   env.Append(CCFLAGS = '-pg -g -O0 -DSPEEDPROFILING -Winline')
 else:
   # Debug settings.
-  env.Append(CXXFLAGS = '-g -O0 -Wall -fno-stack-limit -Winline')
+  env.Append(CXXFLAGS = '-g -O0 -Wall -fno-stack-limit -Winline -std=c++11')
   env.Append(CCFLAGS = '-g -O0 -Winline')
  
 
