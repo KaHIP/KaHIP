@@ -13,8 +13,6 @@
 #include "definitions.h"
 #include "limits.h"
 
-using namespace __gnu_cxx;
-
 struct compare_nodes {
         bool operator()(const NodeID lhs, const NodeID rhs) const {
                 return (lhs == rhs);
