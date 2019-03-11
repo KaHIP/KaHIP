@@ -200,5 +200,5 @@ target_compile_definitions(graphchecker PRIVATE "-DMODE_GRAPHCHECKER")
 target_link_libraries(graphchecker libkaffpa libmapping ${OpenMP_CXX_LIBRARIES})
 
 add_executable(edge_partitioning app/spac.cpp)
-target_compile_definitions(edge_partitioning PRIVATE "-DMODE_KAFFPAE")
+target_compile_definitions(edge_partitioning PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(edge_partitioning libkaffpa libmapping libspac ${OpenMP_CXX_LIBRARIES})
