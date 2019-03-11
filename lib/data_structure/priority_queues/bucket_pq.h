@@ -1,5 +1,5 @@
 /******************************************************************************
- * bucket_pq.h 
+ * bucket_pq.h
  * *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  * Christian Schulz <christian.schulz.phone@gmail.com>
@@ -10,36 +10,38 @@
 
 #include <limits>
 #include <unordered_map>
+#include <utility>
 
 #include "priority_queue_interface.h"
 
 class bucket_pq : public priority_queue_interface {
         public:
-                bucket_pq( const EdgeWeight & gain_span ); 
+                bucket_pq( const EdgeWeight & gain_span );
 
-                virtual ~bucket_pq() {};
+                ~bucket_pq() override = default;
 
-                NodeID size();  
-                void insert(NodeID id, Gain gain); 
-                bool empty();
+                NodeID size() override;
+                void insert(NodeID id, Gain gain) override;
+                bool empty() override;
 
-                Gain maxValue();
-                NodeID maxElement();
-                NodeID deleteMax();
+                Gain maxValue() override;
+                NodeID maxElement() override;
+                NodeID deleteMax() override;
 
-                void decreaseKey(NodeID node, Gain newGain);
-                void increaseKey(NodeID node, Gain newGain);
+                void decreaseKey(NodeID node, Gain newGain) override;
+                void increaseKey(NodeID node, Gain newGain) override;
 
-                void changeKey(NodeID element, Gain newKey);
-                Gain getKey(NodeID element);
-                void deleteNode(NodeID node);
+                void changeKey(NodeID element, Gain newKey) override;
+                Gain getKey(NodeID element) override;
+                void deleteNode(NodeID node) override;
 
-                bool contains(NodeID node);
-        private:
+                bool contains(NodeID node) override;
+
+              private:
                 NodeID     m_elements;
                 EdgeWeight m_gain_span;
                 unsigned   m_max_idx; //points to the non-empty bucket with the largest gain
-                
+
                 std::unordered_map<NodeID, std::pair<Count, Gain> > m_queue_index;
                 std::vector< std::vector<NodeID> >             m_buckets;
 };
@@ -53,16 +55,16 @@ inline bucket_pq::bucket_pq( const EdgeWeight & gain_span_input ) {
 }
 
 inline NodeID bucket_pq::size() {
-        return m_elements;  
+        return m_elements;
 }
 
 inline void bucket_pq::insert(NodeID node, Gain gain) {
         unsigned address = gain + m_gain_span;
         if(address > m_max_idx) {
-                m_max_idx = address; 
+                m_max_idx = address;
         }
-       
-        m_buckets[address].push_back( node ); 
+
+        m_buckets[address].push_back( node );
         m_queue_index[node].first  = m_buckets[address].size() - 1; //store position
         m_queue_index[node].second = gain;
 
@@ -70,15 +72,15 @@ inline void bucket_pq::insert(NodeID node, Gain gain) {
 }
 
 inline bool bucket_pq::empty( ) {
-        return m_elements == 0;        
+        return m_elements == 0;
 }
 
 inline Gain bucket_pq::maxValue( ) {
-        return m_max_idx - m_gain_span;        
+        return m_max_idx - m_gain_span;
 }
 
 inline NodeID bucket_pq::maxElement( ) {
-        return m_buckets[m_max_idx].back();        
+        return m_buckets[m_max_idx].back();
 }
 
 inline NodeID bucket_pq::deleteMax() {
@@ -97,7 +99,7 @@ inline NodeID bucket_pq::deleteMax() {
        }
 
        m_elements--;
-       return node;        
+       return node;
 }
 
 inline void bucket_pq::decreaseKey(NodeID node, Gain new_gain) {
@@ -109,7 +111,7 @@ inline void bucket_pq::increaseKey(NodeID node, Gain new_gain) {
 }
 
 inline Gain bucket_pq::getKey(NodeID node) {
-        return m_queue_index[node].second;        
+        return m_queue_index[node].second;
 }
 
 inline void bucket_pq::changeKey(NodeID node, Gain new_gain) {
@@ -148,7 +150,7 @@ inline void bucket_pq::deleteNode(NodeID node) {
 }
 
 inline bool bucket_pq::contains(NodeID node) {
-        return m_queue_index.find(node) != m_queue_index.end(); 
+        return m_queue_index.find(node) != m_queue_index.end();
 }
 
 

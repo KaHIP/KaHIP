@@ -1,5 +1,5 @@
 /******************************************************************************
- * graph_io.h 
+ * graph_io.h
  * *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  * Christian Schulz <christian.schulz.phone@gmail.com>
@@ -24,32 +24,32 @@ class graph_io {
                 graph_io();
                 virtual ~graph_io () ;
 
-                static 
-                int readGraphWeighted(graph_access & G, std::string filename);
+                static
+                int readGraphWeighted(graph_access & G, const std::string & filename);
 
                 static
-                int writeGraphWeighted(graph_access & G, std::string filename);
+                int writeGraphWeighted(graph_access & G, const std::string & filename);
 
                 static
-                int writeGraph(graph_access & G, std::string filename);
+                int writeGraph(graph_access & G, const std::string & filename);
 
-                static 
-                int readPartition(graph_access& G, std::string filename); 
+                static
+                int readPartition(graph_access& G, const std::string & filename);
 
-                static 
-                void writePartition(graph_access& G, std::string filename);
+                static
+                void writePartition(graph_access& G, const std::string & filename);
 
-                template<typename vectortype> 
-                static void writeVector(std::vector<vectortype> & vec, std::string filename);
+                template<typename vectortype>
+                static void writeVector(std::vector<vectortype> & vec, const std::string & filename);
 
-                template<typename vectortype> 
-                static void readVector(std::vector<vectortype> & vec, std::string filename);
+                template<typename vectortype>
+                static void readVector(std::vector<vectortype> & vec, const std::string & filename);
 
 
 };
 
-template<typename vectortype> 
-void graph_io::writeVector(std::vector<vectortype> & vec, std::string filename) {
+template<typename vectortype>
+void graph_io::writeVector(std::vector<vectortype> & vec, const std::string & filename) {
         std::ofstream f(filename.c_str());
         for( unsigned i = 0; i < vec.size(); ++i) {
                 f << vec[i] <<  std::endl;
@@ -58,8 +58,8 @@ void graph_io::writeVector(std::vector<vectortype> & vec, std::string filename) 
         f.close();
 }
 
-template<typename vectortype> 
-void graph_io::readVector(std::vector<vectortype> & vec, std::string filename) {
+template<typename vectortype>
+void graph_io::readVector(std::vector<vectortype> & vec, const std::string & filename) {
 
         std::string line;
 
