@@ -1,3 +1,7 @@
+if(NOT OPTIMIZED_OUTPUT)
+  add_definitions("-DNOOUTPUT")
+endif()
+
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib/tools)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib/partition)
