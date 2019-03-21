@@ -40,6 +40,8 @@ Project Contributors (sorted by last name)
 Yaroslav Akhremtsev
 
 Roland Glantz
+ 
+Dennis Luxen
 
 Henning Meyerhenke
 

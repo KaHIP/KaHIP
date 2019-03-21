@@ -1,5 +1,5 @@
 /******************************************************************************
- * graph_io.cpp 
+ * graph_io.cpp
  * *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  * Christian Schulz <christian.schulz.phone@gmail.com>
@@ -9,14 +9,14 @@
 #include "graph_io.h"
 
 graph_io::graph_io() {
-                
+
 }
 
 graph_io::~graph_io() {
-                
+
 }
 
-int graph_io::writeGraphWeighted(graph_access & G, std::string filename) {
+int graph_io::writeGraphWeighted(graph_access & G, const std::string & filename) {
         std::ofstream f(filename.c_str());
         f << G.number_of_nodes() <<  " " <<  G.number_of_edges()/2 <<  " 11" <<  std::endl;
 
@@ -24,7 +24,7 @@ int graph_io::writeGraphWeighted(graph_access & G, std::string filename) {
                 f <<  G.getNodeWeight(node) ;
                 forall_out_edges(G, e, node) {
                         f << " " <<   (G.getEdgeTarget(e)+1) <<  " " <<  G.getEdgeWeight(e) ;
-                } endfor 
+                } endfor
                 f <<  "\n";
         } endfor
 
@@ -32,14 +32,14 @@ int graph_io::writeGraphWeighted(graph_access & G, std::string filename) {
         return 0;
 }
 
-int graph_io::writeGraph(graph_access & G, std::string filename) {
+int graph_io::writeGraph(graph_access & G, const std::string & filename) {
         std::ofstream f(filename.c_str());
         f << G.number_of_nodes() <<  " " <<  G.number_of_edges()/2 << std::endl;
 
         forall_nodes(G, node) {
                 forall_out_edges(G, e, node) {
                         f <<   (G.getEdgeTarget(e)+1) << " " ;
-                } endfor 
+                } endfor
                 f <<  "\n";
         } endfor
 
@@ -47,7 +47,7 @@ int graph_io::writeGraph(graph_access & G, std::string filename) {
         return 0;
 }
 
-int graph_io::readPartition(graph_access & G, std::string filename) {
+int graph_io::readPartition(graph_access & G, const std::string & filename) {
         std::string line;
 
         // open file for reading
@@ -66,7 +66,7 @@ int graph_io::readPartition(graph_access & G, std::string filename) {
                         continue;
                 }
 
-                // in this line we find the block of Node node 
+                // in this line we find the block of Node node
                 G.setPartitionIndex(node, (PartitionID) atol(line.c_str()));
 
                 if(G.getPartitionIndex(node) > max)
@@ -79,7 +79,7 @@ int graph_io::readPartition(graph_access & G, std::string filename) {
         return 0;
 }
 
-int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
+int graph_io::readGraphWeighted(graph_access & G, const std::string & filename) {
         std::string line;
 
         // open file for reading
@@ -121,7 +121,7 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
                 read_nw = true;
         }
         nmbEdges *= 2; //since we have forward and backward edges
-        
+
         NodeID node_counter   = 0;
         EdgeID edge_counter   = 0;
         long long total_nodeweight = 0;
@@ -129,7 +129,7 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
         G.start_construction(nmbNodes, nmbEdges);
 
         while(  std::getline(in, line)) {
-       
+
                 if (line[0] == '%') { // a comment in the file
                         continue;
                 }
@@ -191,7 +191,7 @@ int graph_io::readGraphWeighted(graph_access & G, std::string filename) {
 }
 
 
-void graph_io::writePartition(graph_access & G, std::string filename) {
+void graph_io::writePartition(graph_access & G, const std::string & filename) {
         std::ofstream f(filename.c_str());
         std::cout << "writing partition to " << filename << " ... " << std::endl;
 

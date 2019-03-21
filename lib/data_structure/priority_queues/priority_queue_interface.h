@@ -1,5 +1,5 @@
 /******************************************************************************
- * priority_queue_interface.h 
+ * priority_queue_interface.h
  * *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  * Christian Schulz <christian.schulz.phone@gmail.com>
@@ -12,15 +12,15 @@
 
 class priority_queue_interface {
         public:
-                priority_queue_interface( ) {};
-                virtual ~priority_queue_interface() {};
+                priority_queue_interface( ) = default;
+                virtual ~priority_queue_interface() = default;
 
                 /* returns the size of the priority queue */
                 virtual NodeID size() = 0;
                 virtual bool empty()  = 0 ;
-               
-                virtual void insert(NodeID id, Gain gain) = 0; 
-                
+
+                virtual void insert(NodeID id, Gain gain) = 0;
+
                 virtual Gain maxValue()     = 0;
                 virtual NodeID maxElement() = 0;
                 virtual NodeID deleteMax()  = 0;
