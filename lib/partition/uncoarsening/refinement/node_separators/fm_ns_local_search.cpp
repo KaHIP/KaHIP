@@ -27,6 +27,7 @@ EdgeWeight fm_ns_local_search::perform_refinement(const PartitionConfig & config
                         start_nodes.push_back(node);
                 }
         } endfor
+        if(start_nodes.empty()) return 0;
 
         random_functions::permutate_vector_good(start_nodes, false);
         

@@ -588,6 +588,11 @@ void vertex_separator_algorithm::compute_vertex_separator_simpler(const Partitio
         QuotientGraphEdges qgraph_edges;
         boundary.getQuotientGraphEdges(qgraph_edges);
 
+        if(qgraph_edges.size() == 0) {
+                //is_vertex_separator(G, allready_separator);         
+                return;
+        }
+
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
 
         std::unordered_map<NodeID, bool> allready_separator;
@@ -636,6 +641,11 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
 
         QuotientGraphEdges qgraph_edges;
         boundary.getQuotientGraphEdges(qgraph_edges);
+
+        if(qgraph_edges.size() == 0) {
+                //is_vertex_separator(G, allready_separator);         
+                return;
+        }
 
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
 
