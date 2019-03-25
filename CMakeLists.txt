@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.10)
 include(CheckCXXCompilerFlag)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -66,6 +66,8 @@ if(OPTIMIZED_OUTPUT)
   add_definitions("-DKAFFPAOUTPUT")
 endif()
 
+# ParHIP
+option(PARHIP "build ParHIP" ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/app)
@@ -204,3 +206,9 @@ target_link_libraries(graphchecker libkaffpa libmapping ${OpenMP_CXX_LIBRARIES})
 add_executable(edge_partitioning app/spac.cpp)
 target_compile_definitions(edge_partitioning PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(edge_partitioning libkaffpa libmapping libspac ${OpenMP_CXX_LIBRARIES})
+
+# ParHIP
+if(PARHIP)
+  add_subdirectory(parallel/modified_kahip)
+  add_subdirectory(parallel/parallel_src)
+endif()
