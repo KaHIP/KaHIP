@@ -2,6 +2,7 @@ if(NOT OPTIMIZED_OUTPUT)
   add_definitions("-DNOOUTPUT")
 endif()
 
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/app)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib/tools)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib/partition)
@@ -30,7 +31,7 @@ set(LIBPARALLEL_SOURCE_FILES
   lib/tools/random_functions.cpp
   lib/tools/distributed_quality_metrics.cpp
   extern/argtable3-3.0.3/argtable3.c)
-add_library(libparallel ${LIBPARALLEL_SOURCE_FILES})
+add_library(libparallel OBJECT ${LIBPARALLEL_SOURCE_FILES})
 target_link_libraries(libparallel PRIVATE libmodified_kahip_interface)
 
 set(LIBGRAPH2BGF_SOURCE_FILES
@@ -39,7 +40,7 @@ set(LIBGRAPH2BGF_SOURCE_FILES
   lib/data_structure/balance_management.cpp
   lib/data_structure/balance_management_refinement.cpp
   lib/data_structure/balance_management_coarsening.cpp)
-add_library(libgraph2bf ${LIBGRAPH2BGF_SOURCE_FILES})
+add_library(libgraph2bf OBJECT ${LIBGRAPH2BGF_SOURCE_FILES})
 
 set(LIBEDGELIST_SOURCE_FILES
   lib/data_structure/parallel_graph_access.cpp
@@ -48,12 +49,12 @@ set(LIBEDGELIST_SOURCE_FILES
   lib/data_structure/balance_management_refinement.cpp
   lib/data_structure/balance_management_coarsening.cpp
   extern/argtable3-3.0.3/argtable3.c)
-add_library(libedgelist ${LIBEDGELIST_SOURCE_FILES})
+add_library(libedgelist OBJECT ${LIBEDGELIST_SOURCE_FILES})
 
 set(LIBDSPAC_SOURCE_FILES
   lib/dspac/dspac.cpp
   lib/dspac/edge_balanced_graph_io.cpp)
-add_library(libdspac ${LIBDSPAC_SOURCE_FILES})
+add_library(libdspac OBJECT ${LIBDSPAC_SOURCE_FILES})
 
 add_executable(parhip app/parhip.cpp)
 target_compile_definitions(parhip PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")
@@ -86,3 +87,13 @@ target_link_libraries(friendster_list_to_metis_graph libedgelist)
 add_executable(dspac app/dspac.cpp)
 target_compile_definitions(dspac PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")
 target_link_libraries(dspac libparallel libdspac)
+
+add_library(parhip_interface SHARED interface/parhip_interface.cpp)
+target_compile_definitions(parhip_interface PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")
+target_include_directories(parhip_interface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
+target_link_libraries(parhip_interface libparallel)
+
+add_library(parhip_interface_static interface/parhip_interface.cpp)
+target_compile_definitions(parhip_interface_static PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")
+target_include_directories(parhip_interface_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
+target_link_libraries(parhip_interface_static libparallel)

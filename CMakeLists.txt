@@ -141,7 +141,7 @@ set(LIBKAFFPA_SOURCE_FILES
   lib/partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.cpp
   lib/partition/uncoarsening/refinement/tabu_search/tabu_search.cpp
   extern/argtable3-3.0.3/argtable3.c)
-add_library(libkaffpa ${LIBKAFFPA_SOURCE_FILES})
+add_library(libkaffpa OBJECT ${LIBKAFFPA_SOURCE_FILES})
 
 set(LIBKAFFPA_PARALLEL_SOURCE_FILES
   lib/parallel_mh/parallel_mh_async.cpp
@@ -151,7 +151,7 @@ set(LIBKAFFPA_PARALLEL_SOURCE_FILES
   lib/parallel_mh/exchange/exchanger.cpp
   lib/tools/graph_communication.cpp
   lib/tools/mpi_tools.cpp)
-add_library(libkaffpa_parallel ${LIBKAFFPA_PARALLEL_SOURCE_FILES})
+add_library(libkaffpa_parallel OBJECT ${LIBKAFFPA_PARALLEL_SOURCE_FILES})
 target_include_directories(libkaffpa_parallel PUBLIC ${MPI_CXX_INCLUDE_PATH})
 
 set(LIBMAPPING_SOURCE_FILES
@@ -163,9 +163,9 @@ set(LIBMAPPING_SOURCE_FILES
   lib/mapping/construct_distance_matrix.cpp
   lib/mapping/mapping_algorithms.cpp
   lib/mapping/construct_mapping.cpp)
-add_library(libmapping ${LIBMAPPING_SOURCE_FILES})
+add_library(libmapping OBJECT ${LIBMAPPING_SOURCE_FILES})
 
-set(LIBSPAC_SOURCE_FILES lib/spac/spac.cpp)
+set(LIBSPAC_SOURCE_FILES OBJECT lib/spac/spac.cpp)
 add_library(libspac ${LIBSPAC_SOURCE_FILES})
 
 # generate targets for each binary
@@ -206,6 +206,18 @@ target_link_libraries(graphchecker libkaffpa libmapping ${OpenMP_CXX_LIBRARIES})
 add_executable(edge_partitioning app/spac.cpp)
 target_compile_definitions(edge_partitioning PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(edge_partitioning libkaffpa libmapping libspac ${OpenMP_CXX_LIBRARIES})
+
+# Shared interface library
+add_library(interface SHARED interface/kaHIP_interface.cpp)
+target_include_directories(interface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
+target_compile_definitions(interface PRIVATE "-DMODE_KAFFPA")
+target_link_libraries(interface PUBLIC libkaffpa libmapping ${OpenMP_CXX_LIBRARIES})
+
+# Static interface library
+add_library(interface_static interface/kaHIP_interface.cpp)
+target_include_directories(interface_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
+target_compile_definitions(interface_static PRIVATE "-DMODE_KAFFPA")
+target_link_libraries(interface_static PUBLIC libkaffpa libmapping ${OpenMP_CXX_LIBRARIES})
 
 # ParHIP
 if(PARHIP)

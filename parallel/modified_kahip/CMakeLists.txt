@@ -65,7 +65,7 @@ set(LIBMODIFIED_KAFFPA_SOURCE_FILES
   lib/parallel_mh/galinier_combine/gal_combine.cpp
   lib/parallel_mh/galinier_combine/construct_partition.cpp
   lib/partition/uncoarsening/refinement/tabu_search/tabu_search.cpp)
-add_library(libmodified_kaffpa ${LIBMODIFIED_KAFFPA_SOURCE_FILES})
+add_library(libmodified_kaffpa OBJECT ${LIBMODIFIED_KAFFPA_SOURCE_FILES})
 target_link_libraries(libmodified_kaffpa PRIVATE OpenMP::OpenMP_CXX)
 
 set(LIBMODIFIED_KAFFPA_PARALLEL_SOURCE_FILES
@@ -74,7 +74,7 @@ set(LIBMODIFIED_KAFFPA_PARALLEL_SOURCE_FILES
   lib/parallel_mh/exchange/exchanger.cpp
   lib/tools/graph_communication.cpp
   lib/tools/mpi_tools.cpp)
-add_library(libmodified_kaffpa_async ${LIBMODIFIED_KAFFPA_PARALLEL_SOURCE_FILES})
+add_library(libmodified_kaffpa_async OBJECT ${LIBMODIFIED_KAFFPA_PARALLEL_SOURCE_FILES})
 
 add_library(libmodified_kahip_interface interface/kaHIP_interface.cpp)
 target_link_libraries(libmodified_kahip_interface PRIVATE libmodified_kaffpa_async libmodified_kaffpa)
