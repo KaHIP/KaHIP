@@ -9,13 +9,13 @@
 #define RANDOM_FUNCTIONS_RMEPKWYT
 
 #include <iostream>
-#include <tr1/random>
+#include <random>
 #include <vector>
 
 #include "definitions.h"
 #include "partition_config.h"
 
-typedef std::tr1::mt19937 MersenneTwister;
+typedef std::mt19937 MersenneTwister;
 
 class random_functions {
         public:
@@ -30,8 +30,8 @@ class random_functions {
                                 }                   
 
                                 ULONG size = vec.size();
-                                std::tr1::uniform_int<ULONG> A(0,size-1);
-                                std::tr1::uniform_int<ULONG> B(0,size-1);
+                                std::uniform_int_distribution<ULONG> A(0,size-1);
+                                std::uniform_int_distribution<ULONG> B(0,size-1);
 
                                 for( ULONG i = 0; i < size; i++) {
                                         ULONG posA = A(m_mt);
@@ -59,7 +59,7 @@ class random_functions {
                                 if(vec.size() < 10) return;
                                         
                                 int distance = 20; 
-                                std::tr1::uniform_int<unsigned int> A(0, distance);
+                                std::uniform_int_distribution<unsigned int> A(0, distance);
                                 ULONG size = vec.size()-4;
                                 for( ULONG i = 0; i < size; i++) {
                                         ULONG posA = i;
@@ -84,8 +84,8 @@ class random_functions {
                                         return;
                                 }
                                 ULONG size = vec.size();
-                                std::tr1::uniform_int<ULONG> A(0,size - 4);
-                                std::tr1::uniform_int<ULONG> B(0,size - 4);
+                                std::uniform_int_distribution<ULONG> A(0,size - 4);
+                                std::uniform_int_distribution<ULONG> B(0,size - 4);
 
                                 for( ULONG i = 0; i < size; i++) {
                                         ULONG posA = A(m_mt);
@@ -102,8 +102,8 @@ class random_functions {
                         static void permutate_vector_good_small(std::vector<sometype> & vec) {
                                 if(vec.size() < 2) return;
                                 ULONG size = vec.size();
-                                std::tr1::uniform_int<ULONG> A(0,size-1);
-                                std::tr1::uniform_int<ULONG> B(0,size-1);
+                                std::uniform_int_distribution<ULONG> A(0,size-1);
+                                std::uniform_int_distribution<ULONG> B(0,size-1);
 
                                 for( ULONG i = 0; i < size; i++) {
                                         ULONG posA = A(m_mt);
@@ -131,14 +131,14 @@ class random_functions {
                         }
 
                 static bool nextBool() {
-                        std::tr1::uniform_int<short> A(0,1);
+                        std::uniform_int_distribution<short> A(0,1);
                         return (bool) A(m_mt); 
                 }
 
                 //including lb and rb
                 template<typename sometype>
                         static sometype nextInt(sometype lb, sometype rb) {
-                                std::tr1::uniform_int<sometype> A(lb,rb);
+                                std::uniform_int_distribution<sometype> A(lb,rb);
                                 return A(m_mt); 
                         }
 
