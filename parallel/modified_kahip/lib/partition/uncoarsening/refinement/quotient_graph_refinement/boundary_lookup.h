@@ -14,8 +14,6 @@
 #include "limits.h"
 #include "partial_boundary.h"
 
-using namespace __gnu_cxx;
-
 struct boundary_pair {
         PartitionID k;
         PartitionID lhs;
