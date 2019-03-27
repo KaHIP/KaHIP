@@ -50,6 +50,8 @@ if(OpenMP_CXX_FOUND)
   add_definitions(${OpenMP_CXX_FLAGS})
 else()
   message(WARNING "OpenMP not available, activating workaround")
+  add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
+  set_property(TARGET OpenMP::OpenMP_CXX PROPERTY INTERFACE_COMPILE_OPTIONS "")
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/misc)
 endif()
 
