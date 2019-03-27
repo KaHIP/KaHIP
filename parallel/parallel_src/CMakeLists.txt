@@ -32,7 +32,7 @@ set(LIBPARALLEL_SOURCE_FILES
   lib/tools/distributed_quality_metrics.cpp
   extern/argtable3-3.0.3/argtable3.c)
 add_library(libparallel OBJECT ${LIBPARALLEL_SOURCE_FILES})
-target_link_libraries(libparallel PRIVATE libmodified_kahip_interface)
+target_include_directories(libparallel PUBLIC $<TARGET_PROPERTY:libmodified_kahip_interface,INTERFACE_INCLUDE_DIRECTORIES>)
 
 set(LIBGRAPH2BGF_SOURCE_FILES
   lib/data_structure/parallel_graph_access.cpp
@@ -80,10 +80,12 @@ install(TARGETS readbgf DESTINATION bin)
 
 add_executable(edge_list_to_metis_graph app/edge_list_to_metis_graph.cpp $<TARGET_OBJECTS:libedgelist>)
 target_compile_definitions(edge_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM")
+target_link_libraries(edge_list_to_metis_graph PRIVATE libmodified_kahip_interface)
 install(TARGETS edge_list_to_metis_graph DESTINATION bin)
 
 add_executable(friendster_list_to_metis_graph app/friendster_list_to_metis_graph.cpp $<TARGET_OBJECTS:libedgelist>)
 target_compile_definitions(friendster_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM")
+target_link_libraries(edge_list_to_metis_graph PRIVATE libmodified_kahip_interface)
 install(TARGETS friendster_list_to_metis_graph DESTINATION bin)
 
 add_executable(dspac app/dspac.cpp $<TARGET_OBJECTS:libparallel> $<TARGET_OBJECTS:libdspac>)
