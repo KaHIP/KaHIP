@@ -6,6 +6,7 @@
  *****************************************************************************/
 
 #include <algorithm>
+#include <array>
 
 #include "edge_balanced_graph_io.h"
 
