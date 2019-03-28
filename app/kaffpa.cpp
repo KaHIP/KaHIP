@@ -84,12 +84,6 @@ int main(int argn, char **argv) {
         srand(partition_config.seed);
         random_functions::setSeed(partition_config.seed);
 
-        std::cout << "partition_config.refinement_type=" << partition_config.refinement_type << std::endl;
-        std::cout << "partition_config.corner_refinement_enabled=" << partition_config.corner_refinement_enabled << std::endl;
-        std::cout << "partition_config.most_balanced_minimum_cuts=" << partition_config.most_balanced_minimum_cuts << std::endl;
-        std::cout << "partition_config.flow_region_factor=" << partition_config.flow_region_factor << std::endl;
-        std::cout << "partition_config.global_cycle_iterations=" << partition_config.global_cycle_iterations << std::endl;
-
         std::cout <<  "graph has " <<  G.number_of_nodes() <<  " nodes and " <<  G.number_of_edges() <<  " edges"  << std::endl;
         // ***************************** perform partitioning ***************************************       
         t.restart();
