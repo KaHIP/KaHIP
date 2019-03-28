@@ -31,8 +31,6 @@
 #include "macros_assertions.h"
 #include "stdio.h"
 
-#define MODE_DEVEL
-
 // allows us to disable most of the output during partitioning
 #ifdef KAFFPAOUTPUT
         #define PRINT(x) x
