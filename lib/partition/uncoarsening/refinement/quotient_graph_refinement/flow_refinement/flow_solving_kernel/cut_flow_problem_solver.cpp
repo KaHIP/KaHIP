@@ -144,12 +144,9 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
           const NodeID inner_lhs_node = outer_lhs_boundary[i]; //new id in flow network
           bool source_edge_added = false;
           bool sink_edge_added = false;
-          FlowType source_flow = 0;
-          FlowType sink_flow = 0;
           forall_out_edges(G, e, new_to_old_ids[inner_lhs_node]) {
             if(G.getPartitionIndex(G.getEdgeTarget(e)) == lhs)  {
               // block of nodes inside the flow problem was set to BOUNDARY_STRIPE_NODE
-              source_flow += G.getEdgeWeight(e);
               if (!source_edge_added) {
                 fG.new_edge(source, inner_lhs_node, G.getEdgeWeight(e));
                 source_edge_added = true;
@@ -157,7 +154,6 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                 fG.increaseCapacity(source, G.getEdgeWeight(e));
               }
             } else if (G.getPartitionIndex(G.getEdgeTarget(e)) == rhs) {
-              sink_flow += G.getEdgeWeight(e);
               if (!sink_edge_added) {
                 fG.new_edge(inner_lhs_node, sink, G.getEdgeWeight(e));
                 sink_edge_added = true;
@@ -174,12 +170,9 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
           NodeID inner_rhs_node = outer_rhs_boundary[i]; //new id in flow network
           bool sink_edge_added = false;
           bool source_edge_added = false;
-          FlowType sink_flow = 0;
-          FlowType source_flow = 0;
           forall_out_edges(G, e, new_to_old_ids[inner_rhs_node]) {
             if(G.getPartitionIndex(G.getEdgeTarget(e)) == rhs)  {
               // block of nodes inside the flow problem was set to BOUNDARY_STRIPE_NODE
-              sink_flow += G.getEdgeWeight(e);
                if (!sink_edge_added) {
                  fG.new_edge(inner_rhs_node, sink, G.getEdgeWeight(e));
                  sink_edge_added = true;
@@ -187,7 +180,6 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                  fG.increaseCapacity(inner_rhs_node, G.getEdgeWeight(e));
                }
             } else if(G.getPartitionIndex(G.getEdgeTarget(e)) == lhs)  {
-              source_flow += G.getEdgeWeight(e);
               if (!source_edge_added) {
                 fG.new_edge(source, inner_rhs_node, G.getEdgeWeight(e));
                  source_edge_added = true;
