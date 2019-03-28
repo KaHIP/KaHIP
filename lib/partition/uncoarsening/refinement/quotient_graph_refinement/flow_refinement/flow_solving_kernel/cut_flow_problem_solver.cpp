@@ -139,7 +139,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                 } endfor
         }
 
-        ////connect source_dummy to outer boundary nodes
+        //connect source_dummy to outer boundary nodes
         for(unsigned i = 0; i < outer_lhs_boundary.size(); i++) {
           const NodeID inner_lhs_node = outer_lhs_boundary[i]; //new id in flow network
           bool source_edge_added = false;
@@ -166,24 +166,10 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
               }
             }
           } endfor
-          //       std::vector<bool> seen(G.get_partition_count(), false);
-          //       forall_out_edges(G, e, new_to_old_ids[inner_lhs_node]) {
-          //   if(G.getPartitionIndex(G.getEdgeTarget(e)) != rhs &&
-          //      G.getPartitionIndex(G.getEdgeTarget(e)) != lhs &&
-          //      G.getPartitionIndex(G.getEdgeTarget(e)) != BOUNDARY_STRIPE_NODE &&
-          //      !seen[G.getPartitionIndex(G.getEdgeTarget(e))]) {
-          //     // std::cout << "lhs: " <<  lhs << std::endl;
-          //     // std::cout << "rhs: " <<  rhs << std::endl;
-          //     std::cout << new_to_old_ids[inner_lhs_node] << "[inner_lhs] incident to block " << G.getPartitionIndex(G.getEdgeTarget(e)) << std::endl;;
-          //     seen[G.getPartitionIndex(G.getEdgeTarget(e))] = true;
-          //     // fG.new_edge(source, inner_lhs_node, std::numeric_limits<FlowType>::max());
-          //     // break;
-          //   }
-          // } endfor
-                }
+          }
 
 
-        ////connect outer boundary nodes to sink_dummy
+        // connect outer boundary nodes to sink_dummy
         for(unsigned i = 0; i < outer_rhs_boundary.size(); i++) {
           NodeID inner_rhs_node = outer_rhs_boundary[i]; //new id in flow network
           bool sink_edge_added = false;
@@ -210,21 +196,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                }
             }
           }endfor
-           //     std::vector<bool> seen(G.get_partition_count(), false);
-          //      forall_out_edges(G, e, new_to_old_ids[inner_rhs_node]) {
-          //   if(G.getPartitionIndex(G.getEdgeTarget(e)) != rhs &&
-          //      G.getPartitionIndex(G.getEdgeTarget(e)) != lhs &&
-          //      G.getPartitionIndex(G.getEdgeTarget(e)) != BOUNDARY_STRIPE_NODE &&
-          //      !seen[G.getPartitionIndex(G.getEdgeTarget(e))]) {
-          //     // fG.new_edge(inner_rhs_node, sink, std::numeric_limits<FlowType>::max());
-          //     // std::cout << "lhs: " <<  lhs << std::endl;
-          //     // std::cout << "rhs: " <<  rhs << std::endl;
-          //     std::cout << new_to_old_ids[inner_rhs_node] << " [inner rhs] incident to block " << G.getPartitionIndex(G.getEdgeTarget(e)) << std::endl;;
-          //     seen[G.getPartitionIndex(G.getEdgeTarget(e))] = true;
-          //     // break;
-          //   }
-          // } endfor
-                }
+          }
         return true;
 }
 
