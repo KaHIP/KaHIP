@@ -139,7 +139,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                 } endfor
         }
 
-        //connect source_dummy to outer boundary nodes
+        //connect source to outer boundary nodes
         for(unsigned i = 0; i < outer_lhs_boundary.size(); i++) {
           const NodeID inner_lhs_node = outer_lhs_boundary[i]; //new id in flow network
           bool source_edge_added = false;
@@ -165,7 +165,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
           }
 
 
-        // connect outer boundary nodes to sink_dummy
+        // connect outer boundary nodes to sink
         for(unsigned i = 0; i < outer_rhs_boundary.size(); i++) {
           NodeID inner_rhs_node = outer_rhs_boundary[i]; //new id in flow network
           bool sink_edge_added = false;
