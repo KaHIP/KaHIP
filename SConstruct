@@ -38,15 +38,15 @@ def GetEnvironment():
 
   env = Environment(options=opts, ENV=os.environ)
   if not env['variant'] in ['optimized','optimized_output','debug']:
-    print 'Illegal value for variant: %s' % env['variant']
+    print('Illegal value for variant: %s' % env['variant'])
     sys.exit(1)
-  
+
   if not env['program'] in ['kaffpa', 'kaffpaE', 'partition_to_vertex_separator','improve_vertex_separator','library','graphchecker','label_propagation','evaluator','node_separator','spac']:
-    print 'Illegal value for program: %s' % env['program']
+    print('Illegal value for program: %s' % env['program'])
     sys.exit(1)
 
   if not env['mode'] in ['32bit','64bit']:
-    print 'Illegal value for mode: %s' % env['mode']
+    print('Illegal value for mode: %s' % env['mode'])
     sys.exit(1)
 
   # Special configuration for 64 bit machines.
@@ -127,4 +127,3 @@ if env['mode'] == '64bit':
 
 # Execute the SConscript.
 SConscript('SConscript', exports=['env'],variant_dir=env['variant'], duplicate=False)
-
