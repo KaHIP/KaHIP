@@ -39,11 +39,11 @@ def GetEnvironment():
 
   env = Environment(options=opts, ENV=os.environ)
   if not env['variant'] in ['optimized','optimized_nooutput','debug']:
-    print 'Illegal value for variant: %s' % env['variant']
+    print('Illegal value for variant: %s' % env['variant'])
     sys.exit(1)
-  
+
   if not env['program'] in ['parhip','edge_list_to_metis_graph','friendster_list_to_metis_graph','parallel_label_compress_reps','yahoo_to_metis','parmetis_driver','graph2binary','graph2binary_external','readbgf','toolbox','dspac']:
-    print 'Illegal value for program: %s' % env['program']
+    print('Illegal value for program: %s' % env['program'])
     sys.exit(1)
 
   # Special configuration for 64 bit machines.
@@ -78,7 +78,7 @@ if SYSTEM == 'Darwin':
         env.Append(LIBPATH=['/opt/local/lib/'])
         # homebrew related paths
         env.Append(LIBPATH=['/usr/local/lib/'])
-        
+
 
 #if not conf.CheckCXXHeader('mpi.h'):
 	#print "openmpi header not found. Exiting"
@@ -123,4 +123,3 @@ else:
 
 # Execute the SConscript.
 SConscript('SConscript', exports=['env'],variant_dir=env['variant'], duplicate=False)
-

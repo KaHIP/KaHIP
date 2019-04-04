@@ -33,9 +33,9 @@ def GetEnvironment():
 
   env = Environment(options=opts, ENV=os.environ)
   if not env['variant'] in ['debug', 'optimized', 'pdebug', 'profilingoptimized']:
-    print 'Illegal value for variant: %s' % env['variant']
+    print('Illegal value for variant: %s' % env['variant'])
     sys.exit(1)
-  
+
   # Special configuration for 64 bit machines.
   if platform.architecture()[0] == '64bit':
      env.Append(CPPFLAGS=['-DPOINTER64=1'])
@@ -67,8 +67,7 @@ else:
   # Debug settings.
   env.Append(CXXFLAGS = '-g -O0 -Wall -fno-stack-limit -Winline')
   env.Append(CCFLAGS = '-g -O0 -Winline')
- 
+
 
 # Execute the SConscript.
 SConscript('SConscript', exports=['env'],variant_dir=env['variant'], duplicate=False)
-
