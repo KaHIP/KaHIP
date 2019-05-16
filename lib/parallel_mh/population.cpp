@@ -255,6 +255,7 @@ void population::combine_cross(const PartitionConfig & partition_config,
         int lowerbound = config.k / 4;
         lowerbound     = std::max(2, lowerbound);
         int kfactor    = random_functions::nextInt(lowerbound,4*config.k);
+        kfactor = std::min( kfactor, (int)G.number_of_nodes());
 
         if( config.mh_cross_combine_original_k ) {
                 MPI_Bcast(&kfactor, 1, MPI_INT, 0, m_communicator);
