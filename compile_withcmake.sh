@@ -13,7 +13,7 @@ fi
 rm -rf deploy
 rm -rf build
 mkdir build
-cd build 
+cd build
 cmake ../
 make -j $NCORES
 cd ..
@@ -36,4 +36,6 @@ cp ./build/parallel/parallel_src/libparhip_inter*.a deploy/libparhip.a
 cp ./interface/kaHIP_interface.h deploy/
 cp ./parallel/parallel_src/interface/parhip_interface.h deploy/
 
+mkdir deploy/parallel
+cp ./build/parallel/modified_kahip/lib*.a deploy/parallel/libkahip.a
 
