@@ -53,7 +53,7 @@ void ParHIPPartitionKWay(idxtype *vtxdist, idxtype *xadj, idxtype *adjncy, idxty
         MPI_Allreduce(&local_number_of_edges, &global_number_of_edges, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, *comm); 
 
         parallel_graph_access G(*comm);
-        G.start_construction(local_number_of_nodes, 2*local_number_of_edges, number_of_nodes, 2*global_number_of_edges);
+        G.start_construction(local_number_of_nodes, local_number_of_edges, number_of_nodes, global_number_of_edges);
         G.set_range(from, to);
         std::vector< NodeID > vertex_dist( size+1, 0 );
         for( PEID peID = 0; peID <= size; peID++) {
