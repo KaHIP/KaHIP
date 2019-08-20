@@ -27,7 +27,7 @@ int parse_spac_parameters(int argn, char **argv, PartitionConfig &partition_conf
     struct arg_str *filename_output = arg_str0(NULL, "output_filename", NULL, "Specify the name of the output file (that contains the partition).");
     struct arg_int *k = arg_int1(NULL, "k", NULL, "Number of blocks to partition the graph.");
     struct arg_int *seed = arg_int0(NULL, "seed", NULL, "Seed to use for PRNG.");
-    struct arg_rex *preconfiguration = arg_rex1(NULL, "preconfiguration", "^(strong|eco|fast|fastsocial|ecosocial|strongsocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fastsocial|ecosocial|strongsocial]." );
+    struct arg_rex *preconfiguration = arg_rex1(NULL, "preconfiguration", "^(strong$|eco$|fast$|fastsocial|ecosocial|strongsocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fastsocial|ecosocial|strongsocial]." );
     struct arg_int *infinity = arg_int0(NULL, "infinity", NULL, "Infinity edge weight. Default: 1000");
     struct arg_int *imbalance = arg_int0(NULL, "imbalance", NULL, "Desired imbalance. Default: 3%");
     struct arg_end *end = arg_end(100);
