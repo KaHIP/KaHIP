@@ -253,7 +253,68 @@ EdgeWeight distributed_quality_metrics::comm_vol( PPartitionConfig & config, par
                 std::cout <<  "log> total vol part " <<  total_comm_vol << std::endl;
                 std::cout <<  "log> max vol part " <<  max_comm_vol << std::endl;
                 std::cout <<  "log> min vol part " <<  min_comm_vol << std::endl;
-                std::cout <<  "log> vol part ratio " <<  max_comm_vol/(double)min_comm_vol  << std::endl;
+                std::cout <<  "log> vol part ratio " <<  max_comm_vol/(double)min_comm_vol  << std::endl << std::endl;
+        }
+
+        return local_comm_vol;
+}
+
+
+EdgeWeight distributed_quality_metrics::comm_bnd( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator ) {
+        EdgeWeight local_comm_vol = 0; int rank;
+        MPI_Comm_rank( communicator, &rank);
+
+        std::vector<EdgeWeight> num_inner_nodes(config.k, 0);
+        std::vector<EdgeWeight> num_bnd_nodes(config.k, 0);
+        
+        forall_local_nodes(G, node) {                
+                bool is_bnd = false;
+                PartitionID my_block = G.getNodeLabel( node );
+                
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+                        PartitionID target_block = G.getNodeLabel( target );
+                        if( my_block!=target_block ) {     // found neighbor in different block
+                            is_bnd = true;
+                            break;
+                        }
+                } endfor
+
+                if( is_bnd ){
+                    num_bnd_nodes[my_block]++;
+                }
+                else{
+                    num_inner_nodes[my_block]++;
+                }
+                
+        } endfor
+
+        std::vector<EdgeWeight> global_num_inner_nodes(config.k, 0);
+        std::vector<EdgeWeight> global_num_bnd_nodes(config.k, 0);
+
+        MPI_Allreduce(&num_inner_nodes[0], &global_num_inner_nodes[0], config.k, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+        MPI_Allreduce(&num_bnd_nodes[0], &global_num_bnd_nodes[0], config.k, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+
+        
+        EdgeWeight total_bnd_nodes = std::accumulate( global_num_bnd_nodes.begin(), global_num_bnd_nodes.end(), 0);
+        EdgeWeight total_inner_nodes = std::accumulate( global_num_inner_nodes.begin(), global_num_inner_nodes.end(), 0);
+        
+        EdgeWeight max_bnd_nodes = *std::max_element( global_num_bnd_nodes.begin(), global_num_bnd_nodes.end() );
+        
+        EdgeWeight total_nodes = total_bnd_nodes + total_inner_nodes;
+        //TODO assertion to check if total sum of nodes is correct
+                
+        if( rank == ROOT ) {
+                std::vector<double> percent_bnd_nodes(config.k, 0.0);    
+                for( PEID i = 0; i < PEID( config.k); i++) {
+                        percent_bnd_nodes[i] = (double( global_num_bnd_nodes[i]))/(global_num_bnd_nodes[i]+global_num_inner_nodes[i]);
+                }
+                
+                std::cout <<  " _debug_ > total inner nodes= " << total_inner_nodes <<  "   __ total nodes must be: " << total_nodes << std::endl;
+                std::cout <<  "log> total bnd nodes " <<  total_bnd_nodes << std::endl;
+                std::cout <<  "log> max bnd nodes " <<  max_bnd_nodes << std::endl;
+                std::cout <<  "log> max percentage of bnd nodes " << *std::max_element(percent_bnd_nodes.begin(), percent_bnd_nodes.end())  << std::endl;
+                std::cout <<  "log> average percentage of bnd nodes " << std::accumulate(percent_bnd_nodes.begin(), percent_bnd_nodes.end(), 0.0)/(double(config.k))  << std::endl<< std::endl;
         }
 
         return local_comm_vol;

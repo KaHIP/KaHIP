@@ -26,6 +26,7 @@ public:
         double balance_load_dist( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator  );
         double balance_second( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator  );
 	EdgeWeight comm_vol( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator  );
+    EdgeWeight comm_bnd( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator );
 	EdgeWeight comm_vol_dist( parallel_graph_access & G, MPI_Comm communicator );
 };
 

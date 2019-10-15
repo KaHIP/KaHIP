@@ -153,6 +153,7 @@ int main(int argn, char **argv) {
                         PRINT(std::cout <<  "log>final balance load dist "  <<  balance_load_dist   << std::endl;)
                 }
                 PRINT(qm.comm_vol( partition_config, G, communicator );)
+                PRINT(qm.comm_bnd( partition_config, G, communicator );)
                 PRINT(qm.comm_vol_dist( G, communicator );)
 
 
@@ -172,7 +173,7 @@ int main(int argn, char **argv) {
 
                 if( partition_config.save_partition ) {
                         parallel_vector_io pvio;
-                        std::string filename("tmppartition.txtp");
+                        std::string filename(graph_filename+".txtpart");
                         pvio.writePartitionSimpleParallel(G, filename);
                 }
 
