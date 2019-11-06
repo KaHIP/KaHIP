@@ -6,6 +6,7 @@
  *****************************************************************************/
 
 #include <algorithm>
+#include <numeric>
 #include "distributed_quality_metrics.h"
 
 distributed_quality_metrics::distributed_quality_metrics() {

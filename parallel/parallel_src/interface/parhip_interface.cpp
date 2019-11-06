@@ -7,11 +7,10 @@
 #include "tools/distributed_quality_metrics.h"
 #include "random_functions.h"
 
-
+template<typename idxtype>
 void ParHIPPartitionKWay(idxtype *vtxdist, idxtype *xadj, idxtype *adjncy, idxtype *vwgt, idxtype *adjwgt,
                          int *nparts, double* imbalance, bool suppress_output, int seed, int mode, int *edgecut, idxtype *part, 
                          MPI_Comm *comm) {
-
 
 
         std::streambuf* backup = std::cout.rdbuf();
@@ -37,7 +36,7 @@ void ParHIPPartitionKWay(idxtype *vtxdist, idxtype *xadj, idxtype *adjncy, idxty
         if( vwgt != NULL ) {
                 local_overall_node_weight = 0;
                 global_node_weight = 0;
-                for( unsigned long long i = 0; i < local_number_of_nodes; i++) {
+                for( unsigned long long i = 0; i < (unsigned) local_number_of_nodes; i++) {
                         vertex_weights[i] = vwgt[i];
                         local_overall_node_weight += vwgt[i]; 
                 }
@@ -62,25 +61,25 @@ void ParHIPPartitionKWay(idxtype *vtxdist, idxtype *xadj, idxtype *adjncy, idxty
         G.set_range_array(vertex_dist);
 
         if( adjwgt != NULL ) {
-                for (NodeID i = 0; i < local_number_of_nodes; ++i) {
+                for (NodeID i = 0; i < (unsigned) local_number_of_nodes; ++i) {
                         NodeID node = G.new_node();
                         G.setNodeWeight(node, vertex_weights[i]);
                         G.setNodeLabel(node, from+node);
                         G.setSecondPartitionIndex(node, 0);
 
-                        for (ULONG j = xadj[i]; j < xadj[i + 1]; j++) {
+                        for (ULONG j = xadj[i]; j < (unsigned) xadj[i + 1]; j++) {
                                 EdgeID e = G.new_edge(node, adjncy[j]);
                                 G.setEdgeWeight(e, adjwgt[j]);
                         }
                 }
         } else {
-                for (NodeID i = 0; i < local_number_of_nodes; ++i) {
+                for (NodeID i = 0; i < (unsigned) local_number_of_nodes; ++i) {
                         NodeID node = G.new_node();
                         G.setNodeWeight(node, vertex_weights[i]);
                         G.setNodeLabel(node, from+node);
                         G.setSecondPartitionIndex(node, 0);
 
-                        for (ULONG j = xadj[i]; j < xadj[i + 1]; j++) {
+                        for (ULONG j = xadj[i]; j < (unsigned) xadj[i + 1]; j++) {
                                 EdgeID e = G.new_edge(node, adjncy[j]);
                                 G.setEdgeWeight(e, 1);
                         }
@@ -147,9 +146,31 @@ void ParHIPPartitionKWay(idxtype *vtxdist, idxtype *xadj, idxtype *adjncy, idxty
         distributed_quality_metrics qm;
         *edgecut = qm.edge_cut( G, *comm );
 
-        for (NodeID i = 0; i < local_number_of_nodes; ++i) {
+        for (NodeID i = 0; i < (unsigned) local_number_of_nodes; ++i) {
                 part[i] = G.getNodeLabel(i);
         }
-
-
 }
+
+template void ParHIPPartitionKWay( unsigned long int *vtxdist, unsigned long int *xadj, unsigned long int *adjncy, unsigned long int *vwgt, unsigned long int *adjwgt,
+                         int *nparts, double* imbalance, bool suppress_output, int seed, int mode, int *edgecut, unsigned long int *part, 
+                         MPI_Comm *comm);
+
+
+template void ParHIPPartitionKWay( unsigned int *vtxdist, unsigned int *xadj, unsigned int *adjncy, unsigned int *vwgt, unsigned int *adjwgt,
+                         int *nparts, double* imbalance, bool suppress_output, int seed, int mode, int *edgecut, unsigned int *part, 
+                         MPI_Comm *comm);
+
+template void ParHIPPartitionKWay(long int *vtxdist, long int *xadj, long int *adjncy, long int *vwgt, long int *adjwgt,
+                         int *nparts, double* imbalance, bool suppress_output, int seed, int mode, int *edgecut, long int *part, 
+                         MPI_Comm *comm);
+
+
+template void ParHIPPartitionKWay(int *vtxdist, int *xadj, int *adjncy, int *vwgt, int *adjwgt,
+                         int *nparts, double* imbalance, bool suppress_output, int seed, int mode, int *edgecut, int *part, 
+                         MPI_Comm *comm);
+
+/*
+template void ParHIPPartitionKWay(long *vtxdist, long *xadj, long *adjncy, long *vwgt, long *adjwgt,
+                         int *nparts, double* imbalance, bool suppress_output, int seed, int mode, int *edgecut, long *part, 
+                         MPI_Comm *comm);
+*/                         
