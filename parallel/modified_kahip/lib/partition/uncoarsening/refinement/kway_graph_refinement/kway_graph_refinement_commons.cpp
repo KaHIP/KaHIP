@@ -22,13 +22,13 @@ kway_graph_refinement_commons::~kway_graph_refinement_commons() {
 
 
 kway_graph_refinement_commons* kway_graph_refinement_commons::getInstance( PartitionConfig & config ) {
+        bool created = false;
         #ifdef USE_OPENMP
         int max_threads = omp_get_max_threads();
+        #pragma omp critical
         #else
         int  max_threads = 1;
         #endif
-        bool created = false;
-        #pragma omp critical
         {
                 if( m_instances == NULL ) {
                         m_instances = new std::vector< kway_graph_refinement_commons*>(max_threads, NULL);
