@@ -11,10 +11,16 @@ if [[ "$unamestr" == "Darwin" ]]; then
 fi
 
 rm -rf deploy
-#rm -rf build
+rm -rf build
 mkdir build
 cd build
-cmake ../
+
+#specific paths for compiler in lise
+cmake \
+-DCMAKE_C_COMPILER=/sw/compiler/gcc/9.2.0/skl/bin/gcc \
+-DCMAKE_CXX_COMPILER=/sw/compiler/gcc/9.2.0/skl/bin/g++ \
+../
+
 make -j $NCORES
 cd ..
 
