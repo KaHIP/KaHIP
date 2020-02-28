@@ -52,7 +52,7 @@ If you publish results using our algorithms, please acknowledge our work by quot
              PAGES = {164--175}
 }
 
-If you use our parallel partitioner ParHIP please also cite the following paper (PDF):
+If you use our parallel partitioner ParHIP please also cite the following paper:
 
 @inproceedings{meyerhenkesandersschulz2017,
              AUTHOR = {Meyerhenke, Henning and Sanders, Peter and Schulz, Christian},
@@ -64,7 +64,7 @@ If you use our parallel partitioner ParHIP please also cite the following paper 
              YEAR = {2017}
 }
 
-If you use mapping algorithm please also cite the following paper (PDF):
+If you use mapping algorithm please also cite the following paper:
 
 @techreport{schulztraeff2017,
              AUTHOR = {Schulz, Christian and Träff, Jesper Larsson},
@@ -77,7 +77,7 @@ If you use mapping algorithm please also cite the following paper (PDF):
              YEAR = {2017}
 }
 
-If you use edge partitioning algorithms please also cite the following paper (PDF):
+If you use edge partitioning algorithms please also cite the following paper:
 
 @inproceedings{edgepartitioning2019,
              AUTHOR = {Schlag, Sebastian and Schulz, Christian and Seemaier, Daniel and Strash, Darren},
