@@ -90,8 +90,9 @@ If you use edge partitioning algorithms please also cite the following paper:
              AUTHOR = {Schlag, Sebastian and Schulz, Christian and Seemaier, Daniel and Strash, Darren},
              TITLE = {{Scalable Edge Partitioning}},
              BOOKTITLE = {Proceedings of the 21th Workshop on Algorithm Engineering and Experimentation (ALENEX)},
-             JOURNAL = {Technical Report, arXiv:1808.06411},
-             YEAR = {2019, to appear.}
+             PUBLISHER = {SIAM},
+             PAGES = {211--225},
+             YEAR = {2019}
 }
 ```
 
