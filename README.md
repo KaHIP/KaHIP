@@ -35,6 +35,58 @@ For a description of the graph format please have a look into the manual.
 
 Travis-CI Status [![Build Status](https://travis-ci.org/schulzchristian/KaHIP.svg?branch=master)](https://travis-ci.org/schulzchristian/KaHIP)
 
+
+Licence
+=====
+The program is licenced under MIT licence.
+If you publish results using our algorithms, please acknowledge our work by quoting the following paper:
+
+@inproceedings{sandersschulz2013,
+             AUTHOR = {Sanders, Peter and Schulz, Christian},
+             TITLE = {{Think Locally, Act Globally: Highly Balanced Graph Partitioning}},
+             BOOKTITLE = {Proceedings of the 12th International Symposium on Experimental Algorithms (SEA'13)},
+             SERIES = {LNCS},
+             PUBLISHER = {Springer},
+             YEAR = {2013},
+             VOLUME = {7933},
+             PAGES = {164--175}
+}
+
+If you use our parallel partitioner ParHIP please also cite the following paper (PDF):
+
+@inproceedings{meyerhenkesandersschulz2017,
+             AUTHOR = {Meyerhenke, Henning and Sanders, Peter and Schulz, Christian},
+             TITLE = {{Parallel Graph Partitioning for Complex Networks}},
+             JOURNAL = {IEEE Transactions on Parallel and Distributed Systems (TPDS)},
+             VOLUME = {28},
+             NUMBER = {9},
+             PAGES = {2625--2638},
+             YEAR = {2017}
+}
+
+If you use mapping algorithm please also cite the following paper (PDF):
+
+@techreport{schulztraeff2017,
+             AUTHOR = {Schulz, Christian and Träff, Jesper Larsson},
+             TITLE = {{Better Process Mapping and Sparse Quadratic Assignment}},
+             BOOKTITLE = {Proceedings of the 16th International Symposium on Experimental Algorithms (SEA'17)},
+             PUBLISHER = {Schloss Dagstuhl - Leibniz-Zentrum fuer Informatik},
+             VOLUME = {75},
+             SERIES = {LIPIcs},
+             PAGES = {4:1--4:15},
+             YEAR = {2017}
+}
+
+If you use edge partitioning algorithms please also cite the following paper (PDF):
+
+@inproceedings{edgepartitioning2019,
+             AUTHOR = {Schlag, Sebastian and Schulz, Christian and Seemaier, Daniel and Strash, Darren},
+             TITLE = {{Scalable Edge Partitioning}},
+             BOOKTITLE = {Proceedings of the 21th Workshop on Algorithm Engineering and Experimentation (ALENEX)},
+             JOURNAL = {Technical Report, arXiv:1808.06411},
+             YEAR = {2019, to appear.}
+}
+
 Project Contributors (sorted by last name)
 =====
 Yaroslav Akhremtsev
