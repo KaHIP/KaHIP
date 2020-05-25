@@ -8,6 +8,8 @@
 #ifndef PARTITION_CONFIG_DI1ES4T0
 #define PARTITION_CONFIG_DI1ES4T0
 
+#include <iosfwd>
+
 #include "definitions.h"
 
 // Configuration for the partitioning.
@@ -385,6 +387,27 @@ struct PartitionConfig
         int max_recursion_levels_construction; 
 
         bool enable_mapping;
+
+        //=======================================
+        //========NODE ORDERING==================
+        //=======================================
+        unsigned int dissection_rec_limit;
+
+        bool disable_reductions;
+
+        std::vector<nested_dissection_reduction_type> reduction_order;
+
+        double convergence_factor;
+        
+        // Maximum number of iterations for label propagation
+        int order_lp_iterations;
+
+        // Whether or not to use nodes from previously eliminated clusters in the halo of a cluster
+        // partial_halo = true -> use only nodes from clusters ordered later
+        // partial_halo = false -> use all nodes from neighboring clusters
+        bool partial_halo;
+
+        unsigned int max_simplicial_degree;
 
         //=======================================
         //===============Shared Mem OMP==========

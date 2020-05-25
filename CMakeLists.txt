@@ -58,6 +58,11 @@ else()
   set_property(TARGET OpenMP::OpenMP_CXX PROPERTY INTERFACE_COMPILE_OPTIONS "")
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/misc)
 endif()
+find_library(LIB_METIS metis)
+if(LIB_METIS)
+  message(STATUS "Metis support detected")
+  add_definitions("-DUSEMETIS")
+endif()
 
 # 64 Bit option
 option(64BITMODE "64 bit mode" OFF)
@@ -174,6 +179,13 @@ add_library(libmapping OBJECT ${LIBMAPPING_SOURCE_FILES})
 set(LIBSPAC_SOURCE_FILES OBJECT lib/spac/spac.cpp)
 add_library(libspac ${LIBSPAC_SOURCE_FILES})
 
+set(NODE_ORDERING_SOURCE_FILES OBJECT
+  lib/node_ordering/min_degree_ordering.cpp
+  lib/node_ordering/nested_dissection.cpp
+  lib/node_ordering/ordering_tools.cpp
+  lib/node_ordering/reductions.cpp)
+add_library(libnodeordering ${NODE_ORDERING_SOURCE_FILES})
+
 # generate targets for each binary
 add_executable(kaffpa app/kaffpa.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
 target_compile_definitions(kaffpa PRIVATE "-DMODE_KAFFPA")
@@ -221,6 +233,19 @@ add_executable(edge_partitioning app/spac.cpp $<TARGET_OBJECTS:libkaffpa> $<TARG
 target_compile_definitions(edge_partitioning PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(edge_partitioning ${OpenMP_CXX_LIBRARIES})
 install(TARGETS edge_partitioning DESTINATION bin)
+
+add_executable(node_ordering app/node_ordering.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libnodeordering>)
+target_compile_definitions(node_ordering PRIVATE "-DMODE_NODESEP -DMODE_NODEORDERING")
+target_link_libraries(node_ordering ${OpenMP_CXX_LIBRARIES})
+install(TARGETS node_ordering DESTINATION bin)
+
+if(LIB_METIS)
+  add_executable(metis_ordering app/metis_ordering.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libnodeordering>)
+  target_compile_definitions(metis_ordering PRIVATE "-DMODE_NODESEP -DMODE_NODEORDERING")
+  target_link_libraries(metis_ordering ${OpenMP_CXX_LIBRARIES} ${LIB_METIS})
+  install(TARGETS metis_ordering DESTINATION bin)
+endif()
+
 
 # Shared interface library
 add_library(interface SHARED interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
