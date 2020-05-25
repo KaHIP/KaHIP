@@ -80,32 +80,3 @@ Count compute_fill(graph_access &graph, const std::vector<NodeID> &ordering) {
         }
         return fill_edge_count - edge_count;
 }
-
-// Breadth-first search starting at 'node' that doesn't visit the node given by 'exclude'.
-// Every time a node is visited, 'visit_callback' is called with the node id as parameter.
-// If 'visit_callback' returns false, the BFS is terminated.
-template<class node_function>
-void bfs_excluding_node(graph_access &graph, NodeID node, NodeID exclude, node_function visit_callback) {
-        std::vector<bool> visited(graph.number_of_nodes(), false);
-        visited[exclude] = true;
-        std::queue<NodeID> to_visit;
-        to_visit.push(node);
-        visited[node] = true;
-        while (!to_visit.empty()) {
-                auto visit = to_visit.front();
-                to_visit.pop();
-                // Do something when we visit a node
-                // Stop, if the callback returns false
-                if (!visit_callback(visit)) {
-                        return;
-                }
-                
-                forall_out_edges(graph, edge, visit) {
-                        auto target = graph.getEdgeTarget(edge);
-                        if (!visited[target]) {
-                                to_visit.push(target);
-                                visited[target] = true;
-                        }
-                } endfor
-        }
-}
