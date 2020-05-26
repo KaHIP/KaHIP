@@ -21,9 +21,16 @@
  *****************************************************************************/
 
 #include <iostream>
+#include <sstream>
+
+#ifdef USEMETIS
+        #include "metis.h"
+#endif
+
 #include "kaHIP_interface.h"
 #include "../lib/data_structure/graph_access.h"
 #include "../lib/io/graph_io.h"
+#include "../lib/node_ordering/nested_dissection.h"
 #include "../lib/tools/timer.h"
 #include "../lib/tools/quality_metrics.h"
 #include "../lib/tools/macros_assertions.h"
@@ -339,4 +346,188 @@ void node_separator(int* n,
         internal_nodeseparator_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, mode, num_separator_vertices, separator);
 }
 
+bool internal_parse_reduction_order(const std::string &&order, PartitionConfig &partition_config) {
+        std::istringstream stream(order);
+        while (!stream.eof()) {
+                int value;
+                stream >> value;
+                if (value >= 0 && value < nested_dissection_reduction_type::num_types) {
+                        partition_config.reduction_order.push_back((nested_dissection_reduction_type)value);
+                } else {
+                        std::cout << "Unknown reduction type " << value << std::endl;
+                        return false;
+                }
+        }
+        if (partition_config.reduction_order.empty()) {
+                partition_config.disable_reductions = true;
+        }
+        return true;
+}
 
+void reduced_nd(int* n,
+                int* vwgt,
+                int* xadj,
+                int* adjcwgt,
+                int* adjncy,
+                bool suppress_output,
+                int seed,
+                int mode,
+                double imbalance,
+                int rec_limit,
+                const char* reduction_order,
+                double convergence,
+                int max_sim_deg,
+                int* ordering) {
+        std::streambuf* backup = std::cout.rdbuf();
+        if(suppress_output) {
+                std::cout.rdbuf(nullptr);
+        }
+
+        configuration cfg;
+        PartitionConfig partition_config;
+        partition_config.k = 2;
+        partition_config.dissection_rec_limit = rec_limit;
+        partition_config.convergence_factor = convergence;
+        partition_config.max_simplicial_degree = max_sim_deg;
+        partition_config.disable_reductions = false;
+
+        partition_config.seed = seed;
+        srand(partition_config.seed);
+        random_functions::setSeed(partition_config.seed);
+
+        switch( mode ) {
+                case FAST: 
+                        cfg.fast(partition_config);
+                        break;
+                case ECO: 
+                        cfg.eco(partition_config);
+                        break;
+                case STRONG: 
+                        cfg.strong(partition_config);
+                        break;
+                case FASTSOCIAL: 
+                        cfg.fastsocial(partition_config);
+                        break;
+                case ECOSOCIAL: 
+                        cfg.ecosocial(partition_config);
+                        break;
+                case STRONGSOCIAL: 
+                        cfg.strongsocial(partition_config);
+                        break;
+                default: 
+                        cfg.eco(partition_config);
+                        break;
+        }
+        partition_config.seed = seed;
+        auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
+        if (!parse_success) {
+                return;
+        }
+
+        graph_access G;     
+        internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
+        
+        partition_config.imbalance = 100*imbalance;
+        balance_configuration bc;
+        bc.configurate_balance(partition_config, G);
+        
+        nested_dissection dissection(&G);
+        dissection.perform_nested_dissection(partition_config);
+
+        for (int i = 0; i < *n; ++i) {
+                ordering[i] = dissection.ordering()[i];
+        }
+
+        // Restore cout output stream
+        std::cout.rdbuf(backup);
+}
+
+#ifdef USEMETIS
+void reduced_nd_metis(int* n,
+                      int* vwgt,
+                      int* xadj,
+                      int* adjcwgt,
+                      int* adjncy,
+                      bool suppress_output,
+                      int seed,
+                      const char* reduction_order,
+                      int max_sim_deg,
+                      int* ordering) {
+        std::streambuf* backup = std::cout.rdbuf();
+        if(suppress_output) {
+                std::cout.rdbuf(nullptr);
+        }
+
+        configuration cfg;
+        PartitionConfig partition_config;
+        partition_config.k = 2;
+        partition_config.max_simplicial_degree = max_sim_deg;
+        partition_config.disable_reductions = false;
+
+        partition_config.seed = seed;
+        srand(partition_config.seed);
+        random_functions::setSeed(partition_config.seed);
+        partition_config.seed = seed;
+        auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
+        if (!parse_success) {
+                return;
+        }
+
+        graph_access input_graph;
+        internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, input_graph);
+        
+        // 'active_graph' is the graph to use after reductions have been applied.
+        // If no reductions have been applied, 'active_graph' points to 'input_graph'.
+        // Otherwise, it points to 'reduction_stack.back()->get_reduced_graph()'.
+        graph_access *active_graph;
+        std::vector<std::unique_ptr<Reduction>> reduction_stack;
+        bool used_reductions = apply_reductions(partition_config, input_graph, reduction_stack);
+        if (used_reductions) {
+                active_graph = &reduction_stack.back()->get_reduced_graph();
+        } else {
+                active_graph = &input_graph;
+        }
+
+        idx_t num_nodes = active_graph->number_of_nodes();            // graph data structure
+        idx_t* m_xadj = active_graph->UNSAFE_metis_style_xadj_array();
+        idx_t* m_adjncy = active_graph->UNSAFE_metis_style_adjncy_array();
+        idx_t* m_perm = new idx_t[active_graph->number_of_nodes()];
+        idx_t* m_iperm = new idx_t[active_graph->number_of_nodes()];      // inverse ordering. This is the one we are interested in.
+        idx_t* metis_options = new idx_t[METIS_NOPTIONS];
+
+        // Perform nested dissection with Metis
+        if (num_nodes > 0) {
+                METIS_SetDefaultOptions(metis_options);
+                metis_options[METIS_OPTION_SEED] = seed;
+                METIS_NodeND(&num_nodes, m_xadj, m_adjncy, nullptr, metis_options, m_perm, m_iperm);
+        }
+
+        std::vector<NodeID> reduced_labels(active_graph->number_of_nodes(), 0);
+        for (size_t i = 0; i < active_graph->number_of_nodes(); ++i) {
+                reduced_labels[i] = m_iperm[i];
+        }
+
+        // Map ordering of reduced graph to input graph
+        std::vector<NodeID> final_labels;
+        if (used_reductions) {
+                map_ordering(reduction_stack, reduced_labels, final_labels);
+        } else {
+                final_labels = reduced_labels;
+        }
+
+        for (int i = 0; i < *n; ++i) {
+                ordering[i] = final_labels[i];
+        }
+
+        // Restore cout output stream
+        std::cout.rdbuf(backup);
+
+        // Delete temporary graph
+        delete[] m_xadj;
+        delete[] m_adjncy;
+        delete[] m_perm;
+        delete[] m_iperm;
+        delete[] metis_options;
+
+}
+#endif

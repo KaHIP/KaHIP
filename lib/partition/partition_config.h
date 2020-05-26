@@ -399,14 +399,6 @@ struct PartitionConfig
 
         double convergence_factor;
         
-        // Maximum number of iterations for label propagation
-        int order_lp_iterations;
-
-        // Whether or not to use nodes from previously eliminated clusters in the halo of a cluster
-        // partial_halo = true -> use only nodes from clusters ordered later
-        // partial_halo = false -> use all nodes from neighboring clusters
-        bool partial_halo;
-
         unsigned int max_simplicial_degree;
 
         //=======================================

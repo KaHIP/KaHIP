@@ -212,10 +212,13 @@ target_compile_definitions(partition_to_vertex_separator PRIVATE "-DMODE_PARTITI
 target_link_libraries(partition_to_vertex_separator ${OpenMP_CXX_LIBRARIES})
 install(TARGETS partition_to_vertex_separator DESTINATION bin)
 
-add_executable(interface_test misc/example_library_call/interface_test.cpp interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
+add_executable(interface_test misc/example_library_call/interface_test.cpp interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping> $<TARGET_OBJECTS:libnodeordering>)
 target_include_directories(interface_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(interface_test PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(interface_test ${OpenMP_CXX_LIBRARIES})
+if(LIB_METIS)
+        target_link_libraries(interface_test ${LIB_METIS})
+endif()
 install(TARGETS interface_test DESTINATION bin)
 
 add_executable(kaffpaE app/kaffpaE.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping> $<TARGET_OBJECTS:libkaffpa_parallel>)
@@ -248,17 +251,27 @@ endif()
 
 
 # Shared interface library
-add_library(interface SHARED interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
+add_library(interface SHARED interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
+                                                           $<TARGET_OBJECTS:libmapping>
+                                                           $<TARGET_OBJECTS:libnodeordering>)
 target_include_directories(interface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(interface PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(interface PUBLIC ${OpenMP_CXX_LIBRARIES})
+if(LIB_METIS)
+        target_link_libraries(interface PUBLIC ${LIB_METIS})
+endif()
 install(TARGETS interface DESTINATION lib)
 
 # Static interface library
-add_library(interface_static interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
+add_library(interface_static interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
+                                                           $<TARGET_OBJECTS:libmapping>
+                                                           $<TARGET_OBJECTS:libnodeordering>)
 target_include_directories(interface_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(interface_static PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(interface_static PUBLIC ${OpenMP_CXX_LIBRARIES})
+if(LIB_METIS)
+        target_link_libraries(interface_static PUBLIC ${LIB_METIS})
+endif()
 install(TARGETS interface_static DESTINATION lib)
 
 # ParHIP

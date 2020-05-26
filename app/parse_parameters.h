@@ -165,8 +165,6 @@ int parse_parameters(int argn, char **argv,
         struct arg_lit *disable_reductions                   = arg_lit0(NULL, "disable_reductions", "Turn graph reductions off");
         struct arg_str *reduction_order                      = arg_str0(NULL, "reduction_order", NULL, "Order in which to apply reductions");
         struct arg_dbl *convergence_factor                   = arg_dbl0(NULL, "convergence_factor", NULL, "Reapply reductions only if the reduction in percent is greater than this factor (0: repeat until perfect convergence, 1: never repeat reductions (default))");
-        struct arg_int *order_lp_iterations                  = arg_int0(NULL, "order_lp_iterations", NULL, "Maximum number of iterations for label propagation in cluster-based ordering (default: 10)");
-        struct arg_lit *partial_halo                         = arg_lit0(NULL, "partial_halo", "Use partial halos in cluster-based ordering");
         struct arg_int *max_simplicial_degree                = arg_int0(NULL, "max_sim_deg", NULL, "Only evaluate nodes with smaller degree in simplicial node reduction.");
 
         struct arg_end *end                                  = arg_end(100);
@@ -249,8 +247,6 @@ int parse_parameters(int argn, char **argv,
                 disable_reductions,
                 reduction_order,
                 convergence_factor,
-                order_lp_iterations,
-                partial_halo,
                 max_simplicial_degree,
         #endif
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
@@ -1094,18 +1090,6 @@ int parse_parameters(int argn, char **argv,
                 partition_config.convergence_factor = 1.0;
         }
 
-        if (order_lp_iterations->count > 0) {
-                partition_config.order_lp_iterations = order_lp_iterations->ival[0];
-        } else {
-                partition_config.order_lp_iterations = 10;
-        }
-
-        if (partial_halo->count > 0) {
-                partition_config.partial_halo = true;
-        } else {
-                partition_config.partial_halo = false;
-        }
-        
         if (max_simplicial_degree->count > 0) {
                 partition_config.max_simplicial_degree = max_simplicial_degree->ival[0];
         } else {
