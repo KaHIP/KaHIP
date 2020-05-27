@@ -28,7 +28,6 @@ class configuration {
                 void standardsnw( PartitionConfig & config );
 
                 void fastsocial( PartitionConfig & config );
-                void ultrafastsocial_separator( PartitionConfig & config );
                 void ecosocial( PartitionConfig & config );
                 void strongsocial( PartitionConfig & config ); 
 
@@ -499,31 +498,6 @@ inline void configuration::standardsnw( PartitionConfig & partition_config ) {
 inline void configuration::fastsocial_separator( PartitionConfig & partition_config ) {
         eco(partition_config);
         standardsnw(partition_config);
-        
-        partition_config.label_propagation_refinement = true;
-        partition_config.cluster_coarsening_during_ip = true;
-        partition_config.balance_factor               = 0;
-
-        partition_config.mode_node_separators    = true;
-        partition_config.use_fullmultigrid       = false;
-        partition_config.use_wcycles             = false;
-        partition_config.matching_type           = MATCHING_GPA;
-        partition_config.sep_loc_fm_disabled     = true;
-        partition_config.sep_flows_disabled      = true;
-        partition_config.sep_fm_disabled         = false;
-        partition_config.sep_greedy_disabled     = true;
-        partition_config.global_cycle_iterations = 1;
-}
-
-inline void configuration::ultrafastsocial_separator(PartitionConfig &partition_config) {
-        fast(partition_config);
-        standardsnw(partition_config);
-
-        partition_config.initial_partitioning_repetitions = 1;
-	partition_config.sep_fm_unsucc_steps              = 10;
-        partition_config.sep_num_fm_reps                  = 100;
-        partition_config.max_initial_ns_tries             = 5;
-        partition_config.faster_ns                        = true;
         
         partition_config.label_propagation_refinement = true;
         partition_config.cluster_coarsening_during_ip = true;

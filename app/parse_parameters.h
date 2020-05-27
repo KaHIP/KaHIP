@@ -104,7 +104,7 @@ int parse_parameters(int argn, char **argv,
 #ifdef MODE_KAFFPA
         struct arg_rex *preconfiguration                     = arg_rex1(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fsocial|esocial|ssocial]." );
 #else
-        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial|ultrafastsocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [strong|eco|fast|fsocial|esocial|ssocial]." );
+        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [strong|eco|fast|fsocial|esocial|ssocial]." );
 #endif
 
         struct arg_dbl *time_limit                           = arg_dbl0(NULL, "time_limit", NULL, "Time limit in s. Default 0s .");
@@ -331,8 +331,6 @@ int parse_parameters(int argn, char **argv,
                         cfg.fastsocial_separator(partition_config);
                 } else if (strcmp("esocial", preconfiguration->sval[0]) == 0) {
                         cfg.ecosocial_separator(partition_config);
-                } else if (strcmp("ultrafastsocial", preconfiguration->sval[0]) == 0) {
-                        cfg.ultrafastsocial_separator(partition_config);
                 } else if (strcmp("ssocial", preconfiguration->sval[0]) == 0) {
                         std::cout <<  "socialstrong not supported yet"  << std::endl;
                         exit(0);
