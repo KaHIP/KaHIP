@@ -1,3 +1,7 @@
+/*
+ * Author: Wolfgang Ost
+ */
+
 #ifndef NESTED_DISSECTION
 #define NESTED_DISSECTION
 

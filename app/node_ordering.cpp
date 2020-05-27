@@ -1,3 +1,7 @@
+/*
+ * Author: Wolfgang Ost
+ */
+
 #include <argtable3.h>
 #include <iostream>
 #include <regex.h>

@@ -1,3 +1,7 @@
+/*
+ * Author: Wolfgang Ost
+ */
+
 #ifndef MIN_DEGREE_ORDERING
 #define MIN_DEGREE_ORDERING
 

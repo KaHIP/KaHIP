@@ -1,3 +1,7 @@
+/*
+ * Author: Wolfgang Ost
+ */
+
 #ifndef ORDERING_TOOLS_H
 #define ORDERING_TOOLS_H
 

@@ -1,3 +1,7 @@
+/*
+ * Author: Wolfgang Ost
+ */
+
 #ifndef H_ISOLATED_CLIQUE
 #define H_ISOLATED_CLIQUE
 

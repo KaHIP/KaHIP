@@ -1,3 +1,7 @@
+/*
+ * Author: Wolfgang Ost
+ */
+
 #include <algorithm>
 #include <iostream>
 #include <utility>
