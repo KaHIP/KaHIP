@@ -365,9 +365,7 @@ bool internal_parse_reduction_order(const std::string &&order, PartitionConfig &
 }
 
 void reduced_nd(int* n,
-                int* vwgt,
                 int* xadj,
-                int* adjcwgt,
                 int* adjncy,
                 bool suppress_output,
                 int seed,
@@ -425,7 +423,7 @@ void reduced_nd(int* n,
         }
 
         graph_access G;     
-        internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
+        internal_build_graph( partition_config, n, nullptr, xadj, nullptr, adjncy, G);
         
         partition_config.imbalance = 100*imbalance;
         balance_configuration bc;
@@ -444,9 +442,7 @@ void reduced_nd(int* n,
 
 #ifdef USEMETIS
 void reduced_nd_metis(int* n,
-                      int* vwgt,
                       int* xadj,
-                      int* adjcwgt,
                       int* adjncy,
                       bool suppress_output,
                       int seed,
@@ -474,7 +470,7 @@ void reduced_nd_metis(int* n,
         }
 
         graph_access input_graph;
-        internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, input_graph);
+        internal_build_graph( partition_config, n, nullptr, xadj, nullptr, adjncy, input_graph);
         
         // 'active_graph' is the graph to use after reductions have been applied.
         // If no reductions have been applied, 'active_graph' points to 'input_graph'.
