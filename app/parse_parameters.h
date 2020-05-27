@@ -332,7 +332,7 @@ int parse_parameters(int argn, char **argv,
                 } else if (strcmp("esocial", preconfiguration->sval[0]) == 0) {
                         cfg.ecosocial_separator(partition_config);
                 } else if (strcmp("ssocial", preconfiguration->sval[0]) == 0) {
-                        std::cout <<  "socialstrong not supported yet"  << std::endl;
+                        cfg.strongsocial_separator(partition_config);
                         exit(0);
                 } else {
                         fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);

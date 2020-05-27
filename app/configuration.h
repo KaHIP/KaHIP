@@ -33,7 +33,7 @@ class configuration {
 
                 void fastsocial_separator( PartitionConfig & config );
                 void ecosocial_separator( PartitionConfig & config );
-                //void strongsocial_separator( PartitionConfig & config ); 
+                void strongsocial_separator( PartitionConfig & config ); 
 
 };
 
@@ -525,20 +525,20 @@ inline void configuration::ecosocial_separator( PartitionConfig & partition_conf
         partition_config.cluster_coarsening_during_ip = true;
 }
 
-//inline void configuration::strongsocial_separator( PartitionConfig & partition_config ) {
-        //strong(partition_config);
-        //standardsnw(partition_config);
+inline void configuration::strongsocial_separator( PartitionConfig & partition_config ) {
+        strong(partition_config);
+        standardsnw(partition_config);
 
-        //partition_config.label_propagation_refinement = false;
-        //partition_config.cluster_coarsening_during_ip = true;
-        //partition_config.ensemble_clusterings         = true;
+        partition_config.label_propagation_refinement = false;
+        partition_config.cluster_coarsening_during_ip = true;
+        partition_config.ensemble_clusterings         = true;
 
-        //partition_config.mode_node_separators = true;
-        //partition_config.use_fullmultigrid    = false;
-        //partition_config.use_wcycles          = false;
-        //partition_config.matching_type        = MATCHING_GPA;
-        //partition_config.global_cycle_iterations = 3;
-//}
+        partition_config.mode_node_separators = true;
+        partition_config.use_fullmultigrid    = false;
+        partition_config.use_wcycles          = false;
+        partition_config.matching_type        = MATCHING_GPA;
+        partition_config.global_cycle_iterations = 3;
+}
 
 
 inline void configuration::fastsocial( PartitionConfig & partition_config ) {
