@@ -100,6 +100,11 @@ libmapping                = ['lib/mapping/local_search_mapping.cpp',
                              'lib/mapping/mapping_algorithms.cpp',
                              'lib/mapping/construct_mapping.cpp' ]
 
+libnodeorderingi_files = ['lib/node_ordering/nested_dissection.cpp',
+                          'lib/node_ordering/min_degree_ordering.cpp',
+                          'lib/node_ordering/ordering_tools.cpp',
+                          'lib/node_ordering/reductions.cpp']
+
 libspac_files = ['lib/spac/spac.cpp']
 
 if env['program'] == 'kaffpa':
@@ -162,3 +167,17 @@ if env['program'] == 'spac':
         env.Append(CXXFLAGS = '-DMODE_KAFFPA')
         env.Append(CCFLAGS  = '-DMODE_KAFFPA')
         env.Program('edge_partitioning', ['app/spac.cpp']+libkaffpa_files+libmapping+libspac_files, LIBS=['gomp'])
+
+if env['program'] == 'node_ordering':
+        env.Append(CXXFLAGS = '-DMODE_NODESEP')
+        env.Append(CXXFLAGS = '-DMODE_NODEORDERING')
+        env.Append(CCFLAGS = '-DMODE_NODESEP')
+        env.Append(CCFLAGS = '-DMODE_NODEORDERING')
+        env.Program('node_ordering', ['app/node_ordering.cpp']+libkaffpa_files+libnodeordering_files, LIBS=['gomp'])
+
+if env['program'] == 'node_ordering' and env['usemetis']:
+        env.Append(CXXFLAGS = '-DMODE_NODESEP')
+        env.Append(CXXFLAGS = '-DMODE_NODEORDERING')
+        env.Append(CCFLAGS = '-DMODE_NODESEP')
+        env.Append(CCFLAGS = '-DMODE_NODEORDERING')
+        env.Program('metis_ordering', ['app/metis_ordering.cpp']+libkaffpa_files+libnodeordering_files, LIBS=['gomp', 'metis'])

@@ -73,9 +73,17 @@ libkaffpa_files = [   '..//lib/data_structure/graph_hierarchy.cpp',
                       #'..//lib/partition/uncoarsening/refinement/tabu_search/tabu_search.cpp'
                       ]
 
+libnodeordering_files = ['lib/node_ordering/nested_dissection.cpp',
+                         'lib/node_ordering/min_degree_ordering.cpp',
+                         'lib/node_ordering/ordering_tools.cpp',
+                         'lib/node_ordering/reductions.cpp']
+
 env.Append(LIBPATH=['./optimized'])
 env.Append(LIBPATH=['./debug'])
 env.Append(LIBPATH=['../interface/'])
 
-env.Library('libkahip', ['kaHIP_interface.cpp']+libkaffpa_files, LIBS=['gomp'])
+if env['usemetis']:
+        env.Library('libkahip', ['kaHIP_interface.cpp']+libkaffpa_files+libnodeordering_files, LIBS=['gomp', 'metis'])
+else:
+        env.Library('libkahip', ['kaHIP_interface.cpp']+libkaffpa_files+libnodeordering_files, LIBS=['gomp'])
 

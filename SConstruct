@@ -41,7 +41,7 @@ def GetEnvironment():
     print('Illegal value for variant: %s' % env['variant'])
     sys.exit(1)
 
-  if not env['program'] in ['kaffpa', 'kaffpaE', 'partition_to_vertex_separator','improve_vertex_separator','library','graphchecker','label_propagation','evaluator','node_separator','spac']:
+  if not env['program'] in ['kaffpa', 'kaffpaE', 'partition_to_vertex_separator','improve_vertex_separator','library','graphchecker','label_propagation','evaluator','node_separator','spac','node_ordering','metis_ordering']:
     print('Illegal value for program: %s' % env['program'])
     sys.exit(1)
 
@@ -67,6 +67,7 @@ env.Append(CPPPATH=['./lib/partition'])
 env.Append(CPPPATH=['./lib/io'])
 env.Append(CPPPATH=['./lib/partition/uncoarsening/refinement/quotient_graph_refinement/flow_refinement/'])
 env.Append(CPPPATH=['../lib'])
+env.Append(CPPPATH=['../lib/node_ordering'])
 env.Append(CPPPATH=['../lib/tools'])
 env.Append(CPPPATH=['../lib/partition'])
 env.Append(CPPPATH=['../lib/io'])
@@ -90,6 +91,13 @@ if SYSTEM == 'Darwin':
         #Exit(-1)
 #
 #
+
+if conf.CheckLibWithHeader('metis', 'metis.h', 'c'):
+        print("Metis support detected")
+        env.Append(CXXFLAGS = '-DUSEMETIS')
+        env.Append(CFLAGS = '-DUSEMETIS')
+        env['usemetis'] = True
+
 env.Append(CXXFLAGS = '-fopenmp')
 if "clang" in env['CC'] or "clang" in env['CXX']:
         if env['variant'] == 'optimized':

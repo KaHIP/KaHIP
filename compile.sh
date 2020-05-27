@@ -11,7 +11,7 @@ if [[ "$unamestr" == "Darwin" ]]; then
 fi
 
 rm -rf deploy
-for program in node_separator kaffpa evaluator kaffpaE graphchecker label_propagation partition_to_vertex_separator library spac; do
+for program in node_separator kaffpa evaluator kaffpaE graphchecker label_propagation partition_to_vertex_separator library spac node_ordering metis_ordering; do
 scons program=$program variant=optimized -j $NCORES 
 if [ "$?" -ne "0" ]; then 
         echo "compile error in $program. exiting."
@@ -29,6 +29,8 @@ cp ./optimized/partition_to_vertex_separator deploy/
 cp ./optimized/interface/lib* deploy/
 cp ./optimized/node_separator deploy/
 cp ./optimized/edge_partitioning deploy/
+cp ./optimized/node_ordering deploy/
+cp ./optimized/metis_ordering deploy/
 cp ./interface/kaHIP_interface.h deploy/
 
 rm -rf ./optimized
