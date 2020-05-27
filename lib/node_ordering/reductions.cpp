@@ -256,7 +256,6 @@ void SimplicialNodeReduction::apply() {
 }
 
 void SimplicialNodeReduction::map(std::vector<NodeID> &reduced_label, std::vector<NodeID> &new_label) const {
-std::cout << "Uncontracting simplicial nodes" << std::endl;
         new_label.resize(graph_before.number_of_nodes());
         NodeID order = 0;
         for (auto node: label_first) {
@@ -367,7 +366,6 @@ void IndistinguishableNodeReduction::apply() {
 }
 
 void IndistinguishableNodeReduction::map(std::vector<NodeID> &reduced_label, std::vector<NodeID> &new_label) const {
-std::cout << "Uncontracting indistinguishable nodes" << std::endl;
         new_label.resize(graph_before.number_of_nodes());
         std::vector<NodeID> orderings(reduced_label.size(), 0);
         for (size_t node = 0; node < reduced_label.size(); node++) {
@@ -474,7 +472,6 @@ void TwinReduction::apply() {
 }
 
 void TwinReduction::map(std::vector<NodeID> &reduced_label, std::vector<NodeID> &new_label) const {
-std::cout << "Uncontracting twins" << std::endl;
         new_label.resize(graph_before.number_of_nodes());
         std::vector<NodeID> orderings(reduced_label.size(), 0);
         for (size_t node = 0; node < reduced_label.size(); node++) {
@@ -560,7 +557,6 @@ void PathCompression::apply() {
 }
 
 void PathCompression::map(std::vector<NodeID> &reduced_label, std::vector<NodeID> &new_label) const {
-std::cout << "Uncontracting path compression nodes" << std::endl;
         new_label.resize(graph_before.number_of_nodes(), graph_before.number_of_nodes() + 1);
         bucket_pq queue(reduced_label.size());
         for (size_t i = 0; i < reduced_label.size(); ++i) {
@@ -768,7 +764,6 @@ void Degree2Elimination::apply() {
 }
 
 void Degree2Elimination::map(std::vector<NodeID> &reduced_label, std::vector<NodeID> &new_label) const {
-std::cout << "Uncontracting degree-2 nodes" << std::endl;
         new_label.resize(graph_before.number_of_nodes());
         NodeID order = 0;
         for (auto node: label_first) {
@@ -843,7 +838,6 @@ void TriangleContraction::apply() {
 }
 
 void TriangleContraction::map(std::vector<NodeID> &reduced_label, std::vector<NodeID> &new_label) const {
-std::cout << "Uncontracting triangle contraction" << std::endl;
         new_label.resize(graph_before.number_of_nodes());
         std::vector<NodeID> orderings(reduced_label.size(), 0);
         for (size_t node = 0; node < reduced_label.size(); node++) {
@@ -878,34 +872,27 @@ void apply_reductions_internal(const PartitionConfig &config,
         int round_counter = 0;
         do {
                 round_counter++;
-                std::cout << "Reduction round " << round_counter << std::endl;
                 num_nodes_before = graph_1->number_of_nodes();
                 for (auto type: config.reduction_order) {
                         timer reduction_timer;
                         // print reduction name
                         switch (type) {
                                 case simplicial_nodes:
-                                        std::cout << "  Applying simplicial node reduction" << std::endl;
                                         reduction_stack.emplace_back(new SimplicialNodeReduction(*graph_1, config.max_simplicial_degree));
                                         break;
                                 case indistinguishable_nodes:
-                                        std::cout << "  Applying indistinguishable node reduction" << std::endl;
                                         reduction_stack.emplace_back(new IndistinguishableNodeReduction(*graph_1));
                                         break;
                                 case twins:
-                                        std::cout << "  Applying twin reduction" << std::endl;
                                         reduction_stack.emplace_back(new TwinReduction(*graph_1));
                                         break;
                                 case path_compression:
-                                        std::cout << "  Applying path compression" << std::endl;
                                         reduction_stack.emplace_back(new PathCompression(*graph_1));
                                         break;
                                 case degree_2_nodes:
-                                        std::cout << "Eliminating nodes of degree 2" << std::endl;
                                         reduction_stack.emplace_back(new Degree2Elimination(*graph_1));
                                         break;
                                 case triangle_contraction:
-                                        std::cout << "  Applying triangle contraction" << std::endl;
                                         reduction_stack.emplace_back(new TriangleContraction(*graph_1));
                                         break;
                                 default:
@@ -913,8 +900,6 @@ void apply_reductions_internal(const PartitionConfig &config,
                                         continue;
                         }
                         reduction_stack.back()->apply();
-                        std::cout << "    took " << reduction_timer.elapsed() << " seconds" << std::endl;
-                        std::cout << "    Number of nodes after reduction: " << reduction_stack.back()->get_reduced_graph().number_of_nodes() << std::endl;
                         reduction_stat_counter::get_instance()
                                                .count_reduction(type,
                                                                 graph_1->number_of_nodes(),

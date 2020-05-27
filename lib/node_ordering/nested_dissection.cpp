@@ -37,31 +37,24 @@ void nested_dissection::perform_nested_dissection(PartitionConfig &config) {
                 active_graph = original_graph;
         }
 
-        std::cout << "    Number of nodes before reduction: " << original_graph->number_of_nodes()
-                                     << ", after reduction: " << active_graph->number_of_nodes() << std::endl;
-
         m_reduced_label.resize(active_graph->number_of_nodes());
 
         if (active_graph->number_of_nodes() > 0) {
                 if (active_graph->number_of_nodes() < config.dissection_rec_limit) {
                         // Stop nested dissection and use the min degree algorithm instead
-                        std::cout << "Min degree" << std::endl;
                         MinDegree(active_graph).perform_ordering(m_reduced_label);
                 } else {
                         NodeID order_begin = 0;
-                        std::cout << "More nested dissection" << std::endl;
                         // continue nested dissection
                         compute_separator(config, *active_graph);
 
                         // perform nested dissection on subgraphs
                         forall_blocks((*active_graph), p) {
                                 if (p != active_graph->getSeparatorBlock()) {
-                                        std::cout << "  Ordering block " << p << std::endl;
                                         recurse_dissection(config, (*active_graph), p, order_begin);
                                 }
                         } endfor
                         // Perform nested dissection on separator block
-                        std::cout << "  Ordering separator" << std::endl;
                         recurse_dissection(config, (*active_graph), active_graph->getSeparatorBlock(), order_begin);
                 }
         }

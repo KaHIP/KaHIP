@@ -10,8 +10,6 @@
 #include "tools/macros_assertions.h"
 
 MinDegree::MinDegree(graph_access * const graph, const std::vector<NodeID> &halo_nodes) : graph(graph),
-                                                   // TODO: Can we use a smaller bound for the node-degree?
-                                                   //degree_pq(graph->number_of_nodes()*10),
                                                    memberships(graph->number_of_nodes()),
                                                    node_links(graph->number_of_nodes()),
                                                    link_weights(graph->number_of_nodes()),
