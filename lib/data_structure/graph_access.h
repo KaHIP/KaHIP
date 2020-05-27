@@ -13,12 +13,6 @@
 #include <iostream>
 #include <vector>
 
-#ifdef USEMETIS
-    #include "metis.h"
-#else
-    typedef int idx_t;
-#endif
-
 #include "definitions.h"
 
 struct Node {
@@ -224,11 +218,11 @@ class graph_access {
                 NodeWeight get_contraction_offset(NodeID node) const;
                 void set_contraction_offset(NodeID node, NodeWeight offset);
 
-                idx_t* UNSAFE_metis_style_xadj_array();
-                idx_t* UNSAFE_metis_style_adjncy_array();
+                int* UNSAFE_metis_style_xadj_array();
+                int* UNSAFE_metis_style_adjncy_array();
 
-                idx_t* UNSAFE_metis_style_vwgt_array();
-                idx_t* UNSAFE_metis_style_adjwgt_array();
+                int* UNSAFE_metis_style_vwgt_array();
+                int* UNSAFE_metis_style_adjwgt_array();
 
                 int build_from_metis(int n, int* xadj, int* adjncy);
                 int build_from_metis_weighted(int n, int* xadj, int* adjncy, int * vwgt, int* adjwgt);
@@ -431,8 +425,8 @@ inline EdgeWeight graph_access::getMaxDegree() {
         return m_max_degree;
 }
 
-inline idx_t* graph_access::UNSAFE_metis_style_xadj_array() {
-        idx_t* xadj      = new idx_t[graphref->number_of_nodes()+1];
+inline int* graph_access::UNSAFE_metis_style_xadj_array() {
+        int* xadj      = new int[graphref->number_of_nodes()+1];
         basicGraph& ref = *graphref;
 
         forall_nodes(ref, n) {
@@ -443,8 +437,8 @@ inline idx_t* graph_access::UNSAFE_metis_style_xadj_array() {
 }
 
 
-inline idx_t* graph_access::UNSAFE_metis_style_adjncy_array() {
-        idx_t* adjncy    = new idx_t[graphref->number_of_edges()];
+inline int* graph_access::UNSAFE_metis_style_adjncy_array() {
+        int* adjncy    = new int[graphref->number_of_edges()];
         basicGraph& ref = *graphref;
         forall_edges(ref, e) {
                 adjncy[e] = graphref->m_edges[e].target;
@@ -454,22 +448,22 @@ inline idx_t* graph_access::UNSAFE_metis_style_adjncy_array() {
 }
 
 
-inline idx_t* graph_access::UNSAFE_metis_style_vwgt_array() {
-        idx_t* vwgt      = new idx_t[graphref->number_of_nodes()];
+inline int* graph_access::UNSAFE_metis_style_vwgt_array() {
+        int* vwgt      = new int[graphref->number_of_nodes()];
         basicGraph& ref = *graphref;
 
         forall_nodes(ref, n) {
-                vwgt[n] = (idx_t)graphref->m_nodes[n].weight;
+                vwgt[n] = (int)graphref->m_nodes[n].weight;
         } endfor
         return vwgt;
 }
 
-inline idx_t* graph_access::UNSAFE_metis_style_adjwgt_array() {
-        idx_t* adjwgt    = new idx_t[graphref->number_of_edges()];
+inline int* graph_access::UNSAFE_metis_style_adjwgt_array() {
+        int* adjwgt    = new int[graphref->number_of_edges()];
         basicGraph& ref = *graphref;
 
         forall_edges(ref, e) {
-                adjwgt[e] = (idx_t)graphref->m_edges[e].weight;
+                adjwgt[e] = (int)graphref->m_edges[e].weight;
         } endfor 
 
         return adjwgt;

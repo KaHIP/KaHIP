@@ -76,9 +76,18 @@ int main(int argn, char **argv) {
         std::cout << "Time for reductions: " << t.elapsed() << std::endl;
 
         t.restart();
-        idx_t num_nodes = active_graph->number_of_nodes();            // graph data structure
-        idx_t* xadj = active_graph->UNSAFE_metis_style_xadj_array();
-        idx_t* adjncy = active_graph->UNSAFE_metis_style_adjncy_array();
+        idx_t num_nodes = active_graph->number_of_nodes();
+        // convert the graph into metis style
+        idx_t* xadj = new idx_t[num_nodes + 1];
+        forall_nodes((*active_graph), node) {
+                xadj[node] = (idx_t)active_graph->get_first_edge(node);
+        } endfor
+        xadj[num_nodes] = (idx_t)active_graph->number_of_edges();
+        idx_t* adjncy = new idx_t[active_graph->number_of_edges()];
+        forall_edges((*active_graph), edge) {
+                adjncy[edge] = (idx_t)active_graph->getEdgeTarget(edge);
+        } endfor
+
         idx_t* perm = new idx_t[active_graph->number_of_nodes()];
         idx_t* iperm = new idx_t[active_graph->number_of_nodes()];      // inverse ordering. This is the one we are interested in.
         idx_t* metis_options = new idx_t[METIS_NOPTIONS];
