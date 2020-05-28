@@ -362,6 +362,24 @@ struct PartitionConfig
 
         int grow_target;
 
+
+        //=======================================
+        //=========ILP LOCAL SEARCH==============
+        //=======================================
+        OptimizationMode ilp_mode;
+
+        int ilp_min_gain;
+
+        int ilp_bfs_depth;
+
+        int ilp_bfs_min_gain;
+
+        int ilp_optimality;
+
+        int ilp_limit_nonzeroes;
+
+        int ilp_overlap_runs;
+
         //=======================================
         //===============QAP=====================
         //=======================================

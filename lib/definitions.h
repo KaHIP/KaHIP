@@ -186,6 +186,14 @@ typedef enum {
         PRE_CONFIG_MAPPING_STRONG
 } PreConfigMapping;
 
+typedef enum {
+    GAIN,
+    TREES,
+    BOUNDARY,
+    OVERLAP
+} OptimizationMode;
+
+
 
 #endif
 

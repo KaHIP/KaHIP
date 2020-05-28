@@ -161,6 +161,12 @@ int parse_parameters(int argn, char **argv,
 
         struct arg_end *end                                  = arg_end(100);
 
+        //ilp parameters
+        struct arg_str *ilp_mode                             = arg_str0(NULL,
+        "ilp_mode", NULL, "TODO");
+        struct arg_int *ilp_min_gain                         = arg_int0(NULL, "ilp_min_gain", NULL, "TODO");
+        struct arg_int *ilp_bfs_depth                        = arg_int0(NULL, "ilp_bfs_depth", NULL, "TODO");
+
         // Define argtable.
         void* argtable[] = {
                 help, filename, user_seed,
@@ -254,7 +260,11 @@ int parse_parameters(int argn, char **argv,
                 cluster_upperbound,
                 label_propagation_iterations,
                 filename_output, 
+#elif defined MODE_ILPIMPROVE
+                k, input_partition, filename_output,
+                ilp_mode, ilp_min_gain, ilp_bfs_depth,
 #endif
+
                 end
         };
         // Parse arguments.

@@ -4,7 +4,8 @@
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
-#include <argtable2.h>
+
+#include <argtable3.h>
 #include <iostream>
 #include <sstream>
 #include <cstring>
@@ -70,9 +71,9 @@ int main(int argn, char **argv) {
     // partition graph
     quality_metrics qm;
     graph_io::readPartition(G, partition_filename);
-    compare cp;
-    auto pid1 = cp.extractPartition(G);
-    cp.setFirstPartition(G, pid1);
+    ilp_helpers ilp_h;
+    auto pid1 = ilp_h.extractPartition(G);
+    ilp_h.setFirstPartition(G, pid1);
 
 
 
@@ -85,7 +86,7 @@ int main(int argn, char **argv) {
     EdgeWeight before_ec = qm.edge_cut(G);
     double before_balance = qm.balance(G);
 
-    auto limit_nonzeroes = (size_t) partition_config.limit_nonzeroes;
+    auto limit_nonzeroes = (size_t) partition_config.ilp_limit_nonzeroes;
     // compute BFS
     std::unordered_set<NodeID> reachable;
     size_t trees = ilp.computeBFS(G, reachable, partition_config, limit_nonzeroes);
@@ -96,7 +97,7 @@ int main(int argn, char **argv) {
 
     graph_access coarser;
     std::vector<bool> coarse_presets(coarser.number_of_nodes(), false);
-    if (partition_config.mode == OptimizationMode::OVERLAP) {
+    if (partition_config.ilp_mode == OptimizationMode::OVERLAP) {
         auto partitions = ilp.createPartitions(G, partition_config);
         size_t best_index;
         std::tie(no_of_coarse_vertices, base_ec, best_index) = ilp.buildOverlapGraph(G, partition_config, pid1,
@@ -166,9 +167,9 @@ int main(int argn, char **argv) {
                              (after_ec == before_ec
                               && after_balance < before_balance));
 
-        auto pid2 = cp.extractPartition(G);
+        auto pid2 = ilp_h.extractPartition(G);
 
-        std::tie(maxcut, maxgain) = cp.comparePartitionsMoreInfo(G, pid2);
+        std::tie(maxcut, maxgain) = ilp_h.comparePartitionsMoreInfo(G, pid2);
 
         if (improved_solution) {
             if (after_balance > imbalance_param) {
@@ -192,7 +193,7 @@ int main(int argn, char **argv) {
 
     std::string modestr;
 
-    switch (partition_config.mode) {
+    switch (partition_config.ilp_mode) {
         case OptimizationMode::GAIN :
             modestr = "gain";
             break;
@@ -222,18 +223,18 @@ int main(int argn, char **argv) {
         << " actual_imbalance=" << after_balance
         << " t_limit=" << (t.elapsed() >= timelimit)
         << " mode=" << modestr
-        << " gain=" << partition_config.min_gain
-        << " depth=" << partition_config.bfs_depth
+        << " gain=" << partition_config.ilp_min_gain
+        << " depth=" << partition_config.ilp_bfs_depth
         << " trees=" << trees
         << " maxcut=" << maxcut
         << " maxgain=" << maxgain
         << " nonzeroes=" << limit_nonzeroes
-        << " overlap_runs=" << partition_config.overlap_runs
+        << " overlap_runs=" << partition_config.ilp_overlap_runs
         << " vertices=" << no_of_coarse_vertices
         << " edges=" << (coarser.number_of_edges() / 2)
         << " improved_base=" << (after_ec < base_ec)
         << " base_cut=" << base_ec
-        << " optimal=" << partition_config.optimality
+        << " optimal=" << partition_config.ilp_optimality
         << std::endl;
 
     logfile << log.str();

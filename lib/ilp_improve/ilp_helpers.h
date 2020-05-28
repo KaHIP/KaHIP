@@ -17,8 +17,95 @@
 #include "ilp_improve.h"
 
 class ilp_helpers {
+private:
+    std::unordered_set<NodeID> nodes_gain;
+    std::queue<std::vector<NodeID> > q_gain;
+    std::vector<size_t> dist_gain;
+    std::unordered_set<NodeID> nodes_cut;
+    std::queue<std::vector<NodeID> > q_cut;
+    std::vector<size_t> dist_cut;
+    std::vector<PartitionID> pid1;
+
 
 public:
+  std::pair<size_t, size_t> comparePartitionsMoreInfo(graph_access & G,
+                                   const std::vector<PartitionID> & pid2) {
+
+        size_t max_dist_cut = 0;
+         size_t max_dist_gain = 0;
+         for (size_t i = 0; i < pid1.size(); ++i) {
+            if (pid1[i] != pid2[i]) {
+                if (dist_cut[i] > max_dist_cut) {
+                    max_dist_cut = dist_cut[i];
+                }
+                if (dist_gain[i] > max_dist_gain) {
+                    max_dist_gain = dist_gain[i];
+                }
+                // std::cout << "[" << i << "]: " << pid1[i]
+                //           << " -> " << pid2[i] << " dist: "
+                //           << dist_cut[i] << ":" << dist_gain[i]
+                //           << std::endl;
+            }
+        }
+         return {max_dist_cut, max_dist_gain};
+    }
+
+
+    void setFirstPartition(graph_access & G,
+                           const std::vector<PartitionID> & pid) {
+
+        pid1 = pid;
+        dist_gain.resize(G.number_of_nodes());
+        dist_cut.resize(G.number_of_nodes());
+        ilp_helpers ilp;
+
+        ilp.gainBFSStartNodes(G, nodes_gain, q_gain, 0);
+        ilp.cutBFSStartNodes(G, nodes_cut, q_cut);
+
+        for(auto zero : nodes_gain) {
+            dist_gain[zero] = 0;
+        }
+
+        for(auto zero : nodes_cut) {
+            dist_cut[zero] = 0;
+        }
+
+         while (!q_gain.empty()) {
+            std::vector<NodeID> curVec = q_gain.front();
+            q_gain.pop();
+            NodeID curNode = curVec[curVec.size()-1];
+            forall_out_edges(G, e, curNode) {
+                if (nodes_gain.count(G.getEdgeTarget(e)) == 0) {
+                    std::vector<NodeID> newVec (curVec);
+                    NodeID newNode = G.getEdgeTarget(e);
+                    newVec.push_back(newNode);
+                    nodes_gain.insert(newNode);
+                    q_gain.push(newVec);
+                    dist_gain[newNode] = newVec.size() - 1;
+                }
+
+            } endfor
+         }
+
+         while (!q_cut.empty()) {
+            std::vector<NodeID> curVec = q_cut.front();
+            q_cut.pop();
+            NodeID curNode = curVec[curVec.size()-1];
+            forall_out_edges(G, e, curNode) {
+                if (nodes_cut.count(G.getEdgeTarget(e)) == 0) {
+                    std::vector<NodeID> newVec (curVec);
+                    NodeID newNode = G.getEdgeTarget(e);
+                    newVec.push_back(newNode);
+                    nodes_cut.insert(newNode);
+                    q_cut.push(newVec);
+                    dist_cut[newNode] = newVec.size() - 1;
+                }
+
+            } endfor
+         }
+    }
+
+
     Gain compute_gain(graph_access &G, NodeID n, PartitionID pid) {
 
         std::vector<EdgeWeight> part_connections(G.get_partition_count(), 0);
@@ -55,7 +142,7 @@ public:
             } endfor
         } endfor
 
-                std::sort(gains.begin(), gains.end(),[&](auto a1, auto a2) {
+                std::sort(gains.begin(), gains.end(),[&](const std::pair<NodeID, Gain>& a1, const std::pair<NodeID, Gain>& a2) {
             if (a1.second == a2.second) {
                 return (G.getNodeDegree(a1.first) < G.getNodeDegree(a2.first));  //rand()%2==0;
             } else {

@@ -1,10 +1,3 @@
-/******************************************************************************
- * ilp_improve.h 
- * *
- * Source of KaHIP -- Karlsruhe High Quality Partitioning.
- * Christian Schulz <christian.schulz.phone@gmail.com>
- *****************************************************************************/
-
 #pragma once
 
 #include <unordered_set>
@@ -20,68 +13,8 @@
 #include "partition/graph_partitioner.h"
 #include "ilp_helpers.h"
 
-class balanceelim : public GRBCallback
-{
-    public:
-        GRBVar* vars;
-        NodeWeight* wgt;
-        EdgeWeight maxbal;
-        NodeID n;
-        PartitionID p;
-        balanceelim(GRBVar* xvars, NodeWeight* xwgt, EdgeWeight xmaxbal, NodeID xn, PartitionID xp) {
-            vars = xvars;
-            wgt = xwgt;
-            maxbal = xmaxbal;
-            n = xn;
-            p = xp;
-        }
-    protected:
-        void callback() {
-            try {
-                if (where == GRB_CB_MIPSOL) {
-                    std::vector<NodeID> pos(n, UNDEFINED_NODE);
-                    double* s = new double[n];
-                    std::vector<EdgeWeight> blockwgt(p, 0);
-
-                    s = getSolution(vars, n * p);
-                    for (NodeID q = 0; q < p; ++q) {
-                        for (NodeID i = 0; i < n; ++i) {
-                            NodeID id = i + q * n;
-                            if (s[id] == 1) {
-                                pos[i] = q;
-                                blockwgt[q] += wgt[i];
-                            }
-                        }
-                    }
-
-                    for (size_t i = 0; i < p; ++i) {
-                        if (blockwgt[i] > maxbal) {
-                            std::cout << "TOO HEAVY ON " << i << " "
-                            << blockwgt[i] << " to " << maxbal << std::endl;
-                            GRBLinExpr expr = 0;
-                            for (NodeID j = 0; j < n; ++j) {
-                                NodeID id = j + i * n;
-                                if (pos[j] == i) {
-                                    expr += vars[id] * wgt[j];
-                                }
-                            }
-                            addLazy(expr <= maxbal);
-                        }
-                    }
-                    delete[] s;
-                }
-            } catch (GRBException e) {
-                std::cout << "Error number: " << e.getErrorCode() << std::endl;
-                std::cout << e.getMessage() << std::endl;
-            } catch (...) {
-                std::cout << "Error during callback" << std::endl;
-            }
-        }
-};
-
 class ilp_improve {
 public:
-
 
 
     size_t computeBFS(graph_access &G, std::unordered_set<NodeID> &nodesAvailable,
@@ -92,13 +25,13 @@ public:
 
         std::vector<std::pair<NodeID, Gain>> gains;
 
-        switch(partition_config.mode) {
+        switch(partition_config.ilp_mode) {
             case OptimizationMode::TREES :
                 gains = help.bestStartNodes(G, nodesAvailable, queue);
                 break;
             case OptimizationMode::GAIN :
                 help.gainBFSStartNodes(G, nodesAvailable, queue,
-                                  partition_config.min_gain);
+                                  partition_config.ilp_bfs_min_gain);
                 break;
             case OptimizationMode::BOUNDARY :
                 help.cutBFSStartNodes(G, nodesAvailable, queue);
@@ -127,7 +60,7 @@ public:
 
 
 
-        if (partition_config.mode == OptimizationMode::TREES) {
+        if (partition_config.ilp_mode == OptimizationMode::TREES) {
 
             nodesAvailable.clear();
 
@@ -179,7 +112,7 @@ public:
                         std::vector<size_t> curVec = bfs_queue.front();
                         bfs_queue.pop();
                         auto curNode = (NodeID) curVec.back();
-                        if (curVec.size() < (size_t) partition_config.bfs_depth) {
+                        if (curVec.size() < (size_t) partition_config.ilp_bfs_depth) {
                             if (new_vertex[curNode])
                                 m -= degrees[curNode];
 
@@ -288,7 +221,7 @@ public:
                 std::vector<NodeID> curVec = queue.front();
                 queue.pop();
                 NodeID curNode = curVec.back();
-                if (curVec.size() < (size_t) partition_config.bfs_depth) {
+                if (curVec.size() < (size_t) partition_config.ilp_bfs_depth) {
                     m -= degrees[curNode];
                     forall_out_edges(G, e, curNode){
                                 if (nodesAvailable.count(G.getEdgeTarget(e)) == 0) {
@@ -388,7 +321,6 @@ public:
         std::cout << "cut \t\t\t" << qm.edge_cut(G) << std::endl;
         std::cout << "bnd \t\t\t" << qm.boundary_nodes(G) << std::endl;
         std::cout << "balance \t\t" << qm.balance(G) << std::endl;
-        std::cout << "balance_abs \t" << qm.balance_absolute(G) << std::endl;
         std::cout << "max_comm_vol \t"
                   << qm.max_communication_volume(G) << std::endl;
     }
@@ -421,6 +353,9 @@ public:
         GRBVar* nodes = new GRBVar [numNodes*pc.k];
         GRBVar* edges = new GRBVar [numEdges];
 
+        std::cout << "TODO: Threads set to 1!" << std::endl;
+        model.set(GRB_IntParam_Threads, 1);
+
         model.set(GRB_StringAttr_ModelName, "Partition");
         model.set(GRB_DoubleParam_TimeLimit, timelimit);
         model.set(GRB_DoubleParam_MIPGap, 0);
@@ -434,11 +369,6 @@ public:
             //model.set(GRB_IntParam_PoolSolutions, 3);
         }
 #endif
-
-        NodeWeight* wgts = new NodeWeight[numNodes];
-        for (NodeID i = 0; i < numNodes; ++i) {
-            wgts[i] = coarser.getNodeWeight(i);
-        }
 
         // Set decision variables for nodes
         for (size_t q = 0; q < pc.k; q++) {
@@ -461,13 +391,9 @@ public:
                 nodeTot += coarser.getNodeWeight(i) * nodes[i + q*numNodes];
             }
             // Add constraint: Balanced partition
-            //we do this lazily now
-            // model.addConstr(nodeTot <= upper, "upper bound " + pc.k);
+            model.addConstr(nodeTot <= upper, "upper bound " + pc.k);
         }
 
-        model.set(GRB_IntParam_LazyConstraints, 1);
-        balanceelim be = balanceelim(nodes, wgts, upper, numNodes, pc.k);
-        model.setCallback(&be);
 
         size_t j = 0;
         // Decision variables for edges
@@ -506,7 +432,6 @@ public:
         // if solution is found
         if (model.get(GRB_IntAttr_Status) == GRB_OPTIMAL ||
             model.get(GRB_IntAttr_Status) == GRB_TIME_LIMIT) {
-            std::cout << "setting graph" << std::endl;
             // set partition
             for (PartitionID q = 0; q < pc.k; q++) {
                 for (size_t i = 0; i < numNodes; i++) {
@@ -520,7 +445,6 @@ public:
 
         delete[] nodes;
         delete[] edges;
-        delete[] wgts;
         return model;
         } catch(GRBException e) {
             GRBEnv* env = new GRBEnv();
@@ -540,8 +464,8 @@ public:
         graph_partitioner partitioner;
 
 
-        for (int i = 0; i < pc.overlap_runs; ++i) {
-            pc.graph_already_partitioned = false;
+        for (int i = 0; i < pc.ilp_overlap_runs; ++i) {
+            pc.graph_allready_partitioned = false;
             random_functions::setSeed(i);
             partitioner.perform_partitioning(pc, G);
             if( pc.kaffpa_perfectly_balance ) {
@@ -567,7 +491,7 @@ public:
 
     std::tuple<size_t, size_t, size_t> buildOverlapGraph(graph_access & G, PartitionConfig pc, std::vector<NodeID> & best,
                                                          std::vector<std::vector<NodeID>> & partitions) {
-        return buildOverlapGraph(G, pc, best, partitions, pc.overlap_runs);
+        return buildOverlapGraph(G, pc, best, partitions, pc.ilp_overlap_runs);
     };
 
     std::tuple<size_t, size_t, size_t> buildOverlapGraph(graph_access & G, PartitionConfig pc, std::vector<NodeID> & best,
@@ -598,8 +522,6 @@ public:
 
                 bestindex = i;
             }
-
-
             size_constraint_label_propagation sclp;
             
             if (i) {
@@ -621,7 +543,7 @@ public:
 
         std::vector<bool> presets(G.number_of_nodes(), false);
 
-        if (pc.optimality == 1) {
+        if (pc.ilp_optimality == 1) {
             std::vector<bool> lockable_vertices(G.number_of_nodes(), true);
             size_t num_lockable = G.number_of_nodes();
 
@@ -649,7 +571,7 @@ public:
                     presets[index] = true;
                 }
             }
-        } else if (pc.optimality == 2) {
+        } else if (pc.ilp_optimality == 2) {
             std::vector<std::queue<NodeID>> queue(pc.k);
             std::vector<bool> vtx_discovered(G.number_of_nodes(), false);
             std::vector<size_t> discovered(pc.k, 0);
@@ -693,7 +615,7 @@ public:
                 }
             }
 
-        } else if (pc.optimality == 3) {
+        } else if (pc.ilp_optimality == 3) {
             size_t set = 0;
             std::vector<bool> already_set(pc.k, false);
 
@@ -705,7 +627,7 @@ public:
                     presets[n] = true;
                 }
             }
-        } else if (pc.optimality == 4) {
+        } else if (pc.ilp_optimality == 4) {
             std::vector<std::pair<NodeID, NodeWeight>> nodeWeights;
             size_t set = 0;
             std::vector<bool> already_set(pc.k, false);
@@ -724,7 +646,8 @@ public:
 
 
             std::sort(nodeWeights.begin(), nodeWeights.end(),
-                      [](auto n1, auto n2) {
+                      [](const std::pair<NodeID, NodeID>& n1,
+                         const std::pair<NodeID, NodeID>& n2) {
                           return n1.second > n2.second;
                       });
 
@@ -753,6 +676,4 @@ public:
 
         return coarse_presets;
     }
-
-
 };
