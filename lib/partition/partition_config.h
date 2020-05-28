@@ -374,7 +374,7 @@ struct PartitionConfig
 
         int ilp_bfs_min_gain;
 
-        int ilp_optimality;
+        OverlapPresets ilp_overlap_presets;
 
         int ilp_limit_nonzeroes;
 

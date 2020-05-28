@@ -215,7 +215,6 @@ public:
                     m += help.edgesInCoarse(G,nodesAvailable,curNode,degrees);
 
                     if (help.numNonzeroes(n,m,k) > limit_nonzeroes) {
-
                         std::cout << "early break - nonzeroes: " << help.numNonzeroes(n,m,k) << std::endl;
                         std::cout << "n: " << n << " m: " << m << std::endl;
                         return n;
@@ -358,9 +357,6 @@ public:
 
         GRBVar* nodes = new GRBVar [numNodes*pc.k];
         GRBVar* edges = new GRBVar [numEdges];
-
-        std::cout << "TODO: Threads set to 1!" << std::endl;
-        model.set(GRB_IntParam_Threads, 1);
 
         model.set(GRB_StringAttr_ModelName, "Partition");
         model.set(GRB_DoubleParam_TimeLimit, timelimit);
@@ -549,7 +545,7 @@ public:
 
         std::vector<bool> presets(G.number_of_nodes(), false);
 
-        if (pc.ilp_optimality == 1) {
+        if (pc.ilp_overlap_presets == OverlapPresets::NOEQUAL) {
             std::vector<bool> lockable_vertices(G.number_of_nodes(), true);
             size_t num_lockable = G.number_of_nodes();
 
@@ -577,7 +573,7 @@ public:
                     presets[index] = true;
                 }
             }
-        } else if (pc.ilp_optimality == 2) {
+        } else if (pc.ilp_overlap_presets == OverlapPresets::CENTER) {
             std::vector<std::queue<NodeID>> queue(pc.k);
             std::vector<bool> vtx_discovered(G.number_of_nodes(), false);
             std::vector<size_t> discovered(pc.k, 0);
@@ -621,7 +617,7 @@ public:
                 }
             }
 
-        } else if (pc.ilp_optimality == 3) {
+        } else if (pc.ilp_overlap_presets == OverlapPresets::RANDOM) {
             size_t set = 0;
             std::vector<bool> already_set(pc.k, false);
 
@@ -633,7 +629,7 @@ public:
                     presets[n] = true;
                 }
             }
-        } else if (pc.ilp_optimality == 4) {
+        } else if (pc.ilp_overlap_presets == OverlapPresets::HEAVIEST) {
             std::vector<std::pair<NodeID, NodeWeight>> nodeWeights;
             size_t set = 0;
             std::vector<bool> already_set(pc.k, false);

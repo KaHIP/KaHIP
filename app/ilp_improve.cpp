@@ -109,8 +109,8 @@ int main(int argn, char **argv) {
     if (partition_config.ilp_mode == OptimizationMode::OVERLAP) {
         auto partitions = ilp.createPartitions(G, partition_config);
         size_t best_index;
-        std::tie(no_of_coarse_vertices, base_ec, best_index) = ilp.buildOverlapGraph(G, partition_config, pid1,
-                                                                                     partitions);
+        std::tie(no_of_coarse_vertices, base_ec, best_index) =
+            ilp.buildOverlapGraph(G, partition_config, pid1, partitions);
 
         G.set_partition_count(no_of_coarse_vertices);
         complete_boundary bnd(&G);
@@ -139,7 +139,7 @@ int main(int argn, char **argv) {
 
 
     //run 2 hours then use best solution
-    double timelimit = 3600 * 2;
+    double timelimit = partition_config.ilp_timeout;
 
     EdgeWeight after_ec = before_ec;
     double after_balance = before_balance;
@@ -243,7 +243,7 @@ int main(int argn, char **argv) {
         << " edges=" << (coarser.number_of_edges() / 2)
         << " improved_base=" << (after_ec < base_ec)
         << " base_cut=" << base_ec
-        << " optimal=" << partition_config.ilp_optimality
+        << " overlap_presets=" << partition_config.ilp_overlap_presets
         << std::endl;
 
     logfile << log.str();

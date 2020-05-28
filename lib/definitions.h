@@ -193,6 +193,13 @@ typedef enum {
     OVERLAP
 } OptimizationMode;
 
+typedef enum {
+    NONE,
+    RANDOM,
+    NOEQUAL,
+    CENTER,
+    HEAVIEST
+} OverlapPresets;
 
 
 #endif
