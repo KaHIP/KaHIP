@@ -37,7 +37,7 @@ public:
                 break;
             case OptimizationMode::GAIN :
                 help.gainBFSStartNodes(G, nodesAvailable, queue,
-                                  partition_config.ilp_bfs_min_gain);
+                                  partition_config.ilp_min_gain);
                 break;
             case OptimizationMode::BOUNDARY :
                 help.cutBFSStartNodes(G, nodesAvailable, queue);

@@ -163,9 +163,13 @@ int parse_parameters(int argn, char **argv,
 
         //ilp parameters
         struct arg_str *ilp_mode                             = arg_str0(NULL,
-        "ilp_mode", NULL, "TODO");
-        struct arg_int *ilp_min_gain                         = arg_int0(NULL, "ilp_min_gain", NULL, "TODO");
-        struct arg_int *ilp_bfs_depth                        = arg_int0(NULL, "ilp_bfs_depth", NULL, "TODO");
+        "ilp_mode", NULL, "ILP Localsearch mode [boundary|gain|trees|overlap].");
+        struct arg_int *ilp_min_gain                         = arg_int0(NULL, "ilp_min_gain", NULL, "In Gain mode: build BFS around each vertex with gain >= ilp_min_gain [default: -1]");
+        struct arg_int *ilp_bfs_depth                        = arg_int0(NULL, "ilp_bfs_depth", NULL, "Depth of BFS trees in ILP improve [default: 2]");
+        struct arg_int *ilp_optimality                       = arg_int0(NULL, "ilp_optimality", NULL, "TODO");
+        struct arg_int *ilp_limit_nonzeroes                  = arg_int0(NULL, "ilp_limit_nonzeroes", NULL, "ILP: Limit of nonzeroes in ILP problem. [default: 5,000,000]");
+        struct arg_int *ilp_overlap_runs                     = arg_int0(NULL, "ilp_overlap_runs", NULL, "In overlap mode: Build overlap using ilp_overlap_runs many subproblem.");
+        struct arg_int *ilp_timeout                          = arg_int0(NULL, "ilp_timeout", NULL, "ILP timeout in seconds (Default: 7200)");
 
         // Define argtable.
         void* argtable[] = {
@@ -263,6 +267,9 @@ int parse_parameters(int argn, char **argv,
 #elif defined MODE_ILPIMPROVE
                 k, input_partition, filename_output,
                 ilp_mode, ilp_min_gain, ilp_bfs_depth,
+                ilp_optimality,
+                ilp_limit_nonzeroes, ilp_overlap_runs,
+                ilp_timeout,
 #endif
 
                 end
@@ -1039,6 +1046,44 @@ int parse_parameters(int argn, char **argv,
                 partition_config.cluster_upperbound = cluster_upperbound->ival[0];
         } else {
                 partition_config.cluster_upperbound = std::numeric_limits< NodeWeight >::max()/2;
+        }
+
+        if (ilp_mode->count > 0) {
+                if (strcmp("gain", ilp_mode->sval[0]) == 0) {
+                        partition_config.ilp_mode = OptimizationMode::GAIN;
+                } else if (strcmp("overlap", ilp_mode->sval[0]) == 0) {
+                        partition_config.ilp_mode = OptimizationMode::OVERLAP;
+                } else if (strcmp("boundary", ilp_mode->sval[0]) == 0) {
+                        partition_config.ilp_mode = OptimizationMode::BOUNDARY;
+                } else if (strcmp("trees", ilp_mode->sval[0]) == 0) {
+                        partition_config.ilp_mode = OptimizationMode::TREES;
+                } else {
+                        fprintf(stderr, "Invalid ilp mode \"%s\"\n", ilp_mode->sval[0]);
+                }
+        }
+
+        if (ilp_min_gain->count > 0) {
+                partition_config.ilp_min_gain = ilp_min_gain->sval[0];
+        }
+
+        if (ilp_bfs_depth->count > 0) {
+                partition_config.ilp_bfs_depth = ilp_bfs_depth->sval[0];
+        }
+
+        if (ilp_optimality->count > 0) {
+                partition_config.ilp_optimality = ilp_optimality->sval[0];
+        }
+
+        if (ilp_limit_nonzeroes > 0) {
+                partition_config.ilp_limit_nonzeroes = ilp_limit_nonzeroes->sval[0];
+        }
+
+        if (ilp_overlap_runs > 0) {
+                partition_config.ilp_overlap_runs = ilp_overlap_runs->sval[0];
+        }
+
+        if (ilp_timeout > 0) {
+                partition_config.ilp_timeout = ilp_timeout->sval[0];
         }
 
         return 0;
