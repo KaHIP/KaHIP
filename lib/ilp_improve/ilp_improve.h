@@ -1,3 +1,10 @@
+/******************************************************************************
+ * ilp_improve.h 
+ * *
+ * Source of KaHIP -- Karlsruhe High Quality Partitioning.
+ * Christian Schulz <christian.schulz.phone@gmail.com>
+ *****************************************************************************/
+
 #pragma once
 
 #include <unordered_set>
@@ -7,16 +14,15 @@
 #include <algorithm>
 
 #include "gurobi_c++.h"
+
 #include "balance_configuration.h"
+#include "ilp_improve/ilp_helpers.h"
 #include "partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
 #include "partition/coarsening/clustering/size_constraint_label_propagation.h"
 #include "partition/graph_partitioner.h"
-#include "ilp_helpers.h"
 
 class ilp_improve {
 public:
-
-
     size_t computeBFS(graph_access &G, std::unordered_set<NodeID> &nodesAvailable,
                     PartitionConfig partition_config, size_t limit_nonzeroes) {
         // BFS to get available nodes

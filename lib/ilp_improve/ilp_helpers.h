@@ -5,16 +5,13 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
-
-#ifndef ILP_ILP_HELPERS_H
-#define ILP_ILP_HELPERS_H
+#pragma once
 
 #include <algorithm>
 #include <unordered_set>
 
 #include "definitions.h"
 #include "data_structure/graph_access.h"
-#include "ilp_improve.h"
 
 class ilp_helpers {
 private:
@@ -57,10 +54,9 @@ public:
         pid1 = pid;
         dist_gain.resize(G.number_of_nodes());
         dist_cut.resize(G.number_of_nodes());
-        ilp_helpers ilp;
 
-        ilp.gainBFSStartNodes(G, nodes_gain, q_gain, 0);
-        ilp.cutBFSStartNodes(G, nodes_cut, q_cut);
+        gainBFSStartNodes(G, nodes_gain, q_gain, 0);
+        cutBFSStartNodes(G, nodes_cut, q_cut);
 
         for(auto zero : nodes_gain) {
             dist_gain[zero] = 0;
@@ -258,9 +254,4 @@ public:
         } endfor
         return pid;
     }
-
-
 };
-
-
-#endif //ILP_ILP_HELPERS_H
