@@ -29,7 +29,11 @@ class configuration {
 
                 void fastsocial( PartitionConfig & config );
                 void ecosocial( PartitionConfig & config );
-                void strongsocial( PartitionConfig & config ); 
+                void strongsocial( PartitionConfig & config );
+
+#ifdef USE_VIECLUS
+                void slvsocial( PartitionConfig & config );
+#endif
 
                 //void fastsocial_separator( PartitionConfig & config );
                 //void ecosocial_separator( PartitionConfig & config );
@@ -466,7 +470,10 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.distances.push_back(10);
         partition_config.distances.push_back(100);
 
-
+#ifdef USE_VIECLUS
+        partition_config.use_community_detection = false;
+        partition_config.vieclus_time_limit = 0;
+#endif
 
 }
 
@@ -570,5 +577,12 @@ inline void configuration::strongsocial( PartitionConfig & partition_config ) {
         partition_config.ensemble_clusterings         = true;
 
 }
+
+#ifdef USE_VIECLUS
+inline void configuration::slvsocial( PartitionConfig & partition_config ) {
+        strongsocial(partition_config);
+        partition_config.use_community_detection = true;
+}
+#endif
 
 #endif /* end of include guard: CONFIGURATION_3APG5V7Z */

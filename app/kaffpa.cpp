@@ -28,6 +28,10 @@
 #include "random_functions.h"
 #include "timer.h"
 
+#ifdef USE_VIECLUS
+#include "community_detection/VieClus_adapter.h"
+#endif
+
 int main(int argn, char **argv) {
 
         PartitionConfig partition_config;
@@ -70,7 +74,19 @@ int main(int argn, char **argv) {
         random_functions::setSeed(partition_config.seed);
 
         std::cout <<  "graph has " <<  G.number_of_nodes() <<  " nodes and " <<  G.number_of_edges() <<  " edges"  << std::endl;
-        // ***************************** perform partitioning ***************************************       
+        // ***************************** perform partitioning ***************************************
+#ifdef USE_VIECLUS
+        if (partition_config.use_community_detection) {
+            std::vector<int> clustering = VieClus_adapter::instance()
+                    .compute_modularity_clustering(G, partition_config);
+            partition_config.combine = true;
+            G.resizeSecondPartitionIndex(G.number_of_nodes());
+            for (NodeID u = 0; u < G.number_of_nodes(); ++u) {
+                G.setSecondPartitionIndex(u, clustering[u]);
+            }
+        }
+#endif
+
         t.restart();
         graph_partitioner partitioner;
         quality_metrics qm;

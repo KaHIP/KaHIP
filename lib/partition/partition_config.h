@@ -391,6 +391,11 @@ struct PartitionConfig
         //=======================================
         bool enable_omp;
 
+#ifdef USE_VIECLUS
+        bool use_community_detection;
+        int vieclus_time_limit;
+#endif
+
         void LogDump(FILE *out) const {
         }
 };

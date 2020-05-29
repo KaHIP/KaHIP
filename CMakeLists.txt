@@ -75,6 +75,9 @@ endif()
 # ParHIP
 option(PARHIP "build ParHIP" ON)
 
+# stronglvsocial preconfiguration using VieClus
+option(STRONG_LV_SOCIAL "enable stronglvsocial preconfiguration which requires VieClus" OFF)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/app)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/extern/argtable3-3.0.3)
@@ -241,3 +244,40 @@ if(PARHIP)
   add_subdirectory(parallel/modified_kahip)
   add_subdirectory(parallel/parallel_src)
 endif()
+
+# VieClus
+if (STRONG_LV_SOCIAL)
+  message(STATUS "Building with VieClus")
+  include(ExternalProject)
+  include(ProcessorCount)
+
+  ProcessorCount(N_CORES)
+  if (N EQUAL 0)
+    set(N_CORES 1)
+  endif ()
+
+  set(VIECLUS_DIR "${CMAKE_BINARY_DIR}/VieClus")
+  set(VIECLUS_PROGRAM library)
+  set(VIECLUS_VARIANT optimized)
+  ExternalProject_Add(VieClus
+          GIT_REPOSITORY https://github.com/danielseemaier/VieClus.git # TODO CHANGE ME
+          GIT_TAG VieClusInterface # TODO CHANGE ME
+          SOURCE_DIR ${VIECLUS_DIR}
+          BUILD_IN_SOURCE 1
+          CONFIGURE_COMMAND ""
+          BUILD_COMMAND scons program=${VIECLUS_PROGRAM} variant=${VIECLUS_VARIANT} -j ${N_CORES}
+          INSTALL_COMMAND cp ${VIECLUS_DIR}/${VIECLUS_VARIANT}/libvieclus.so ${CMAKE_BINARY_DIR}/libvieclus.so
+          )
+
+  set(LIBKAFFPA_VIECLUS_SOURC_FILES
+          lib/community_detection/VieClus_adapter.cpp
+          lib/community_detection/VieClus_adapter.h)
+  add_library(libkaffpa_vieclus ${LIBKAFFPA_VIECLUS_SOURC_FILES})
+  target_compile_definitions(libkaffpa_vieclus PUBLIC USE_VIECLUS)
+  target_link_libraries(libkaffpa_vieclus PUBLIC libvieclus.so)
+  target_include_directories(libkaffpa_vieclus PUBLIC "${VIECLUS_DIR}/interface/")
+  add_dependencies(libkaffpa_vieclus VieClus)
+
+  target_compile_definitions(kaffpa PUBLIC USE_VIECLUS)
+  target_link_libraries(kaffpa libkaffpa_vieclus MPI::MPI_CXX ${CMAKE_BINARY_DIR}/libvieclus.so)
+endif ()

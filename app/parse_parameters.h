@@ -101,7 +101,12 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *initial_partition_optimize_multitry_rounds   = arg_int0(NULL, "initial_partition_optimize_multitry_rounds", NULL, "(Default: 100)");
 
 #ifdef MODE_KAFFPA
-        struct arg_rex *preconfiguration                     = arg_rex1(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fsocial|esocial|ssocial]." );
+#ifdef USE_VIECLUS
+#define STRONG_LV_SOCIAL_PRECONFIG "|slvsocial"
+#else
+#define STRONG_LV_SOCIAL_PRECONFIG ""
+#endif
+        struct arg_rex *preconfiguration                     = arg_rex1(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial" STRONG_LV_SOCIAL_PRECONFIG ")$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fsocial|esocial|ssocial]." );
 #else
         struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [strong|eco|fast|fsocial|esocial|ssocial]." );
 #endif
@@ -158,6 +163,10 @@ int parse_parameters(int argn, char **argv,
         struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth.");
         struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
         struct arg_lit *online_distances                     = arg_lit0(NULL, "online_distances", "Do not store processor distances in a matrix, but do recomputation. (Default: disabled)");
+
+#ifdef USE_VIECLUS
+        struct arg_int *vieclus_time_limit = arg_int0(NULL, "vieclus_time_limit", NULL, "Time limit for the evolutionary algorithm used by VieClus.");
+#endif
 
         struct arg_end *end                                  = arg_end(100);
 
@@ -255,6 +264,9 @@ int parse_parameters(int argn, char **argv,
                 label_propagation_iterations,
                 filename_output, 
 #endif
+#ifdef USE_VIECLUS
+                vieclus_time_limit,
+#endif
                 end
         };
         // Parse arguments.
@@ -335,6 +347,10 @@ int parse_parameters(int argn, char **argv,
                         cfg.ecosocial(partition_config);
                 } else if (strcmp("ssocial", preconfiguration->sval[0]) == 0) {
                         cfg.strongsocial(partition_config);
+#ifdef USE_VIECLUS
+                } else if (strcmp("slvsocial", preconfiguration->sval[0]) == 0) {
+                        cfg.slvsocial(partition_config);
+#endif
                 } else {
                         fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);
@@ -1030,6 +1046,12 @@ int parse_parameters(int argn, char **argv,
         } else {
                 partition_config.cluster_upperbound = std::numeric_limits< NodeWeight >::max()/2;
         }
+
+#ifdef USE_VIECLUS
+        if (vieclus_time_limit->count > 0) {
+                partition_config.vieclus_time_limit = vieclus_time_limit->ival[0];
+        }
+#endif
 
         return 0;
 }
