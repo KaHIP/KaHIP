@@ -24,6 +24,7 @@ int parse_parameters(int argn, char **argv,
 
         // Setup argtable parameters.
         struct arg_lit *help                                 = arg_lit0(NULL, "help","Print help.");
+        struct arg_lit *use_mmap_io                          = arg_lit0(NULL, "mmap_io", "Use mmap graph IO (experimental).");
         struct arg_lit *edge_rating_tiebreaking              = arg_lit0(NULL, "edge_rating_tiebreaking","Enable random edgerating tiebreaking.");
         struct arg_lit *match_islands                        = arg_lit0(NULL, "match_islands","Enable matching of islands during gpa algorithm.");
         struct arg_lit *only_first_level                     = arg_lit0(NULL, "only_first_level","Disable Multilevel Approach. Only perform on the first level. (Currently only initial partitioning).");
@@ -163,7 +164,7 @@ int parse_parameters(int argn, char **argv,
 
         // Define argtable.
         void* argtable[] = {
-                help, filename, user_seed,
+                help, use_mmap_io, filename, user_seed,
 #ifdef MODE_DEVEL
                 k, graph_weighted, imbalance, edge_rating_tiebreaking, 
                 matching_type, edge_rating, rate_first_level_inner_outer, first_level_random_matching, 
@@ -340,6 +341,10 @@ int parse_parameters(int argn, char **argv,
                         exit(0);
                 }
 #endif
+        }
+
+        if (use_mmap_io->count > 0) {
+                partition_config.use_mmap_io = true;
         }
 
         if(enable_mapping->count > 0) {

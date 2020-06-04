@@ -11,7 +11,7 @@
 #include <regex.h>
 #include <sstream>
 #include <stdio.h>
-#include <string.h> 
+#include <string.h>
 
 #include "balance_configuration.h"
 #include "data_structure/graph_access.h"
@@ -20,6 +20,7 @@
 #include "graph_io.h"
 #include "macros_assertions.h"
 #include "mapping/mapping_algorithms.h"
+#include "mmap_graph_io.h"
 #include "parse_parameters.h"
 #include "partition/graph_partitioner.h"
 #include "partition/partition_config.h"
@@ -58,7 +59,11 @@ int main(int argn, char **argv) {
         graph_access G;     
 
         timer t;
-        graph_io::readGraphWeighted(G, graph_filename);
+        if (partition_config.use_mmap_io) {
+                kahip::io::graph_from_metis_file(G, graph_filename);
+        } else {
+                graph_io::readGraphWeighted(G, graph_filename);
+        }
         std::cout << "io time: " << t.elapsed()  << std::endl;
 
         G.set_partition_count(partition_config.k); 
