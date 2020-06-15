@@ -26,7 +26,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 
 ## Main project site:
-https://algo2.iti.kit.edu/documents/kahip/index.html
+https://kahip.github.io
 
 Installation Notes
 =====
