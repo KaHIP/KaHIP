@@ -33,10 +33,9 @@ Installation Notes
 
 Before you can start you need to install the following software packages:
 
-- Scons (https://www.scons.org/)
-- OpenMPI (https://www.open-mpi.org/). Note: due to removed progress threads in OpenMPI > 1.8, please use an OpenMPI version < 1.8 or Intel MPI to obtain a scalable parallel algorithm.
+- if you want to use parallel algorithms contained withing the framework (e.g. ParHIP) you need OpenMPI (https://www.open-mpi.org/). 
 
-Once you installed the packages, just type ./compile.sh. Once you did that you can try to run the following command:
+Once you installed the packages, just type ./compile_withcmake.sh. Once you did that you can try to run the following command:
 
 ./deploy/kaffpa examples/delaunay_n15.graph --k 2 --preconfiguration=strong
 
