@@ -46,7 +46,7 @@ Once you did that you can try to run the following command:
 ./deploy/kaffpa examples/delaunay_n15.graph --k 2 --preconfiguration=strong
 ```
 
-For a description of the graph format please have a look into the manual.
+For a description of the graph format (and all other programs) please have a look into the manual.
 
 
 
