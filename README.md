@@ -35,7 +35,8 @@ Before you can start you need to install the following software packages:
 
 - if you want to use parallel algorithms contained withing the framework (e.g. ParHIP) you need OpenMPI (https://www.open-mpi.org/). 
 
-Once you installed the packages, just type ./compile_withcmake.sh. Once you did that you can try to run the following command:
+Once you installed the packages, just type ./compile_withcmake.sh. 
+Once you did that you can try to run the following command:
 
 ./deploy/kaffpa examples/delaunay_n15.graph --k 2 --preconfiguration=strong
 
