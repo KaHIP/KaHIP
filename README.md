@@ -42,7 +42,9 @@ Once you installed the packages, just type
 
 Once you did that you can try to run the following command:
 
+```console
 ./deploy/kaffpa examples/delaunay_n15.graph --k 2 --preconfiguration=strong
+```
 
 For a description of the graph format please have a look into the manual.
 
