@@ -97,7 +97,11 @@ add_library(parhip_interface SHARED interface/parhip_interface.cpp $<TARGET_OBJE
 target_compile_definitions(parhip_interface PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")
 target_include_directories(parhip_interface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_link_libraries(parhip_interface PRIVATE libmodified_kahip_interface)
-install(TARGETS parhip_interface DESTINATION lib)
+set_target_properties(parhip_interface PROPERTIES PUBLIC_HEADER interface/parhip_interface.h)
+install(TARGETS parhip_interface
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include
+        )
 
 add_library(parhip_interface_static interface/parhip_interface.cpp $<TARGET_OBJECTS:libparallel>)
 target_compile_definitions(parhip_interface_static PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")
