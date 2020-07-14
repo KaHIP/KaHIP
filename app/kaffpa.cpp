@@ -60,7 +60,7 @@ int main(int argn, char **argv) {
 
         timer t;
         if (partition_config.use_mmap_io) {
-                kahip::io::graph_from_metis_file(G, graph_filename);
+                kahip::mmap_io::graph_from_metis_file(G, graph_filename);
         } else {
                 graph_io::readGraphWeighted(G, graph_filename);
         }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cctype>
-#include <cerrno>
 #include <cstring>
 #include <fcntl.h>
 #include <fstream>
@@ -9,15 +8,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define IO_ERROR(x)                                                            \
-  {                                                                            \
-    std::cerr << x << std::endl;                                               \
-    std::exit(-1);                                                             \
-  }
-#define IO_PERROR(x) IO_ERROR(x << ": " << std::strerror(errno))
-
 namespace kahip {
-namespace io {
+namespace mmap_io {
 namespace {
 struct MappedFile {
   const int fd;
@@ -33,7 +25,8 @@ struct MappedFile {
 int open_file(const std::string &filename) {
   int fd = open(filename.c_str(), O_RDONLY);
   if (fd < 0) {
-    IO_PERROR("Error while opening " << filename);
+    std::cerr << "Error while opening " << filename;
+    std::exit(-1);
   }
   return fd;
 }
@@ -42,7 +35,8 @@ std::size_t file_size(const int fd) {
   struct stat file_info {};
   if (fstat(fd, &file_info) == -1) {
     close(fd);
-    IO_PERROR("Error while determining file size");
+    std::cerr << "Error while determining file size";
+    std::exit(-1);
   }
   return static_cast<std::size_t>(file_info.st_size);
 }
@@ -51,11 +45,11 @@ MappedFile mmap_file_from_disk(const std::string &filename) {
   const int fd = open_file(filename);
   const std::size_t length = file_size(fd);
 
-  char *contents =
-      static_cast<char *>(mmap(nullptr, length, PROT_READ, MAP_PRIVATE, fd, 0));
+  char *contents = static_cast<char *>(mmap(nullptr, length, PROT_READ, MAP_PRIVATE, fd, 0));
   if (contents == MAP_FAILED) {
     close(fd);
-    IO_PERROR("Error while mapping file to memory");
+    std::cerr << "Error while mapping file to memory";
+    std::exit(-1);
   }
 
   return {
@@ -69,7 +63,8 @@ MappedFile mmap_file_from_disk(const std::string &filename) {
 void munmap_file_from_disk(const MappedFile &mapped_file) {
   if (munmap(mapped_file.contents, mapped_file.length) == -1) {
     close(mapped_file.fd);
-    IO_PERROR("Error while unmapping file from memory");
+    std::cerr << "Error while unmapping file from memory";
+    std::exit(-1);
   }
   close(mapped_file.fd);
 }
@@ -151,10 +146,8 @@ void graph_from_metis_file(graph_access &G, const std::string &filename) {
 
     G.setNodeWeight(u, header.has_node_weights ? scan_uint(mapped_file) : 1);
     while (std::isdigit(mapped_file.current())) {
+      const EdgeWeight weight = (header.has_edge_weights) ? scan_uint(mapped_file) : 1;
       const EdgeID e = G.new_edge(u, scan_uint(mapped_file) - 1);
-      const EdgeWeight weight = (header.has_edge_weights)    //
-                                    ? scan_uint(mapped_file) //
-                                    : 1;
       G.setEdgeWeight(e, weight);
     }
     if (mapped_file.current() == '\n') {
@@ -164,8 +157,5 @@ void graph_from_metis_file(graph_access &G, const std::string &filename) {
   G.finish_construction();
   munmap_file_from_disk(mapped_file);
 }
-} // namespace io
+} // namespace mmap_io
 } // namespace kahip
-
-#undef IO_ERROR
-#undef IO_PERROR
