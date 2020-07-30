@@ -288,15 +288,59 @@ If you use edge partitioning algorithms please also cite the following paper:
 }
 ```
 
+If you use node ordering algorithms please also cite the following paper:
+
+```
+@article{DBLP:journals/corr/abs-2004-11315,
+  author    = {Wolfgang Ost and
+               Christian Schulz and
+               Darren Strash},
+  title     = {Engineering Data Reduction for Nested Dissection},
+  journal   = {CoRR},
+  volume    = {abs/2004.11315},
+  year      = {2020},
+  url       = {https://arxiv.org/abs/2004.11315},
+  archivePrefix = {arXiv},
+  eprint    = {2004.11315},
+  timestamp = {Tue, 28 Apr 2020 16:10:02 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/abs-2004-11315.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+```
+
+
+If you use ILP algorithms to improve an partition please also cite the following paper:
+
+```
+@inproceedings{DBLP:conf/wea/HenzingerN018,
+  author    = {Alexandra Henzinger and
+               Alexander Noe and
+               Christian Schulz},
+  title     = {ILP-based Local Search for Graph Partitioning},
+  booktitle = {17th International Symposium on Experimental Algorithms, {SEA} 2018},
+  pages     = {4:1--4:15},
+  year      = {2018},
+  url       = {https://doi.org/10.4230/LIPIcs.SEA.2018.4},
+  doi       = {10.4230/LIPIcs.SEA.2018.4},
+  series    = {LIPIcs},
+  volume    = {103},
+  publisher = {Schloss Dagstuhl - Leibniz-Zentrum f{\"{u}}r Informatik}
+}
+```
+
 Project Contributors (sorted by last name)
 =====
 Yaroslav Akhremtsev
 
 Roland Glantz
  
+Alexandra Henzinger 
+
 Dennis Luxen
 
 Henning Meyerhenke
+
+Alexander Noe
 
 Ilya Safro
 
