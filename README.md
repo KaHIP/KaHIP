@@ -14,6 +14,13 @@ The graph partitioning problem asks for a division of a graph's node set into k 
   width="601" height="558">
 </p>
 
+## Downloading KaHIP: 
+You can download KaHIP with the following command line
+
+```console
+git clone https://github.com/KaHIP/KaHIP
+```
+
 ## NEW in v2.20: 
 * TCMalloc: possibility to link against TCMalloc
 * Faster IO for kaffpa (option --mmap_io)
