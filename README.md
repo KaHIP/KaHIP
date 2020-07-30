@@ -110,11 +110,11 @@ mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit
 
 #### Example Runs
 ```console
-mpirun -n 24 ./deploy/parhip ./examples/rgg_n_2_15_s0.graph --k 4 --preconfiguration=fastmesh
+./deploy/graph2binary examples/rgg_n_2_15_s0.graph examples/rgg_n_2_15_s0.bgf
 ```
 
 ```console
-./deploy/graph2binary examples/rgg_n_2_15_s0.graph examples/rgg_n_2_15_s0.bgf
+mpirun -n 24 ./deploy/parhip ./examples/rgg_n_2_15_s0.graph --k 4 --preconfiguration=fastmesh
 ```
 
 ```console
@@ -127,6 +127,11 @@ mpirun -n 24 ./deploy/parhip ./examples/rgg_n_2_15_s0.bgf --k 4 --preconfigurati
 | Node Separators | partition_to_vertex_separator, node_separator |
 | Two Way Node Separators | node_separator |
 | KWay Node Separators | use kaffpa to create k-partition, then partition_to_vertex_separator to create a separaotr |
+
+#### Example Runs
+```console
+./deploy/node_separator examples/rgg_n_2_15_s0.graph
+```
 
 ### Edge Partitioning 
 | Use Case | Programs |
