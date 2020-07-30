@@ -126,8 +126,11 @@ mpirun -n 24 ./deploy/parhip ./examples/rgg_n_2_15_s0.bgf --k 4 --preconfigurati
 ```
 
 ### Node Separators 
-KaHIP can also compute node separators. In can do so with a standard node separator (2-way), but it can also compute k-way node separators.
 
+The node separator problem asks to partition the node set of a graph into three sets A, B and S such that the
+removal of S disconnects A and B. We use flow-based and localized local search algorithms withing a multilevel
+framework to compute node separators.
+KaHIP can also compute node separators. In can do so with a standard node separator (2-way), but it can also compute k-way node separators.
 
 | Use Case | Programs |
 | ------------ | -------- |
