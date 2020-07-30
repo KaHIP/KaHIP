@@ -51,9 +51,10 @@ mkdir build
 cd build 
 cmake ../ -DCMAKE_BUILD_TYPE=Release     
 make 
+cd ..
 ```
 
-We also provide the option to link against TCMalloc. If you have it installed, run cmake with the additional option -DUSE_TCMALLOC=O.
+We also provide the option to link against TCMalloc. If you have it installed, run cmake with the additional option -DUSE_TCMALLOC=On.
 
 For a description of the graph format (and all other programs) please have a look into the manual.
 
