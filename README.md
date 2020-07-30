@@ -71,7 +71,7 @@ For a description of the graph format (and an extensive description of all other
 
 ## Overview of Programs and Usecase
 
-### Default Partitioning Problem (sequentially) kaffpa, kaffpaE 
+### Default Partitioning Problem  
 | Use Case | Programs |
 | ------------ | -------- |
 | Checking Graph Format | graph_checker  |
@@ -85,12 +85,19 @@ For a description of the graph format (and an extensive description of all other
 | Highest Quality, Mesh | kaffpaE, use mpirun, large time limit  |
 | Highest Quality, Social | kaffpaE, use mpirun, large time limit, preconfiguration ssocial  |
 | Even Higher Quality | kaffpaE, use mpirun, large time limit, use the options --mh_enable_tabu_search, --mh_enable_kabapE  |
+#### Example Runs
+```console
+./deploy/graph_checker ./examples/rgg_n_2_15_s0.graph 
+```
 
+```console
+./deploy/kaffpa ./examples/rgg_n_2_15_s0.graph --k 4  --preconfiguration=strong
+```
 
-### Process Mapping 
-| Use Case | Programs |
-| ------------ | -------- |
-| Mapping to Processor Networks | kaffpa, and use enable_mapping option with resp. perconfigurations |
+```console
+mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit=3600 --mh_enable_tabu_search --mh_enable_kabapE 
+```
+
 
 ### Distributed Memory Parallel Partitioning 
 | Use Case | Programs |
@@ -100,6 +107,11 @@ For a description of the graph format (and an extensive description of all other
 | Distributed Memory Parallel, Social | parhip with preconfigs ecosocial, fastsocial, ultrafastsocial |
 | Convert Metis to Binary | graph2binary, graph2binary_external |
 | Evaluate and Convert Partitions | toolbox |
+
+#### Example Runs
+```console
+mpirun -n 24 ./deploy/parhip ./examples/rgg_n_2_15_s0.graph --k 4 --preconfiguration=ultrafastmesh
+```
 
 ### Node Separators 
 | Use Case | Programs |
@@ -113,6 +125,10 @@ For a description of the graph format (and an extensive description of all other
 | ------------ | -------- |
 | Edge Partitioning | edge_partitioning, distributed_edge_partitioning |
 
+### Process Mapping 
+| Use Case | Programs |
+| ------------ | -------- |
+| Mapping to Processor Networks | kaffpa, and use enable_mapping option with resp. perconfigurations |
 
 Licence
 =====
