@@ -39,11 +39,7 @@ Once you installed the packages, just type
 ```console
 ./compile_withcmake.sh. 
 ```
-Once you did that you can try to run the following command:
-
-```console
-./deploy/kaffpa examples/delaunay_n15.graph --k 2 --preconfiguration=strong
-```
+In this case, all binaries, libraries and headers are in the folder ./deploy/ 
 
 Alternatively use the standard cmake build process:
 ```console 
@@ -56,8 +52,11 @@ cd ..
 
 We also provide the option to link against TCMalloc. If you have it installed, run cmake with the additional option -DUSE_TCMALLOC=On.
 
-For a description of the graph format (and all other programs) please have a look into the manual.
 
+Running Programs
+=====
+
+For a description of the graph format (and all other programs) please have a look into the manual.
 
 
 Licence
