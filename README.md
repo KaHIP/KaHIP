@@ -126,7 +126,7 @@ mpirun -n 24 ./deploy/parhip ./examples/rgg_n_2_15_s0.bgf --k 4 --preconfigurati
 | ------------ | -------- |
 | Node Separators | partition_to_vertex_separator, node_separator |
 | Two Way Node Separators | node_separator |
-| KWay Node Separators | use kaffpa to create k-partition, then partition_to_vertex_separator to create a separaotr |
+| KWay Node Separators | use kaffpa to create k-partition, then partition_to_vertex_separator to create a separator |
 
 #### Example Runs
 ```console
