@@ -72,7 +72,7 @@ For a description of the graph format (and an extensive description of all other
 ## Overview of Programs and Usecase
 
 | Use Case | Programs |
-| -------- | -------- |
+| ------------ | -------- |
 | Default Partitioning Problem (sequentially) | kaffpa, kaffpaE |
 | Checking Graph Format | graph_checker  |
 | Evaluate Partitioning Metrics | evaluator |
