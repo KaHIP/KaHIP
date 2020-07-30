@@ -140,6 +140,15 @@ mpirun -n 24 ./deploy/parhip ./examples/rgg_n_2_15_s0.bgf --k 4 --preconfigurati
 | ------------ | -------- |
 | Edge Partitioning | edge_partitioning, distributed_edge_partitioning |
 
+#### Example Runs
+```console
+./deploy/edge_partitioning ./examples/rgg_n_2_15_s0.graph --k 4 --preconfiguration=fast
+```
+
+```console
+mpirun -n 4 ./deploy/distributed_edge_partitioning ./examples/rgg_n_2_15_s0.bgf --k 4 --preconfiguration=fastsocial 
+```
+
 ### Process Mapping 
 | Use Case | Programs |
 | ------------ | -------- |
