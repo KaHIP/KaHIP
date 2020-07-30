@@ -17,6 +17,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 ## NEW in v2.20: 
 *TCMalloc:* possibility to link against TCMalloc
+
 *Faster IO* for kaffpa (option --mmap_io)
 
 ## NEW in v2.10: 
