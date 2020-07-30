@@ -75,6 +75,6 @@ set(LIBMODIFIED_KAFFPA_PARALLEL_SOURCE_FILES
   lib/tools/mpi_tools.cpp)
 add_library(libmodified_kaffpa_async OBJECT ${LIBMODIFIED_KAFFPA_PARALLEL_SOURCE_FILES})
 
-add_library(libmodified_kahip_interface interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libmodified_kaffpa> $<TARGET_OBJECTS:libmodified_kaffpa_async>)
+add_library(libmodified_kahip_interface STATIC interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libmodified_kaffpa> $<TARGET_OBJECTS:libmodified_kaffpa_async>)
 target_link_libraries(libmodified_kahip_interface PRIVATE OpenMP::OpenMP_CXX)
 target_include_directories(libmodified_kahip_interface PUBLIC interface)
