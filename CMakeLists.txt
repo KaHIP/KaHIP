@@ -75,6 +75,9 @@ endif()
 # ParHIP
 option(PARHIP "build ParHIP" ON)
 
+# tcmalloc
+option(USE_TCMALLOC "if available, link against tcmalloc" OFF)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/app)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/extern/argtable3-3.0.3)
@@ -179,6 +182,15 @@ add_executable(kaffpa app/kaffpa.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECT
 target_compile_definitions(kaffpa PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(kaffpa ${OpenMP_CXX_LIBRARIES})
 install(TARGETS kaffpa DESTINATION bin)
+if (USE_TCMALLOC)
+  find_library(TCMALLOC_LIB tcmalloc)
+  if (TCMALLOC_LIB)
+    target_link_libraries(kaffpa ${TCMALLOC_LIB})
+    message(STATUS "Using tcmalloc: ${TCMALLOC_LIB}")
+  else ()
+    message(STATUS "tcmalloc enabled but unavailable on this system")
+  endif ()
+endif ()
 
 add_executable(evaluator app/evaluator.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
 target_compile_definitions(evaluator PRIVATE "-DMODE_EVALUATOR")
