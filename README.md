@@ -132,8 +132,8 @@ KaHIP can also compute node separators. In can do so with a standard node separa
 | Use Case | Programs |
 | ------------ | -------- |
 | Node Separators | partition_to_vertex_separator, node_separator |
-| 2-Way Node Separators | node_separator |
-| KWay Node Separators | use kaffpa to create k-partition, then partition_to_vertex_separator to create a separator |
+| 2-Way Separators | node_separator |
+| KWay Separators | use kaffpa to create k-partition, then partition_to_vertex_separator to create a separator |
 
 #### Example Runs
 ```console
