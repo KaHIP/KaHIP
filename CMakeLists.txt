@@ -246,7 +246,12 @@ add_library(interface_static interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libk
 target_include_directories(interface_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(interface_static PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(interface_static PUBLIC ${OpenMP_CXX_LIBRARIES})
-install(TARGETS interface_static DESTINATION lib)
+set_target_properties(interface_static PROPERTIES PUBLIC_HEADER interface/kaHIP_interface.h)
+install(TARGETS interface_static 
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include
+        )
+
 
 # ParHIP
 if(PARHIP)
