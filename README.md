@@ -171,6 +171,13 @@ mpirun -n 4 ./deploy/distributed_edge_partitioning ./examples/rgg_n_2_15_s0.bgf 
 ```
 
 ### Process Mapping 
+Communication and topology aware process mapping is a powerful approach to reduce communication time in parallel applications with known communication patterns on large, distributed memory systems. We address the problem as a quadratic assignment problem (QAP), and include algorithms to construct initial mappings of processes
+to processors as well as fast local search algorithms to further improve the mappings. By exploiting assumptions
+6that typically hold for applications and modern supercomputer systems such as sparse communication patterns and
+hierarchically organized communication systems, we arrive at significantly more powerful algorithms for these
+special QAPs. Our multilevel construction algorithms employ perfectly balanced graph partitioning techniques and
+excessively exploit the given communication system hierarchy.
+
 | Use Case | Programs |
 | ------------ | -------- |
 | Mapping to Processor Networks | kaffpa, and use enable_mapping option with resp. perconfigurations |
