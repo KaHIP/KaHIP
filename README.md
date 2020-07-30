@@ -73,8 +73,10 @@ For a description of the graph format (and an extensive description of all other
 
 | Use Case | Programs |
 | -------- | -------- |
-| | |
-| | |
+| Default Partitioning Problem (sequentially) | kaffpa, kaffpaE |
+| Checking Graph Format | graph_checker  |
+| Evaluate Partitioning Metrics | evaluator |
+| Fast Sequential Partitioning, Meshes | kaffpa with preconfiguration set to fast  |
 
 Licence
 =====
