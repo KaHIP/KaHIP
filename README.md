@@ -74,8 +74,8 @@ For a description of the graph format (and an extensive description of all other
 ### Default Partitioning Problem  
 | Use Case | Input |  Programs |
 | ------------ | -------- | -------- |
-| Checking Graph Format || graph_checker  |
-| Evaluate Partitioning Metrics || evaluator |
+| Graph Format || graph_checker  |
+| Evaluate Partitions || evaluator |
 | Fast Partitioning | Meshes | kaffpa preconfiguration set to fast  |
 | Good Partitioning | Meshes | kaffpa preconfiguration set to eco  |
 | Very Good Partitioning | Meshes | kaffpa preconfiguration set to strong |
