@@ -20,9 +20,9 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 *ILPs For Even Higher Quality*: ILPs typically don't scale to large instances. We adapt them to heuristically improve a given partition.  We do so by defining a much smaller model that allows us to use symmetry breaking and other techniques that make the approach scalable. we include ILPs that can be used as a post-processing step to improve high-quality partitions even further. The codes are now included in KaHIP.
 
-*TCMalloc:* possibility to link against TCMalloc
+*TCMalloc:* we added the possibility to link against TCMalloc. Depending on your system, this can yield an overall faster algorithm since it provides faster malloc operations.
 
-*Faster IO* for kaffpa (option --mmap_io)
+*Faster IO*: we added an option to  kaffpa (option --mmap_io) that speedsup the IO of text files significantly -- sometimes by an order of magnitude.
 
 
 ## NEW in v2.10: 
