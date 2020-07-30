@@ -40,7 +40,6 @@ Once you installed the packages, just type
 ./compile_withcmake.sh. 
 ```
 In this case, all binaries, libraries and headers are in the folder ./deploy/ 
-
 Alternatively use the standard cmake build process:
 ```console 
 mkdir build
@@ -56,7 +55,7 @@ We also provide the option to link against TCMalloc. If you have it installed, r
 Running Programs
 =====
 
-For a description of the graph format (and all other programs) please have a look into the manual.
+For a description of the graph format (and an extensive description of all other programs) please have a look into the manual. We give a short examples here.
 
 
 Licence
