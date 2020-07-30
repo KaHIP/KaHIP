@@ -182,6 +182,10 @@ excessively exploit the given communication system hierarchy.
 | ------------ | -------- |
 | Mapping to Processor Networks | kaffpa, and use enable_mapping option with resp. perconfigurations |
 
+#### Example Runs
+```console
+./deploy/kaffpa examples/rgg_n_2_15_s0.graph --k 256 --preconfiguration=eco --enable_mapping --hierarchy_parameter_string=4:8:8 --distance_parameter_string=1:10:100
+```
 Licence
 =====
 The program is licenced under MIT licence.
