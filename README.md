@@ -141,6 +141,11 @@ KaHIP can also compute node separators. In can do so with a standard node separa
 ```
 
 ### Edge Partitioning 
+Edge-centric distributed computations have appeared as a recent technique to improve the shortcomings of think-
+like-a-vertex algorithms on large scale-free networks. In order to increase parallelism on this model, edge partitioning -- partitioning edges into roughly equally sized blocks -- has emerged as an alternative to traditional (node-based) graph partitioning. We include a fast parallel and sequential split-and-connect graph construction algorithm
+that yield high-quality edge partitions in a scalable way. Our technique scales to networks with billions of edges,
+and runs efficiently on thousands of PEs.
+
 | Use Case | Programs |
 | ------------ | -------- |
 | Edge Partitioning | edge_partitioning, distributed_edge_partitioning |
