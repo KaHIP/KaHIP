@@ -87,15 +87,15 @@ For a description of the graph format (and an extensive description of all other
 | Even Higher Quality | kaffpaE, use mpirun, large time limit, use the options --mh_enable_tabu_search, --mh_enable_kabapE  |
 #### Example Runs
 ```console
+./deploy/graph_checker ./examples/rgg_n_2_15_s0.graph 
+```
+
+```console
 ./deploy/kaffpa ./examples/rgg_n_2_15_s0.graph --k 4  --preconfiguration=strong
 ```
 
 ```console
 mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit=3600 --mh_enable_tabu_search --mh_enable_kabapE 
-```
-
-```console
-./deploy/graph_checker ./examples/rgg_n_2_15_s0.graph 
 ```
 
 ### Process Mapping 
