@@ -72,7 +72,7 @@ For a description of the graph format (and an extensive description of all other
 ## Overview of Programs and Usecase
 
 ### Default Partitioning Problem  
-These programs and configurations take a graph and partition it more or less sequentially. We list here kaffpa and kaffpaE (the evolutionary framework) and their configurations. In general, the configurations are such that you can invest a lot of time into solution quality using the memetic algorithm. The memetic algorithm can also be run in parallel using MPI. 
+These programs and configurations take a graph and partition it more or less sequentially. We list here kaffpa and kaffpaE (the evolutionary framework) and their configurations. In general, the configurations are such that you can invest a lot of time into solution quality using the memetic algorithm. The memetic algorithm can also be run in parallel using MPI. In general, the more time and ressources you invest, the better will be the quality of your partition. We have a lot of trade-offs, contact us if you are unsure what works best for your application.
 
 | Use Case | Input |  Programs |
 | ------------ | -------- | -------- |
