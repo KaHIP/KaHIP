@@ -82,10 +82,24 @@ For a description of the graph format (and an extensive description of all other
 | Fast Sequential Partitioning, Social | kaffpa with preconfiguration set to fsocial  |
 | Good Sequential Partitioning, Social  | kaffpa with preconfiguration set to esocial  |
 | Very Good Sequential Partitioning, Social | kaffpa with preconfiguration set to ssocial |
-| Mapping to Processor Networks | use enable_mapping option |
+| ------------ | -------- |
 | Highest Quality, Mesh | kaffpaE, use mpirun, large time limit  |
 | Highest Quality, Social | kaffpaE, use mpirun, large time limit, preconfiguration ssocial  |
 | Even Higher Quality | kaffpaE, use mpirun, large time limit, use the options --mh_enable_tabu_search, --mh_enable_kabapE  |
+| ------------ | -------- |
+| Mapping to Processor Networks | use enable_mapping option |
+| ------------ | -------- |
+| Parallel Partitioning | parhip, graph2binary, graph2binary_external, toolbox |
+| Distributed Memory Parallel, Mesh | parhip with preconfigs ecomesh, fastmesh, ultrafastmesh |
+| Distributed Memory Parallel, Social | parhip with preconfigs ecosocial, fastsocial, ultrafastsocial |
+| Convert Metis to Binary | graph2binary, graph2binary_external |
+| Evaluate and Convert Partitions | toolbox |
+| ------------ | -------- |
+| Node Separators | partition_to_vertex_separator, node_separator |
+| Two Way Node Separators | node_separator |
+| KWay Node Separators | use kaffpa to create k-partition, then partition_to_vertex_separator to create a separaotr |
+| ------------ | -------- |
+| Edge Partitioning | edge_partitioning, distributed_edge_partitioning |
 
 
 Licence
