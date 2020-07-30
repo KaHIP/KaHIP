@@ -43,7 +43,7 @@ git clone https://github.com/KaHIP/KaHIP
 ## Compiling KaHIP: 
 Before you can start you need to install the following software packages:
 
-- if you want to use parallel algorithms contained withing the framework (e.g. ParHIP) you need OpenMPI (https://www.open-mpi.org/). 
+- if you want to use parallel algorithms contained withing the framework (e.g. ParHIP) you need OpenMPI (https://www.open-mpi.org/). If you don't want to run ParHIP, you can easily get rid of this dependency.
 
 Once you installed the packages, just type 
 ```console
