@@ -18,7 +18,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 ## NEW in v2.20: 
 *Node Ordering Algorithms*: Many applications rely on time-intensive matrix operations, such as factorization, which can be sped up significantly for large sparse matrices by interpreting the matrix as a sparse graph and computing a node ordering that minimizes the so-called \emph{fill-in}. Here, we added new algorithms to compute fill-in reduced orderings in graphs.
 
-*ILPs For Even Higher Quality*: we include ILPs that can be used as a post-processing step to improve high-quality partitions even further.
+*ILPs For Even Higher Quality*: ILPs typically don't scale to large instances. We adapt them to heuristically improve a given partition.  We do so by defining a much smaller model that allows us to use symmetry breaking and other techniques that make the approach scalable. we include ILPs that can be used as a post-processing step to improve high-quality partitions even further. The codes are now included in KaHIP.
 
 *TCMalloc:* possibility to link against TCMalloc
 
