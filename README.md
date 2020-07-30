@@ -40,6 +40,7 @@ Once you installed the packages, just type
 ./compile_withcmake.sh. 
 ```
 In this case, all binaries, libraries and headers are in the folder ./deploy/ 
+
 Alternatively use the standard cmake build process:
 ```console 
 mkdir build
@@ -48,6 +49,7 @@ cmake ../ -DCMAKE_BUILD_TYPE=Release
 make 
 cd ..
 ```
+In this case, the binaries, libraries and headers are in the folder ./build as well as ./build/parallel/parallel_src/
 
 We also provide the option to link against TCMalloc. If you have it installed, run cmake with the additional option -DUSE_TCMALLOC=On.
 
