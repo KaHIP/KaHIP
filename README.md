@@ -16,13 +16,14 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 
 ## NEW in v2.20: 
+*Node Ordering Algorithms*: Many applications rely on time-intensive matrix operations, such as factorization, which can be sped up significantly for large sparse matrices by interpreting the matrix as a sparse graph and computing a node ordering that minimizes the so-called \emph{fill-in}. Here, we added new algorithms to compute fill-in reduced orderings in graphs.
+
+*ILPs For Even Higher Quality*: we include ILPs that can be used as a post-processing step to improve high-quality partitions even further.
+
 *TCMalloc:* possibility to link against TCMalloc
 
 *Faster IO* for kaffpa (option --mmap_io)
 
-*Node Ordering Algorithms*: we added new algorithms to compute fill-in reduced orderings in graphs.
-
-*ILPs For Even Higher Quality*: we include ILPs that can be used as a post-processing step to improve high-quality partitions even further.
 
 ## NEW in v2.10: 
 *ParHIP (Parallel High Quality Partitioning):* Our distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks.
