@@ -102,6 +102,14 @@ mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit
 
 
 ### Distributed Memory Parallel Partitioning 
+A large part of the project are distributed memory parallel algorithms designed for networks having a hierarchical
+cluster structure such as web graphs or social networks. Unfortunately, previous parallel graph partitioners originally developed for more regular mesh-like networks do not work well for complex networks. Here we address this
+problem by parallelizing and adapting the label propagation technique originally developed for graph clustering.
+By introducing size constraints, label propagation becomes applicable for both the coarsening and the refinement
+phase of multilevel graph partitioning. This way we exploit the hierarchical cluster structure present in many complex networks. We obtain very high quality by applying a highly parallel evolutionary algorithm to the coarsest
+graph. The resulting system is both more scalable and achieves higher quality than state-of-the-art systems like
+ParMetis or PT-Scotch.
+
 Our distributed memory parallel algorithm can read binary files as well as standard Metis graph format files. Binary files are in general much more scalable than reading text files in parallel applications. The way to go here is to convert the Metis file into a binary file first (ending .bgf) and then load this one.
 
 | Use Case | Programs |
