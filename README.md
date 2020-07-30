@@ -86,18 +86,31 @@ For a description of the graph format (and an extensive description of all other
 | Highest Quality, Mesh | kaffpaE, use mpirun, large time limit  |
 | Highest Quality, Social | kaffpaE, use mpirun, large time limit, preconfiguration ssocial  |
 | Even Higher Quality | kaffpaE, use mpirun, large time limit, use the options --mh_enable_tabu_search, --mh_enable_kabapE  |
+
+
+### Process Mapping 
+| Use Case | Programs |
 | ------------ | -------- |
-| Mapping to Processor Networks | use enable_mapping option |
+| Mapping to Processor Networks | kaffpa, and use enable_mapping option with resp. perconfigurations |
+
+### Distributed Memory Parallel Partitioning 
+| Use Case | Programs |
 | ------------ | -------- |
 | Parallel Partitioning | parhip, graph2binary, graph2binary_external, toolbox |
 | Distributed Memory Parallel, Mesh | parhip with preconfigs ecomesh, fastmesh, ultrafastmesh |
 | Distributed Memory Parallel, Social | parhip with preconfigs ecosocial, fastsocial, ultrafastsocial |
 | Convert Metis to Binary | graph2binary, graph2binary_external |
 | Evaluate and Convert Partitions | toolbox |
+
+### Node Separators 
+| Use Case | Programs |
 | ------------ | -------- |
 | Node Separators | partition_to_vertex_separator, node_separator |
 | Two Way Node Separators | node_separator |
 | KWay Node Separators | use kaffpa to create k-partition, then partition_to_vertex_separator to create a separaotr |
+
+### Edge Partitioning 
+| Use Case | Programs |
 | ------------ | -------- |
 | Edge Partitioning | edge_partitioning, distributed_edge_partitioning |
 
