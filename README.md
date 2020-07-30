@@ -126,6 +126,9 @@ mpirun -n 24 ./deploy/parhip ./examples/rgg_n_2_15_s0.bgf --k 4 --preconfigurati
 ```
 
 ### Node Separators 
+KaHIP can also compute node separators. In can do so with a standard node separator (2-way), but it can also compute k-way node separators.
+
+
 | Use Case | Programs |
 | ------------ | -------- |
 | Node Separators | partition_to_vertex_separator, node_separator |
