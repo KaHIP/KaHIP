@@ -82,7 +82,6 @@ For a description of the graph format (and an extensive description of all other
 | Fast Sequential Partitioning, Social | kaffpa with preconfiguration set to fsocial  |
 | Good Sequential Partitioning, Social  | kaffpa with preconfiguration set to esocial  |
 | Very Good Sequential Partitioning, Social | kaffpa with preconfiguration set to ssocial |
-| ------------ | -------- |
 | Highest Quality, Mesh | kaffpaE, use mpirun, large time limit  |
 | Highest Quality, Social | kaffpaE, use mpirun, large time limit, preconfiguration ssocial  |
 | Even Higher Quality | kaffpaE, use mpirun, large time limit, use the options --mh_enable_tabu_search, --mh_enable_kabapE  |
