@@ -263,6 +263,7 @@ inline void configuration::fast_separator( PartitionConfig & partition_config ) 
 
 inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.filename_output                        = "";
+        partition_config.use_mmap_io = false;
         partition_config.seed                                   = 0;
         partition_config.fast                                   = false;
         partition_config.mode_node_separators                   = false;
