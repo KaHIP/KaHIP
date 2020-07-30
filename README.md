@@ -100,6 +100,8 @@ mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit
 
 
 ### Distributed Memory Parallel Partitioning 
+Our distributed memory parallel algorithm can read binary files as well as standard Metis graph format files. Binary files are in general much more scalable than reading text files in parallel applications. The way to go here is to convert the Metis file into a binary file first (ending .bgf) and then load this one.
+
 | Use Case | Programs |
 | ------------ | -------- |
 | Parallel Partitioning | parhip, graph2binary, graph2binary_external, toolbox |
