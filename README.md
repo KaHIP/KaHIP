@@ -187,7 +187,7 @@ excessively exploit the given communication system hierarchy.
 ./deploy/kaffpa examples/rgg_n_2_15_s0.graph --k 256 --preconfiguration=eco --enable_mapping --hierarchy_parameter_string=4:8:8 --distance_parameter_string=1:10:100
 ```
 
-Linking Programs
+Linking the KaHIP Library 
 =====
 KaHIP also offers libaries and interfaces to link the algorithms directly to your code. We explain the details of the interface in the manual. Below we list an example program that links the kahip library. This example can also  be found in misc/example_library_call/.
 
