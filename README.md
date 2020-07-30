@@ -14,12 +14,6 @@ The graph partitioning problem asks for a division of a graph's node set into k 
   width="601" height="558">
 </p>
 
-## Downloading KaHIP: 
-You can download KaHIP with the following command line
-
-```console
-git clone https://github.com/KaHIP/KaHIP
-```
 
 ## NEW in v2.20: 
 * TCMalloc: possibility to link against TCMalloc
@@ -38,7 +32,14 @@ https://kahip.github.io
 
 Installation Notes
 =====
+## Downloading KaHIP: 
+You can download KaHIP with the following command line:
 
+```console
+git clone https://github.com/KaHIP/KaHIP
+```
+
+## Compiling KaHIP: 
 Before you can start you need to install the following software packages:
 
 - if you want to use parallel algorithms contained withing the framework (e.g. ParHIP) you need OpenMPI (https://www.open-mpi.org/). 
