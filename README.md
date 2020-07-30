@@ -98,10 +98,6 @@ For a description of the graph format (and an extensive description of all other
 mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit=3600 --mh_enable_tabu_search --mh_enable_kabapE 
 ```
 
-### Process Mapping 
-| Use Case | Programs |
-| ------------ | -------- |
-| Mapping to Processor Networks | kaffpa, and use enable_mapping option with resp. perconfigurations |
 
 ### Distributed Memory Parallel Partitioning 
 | Use Case | Programs |
@@ -111,6 +107,11 @@ mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit
 | Distributed Memory Parallel, Social | parhip with preconfigs ecosocial, fastsocial, ultrafastsocial |
 | Convert Metis to Binary | graph2binary, graph2binary_external |
 | Evaluate and Convert Partitions | toolbox |
+
+#### Example Runs
+```console
+mpirun -n 24 ./deploy/parhip ./examples/rgg_n_2_15_s0.graph --k 4 --preconfiguration=ultrafastmesh
+```
 
 ### Node Separators 
 | Use Case | Programs |
@@ -124,6 +125,10 @@ mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit
 | ------------ | -------- |
 | Edge Partitioning | edge_partitioning, distributed_edge_partitioning |
 
+### Process Mapping 
+| Use Case | Programs |
+| ------------ | -------- |
+| Mapping to Processor Networks | kaffpa, and use enable_mapping option with resp. perconfigurations |
 
 Licence
 =====
