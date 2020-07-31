@@ -801,8 +801,6 @@ int parse_parameters(int argn, char **argv,
 
         if (user_seed->count > 0) {
                 partition_config.seed = user_seed->ival[0];
-        } else {
-                partition_config.seed = time(NULL);
         }
 
         if (fm_search_limit->count > 0) {
