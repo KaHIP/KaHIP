@@ -40,6 +40,21 @@ void node_separator(int* n, int* vwgt, int* xadj,
                     double* imbalance,  bool suppress_output, int seed, int mode,
                     int* num_separator_vertices, int** separator); 
 
+// takes an unweighted graph and performs reduced nested dissection
+// ordering is the output parameter, an array of n ints
+void reduced_nd(int* n, int* xadj, int* adjncy,
+                bool suppress_output, int seed, int mode,
+                double imbalance, int rec_limit, const char* reduction_order,
+                double convergence, int max_sim_deg,
+                int* ordering);
+
+#ifdef USEMETIS
+// reduced nested dissection with metis
+void reduced_nd_fast(int* n, int* xadj, int* adjncy,
+                      bool suppress_output, int seed, const char* reduction_order, int max_sim_deg,
+                      int* ordering);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

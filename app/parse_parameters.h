@@ -1,5 +1,5 @@
 /******************************************************************************
- * parse_parameters.h 
+         * parse_parameters.h 
  * *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  * Christian Schulz <christian.schulz.phone@gmail.com>
@@ -10,6 +10,7 @@
 #define PARSE_PARAMETERS_GPJMGSM8
 
 #include <omp.h>
+#include <string>
 #include <sstream>
 #include "configuration.h"
 
@@ -160,6 +161,13 @@ int parse_parameters(int argn, char **argv,
         struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
         struct arg_lit *online_distances                     = arg_lit0(NULL, "online_distances", "Do not store processor distances in a matrix, but do recomputation. (Default: disabled)");
 
+        // Node Ordering
+        struct arg_int *dissection_rec_limit                 = arg_int0(NULL, "dissection_rec_limit", NULL, "Size of the smallest graph to dissect");
+        struct arg_lit *disable_reductions                   = arg_lit0(NULL, "disable_reductions", "Turn graph reductions off");
+        struct arg_str *reduction_order                      = arg_str0(NULL, "reduction_order", NULL, "Order in which to apply reductions");
+        struct arg_dbl *convergence_factor                   = arg_dbl0(NULL, "convergence_factor", NULL, "Reapply reductions only if the reduction in percent is greater than this factor (0: repeat until perfect convergence, 1: never repeat reductions (default))");
+        struct arg_int *max_simplicial_degree                = arg_int0(NULL, "max_sim_deg", NULL, "Only evaluate nodes with smaller degree in simplicial node reduction.");
+
         struct arg_end *end                                  = arg_end(100);
 
         // Define argtable.
@@ -178,7 +186,7 @@ int parse_parameters(int argn, char **argv,
                 kway_rounds, kway_search_stop_rule, kway_fm_limits, kway_adaptive_limits_alpha, 
                 enable_corner_refinement, disable_qgraph_refinement,local_multitry_fm_alpha, local_multitry_rounds,
                 global_cycle_iterations, use_wcycles, wcycle_no_new_initial_partitioning, use_fullmultigrid, use_vcycle,level_split, 
-                enable_convergence, compute_vertex_separator, suppress_output, 
+                enable_convergence, compute_vertex_separator, 
                 input_partition, preconfiguration, only_first_level, disable_max_vertex_weight_constraint, 
                 recursive_bipartitioning, use_bucket_queues, time_limit, unsuccessful_reps, local_partitioning_repetitions, 
                 mh_pool_size, mh_plain_repetitions, mh_disable_nc_combine, mh_disable_cross_combine, mh_enable_tournament_selection,       
@@ -215,6 +223,8 @@ int parse_parameters(int argn, char **argv,
                 //time_limit, 
                 //edge_rating,
                 //max_flow_improv_steps,
+                //initial_partitioning_repetitions,
+                //bipartition_tries,
                 //max_initial_ns_tries,
                 //region_factor_node_separators,
                 //global_cycle_iterations,
@@ -228,10 +238,18 @@ int parse_parameters(int argn, char **argv,
 		//sep_loc_fm_unsucc_steps,
 		//sep_num_loc_fm_reps,
                 //sep_loc_fm_no_snodes,
-                //sep_num_vert_stop,
+                //sep_num_vert_stop,              //
                 //sep_full_boundary_ip,
                 //sep_edge_rating_during_ip,
                 //sep_faster_ns,
+                //label_iterations_refinement,    //
+        #ifdef MODE_NODEORDERING
+                //dissection_rec_limit,
+                //disable_reductions,
+                reduction_order,
+                //convergence_factor,
+                //max_simplicial_degree,
+        #endif
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
                 filename_output, 
@@ -311,13 +329,11 @@ int parse_parameters(int argn, char **argv,
                 } else if (strcmp("fast", preconfiguration->sval[0]) == 0) {
                         cfg.fast_separator(partition_config);
                 } else if (strcmp("fsocial", preconfiguration->sval[0]) == 0) {
-                        std::cout <<  "fsocial not supported yet"  << std::endl;
-                        exit(0);
+                        cfg.fastsocial_separator(partition_config);
                 } else if (strcmp("esocial", preconfiguration->sval[0]) == 0) {
-                        std::cout <<  "esocial not supported yet"  << std::endl;
-                        exit(0);
+                        cfg.ecosocial_separator(partition_config);
                 } else if (strcmp("ssocial", preconfiguration->sval[0]) == 0) {
-                        std::cout <<  "ssocial not supported yet"  << std::endl;
+                        cfg.strongsocial_separator(partition_config);
                         exit(0);
                 } else {
                         fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
@@ -1036,6 +1052,51 @@ int parse_parameters(int argn, char **argv,
                 partition_config.cluster_upperbound = std::numeric_limits< NodeWeight >::max()/2;
         }
 
+        if (dissection_rec_limit->count > 0) {
+                partition_config.dissection_rec_limit = dissection_rec_limit->ival[0];
+        } else {
+                partition_config.dissection_rec_limit = 120;
+        }
+
+        if (disable_reductions->count > 0) {
+                partition_config.disable_reductions = true;
+        } else {
+                partition_config.disable_reductions = false;
+        }
+
+        if (reduction_order->count > 0) {
+                std::istringstream stream(reduction_order->sval[0]);
+                while (!stream.eof()) {
+                        int value;
+                        stream >> value;
+                        if (value >= 0 && value < nested_dissection_reduction_type::num_types) {
+                                partition_config.reduction_order.push_back((nested_dissection_reduction_type)value);
+                        } else {
+                                std::cout << "Unknown reduction type " << value << std::endl;
+                                return 1;
+                        }
+                }
+        } else {
+                partition_config.reduction_order = {simplicial_nodes,
+                                                    indistinguishable_nodes,
+                                                    twins,
+                                                    path_compression,
+                                                    degree_2_nodes,
+                                                    triangle_contraction};
+        }
+
+        if (convergence_factor->count > 0) {
+                partition_config.convergence_factor = convergence_factor->dval[0];
+        } else {
+                partition_config.convergence_factor = 1.0;
+        }
+
+        if (max_simplicial_degree->count > 0) {
+                partition_config.max_simplicial_degree = max_simplicial_degree->ival[0];
+        } else {
+                partition_config.max_simplicial_degree = std::numeric_limits<int>::max();
+        }
+        
         return 0;
 }
 
