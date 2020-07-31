@@ -175,7 +175,7 @@ int parse_parameters(int argn, char **argv,
         // Node Ordering
         struct arg_int *dissection_rec_limit                 = arg_int0(NULL, "dissection_rec_limit", NULL, "Size of the smallest graph to dissect");
         struct arg_lit *disable_reductions                   = arg_lit0(NULL, "disable_reductions", "Turn graph reductions off");
-        struct arg_str *reduction_order                      = arg_str0(NULL, "reduction_order", NULL, "Order in which to apply reductions");
+        struct arg_str *reduction_order                      = arg_str0(NULL, "reduction_order", NULL, "Order in which to apply reductions. Reduction numbers 0-5. Specify as string, for example \"0 4\". Available reductions: 0 simplical node reduction, 1 indistinguishable_nodes, 2 twins, 3 path_compression, 4 degree_2_nodes, 5 triangle_contraction.");
         struct arg_dbl *convergence_factor                   = arg_dbl0(NULL, "convergence_factor", NULL, "Reapply reductions only if the reduction in percent is greater than this factor (0: repeat until perfect convergence, 1: never repeat reductions (default))");
         struct arg_int *max_simplicial_degree                = arg_int0(NULL, "max_sim_deg", NULL, "Only evaluate nodes with smaller degree in simplicial node reduction.");
 
