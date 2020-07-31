@@ -239,11 +239,13 @@ int parse_parameters(int argn, char **argv,
                 input_partition,
 #elif defined MODE_NODESEP
                 //k,
+                filename_output, 
                 #ifndef FASTORDERING
+                #ifndef MODE_NODEORDERING
                 imbalance,  
                 preconfiguration, 
                 #endif
-                filename_output, 
+                #endif
                 //time_limit, 
                 //edge_rating,
                 //max_flow_improv_steps,
@@ -268,16 +270,17 @@ int parse_parameters(int argn, char **argv,
                 //sep_faster_ns,
                 //label_iterations_refinement,    //
 
-#elif defined MODE_NODEORDERING
+        #if defined MODE_NODEORDERING
                 //dissection_rec_limit,
                 //disable_reductions,
-                filename_output, 
+                //filename_output, 
                 #ifndef FASTORDERING
-                imbalance,  
+                //imbalance,  
                 preconfiguration, 
                 #endif
-                filename_output, 
+                //filename_output, 
                 reduction_order,
+        #endif
                 //convergence_factor,
                 //max_simplicial_degree,
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
