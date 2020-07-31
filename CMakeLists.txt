@@ -45,6 +45,16 @@ CHECK_CXX_COMPILER_FLAG(-fpermissive COMPILER_SUPPORTS_FPERMISSIVE)
 if(COMPILER_SUPPORTS_FPERMISSIVE)
   add_definitions(-fpermissive)
 endif()
+CHECK_CXX_COMPILER_FLAG(-Wno-unused-result COMPILER_SUPPORTS_UNUSED)
+if(COMPILER_SUPPORTS_UNUSED)
+  add_definitions(-Wno-unused-result)
+endif()
+CHECK_CXX_COMPILER_FLAG(-Wno-sign-compare COMPILER_SUPPORTS_NOSIGNCOMP)
+if(COMPILER_SUPPORTS_NOSIGNCOMP)
+  add_definitions(-Wno-sign-compare)
+endif()
+
+
 
 # check dependencies
 find_package(MPI REQUIRED)

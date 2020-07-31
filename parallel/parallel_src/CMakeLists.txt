@@ -83,10 +83,10 @@ target_compile_definitions(edge_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_M
 target_link_libraries(edge_list_to_metis_graph PRIVATE libmodified_kahip_interface)
 install(TARGETS edge_list_to_metis_graph DESTINATION bin)
 
-add_executable(friendster_list_to_metis_graph app/friendster_list_to_metis_graph.cpp $<TARGET_OBJECTS:libedgelist>)
-target_compile_definitions(friendster_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM")
-target_link_libraries(edge_list_to_metis_graph PRIVATE libmodified_kahip_interface)
-install(TARGETS friendster_list_to_metis_graph DESTINATION bin)
+#add_executable(friendster_list_to_metis_graph app/friendster_list_to_metis_graph.cpp $<TARGET_OBJECTS:libedgelist>)
+#target_compile_definitions(friendster_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM")
+#target_link_libraries(edge_list_to_metis_graph PRIVATE libmodified_kahip_interface)
+#install(TARGETS friendster_list_to_metis_graph DESTINATION bin)
 
 add_executable(dspac app/dspac.cpp $<TARGET_OBJECTS:libparallel> $<TARGET_OBJECTS:libdspac>)
 target_compile_definitions(dspac PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")
