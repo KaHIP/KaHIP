@@ -8,6 +8,8 @@
 #ifndef PARTITION_CONFIG_DI1ES4T0
 #define PARTITION_CONFIG_DI1ES4T0
 
+#include <iosfwd>
+
 #include "definitions.h"
 
 // Configuration for the partitioning.
@@ -386,6 +388,19 @@ struct PartitionConfig
         int max_recursion_levels_construction; 
 
         bool enable_mapping;
+
+        //=======================================
+        //========NODE ORDERING==================
+        //=======================================
+        unsigned int dissection_rec_limit;
+
+        bool disable_reductions;
+
+        std::vector<nested_dissection_reduction_type> reduction_order;
+
+        double convergence_factor;
+        
+        unsigned int max_simplicial_degree;
 
         //=======================================
         //===============Shared Mem OMP==========

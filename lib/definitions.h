@@ -186,6 +186,31 @@ typedef enum {
         PRE_CONFIG_MAPPING_STRONG
 } PreConfigMapping;
 
+/*******************************/
+/* NODE ORDERING RELATED TYPES */
+/*******************************/
+
+// nested dissection reductions
+enum nested_dissection_reduction_type {
+    simplicial_nodes = 0,
+    indistinguishable_nodes,
+    twins,
+    path_compression,
+    degree_2_nodes,
+    triangle_contraction,
+    num_types
+};
+
+// Options for assigning weights to nodes contracted during path compression
+enum path_contraction_variant {
+        // sum the weights of contracted nodes
+        CONTRACT_SUM,
+        // take the maximum of the weights of contracted nodes
+        CONTRACT_MAX,
+        // set the weight of contracted nodes to 1
+        CONTRACT_ONE
+};
+
 
 #endif
 

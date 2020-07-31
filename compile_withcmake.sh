@@ -27,6 +27,12 @@ cp ./build/graphchecker deploy/
 cp ./build/partition_to_vertex_separator deploy/
 cp ./build/node_separator deploy/
 cp ./build/edge_partitioning deploy/
+cp ./build/node_ordering deploy/
+
+if [[ -f "./build/fast_node_ordering" ]]; then 
+        cp ./build/fast_node_ordering deploy/ 
+fi
+
 cp ./build/libinterface_static.a deploy/libkahip.a
 cp ./build/parallel/parallel_src/dsp* ./deploy/distributed_edge_partitioning
 cp ./build/parallel/parallel_src/g* ./deploy

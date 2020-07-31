@@ -75,9 +75,14 @@ private:
         m_edges.resize(m);
         m_coarsening_edge_props.resize(m);
 
+        m_contraction_offset.resize(n+1, 0);
+
         m_nodes[node].firstEdge = e;
     }
 
+    // Add a new edge from node 'source' to node 'target'.
+    // If an edge with source = n has been added, adding
+    // edges with source < n will lead to a broken graph.
     EdgeID new_edge(NodeID source, NodeID target) {
         ASSERT_TRUE(m_building_graph);
         ASSERT_TRUE(e < m_edges.size());
@@ -109,6 +114,8 @@ private:
         m_nodes.resize(node+1);
         m_refinement_node_props.resize(node+1);
 
+        m_contraction_offset.resize(node+1);
+
         m_edges.resize(e);
         m_coarsening_edge_props.resize(e);
 
@@ -130,6 +137,9 @@ private:
     
     std::vector<refinementNode> m_refinement_node_props;
     std::vector<coarseningEdge> m_coarsening_edge_props;
+
+    // Offsets for computing sizes of reachable sets for contracted nodes
+    std::vector<NodeWeight> m_contraction_offset;
         
     // construction properties
     bool m_building_graph;
@@ -154,6 +164,8 @@ class graph_access {
         public:
                 graph_access() { m_max_degree_computed = false; m_max_degree = 0; graphref = new basicGraph(); m_separator_block_ID = 2;}
                 virtual ~graph_access(){ delete graphref; };
+
+                graph_access(const graph_access&) = delete;
 
                 /* ============================================================= */
                 /* build methods */
@@ -202,6 +214,10 @@ class graph_access {
                 EdgeRatingType getEdgeRating(EdgeID edge);
                 void setEdgeRating(EdgeID edge, EdgeRatingType rating);
 
+                // access the contraction offset of a node
+                NodeWeight get_contraction_offset(NodeID node) const;
+                void set_contraction_offset(NodeID node, NodeWeight offset);
+
                 int* UNSAFE_metis_style_xadj_array();
                 int* UNSAFE_metis_style_adjncy_array();
 
@@ -223,6 +239,17 @@ class graph_access {
                 PartitionID  m_separator_block_ID;
                 std::vector<PartitionID> m_second_partition_index;
 };
+
+
+inline NodeWeight graph_access::get_contraction_offset(NodeID node) const {
+        return graphref->m_contraction_offset[node];
+}
+
+inline void graph_access::set_contraction_offset(NodeID node, NodeWeight offset) {
+        graphref->m_contraction_offset[node] = offset;
+}
+
+
 
 /* graph build methods */
 inline void graph_access::start_construction(NodeID nodes, EdgeID edges) {
@@ -399,7 +426,7 @@ inline EdgeWeight graph_access::getMaxDegree() {
 }
 
 inline int* graph_access::UNSAFE_metis_style_xadj_array() {
-        int * xadj      = new int[graphref->number_of_nodes()+1];
+        int* xadj      = new int[graphref->number_of_nodes()+1];
         basicGraph& ref = *graphref;
 
         forall_nodes(ref, n) {
@@ -411,7 +438,7 @@ inline int* graph_access::UNSAFE_metis_style_xadj_array() {
 
 
 inline int* graph_access::UNSAFE_metis_style_adjncy_array() {
-        int * adjncy    = new int[graphref->number_of_edges()];
+        int* adjncy    = new int[graphref->number_of_edges()];
         basicGraph& ref = *graphref;
         forall_edges(ref, e) {
                 adjncy[e] = graphref->m_edges[e].target;
@@ -422,7 +449,7 @@ inline int* graph_access::UNSAFE_metis_style_adjncy_array() {
 
 
 inline int* graph_access::UNSAFE_metis_style_vwgt_array() {
-        int * vwgt      = new int[graphref->number_of_nodes()];
+        int* vwgt      = new int[graphref->number_of_nodes()];
         basicGraph& ref = *graphref;
 
         forall_nodes(ref, n) {
@@ -432,7 +459,7 @@ inline int* graph_access::UNSAFE_metis_style_vwgt_array() {
 }
 
 inline int* graph_access::UNSAFE_metis_style_adjwgt_array() {
-        int * adjwgt    = new int[graphref->number_of_edges()];
+        int* adjwgt    = new int[graphref->number_of_edges()];
         basicGraph& ref = *graphref;
 
         forall_edges(ref, e) {
