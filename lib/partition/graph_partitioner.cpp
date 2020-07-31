@@ -189,10 +189,6 @@ void graph_partitioner::single_run( PartitionConfig & config, graph_access & G) 
                                 coarsen.perform_coarsening(config, G, hierarchy);
                                 init_part.perform_initial_partitioning(config, hierarchy);
                                 uncoarsen.perform_uncoarsening(config, hierarchy);
-                                if( config.mode_node_separators ) {
-                                        quality_metrics qm;
-                                        std::cout <<  "vcycle result " << qm.separator_weight(G)  << std::endl;
-                                }
                         }
                 config.graph_allready_partitioned = true;
                 config.balance_factor             = 0;
