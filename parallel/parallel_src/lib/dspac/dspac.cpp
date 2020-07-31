@@ -373,7 +373,7 @@ bool dspac::assert_edge_range_array_ok(const std::vector<NodeID> &edge_range_arr
     assert(edge_range_array[0] == 0);
     assert(edge_range_array[size] == m_input_graph.number_of_global_edges());
     assert(m_input_graph.number_of_local_edges() == edge_range_array[rank + 1] - edge_range_array[rank]);
-    for (std::size_t pe = 0; pe < size; ++pe)
+    for (std::size_t pe = 0; pe < (size_t)size; ++pe)
         assert(edge_range_array[pe] <= edge_range_array[pe + 1]);
     return true;
 }
