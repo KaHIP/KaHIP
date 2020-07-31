@@ -71,7 +71,6 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                                              std::vector<NodeID> & rhs_boundary_stripe,
                                              std::vector<NodeID> & new_to_old_ids,              
                                              flow_graph & fG) {
-
         //building up the graph as in parse.h of hi_pr code
         NodeID idx = 0;
         new_to_old_ids.resize(lhs_boundary_stripe.size() + rhs_boundary_stripe.size());
@@ -125,18 +124,56 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                 } endfor
         }
 
-        ////connect source and target with outer boundary nodes 
-        FlowType max_capacity = std::numeric_limits<FlowType>::max();
+        //connect source to outer boundary nodes
         for(unsigned i = 0; i < outer_lhs_boundary.size(); i++) {
-                NodeID targetID = outer_lhs_boundary[i];
-                fG.new_edge(source, targetID, max_capacity);
-        }
+          const NodeID inner_lhs_node = outer_lhs_boundary[i]; //new id in flow network
+          bool source_edge_added = false;
+          bool sink_edge_added = false;
+          forall_out_edges(G, e, new_to_old_ids[inner_lhs_node]) {
+            if(G.getPartitionIndex(G.getEdgeTarget(e)) == lhs)  {
+              // block of nodes inside the flow problem was set to BOUNDARY_STRIPE_NODE
+              if (!source_edge_added) {
+                fG.new_edge(source, inner_lhs_node, G.getEdgeWeight(e));
+                source_edge_added = true;
+              } else {
+                fG.increaseCapacity(source, G.getEdgeWeight(e));
+              }
+            } else if (G.getPartitionIndex(G.getEdgeTarget(e)) == rhs) {
+              if (!sink_edge_added) {
+                fG.new_edge(inner_lhs_node, sink, G.getEdgeWeight(e));
+                sink_edge_added = true;
+              } else {
+                fG.increaseCapacity(inner_lhs_node, G.getEdgeWeight(e));
+              }
+            }
+          } endfor
+          }
 
+
+        // connect outer boundary nodes to sink
         for(unsigned i = 0; i < outer_rhs_boundary.size(); i++) {
-                NodeID sourceID = outer_rhs_boundary[i];
-                fG.new_edge(sourceID, sink, max_capacity);
-        }
-
+          NodeID inner_rhs_node = outer_rhs_boundary[i]; //new id in flow network
+          bool sink_edge_added = false;
+          bool source_edge_added = false;
+          forall_out_edges(G, e, new_to_old_ids[inner_rhs_node]) {
+            if(G.getPartitionIndex(G.getEdgeTarget(e)) == rhs)  {
+              // block of nodes inside the flow problem was set to BOUNDARY_STRIPE_NODE
+               if (!sink_edge_added) {
+                 fG.new_edge(inner_rhs_node, sink, G.getEdgeWeight(e));
+                 sink_edge_added = true;
+               } else {
+                 fG.increaseCapacity(inner_rhs_node, G.getEdgeWeight(e));
+               }
+            } else if(G.getPartitionIndex(G.getEdgeTarget(e)) == lhs)  {
+              if (!source_edge_added) {
+                fG.new_edge(source, inner_rhs_node, G.getEdgeWeight(e));
+                 source_edge_added = true;
+               } else {
+                 fG.increaseCapacity(source, G.getEdgeWeight(e));
+               }
+            }
+          }endfor
+          }
         return true;
 }
 
@@ -181,7 +218,7 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                 forall_nodes(fG, node) {
                         NodeID node = residualGraph.new_node(); // for each node here create a new node 
 
-                        if( node < fG.number_of_nodes() -2 ) {
+                        if( node < fG.number_of_nodes() - 2 ) {
                                 residualGraph.setNodeWeight( node, G.getNodeWeight(new_to_old_ids[node]));
                         }
 
@@ -201,7 +238,7 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                                 }
                         } endfor
                 } endfor
-                
+
                 residualGraph.setNodeWeight(source, 0);
                 residualGraph.setNodeWeight(sink, 0);
                 residualGraph.finish_construction();

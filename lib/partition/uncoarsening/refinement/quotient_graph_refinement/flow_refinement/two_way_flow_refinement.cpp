@@ -14,6 +14,7 @@
 #include "boundary_bfs.h"
 #include "flow_solving_kernel/cut_flow_problem_solver.h"
 #include "quality_metrics.h"
+#include "macros_assertions.h"
 #include "two_way_flow_refinement.h"
 
 two_way_flow_refinement::two_way_flow_refinement() {
@@ -112,6 +113,11 @@ EdgeWeight two_way_flow_refinement::iterativ_flow_iteration(PartitionConfig & co
                 std::vector<NodeID> new_rhs_nodes;
                 std::vector<NodeID> new_to_old_ids;
 
+                std::vector<PartitionID> old_part_ids(G.number_of_nodes(), -1);
+                forall_nodes(G, n) {
+                  old_part_ids[n] = G.getPartitionIndex(n);
+                }endfor
+
                 cut_flow_problem_solver fsolve;
                 EdgeWeight new_cut = fsolve.get_min_flow_max_cut(config, G, 
                                                                 lhs, rhs, 
@@ -135,6 +141,8 @@ EdgeWeight two_way_flow_refinement::iterativ_flow_iteration(PartitionConfig & co
                                 G.setPartitionIndex(old_node_id, BOUNDARY_STRIPE_NODE-1);
                         }                
                 }
+
+                // new RHS nodes get index BOUNDARY_STRIPE_NODE-1
 
                 for(unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
                         if(  G.getPartitionIndex(lhs_boundary_stripe[i]) == BOUNDARY_STRIPE_NODE) { 
@@ -168,7 +176,8 @@ EdgeWeight two_way_flow_refinement::iterativ_flow_iteration(PartitionConfig & co
                                                              lhs_stripe_weight, 
                                                              rhs_stripe_weight, 
                                                              new_to_old_ids,
-                                                             new_rhs_nodes); 
+                                                             new_rhs_nodes,
+                                                             old_part_ids);
 
                         boundary.setEdgeCut(refinement_pair, new_cut);
 
@@ -176,6 +185,8 @@ EdgeWeight two_way_flow_refinement::iterativ_flow_iteration(PartitionConfig & co
                         rhs_part_weight = boundary.getBlockWeight(rhs);
                         ASSERT_TRUE(lhs_part_weight < config.upper_bound_partition && rhs_part_weight < config.upper_bound_partition);
 
+                        quality_metrics qm;
+                        ASSERT_EQ(new_cut, qm.edge_cut(G, lhs, rhs));
                        
                         cur_improvement = best_cut - new_cut;
                         best_cut        = new_cut;
@@ -236,7 +247,8 @@ void two_way_flow_refinement::apply_partition_and_update_boundary( const Partiti
                                                                    NodeWeight & lhs_stripe_weight, 
                                                                    NodeWeight & rhs_stripe_weight, 
                                                                    std::vector<NodeID> & new_to_old_ids,
-                                                                   std::vector<NodeID> & new_rhs_nodes) {
+                                                                   std::vector<NodeID> & new_rhs_nodes,
+                                                                   std::vector<PartitionID>& old_part_ids) {
 
 
         NodeID no_nodes_flow_graph = lhs_boundary_stripe.size() + rhs_boundary_stripe.size();
@@ -258,38 +270,43 @@ void two_way_flow_refinement::apply_partition_and_update_boundary( const Partiti
 
         for(unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
                 if(  G.getPartitionIndex(lhs_boundary_stripe[i]) == BOUNDARY_STRIPE_NODE) { 
-                        G.setPartitionIndex(lhs_boundary_stripe[i], lhs);	
+                        G.setPartitionIndex(lhs_boundary_stripe[i], lhs);
                         new_lhs_stripe_weight += G.getNodeWeight(lhs_boundary_stripe[i]);
                         new_lhs_stripe_no_nodes++;
                 }
         }
 
         for(unsigned i = 0; i < rhs_boundary_stripe.size(); i++) {
-                if(  G.getPartitionIndex(rhs_boundary_stripe[i]) == BOUNDARY_STRIPE_NODE) { 
-                        G.setPartitionIndex(rhs_boundary_stripe[i], lhs);	
+                if(  G.getPartitionIndex(rhs_boundary_stripe[i]) == BOUNDARY_STRIPE_NODE) {
+                        G.setPartitionIndex(rhs_boundary_stripe[i], lhs);
                         new_lhs_stripe_weight += G.getNodeWeight(rhs_boundary_stripe[i]);
                         new_lhs_stripe_no_nodes++;
                 }
         }
 
-
-        // ********** fix the boundary data structure *****************  
+        // ********** fix the boundary data structure *****************
         boundary.setBlockWeight(lhs, boundary.getBlockWeight(lhs) + ((int)new_lhs_stripe_weight-(int)lhs_stripe_weight) );
         boundary.setBlockWeight(rhs, boundary.getBlockWeight(rhs) + ((int)new_rhs_stripe_weight-(int)rhs_stripe_weight) );
 
         boundary.setBlockNoNodes(lhs, boundary.getBlockNoNodes(lhs) + ((int)new_lhs_stripe_no_nodes -(int)lhs_boundary_stripe.size()) );
         boundary.setBlockNoNodes(rhs, boundary.getBlockNoNodes(rhs) + ((int)new_rhs_stripe_no_nodes -(int)rhs_boundary_stripe.size()) );
 
+        forall_nodes(G, n) {
+          if (G.getPartitionIndex(n) != old_part_ids[n]) {
+            boundary.updatePeripheralCutEdges(n, refinement_pair);
+          }
+        } endfor
 
         //this can be improved by only calling this method on the nodes that changed the partition
         for(unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
-                boundary.postMovedBoundaryNodeUpdates(lhs_boundary_stripe[i], refinement_pair, false, true); 
+          boundary.postMovedBoundaryNodeUpdates(lhs_boundary_stripe[i], refinement_pair, false, true);
         }
 
         for(unsigned i = 0; i < rhs_boundary_stripe.size(); i++) {
-                boundary.postMovedBoundaryNodeUpdates(rhs_boundary_stripe[i], refinement_pair, false, true); 
+          boundary.postMovedBoundaryNodeUpdates(rhs_boundary_stripe[i], refinement_pair, false, true);
         }
 
-} 
+        ASSERT_TRUE(boundary.assert_bnodes_in_boundaries());
+        ASSERT_TRUE(boundary.assert_boundaries_are_bnodes());
 
-
+}

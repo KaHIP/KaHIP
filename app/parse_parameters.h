@@ -29,7 +29,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_lit *match_islands                        = arg_lit0(NULL, "match_islands","Enable matching of islands during gpa algorithm.");
         struct arg_lit *only_first_level                     = arg_lit0(NULL, "only_first_level","Disable Multilevel Approach. Only perform on the first level. (Currently only initial partitioning).");
         struct arg_lit *graph_weighted                       = arg_lit0(NULL, "weighted","Read the graph as weighted graph.");
-        struct arg_lit *enable_corner_refinement             = arg_lit0(NULL, "enable_corner_refinement","Enables corner refinement.");
+        struct arg_int *enable_corner_refinement             = arg_int0(NULL, "enable_corner_refinement", NULL,"Enables corner refinement.");
         struct arg_lit *disable_qgraph_refinement            = arg_lit0(NULL, "disable_qgraph_refinement","Disables qgraph refinement.");
         struct arg_lit *use_fullmultigrid                    = arg_lit0(NULL, "use_fullmultigrid","Enable full multigrid (wcycles have to be enabled).");
         struct arg_lit *use_vcycle                           = arg_lit0(NULL, "use_vcycle","Enable vcycle .");
@@ -90,7 +90,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *global_cycle_iterations              = arg_int0(NULL, "global_cycle_iterations", NULL, "Number of V-cycle iterations: Default 2.");
         struct arg_int *level_split                          = arg_int0(NULL, "level_split", NULL, "Number of trial tree levels (1 means on each level a two trials are performed). Default: 2.");
         struct arg_int *toposort_iterations                  = arg_int0(NULL, "toposort_iterations", NULL, "Number of topo sort iterations). Default: 4.");
-        struct arg_lit *most_balanced_flows                  = arg_lit0(NULL, "most_balanced_flows", "(Default: disabled)");
+        struct arg_int *most_balanced_flows                  = arg_int0(NULL, "most_balanced_flows", NULL, "(Default: disabled)");
         struct arg_str *input_partition                      = arg_str0(NULL, "input_partition", NULL, "Input partition to use.");
         struct arg_lit *recursive_bipartitioning             = arg_lit0(NULL, "recursive_bipartitioning", "Use recursive bipartitioning instead of kway methods.");
         struct arg_lit *suppress_output                      = arg_lit0(NULL, "suppress_output", "(Default: output enabled)");
@@ -186,7 +186,7 @@ int parse_parameters(int argn, char **argv,
 		mh_print_log,mh_sequential_mode, mh_optimize_communication_volume, mh_enable_tabu_search,
                 mh_disable_diversify, mh_diversify_best, mh_cross_combine_original_k, disable_balance_singletons, initial_partition_optimize_fm_limits,
                 initial_partition_optimize_multitry_fm_alpha, initial_partition_optimize_multitry_rounds,
-                enable_omp, 
+                enable_omp, filename_output,
                 amg_iterations,
                 kaba_neg_cycle_algorithm, kabaE_internal_bal, kaba_internal_no_aug_steps_aug, 
                 kaba_packing_iterations, kaba_flip_packings, kaba_lsearch_p, kaffpa_perfectly_balanced_refinement, 
@@ -670,7 +670,7 @@ int parse_parameters(int argn, char **argv,
         }
 
         if(most_balanced_flows->count > 0) {
-                partition_config.most_balanced_minimum_cuts = true;
+                partition_config.most_balanced_minimum_cuts = most_balanced_flows->ival[0];
         }
 
         if(most_balanced_flows_node_sep->count > 0) {
@@ -768,7 +768,7 @@ int parse_parameters(int argn, char **argv,
         }
 
         if(enable_corner_refinement->count > 0) {
-                partition_config.corner_refinement_enabled = true;
+                partition_config.corner_refinement_enabled = enable_corner_refinement->ival[0];
         }
 
         if(match_islands->count > 0) {

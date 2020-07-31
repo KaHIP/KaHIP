@@ -68,6 +68,10 @@ public:
         EdgeID get_first_edge(NodeID node) {return 0;};
         EdgeID get_first_invalid_edge(NodeID node) {return m_adjacency_lists[node].size();};
 
+        void increaseCapacity(NodeID source, FlowType capacity) {
+          m_adjacency_lists[source].back().capacity += capacity;
+        }
+
 
 private:
         std::vector< std::vector<rEdge> > m_adjacency_lists;

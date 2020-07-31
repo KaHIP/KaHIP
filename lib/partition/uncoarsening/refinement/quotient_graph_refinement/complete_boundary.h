@@ -37,6 +37,7 @@ class complete_boundary {
                 inline void deleteNode(NodeID node, PartitionID partition, boundary_pair * pair);
                 void postMovedBoundaryNodeUpdates(NodeID target, boundary_pair * pair, 
                                                   bool update_edge_cuts, bool update_all_boundaries);
+                void updatePeripheralCutEdges(NodeID target, boundary_pair * pair);
                 void balance_singletons(const PartitionConfig & config, graph_access & G); 
 
                 inline NodeID size(PartitionID partition, boundary_pair * pair);
