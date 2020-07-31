@@ -401,6 +401,7 @@ void reduced_nd(int* n,
                         cfg.eco(partition_config);
                         break;
         }
+
         partition_config.seed = seed;
         auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
         if (!parse_success) {
@@ -426,7 +427,7 @@ void reduced_nd(int* n,
 }
 
 #ifdef USEMETIS
-void reduced_nd_metis(int* n,
+void reduced_nd_fast(int* n,
                       int* xadj,
                       int* adjncy,
                       bool suppress_output,

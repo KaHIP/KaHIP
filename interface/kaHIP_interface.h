@@ -50,7 +50,7 @@ void reduced_nd(int* n, int* xadj, int* adjncy,
 
 #ifdef USEMETIS
 // reduced nested dissection with metis
-void reduced_nd_metis(int* n, int* xadj, int* adjncy,
+void reduced_nd_fast(int* n, int* xadj, int* adjncy,
                       bool suppress_output, int seed, const char* reduction_order, int max_sim_deg,
                       int* ordering);
 #endif
