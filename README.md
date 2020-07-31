@@ -157,7 +157,7 @@ KaHIP can also compute node separators. In can do so with a standard node separa
 
 ### Node Ordering  
 Applications such as factorization can be sped up significantly for large sparse matrices by interpreting the matrix as a sparse graph and computing a node ordering that minimizes the so-called fill-in.
-By applying both new and existing data reduction rules exhaustively before nested dissection, we obtain improved quality and at the same time large improvements in running time on a variety of instances. If METIS is installed, the program also compiles the fast_node_ordering program, which runs reductions before running Metis to compute an ordering.
+By applying both new and existing data reduction rules exhaustively before nested dissection, we obtain improved quality and at the same time large improvements in running time on a variety of instances. If METIS is installed, the build script also compiles the fast_node_ordering program, which runs reductions before running Metis to compute an ordering. The programs are also available through the library.
 
 | Use Case | Programs |
 | ------------ | -------- |
