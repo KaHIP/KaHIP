@@ -270,7 +270,7 @@ install(TARGETS node_ordering DESTINATION bin)
 
 if(LIB_METIS)
   add_executable(fast_node_ordering app/fast_node_ordering.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libnodeordering>)
-  target_compile_definitions(fast_node_ordering PRIVATE "-DMODE_NODESEP -DMODE_NODEORDERING")
+  target_compile_definitions(fast_node_ordering PRIVATE "-DMODE_NODESEP -DMODE_NODEORDERING -DFASTORDERING")
   target_link_libraries(fast_node_ordering ${OpenMP_CXX_LIBRARIES} ${LIB_METIS})
   install(TARGETS fast_node_ordering DESTINATION bin)
 endif()

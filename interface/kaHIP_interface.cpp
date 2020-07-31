@@ -458,10 +458,10 @@ void reduced_nd_fast(int* n,
         srand(partition_config.seed);
         random_functions::setSeed(partition_config.seed);
         partition_config.seed = seed;
-        auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
-        if (!parse_success) {
-                return;
-        }
+        //auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
+        //if (!parse_success) {
+                //return;
+        //}
 
         graph_access input_graph;
         internal_build_graph( partition_config, n, nullptr, xadj, nullptr, adjncy, input_graph);

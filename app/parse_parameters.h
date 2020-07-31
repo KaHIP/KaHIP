@@ -193,7 +193,7 @@ int parse_parameters(int argn, char **argv,
 
         // Define argtable.
         void* argtable[] = {
-                help, use_mmap_io, filename, user_seed,
+                help, filename, user_seed,
 #ifdef MODE_DEVEL
                 k, graph_weighted, imbalance, edge_rating_tiebreaking, 
                 matching_type, edge_rating, rate_first_level_inner_outer, first_level_random_matching, 
@@ -222,6 +222,7 @@ int parse_parameters(int argn, char **argv,
                 kaba_unsucc_iterations, kaba_disable_zero_weight_cycles,
                 maxT, maxIter, minipreps, mh_penalty_for_unconnected, mh_enable_kabapE,
 #elif defined MODE_KAFFPA
+                use_mmap_io, 
                 k, imbalance,  
                 preconfiguration, 
                 time_limit, 
@@ -238,8 +239,10 @@ int parse_parameters(int argn, char **argv,
                 input_partition,
 #elif defined MODE_NODESEP
                 //k,
+                #ifndef FASTORDERING
                 imbalance,  
                 preconfiguration, 
+                #endif
                 filename_output, 
                 //time_limit, 
                 //edge_rating,
@@ -264,13 +267,19 @@ int parse_parameters(int argn, char **argv,
                 //sep_edge_rating_during_ip,
                 //sep_faster_ns,
                 //label_iterations_refinement,    //
-        #ifdef MODE_NODEORDERING
+
+#elif defined MODE_NODEORDERING
                 //dissection_rec_limit,
                 //disable_reductions,
+                filename_output, 
+                #ifndef FASTORDERING
+                imbalance,  
+                preconfiguration, 
+                #endif
+                filename_output, 
                 reduction_order,
                 //convergence_factor,
                 //max_simplicial_degree,
-        #endif
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
                 filename_output, 
