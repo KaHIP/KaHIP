@@ -140,8 +140,8 @@ int main(int argn, char **argv) {
 
         std::cout << "time spent to compute node ordering " << nd_time << std::endl;
 
-        std::cout << "Reduction statistics:" << std::endl;
-        reduction_stat_counter::get_instance().print_summary(std::cout);
+        //std::cout << "Reduction statistics:" << std::endl;
+        //reduction_stat_counter::get_instance().print_summary(std::cout);
 
         delete[] xadj;
         delete[] adjncy;

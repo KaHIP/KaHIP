@@ -355,11 +355,6 @@ void reduced_nd(int* n,
                 bool suppress_output,
                 int seed,
                 int mode,
-                double imbalance,
-                int rec_limit,
-                const char* reduction_order,
-                double convergence,
-                int max_sim_deg,
                 int* ordering) {
         std::streambuf* backup = std::cout.rdbuf();
         if(suppress_output) {
@@ -369,10 +364,17 @@ void reduced_nd(int* n,
         configuration cfg;
         PartitionConfig partition_config;
         partition_config.k = 2;
-        partition_config.dissection_rec_limit = rec_limit;
-        partition_config.convergence_factor = convergence;
-        partition_config.max_simplicial_degree = max_sim_deg;
+        partition_config.dissection_rec_limit = 120;
+        partition_config.max_simplicial_degree = 12;
         partition_config.disable_reductions = false;
+        partition_config.convergence_factor = 1;
+        partition_config.reduction_order = {simplicial_nodes,
+                indistinguishable_nodes,
+                //twins,
+                //path_compression,
+                degree_2_nodes,
+                triangle_contraction};
+
 
         partition_config.seed = seed;
         srand(partition_config.seed);
@@ -403,15 +405,15 @@ void reduced_nd(int* n,
         }
 
         partition_config.seed = seed;
-        auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
-        if (!parse_success) {
-                return;
-        }
+        //auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
+        //if (!parse_success) {
+                //return;
+        //}
 
         graph_access G;     
         internal_build_graph( partition_config, n, nullptr, xadj, nullptr, adjncy, G);
         
-        partition_config.imbalance = 100*imbalance;
+        partition_config.imbalance = 20;// 20 percent
         balance_configuration bc;
         bc.configurate_balance(partition_config, G);
         
@@ -432,8 +434,6 @@ void reduced_nd_fast(int* n,
                       int* adjncy,
                       bool suppress_output,
                       int seed,
-                      const char* reduction_order,
-                      int max_sim_deg,
                       int* ordering) {
         std::streambuf* backup = std::cout.rdbuf();
         if(suppress_output) {
@@ -443,9 +443,17 @@ void reduced_nd_fast(int* n,
         configuration cfg;
         PartitionConfig partition_config;
         partition_config.k = 2;
-        partition_config.max_simplicial_degree = max_sim_deg;
+        partition_config.dissection_rec_limit = 120;
+        partition_config.max_simplicial_degree = 12;
         partition_config.disable_reductions = false;
-
+        partition_config.convergence_factor = 1;
+        partition_config.reduction_order = {simplicial_nodes,
+                indistinguishable_nodes,
+                //twins,
+                //path_compression,
+                degree_2_nodes,
+                triangle_contraction};        
+        
         partition_config.seed = seed;
         srand(partition_config.seed);
         random_functions::setSeed(partition_config.seed);
