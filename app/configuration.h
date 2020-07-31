@@ -217,6 +217,7 @@ inline void configuration::eco_separator( PartitionConfig & partition_config ) {
 	partition_config.sep_flows_disabled   = false;
 	partition_config.sep_fm_disabled      = false;
 	partition_config.sep_greedy_disabled  = true;
+	partition_config.max_simplicial_degree = 12;
         partition_config.region_factor_node_separators = 0.5;
         partition_config.global_cycle_iterations = 2;
 

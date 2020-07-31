@@ -1094,12 +1094,19 @@ int parse_parameters(int argn, char **argv,
                         }
                 }
         } else {
+                //partition_config.reduction_order = {simplicial_nodes,
+                                                    //indistinguishable_nodes,
+                                                    //twins,
+                                                    //path_compression,
+                                                    //degree_2_nodes,
+                                                    //triangle_contraction};
                 partition_config.reduction_order = {simplicial_nodes,
                                                     indistinguishable_nodes,
-                                                    twins,
-                                                    path_compression,
+                                                    //twins,
+                                                    //path_compression,
                                                     degree_2_nodes,
                                                     triangle_contraction};
+
         }
 
         if (convergence_factor->count > 0) {

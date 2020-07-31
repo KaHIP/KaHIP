@@ -95,7 +95,7 @@ option(USE_TCMALLOC "if available, link against tcmalloc" OFF)
 
 
 # ILP improver 
-option(ILP "build local ILP improver - introduces dependency on Gurobi" OFF)
+option(USE_ILP "build local ILP improver - introduces dependency on Gurobi" OFF)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/app)
@@ -313,7 +313,7 @@ if(PARHIP)
   add_subdirectory(parallel/parallel_src)
 endif()
 
-if(ILP)
+if(USE_ILP)
   find_package(Gurobi REQUIRED)
   MESSAGE("Using Gurobi for ILP solver in ilp_improve")
   add_executable(ilp_improve app/ilp_improve.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
