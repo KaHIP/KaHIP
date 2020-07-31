@@ -189,7 +189,6 @@ typedef enum {
 /*******************************/
 /* NODE ORDERING RELATED TYPES */
 /*******************************/
-
 // nested dissection reductions
 enum nested_dissection_reduction_type {
     simplicial_nodes = 0,
@@ -210,6 +209,24 @@ enum path_contraction_variant {
         // set the weight of contracted nodes to 1
         CONTRACT_ONE
 };
+
+/*******************************/
+/* ILP RELATED TYPES */
+/*******************************/
+typedef enum {
+    GAIN,
+    TREES,
+    BOUNDARY,
+    OVERLAP
+} OptimizationMode;
+
+typedef enum {
+    NONE,
+    RANDOM,
+    NOEQUAL,
+    CENTER,
+    HEAVIEST
+} OverlapPresets;
 
 
 #endif

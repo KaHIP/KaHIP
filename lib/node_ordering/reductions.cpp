@@ -165,7 +165,7 @@ public:
                 locations[node].first -= decrease;
                 locations[node].second = buckets[locations[node].first].size();
                 buckets[locations[node].first].push_back(node);
-                if (locations[node].first < min_ptr) {
+                if (locations[node].first < (int)min_ptr) {
                         min_ptr = locations[node].first;
                 }
         }
@@ -336,7 +336,7 @@ void IndistinguishableNodeReduction::apply() {
                                 continue;
                         }
                         
-                        size_t count = 0;
+                        EdgeWeight count = 0;
                         forall_out_edges(graph_before, edge_b, node_b) {
                                 count += labels[graph_before.getEdgeTarget(edge_b)];
                         } endfor
@@ -443,7 +443,7 @@ void TwinReduction::apply() {
                                 continue;
                         }
 
-                        size_t count = 0;
+                        EdgeWeight count = 0;
                         forall_out_edges(graph_before, edge_b, node_b) {
                                 count += labels[graph_before.getEdgeTarget(edge_b)];
                         } endfor

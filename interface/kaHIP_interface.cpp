@@ -3,21 +3,6 @@
  *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
- ******************************************************************************
- * Copyright (C) 2013-2015 Christian Schulz <christian.schulz@kit.edu>
- *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 2 of the License, or (at your option)
- * any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
 #include <iostream>
@@ -346,23 +331,23 @@ void node_separator(int* n,
         internal_nodeseparator_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, mode, num_separator_vertices, separator);
 }
 
-bool internal_parse_reduction_order(const std::string &&order, PartitionConfig &partition_config) {
-        std::istringstream stream(order);
-        while (!stream.eof()) {
-                int value;
-                stream >> value;
-                if (value >= 0 && value < nested_dissection_reduction_type::num_types) {
-                        partition_config.reduction_order.push_back((nested_dissection_reduction_type)value);
-                } else {
-                        std::cout << "Unknown reduction type " << value << std::endl;
-                        return false;
-                }
-        }
-        if (partition_config.reduction_order.empty()) {
-                partition_config.disable_reductions = true;
-        }
-        return true;
-}
+//bool internal_parse_reduction_order(const std::string &&order, PartitionConfig &partition_config) {
+        //std::istringstream stream(order);
+        //while (!stream.eof()) {
+                //int value;
+                //stream >> value;
+                //if (value >= 0 && value < nested_dissection_reduction_type::num_types) {
+                        //partition_config.reduction_order.push_back((nested_dissection_reduction_type)value);
+                //} else {
+                        //std::cout << "Unknown reduction type " << value << std::endl;
+                        //return false;
+                //}
+        //}
+        //if (partition_config.reduction_order.empty()) {
+                //partition_config.disable_reductions = true;
+        //}
+        //return true;
+//}
 
 void reduced_nd(int* n,
                 int* xadj,
@@ -370,11 +355,6 @@ void reduced_nd(int* n,
                 bool suppress_output,
                 int seed,
                 int mode,
-                double imbalance,
-                int rec_limit,
-                const char* reduction_order,
-                double convergence,
-                int max_sim_deg,
                 int* ordering) {
         std::streambuf* backup = std::cout.rdbuf();
         if(suppress_output) {
@@ -384,10 +364,17 @@ void reduced_nd(int* n,
         configuration cfg;
         PartitionConfig partition_config;
         partition_config.k = 2;
-        partition_config.dissection_rec_limit = rec_limit;
-        partition_config.convergence_factor = convergence;
-        partition_config.max_simplicial_degree = max_sim_deg;
+        partition_config.dissection_rec_limit = 120;
+        partition_config.max_simplicial_degree = 12;
         partition_config.disable_reductions = false;
+        partition_config.convergence_factor = 1;
+        partition_config.reduction_order = {simplicial_nodes,
+                //indistinguishable_nodes,
+                //twins,
+                //path_compression,
+                degree_2_nodes};
+                //triangle_contraction};
+
 
         partition_config.seed = seed;
         srand(partition_config.seed);
@@ -416,16 +403,17 @@ void reduced_nd(int* n,
                         cfg.eco(partition_config);
                         break;
         }
+
         partition_config.seed = seed;
-        auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
-        if (!parse_success) {
-                return;
-        }
+        //auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
+        //if (!parse_success) {
+                //return;
+        //}
 
         graph_access G;     
         internal_build_graph( partition_config, n, nullptr, xadj, nullptr, adjncy, G);
         
-        partition_config.imbalance = 100*imbalance;
+        partition_config.imbalance = 20;// 20 percent
         balance_configuration bc;
         bc.configurate_balance(partition_config, G);
         
@@ -441,13 +429,11 @@ void reduced_nd(int* n,
 }
 
 #ifdef USEMETIS
-void reduced_nd_metis(int* n,
+void reduced_nd_fast(int* n,
                       int* xadj,
                       int* adjncy,
                       bool suppress_output,
                       int seed,
-                      const char* reduction_order,
-                      int max_sim_deg,
                       int* ordering) {
         std::streambuf* backup = std::cout.rdbuf();
         if(suppress_output) {
@@ -457,17 +443,25 @@ void reduced_nd_metis(int* n,
         configuration cfg;
         PartitionConfig partition_config;
         partition_config.k = 2;
-        partition_config.max_simplicial_degree = max_sim_deg;
+        partition_config.dissection_rec_limit = 120;
+        partition_config.max_simplicial_degree = 12;
         partition_config.disable_reductions = false;
-
+        partition_config.convergence_factor = 1;
+        partition_config.reduction_order = {simplicial_nodes,
+                //indistinguishable_nodes,
+                //twins,
+                //path_compression,
+                degree_2_nodes};
+                //triangle_contraction};
+        
         partition_config.seed = seed;
         srand(partition_config.seed);
         random_functions::setSeed(partition_config.seed);
         partition_config.seed = seed;
-        auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
-        if (!parse_success) {
-                return;
-        }
+        //auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
+        //if (!parse_success) {
+                //return;
+        //}
 
         graph_access input_graph;
         internal_build_graph( partition_config, n, nullptr, xadj, nullptr, adjncy, input_graph);

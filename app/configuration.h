@@ -217,6 +217,7 @@ inline void configuration::eco_separator( PartitionConfig & partition_config ) {
 	partition_config.sep_flows_disabled   = false;
 	partition_config.sep_fm_disabled      = false;
 	partition_config.sep_greedy_disabled  = true;
+	partition_config.max_simplicial_degree = 12;
         partition_config.region_factor_node_separators = 0.5;
         partition_config.global_cycle_iterations = 2;
 
@@ -263,6 +264,7 @@ inline void configuration::fast_separator( PartitionConfig & partition_config ) 
 
 inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.filename_output                        = "";
+        partition_config.use_mmap_io = false;
         partition_config.seed                                   = 0;
         partition_config.fast                                   = false;
         partition_config.mode_node_separators                   = false;
@@ -466,8 +468,27 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.distances.push_back(10);
         partition_config.distances.push_back(100);
 
+        partition_config.convergence_factor = 1;
+        partition_config.reduction_order = {simplicial_nodes,
+                                            degree_2_nodes};
 
+        //partition_config.reduction_order = {simplicial_nodes,
+                //indistinguishable_nodes,
+                ////twins,
+                ////path_compression,
+                //degree_2_nodes,
+                //triangle_contraction};
 
+        partition_config.dissection_rec_limit = 120;
+        partition_config.disable_reductions = false;
+
+        partition_config.ilp_min_gain = -1;
+        partition_config.ilp_bfs_depth = 2;
+        partition_config.ilp_overlap_presets = OverlapPresets::NOEQUAL;
+
+        partition_config.ilp_limit_nonzeroes = 5000000;
+        partition_config.ilp_overlap_runs = 3;
+        partition_config.ilp_timeout = 7200;
 }
 
 inline void configuration::standardsnw( PartitionConfig & partition_config ) {

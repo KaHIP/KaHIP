@@ -167,7 +167,7 @@ void MinDegree::update_indistinguishable_nodes() {
         if (new_indistinguishable_nodes.size() > 1) {
                 auto representative = new_indistinguishable_nodes[0];
                 auto link = representative;
-                for (int i = 1; i < new_indistinguishable_nodes.size(); ++i) {
+                for (unsigned int i = 1; i < new_indistinguishable_nodes.size(); ++i) {
                         // link from the representative to the next indistinguishable node
                         // if the representative already links to some other node, link from
                         // the first node that links to itself

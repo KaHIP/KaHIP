@@ -17,6 +17,7 @@ struct PartitionConfig
 {
         PartitionConfig() {}
 
+        bool use_mmap_io;
 
         //============================================================
         //=======================MATCHING=============================
@@ -363,6 +364,26 @@ struct PartitionConfig
         bool initial_bipartitioning;
 
         int grow_target;
+
+
+        //=======================================
+        //=========ILP LOCAL SEARCH==============
+        //=======================================
+        OptimizationMode ilp_mode;
+
+        int ilp_min_gain;
+
+        int ilp_bfs_depth;
+
+        int ilp_bfs_min_gain;
+
+        OverlapPresets ilp_overlap_presets;
+
+        int ilp_limit_nonzeroes;
+
+        int ilp_overlap_runs;
+
+        int ilp_timeout;
 
         //=======================================
         //===============QAP=====================

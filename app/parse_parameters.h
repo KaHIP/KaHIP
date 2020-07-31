@@ -1,5 +1,5 @@
 /******************************************************************************
- * parse_parameters.h 
+         * parse_parameters.h 
  * *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  * Christian Schulz <christian.schulz.phone@gmail.com>
@@ -25,6 +25,7 @@ int parse_parameters(int argn, char **argv,
 
         // Setup argtable parameters.
         struct arg_lit *help                                 = arg_lit0(NULL, "help","Print help.");
+        struct arg_lit *use_mmap_io                          = arg_lit0(NULL, "mmap_io", "Use mmap graph IO (experimental).");
         struct arg_lit *edge_rating_tiebreaking              = arg_lit0(NULL, "edge_rating_tiebreaking","Enable random edgerating tiebreaking.");
         struct arg_lit *match_islands                        = arg_lit0(NULL, "match_islands","Enable matching of islands during gpa algorithm.");
         struct arg_lit *only_first_level                     = arg_lit0(NULL, "only_first_level","Disable Multilevel Approach. Only perform on the first level. (Currently only initial partitioning).");
@@ -67,7 +68,16 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *initial_partitioning_repetitions     = arg_int0(NULL, "initial_partitioning_repetitions", NULL, "Number of initial partitioning repetitons. Default: 5.");
         struct arg_int *minipreps                            = arg_int0(NULL, "minipreps", NULL, "Default: 10.");
         struct arg_int *aggressive_random_levels             = arg_int0(NULL, "aggressive_random_levels", NULL, "In case matching is randomgpa, this is the number of levels that should be matched using random matching. Default: 3.");
+
+
+#ifdef MODE_NODEORDERING
+        struct arg_dbl *imbalance                            = arg_dbl0(NULL, "imbalance", NULL, "Desired balance. Default: 20 (%).");
+#elif MODE_NODESEP
+        struct arg_dbl *imbalance                            = arg_dbl0(NULL, "imbalance", NULL, "Desired balance. Default: 20 (%).");
+#else
         struct arg_dbl *imbalance                            = arg_dbl0(NULL, "imbalance", NULL, "Desired balance. Default: 3 (%).");
+#endif
+
         struct arg_rex *initial_partition                    = arg_rex0(NULL, "initial_partitioner", "^(metis|scotch|hybrid|bubbling|squeez|metaheuristic|recursive)$", "PARTITIONER", REG_EXTENDED, "Type of matchings to use during coarsening. One of {metis, scotch, bubbling, hybrid, recursive)." );
         struct arg_lit *initial_partition_optimize           = arg_lit0(NULL, "initial_partition_optimize", "Enables postoptimization of initial partition.");
         struct arg_rex *bipartition_algorithm                = arg_rex0(NULL, "bipartition_algorithm", "^(bfs|fm|squeezing)$", "TYPE", REG_EXTENDED, "Type of bipartition algorithm to use in case of recursive partitioning. One of " " {bfs, fm, squeezing}."  );
@@ -102,6 +112,8 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *initial_partition_optimize_multitry_rounds   = arg_int0(NULL, "initial_partition_optimize_multitry_rounds", NULL, "(Default: 100)");
 
 #ifdef MODE_KAFFPA
+        struct arg_rex *preconfiguration                     = arg_rex1(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fsocial|esocial|ssocial]." );
+#elif MODE_NODEORDERING
         struct arg_rex *preconfiguration                     = arg_rex1(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fsocial|esocial|ssocial]." );
 #else
         struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [strong|eco|fast|fsocial|esocial|ssocial]." );
@@ -163,15 +175,25 @@ int parse_parameters(int argn, char **argv,
         // Node Ordering
         struct arg_int *dissection_rec_limit                 = arg_int0(NULL, "dissection_rec_limit", NULL, "Size of the smallest graph to dissect");
         struct arg_lit *disable_reductions                   = arg_lit0(NULL, "disable_reductions", "Turn graph reductions off");
-        struct arg_str *reduction_order                      = arg_str0(NULL, "reduction_order", NULL, "Order in which to apply reductions");
+        struct arg_str *reduction_order                      = arg_str0(NULL, "reduction_order", NULL, "Order in which to apply reductions. Reduction numbers 0-5. Specify as string, for example \"0 4\". Available reductions: 0 simplical node reduction, 1 indistinguishable_nodes, 2 twins, 3 path_compression, 4 degree_2_nodes, 5 triangle_contraction.");
         struct arg_dbl *convergence_factor                   = arg_dbl0(NULL, "convergence_factor", NULL, "Reapply reductions only if the reduction in percent is greater than this factor (0: repeat until perfect convergence, 1: never repeat reductions (default))");
         struct arg_int *max_simplicial_degree                = arg_int0(NULL, "max_sim_deg", NULL, "Only evaluate nodes with smaller degree in simplicial node reduction.");
 
         struct arg_end *end                                  = arg_end(100);
 
+        //ilp parameters
+        struct arg_str *ilp_mode                             = arg_str0(NULL,
+        "ilp_mode", NULL, "ILP Localsearch mode [boundary|gain|trees|overlap].");
+        struct arg_int *ilp_min_gain                         = arg_int0(NULL, "ilp_min_gain", NULL, "In Gain mode: build BFS around each vertex with gain >= ilp_min_gain [default: -1]");
+        struct arg_int *ilp_bfs_depth                        = arg_int0(NULL, "ilp_bfs_depth", NULL, "Depth of BFS trees in ILP improve [default: 2]");
+        struct arg_str *ilp_overlap_presets                  = arg_str0(NULL, "ilp_overlap_presets", NULL, "In overlap mode: fix assignment of vertices to break symmetries [none,random,noequal,center,heaviest] (Default: noequal)");
+        struct arg_int *ilp_limit_nonzeroes                  = arg_int0(NULL, "ilp_limit_nonzeroes", NULL, "ILP: Limit of nonzeroes in ILP problem. [default: 5,000,000]");
+        struct arg_int *ilp_overlap_runs                     = arg_int0(NULL, "ilp_overlap_runs", NULL, "In overlap mode: Build overlap using ilp_overlap_runs many subproblem.");
+        struct arg_int *ilp_timeout                          = arg_int0(NULL, "ilp_timeout", NULL, "ILP timeout in seconds (Default: 7200)");
+
         // Define argtable.
         void* argtable[] = {
-                help, filename, user_seed, suppress_output,
+                help, filename, user_seed,
 #ifdef MODE_DEVEL
                 k, graph_weighted, imbalance, edge_rating_tiebreaking, 
                 matching_type, edge_rating, rate_first_level_inner_outer, first_level_random_matching, 
@@ -200,6 +222,7 @@ int parse_parameters(int argn, char **argv,
                 kaba_unsucc_iterations, kaba_disable_zero_weight_cycles,
                 maxT, maxIter, minipreps, mh_penalty_for_unconnected, mh_enable_kabapE,
 #elif defined MODE_KAFFPA
+                use_mmap_io, 
                 k, imbalance,  
                 preconfiguration, 
                 time_limit, 
@@ -216,15 +239,17 @@ int parse_parameters(int argn, char **argv,
                 input_partition,
 #elif defined MODE_NODESEP
                 //k,
+                #ifndef FASTORDERING
                 imbalance,  
                 preconfiguration, 
+                #endif
                 filename_output, 
                 //time_limit, 
                 //edge_rating,
                 //max_flow_improv_steps,
-                initial_partitioning_repetitions,
-                bipartition_tries,
-                max_initial_ns_tries,
+                //initial_partitioning_repetitions,
+                //bipartition_tries,
+                //max_initial_ns_tries,
                 //region_factor_node_separators,
                 //global_cycle_iterations,
                 //most_balanced_flows_node_sep,
@@ -232,23 +257,29 @@ int parse_parameters(int argn, char **argv,
 		//sep_fm_disabled,
 		//sep_loc_fm_disabled,
 		//sep_greedy_disabled,
-		sep_fm_unsucc_steps,
-		sep_num_fm_reps,
+		//sep_fm_unsucc_steps,
+		//sep_num_fm_reps,
 		//sep_loc_fm_unsucc_steps,
 		//sep_num_loc_fm_reps,
                 //sep_loc_fm_no_snodes,
-                sep_num_vert_stop,              //
+                //sep_num_vert_stop,              //
                 //sep_full_boundary_ip,
                 //sep_edge_rating_during_ip,
                 //sep_faster_ns,
                 //label_iterations_refinement,    //
-        #ifdef MODE_NODEORDERING
-                dissection_rec_limit,
-                disable_reductions,
+
+#elif defined MODE_NODEORDERING
+                //dissection_rec_limit,
+                //disable_reductions,
+                filename_output, 
+                #ifndef FASTORDERING
+                imbalance,  
+                preconfiguration, 
+                #endif
+                filename_output, 
                 reduction_order,
-                convergence_factor,
-                max_simplicial_degree,
-        #endif
+                //convergence_factor,
+                //max_simplicial_degree,
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
                 k, input_partition, 
                 filename_output, 
@@ -272,7 +303,14 @@ int parse_parameters(int argn, char **argv,
                 cluster_upperbound,
                 label_propagation_iterations,
                 filename_output, 
+#elif defined MODE_ILPIMPROVE
+                k, input_partition, filename_output,
+                ilp_mode, ilp_min_gain, ilp_bfs_depth,
+                ilp_overlap_presets,
+                ilp_limit_nonzeroes, ilp_overlap_runs,
+                ilp_timeout,
 #endif
+
                 end
         };
         // Parse arguments.
@@ -356,6 +394,10 @@ int parse_parameters(int argn, char **argv,
                         exit(0);
                 }
 #endif
+        }
+
+        if (use_mmap_io->count > 0) {
+                partition_config.use_mmap_io = true;
         }
 
         if(enable_mapping->count > 0) {
@@ -796,8 +838,6 @@ int parse_parameters(int argn, char **argv,
 
         if (user_seed->count > 0) {
                 partition_config.seed = user_seed->ival[0];
-        } else {
-                partition_config.seed = time(NULL);
         }
 
         if (fm_search_limit->count > 0) {
@@ -1074,12 +1114,15 @@ int parse_parameters(int argn, char **argv,
                         }
                 }
         } else {
+                //partition_config.reduction_order = {simplicial_nodes,
+                                                    //indistinguishable_nodes,
+                                                    //twins,
+                                                    //path_compression,
+                                                    //degree_2_nodes,
+                                                    //triangle_contraction};
                 partition_config.reduction_order = {simplicial_nodes,
-                                                    indistinguishable_nodes,
-                                                    twins,
-                                                    path_compression,
-                                                    degree_2_nodes,
-                                                    triangle_contraction};
+                                                    degree_2_nodes};
+
         }
 
         if (convergence_factor->count > 0) {
@@ -1094,6 +1137,71 @@ int parse_parameters(int argn, char **argv,
                 partition_config.max_simplicial_degree = std::numeric_limits<int>::max();
         }
         
+        if (ilp_mode->count > 0) {
+                if (strcmp("gain", ilp_mode->sval[0]) == 0) {
+                        partition_config.ilp_mode = OptimizationMode::GAIN;
+                } else if (strcmp("overlap", ilp_mode->sval[0]) == 0) {
+                        partition_config.ilp_mode = OptimizationMode::OVERLAP;
+                } else if (strcmp("boundary", ilp_mode->sval[0]) == 0) {
+                        partition_config.ilp_mode = OptimizationMode::BOUNDARY;
+                } else if (strcmp("trees", ilp_mode->sval[0]) == 0) {
+                        partition_config.ilp_mode = OptimizationMode::TREES;
+                } else {
+                        fprintf(stderr, "Invalid ilp mode \"%s\"\n", ilp_mode->sval[0]);
+                }
+        } else {
+                partition_config.ilp_mode = OptimizationMode::GAIN;
+        }
+
+        if (ilp_min_gain->count > 0) {
+                partition_config.ilp_min_gain = ilp_min_gain->ival[0];
+        } else {
+                partition_config.ilp_min_gain = -1;
+        }
+
+        if (ilp_bfs_depth->count > 0) {
+                partition_config.ilp_bfs_depth = ilp_bfs_depth->ival[0];
+        } else {
+                partition_config.ilp_bfs_depth = 2;
+        }
+ 
+ 
+        if (ilp_overlap_presets->count > 0) {
+                if (strcmp("none", ilp_overlap_presets->sval[0]) == 0) {
+                        partition_config.ilp_overlap_presets = OverlapPresets::NONE;
+                } else if (strcmp("random", ilp_overlap_presets->sval[0]) == 0) {
+                        partition_config.ilp_overlap_presets = OverlapPresets::RANDOM;
+                } else if (strcmp("noequal", ilp_overlap_presets->sval[0]) == 0) {
+                        partition_config.ilp_overlap_presets = OverlapPresets::NOEQUAL;
+                } else if (strcmp("center", ilp_overlap_presets->sval[0]) == 0) {
+                        partition_config.ilp_overlap_presets = OverlapPresets::CENTER;
+                } else if (strcmp("heaviest", ilp_overlap_presets->sval[0]) == 0) {
+                        partition_config.ilp_overlap_presets = OverlapPresets::HEAVIEST;
+                } else {
+                        fprintf(stderr, "Invalid ilp overlap preset \"%s\"\n", ilp_mode->sval[0]);
+                }
+        } else {
+                partition_config.ilp_overlap_presets = OverlapPresets::NOEQUAL;
+        }
+
+        if (ilp_limit_nonzeroes->count > 0) {
+                partition_config.ilp_limit_nonzeroes = ilp_limit_nonzeroes->ival[0];
+        } else {
+                partition_config.ilp_limit_nonzeroes = 5000000;
+        }
+
+        if (ilp_overlap_runs->count > 0) {
+                partition_config.ilp_overlap_runs = ilp_overlap_runs->ival[0];
+        } else {
+                partition_config.ilp_overlap_runs = 3;
+        }
+
+        if (ilp_timeout->count > 0) {
+                partition_config.ilp_timeout = ilp_timeout->ival[0];
+        } else {
+                partition_config.ilp_timeout = 7200;
+        }
+
         return 0;
 }
 

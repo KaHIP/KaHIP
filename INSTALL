@@ -3,8 +3,8 @@ Required Software Packages
 
 Before you can start you need to install the following software packages:
 
-- Scons (http://www.scons.org/)
-- Argtable (http://argtable.sourceforge.net/)
-- OpenMPI (http://www.open-mpi.de/)
+- CMake (https://cmake.org/)
+- An MPI implementation, e.g., OpenMPI (https://www.open-mpi.org/) or MPICH (https://www.mpich.org)
 
-Once you installed the packages, just type ./compile.sh.
+Once you've installed the packages, just type ./compile_withcmake.sh.
+Alternatively, follow standard CMake install practices.

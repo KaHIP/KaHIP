@@ -47,7 +47,7 @@ public:
                                     int num_original_nodes,
                                     int num_reduced_nodes,
                                     int recursion_level = 0) {
-                while (recursion_level >= percent_sums.size()) {
+                while (recursion_level >= (int)percent_sums.size()) {
                         percent_sums.push_back(percent_array{});
                         application_counts.push_back(count_array{});
                 }
@@ -86,11 +86,11 @@ public:
 
         inline void print_histogram(std::ostream &stream) const {
                 stream << "level";
-                for (int i = 0; i < nested_dissection_reduction_type::num_types; ++i) {
+                for (unsigned int i = 0; i < nested_dissection_reduction_type::num_types; ++i) {
                         stream << " " << std::setw(8) << i;
                 }
                 stream << std::endl;
-                for (int i = 0; i < percent_sums.size(); ++i) {
+                for (unsigned int i = 0; i < percent_sums.size(); ++i) {
                         print_level(stream, i);
                         stream << std::endl;
                 }

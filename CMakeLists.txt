@@ -45,6 +45,16 @@ CHECK_CXX_COMPILER_FLAG(-fpermissive COMPILER_SUPPORTS_FPERMISSIVE)
 if(COMPILER_SUPPORTS_FPERMISSIVE)
   add_definitions(-fpermissive)
 endif()
+CHECK_CXX_COMPILER_FLAG(-Wno-unused-result COMPILER_SUPPORTS_UNUSED)
+if(COMPILER_SUPPORTS_UNUSED)
+  add_definitions(-Wno-unused-result)
+endif()
+CHECK_CXX_COMPILER_FLAG(-Wno-sign-compare COMPILER_SUPPORTS_NOSIGNCOMP)
+if(COMPILER_SUPPORTS_NOSIGNCOMP)
+  add_definitions(-Wno-sign-compare)
+endif()
+
+
 
 # check dependencies
 find_package(MPI REQUIRED)
@@ -79,6 +89,13 @@ endif()
 
 # ParHIP
 option(PARHIP "build ParHIP" ON)
+
+# tcmalloc
+option(USE_TCMALLOC "if available, link against tcmalloc" OFF)
+
+
+# ILP improver 
+option(USE_ILP "build local ILP improver - introduces dependency on Gurobi" OFF)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/app)
@@ -191,6 +208,15 @@ add_executable(kaffpa app/kaffpa.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECT
 target_compile_definitions(kaffpa PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(kaffpa ${OpenMP_CXX_LIBRARIES})
 install(TARGETS kaffpa DESTINATION bin)
+if (USE_TCMALLOC)
+  find_library(TCMALLOC_LIB tcmalloc)
+  if (TCMALLOC_LIB)
+    target_link_libraries(kaffpa ${TCMALLOC_LIB})
+    message(STATUS "Using tcmalloc: ${TCMALLOC_LIB}")
+  else ()
+    message(STATUS "tcmalloc enabled but unavailable on this system")
+  endif ()
+endif ()
 
 add_executable(evaluator app/evaluator.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
 target_compile_definitions(evaluator PRIVATE "-DMODE_EVALUATOR")
@@ -243,10 +269,10 @@ target_link_libraries(node_ordering ${OpenMP_CXX_LIBRARIES})
 install(TARGETS node_ordering DESTINATION bin)
 
 if(LIB_METIS)
-  add_executable(metis_ordering app/metis_ordering.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libnodeordering>)
-  target_compile_definitions(metis_ordering PRIVATE "-DMODE_NODESEP -DMODE_NODEORDERING")
-  target_link_libraries(metis_ordering ${OpenMP_CXX_LIBRARIES} ${LIB_METIS})
-  install(TARGETS metis_ordering DESTINATION bin)
+  add_executable(fast_node_ordering app/fast_node_ordering.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libnodeordering>)
+  target_compile_definitions(fast_node_ordering PRIVATE "-DMODE_NODESEP -DMODE_NODEORDERING -DFASTORDERING")
+  target_link_libraries(fast_node_ordering ${OpenMP_CXX_LIBRARIES} ${LIB_METIS})
+  install(TARGETS fast_node_ordering DESTINATION bin)
 endif()
 
 
@@ -269,13 +295,29 @@ add_library(interface_static interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libk
 target_include_directories(interface_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(interface_static PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(interface_static PUBLIC ${OpenMP_CXX_LIBRARIES})
+set_target_properties(interface_static PROPERTIES PUBLIC_HEADER interface/kaHIP_interface.h)
+
 if(LIB_METIS)
         target_link_libraries(interface_static PUBLIC ${LIB_METIS})
 endif()
-install(TARGETS interface_static DESTINATION lib)
+
+install(TARGETS interface_static 
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include
+        )
 
 # ParHIP
 if(PARHIP)
   add_subdirectory(parallel/modified_kahip)
   add_subdirectory(parallel/parallel_src)
+endif()
+
+if(USE_ILP)
+  find_package(Gurobi REQUIRED)
+  MESSAGE("Using Gurobi for ILP solver in ilp_improve")
+  add_executable(ilp_improve app/ilp_improve.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
+  target_include_directories(ilp_improve PUBLIC ${GUROBI_INCLUDE_DIR})
+  target_compile_definitions(ilp_improve PRIVATE "-DMODE_ILPIMPROVE")
+  target_link_libraries(ilp_improve ${OpenMP_CXX_LIBRARIES} ${GUROBI_LIBRARIES})
 endif()

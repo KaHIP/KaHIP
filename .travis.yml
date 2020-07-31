@@ -9,4 +9,7 @@ before_script:
   - sudo apt-get install libopenmpi-dev
 
 script: 
-  - ./compile_withcmake.sh
+  - mkdir build
+  - cd build 
+  - cmake ../
+  - make  

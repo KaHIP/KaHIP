@@ -77,7 +77,7 @@ int main(int argn, char **argv) {
         } else {
                 active_graph = &input_graph;
         }
-        std::cout << "Time for reductions: " << t.elapsed() << std::endl;
+        //std::cout << "Time for reductions: " << t.elapsed() << std::endl;
 
         t.restart();
         idx_t num_nodes = active_graph->number_of_nodes();
@@ -101,7 +101,7 @@ int main(int argn, char **argv) {
                 METIS_SetDefaultOptions(metis_options);
                 METIS_NodeND(&num_nodes, xadj, adjncy, nullptr, metis_options, perm, iperm);
         }
-        std::cout << "Time spent in metis: " << t.elapsed() << std::endl;
+        //std::cout << "Time spent in metis: " << t.elapsed() << std::endl;
         
         t.restart();
         // Place labels of reduced graph in a vector for uncontracting
@@ -117,7 +117,7 @@ int main(int argn, char **argv) {
         } else {
                 final_labels = reduced_labels;
         }
-        std::cout << "Time for mapping: " << t.elapsed() << std::endl;
+        //std::cout << "Time for mapping: " << t.elapsed() << std::endl;
         auto nd_time = full_nd_timer.elapsed();
 
         // Restore cout output stream
@@ -140,8 +140,8 @@ int main(int argn, char **argv) {
 
         std::cout << "time spent to compute node ordering " << nd_time << std::endl;
 
-        std::cout << "Reduction statistics:" << std::endl;
-        reduction_stat_counter::get_instance().print_summary(std::cout);
+        //std::cout << "Reduction statistics:" << std::endl;
+        //reduction_stat_counter::get_instance().print_summary(std::cout);
 
         delete[] xadj;
         delete[] adjncy;

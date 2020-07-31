@@ -83,10 +83,10 @@ target_compile_definitions(edge_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_M
 target_link_libraries(edge_list_to_metis_graph PRIVATE libmodified_kahip_interface)
 install(TARGETS edge_list_to_metis_graph DESTINATION bin)
 
-add_executable(friendster_list_to_metis_graph app/friendster_list_to_metis_graph.cpp $<TARGET_OBJECTS:libedgelist>)
-target_compile_definitions(friendster_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM")
-target_link_libraries(edge_list_to_metis_graph PRIVATE libmodified_kahip_interface)
-install(TARGETS friendster_list_to_metis_graph DESTINATION bin)
+#add_executable(friendster_list_to_metis_graph app/friendster_list_to_metis_graph.cpp $<TARGET_OBJECTS:libedgelist>)
+#target_compile_definitions(friendster_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DKRONECKER_GENERATOR_PROGRAM")
+#target_link_libraries(edge_list_to_metis_graph PRIVATE libmodified_kahip_interface)
+#install(TARGETS friendster_list_to_metis_graph DESTINATION bin)
 
 add_executable(dspac app/dspac.cpp $<TARGET_OBJECTS:libparallel> $<TARGET_OBJECTS:libdspac>)
 target_compile_definitions(dspac PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")
@@ -97,7 +97,11 @@ add_library(parhip_interface SHARED interface/parhip_interface.cpp $<TARGET_OBJE
 target_compile_definitions(parhip_interface PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")
 target_include_directories(parhip_interface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_link_libraries(parhip_interface PRIVATE libmodified_kahip_interface)
-install(TARGETS parhip_interface DESTINATION lib)
+set_target_properties(parhip_interface PROPERTIES PUBLIC_HEADER interface/parhip_interface.h)
+install(TARGETS parhip_interface
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include
+        )
 
 add_library(parhip_interface_static interface/parhip_interface.cpp $<TARGET_OBJECTS:libparallel>)
 target_compile_definitions(parhip_interface_static PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")

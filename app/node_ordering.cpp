@@ -96,10 +96,10 @@ int main(int argn, char **argv) {
                 std::cout << "Failed to open file " << filename << std::endl;
         }
 
-        std::cout << "Reduction statistics:" << std::endl;
-        const auto &stats = reduction_stat_counter::get_instance();
-        stats.print_histogram(std::cout);
-        stats.print_summary(std::cout);
+        //std::cout << "Reduction statistics:" << std::endl;
+        //const auto &stats = reduction_stat_counter::get_instance();
+        //stats.print_histogram(std::cout);
+        //stats.print_summary(std::cout);
 
         return 0; 
 }
