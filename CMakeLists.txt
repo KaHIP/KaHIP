@@ -93,6 +93,10 @@ option(PARHIP "build ParHIP" ON)
 # tcmalloc
 option(USE_TCMALLOC "if available, link against tcmalloc" OFF)
 
+
+# ILP improver 
+option(ILP "build local ILP improver - introduces dependency on Gurobi" OFF)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/app)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/extern/argtable3-3.0.3)
@@ -307,4 +311,13 @@ install(TARGETS interface_static
 if(PARHIP)
   add_subdirectory(parallel/modified_kahip)
   add_subdirectory(parallel/parallel_src)
+endif()
+
+if(ILP)
+  find_package(Gurobi REQUIRED)
+  MESSAGE("Using Gurobi for ILP solver in ilp_improve")
+  add_executable(ilp_improve app/ilp_improve.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
+  target_include_directories(ilp_improve PUBLIC ${GUROBI_INCLUDE_DIR})
+  target_compile_definitions(ilp_improve PRIVATE "-DMODE_ILPIMPROVE")
+  target_link_libraries(ilp_improve ${OpenMP_CXX_LIBRARIES} ${GUROBI_LIBRARIES})
 endif()
