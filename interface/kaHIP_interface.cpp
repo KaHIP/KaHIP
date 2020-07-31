@@ -382,25 +382,25 @@ void reduced_nd(int* n,
 
         switch( mode ) {
                 case FAST: 
-                        cfg.fast(partition_config);
+                        cfg.fast_separator(partition_config);
                         break;
                 case ECO: 
-                        cfg.eco(partition_config);
+                        cfg.eco_separator(partition_config);
                         break;
                 case STRONG: 
-                        cfg.strong(partition_config);
+                        cfg.strong_separator(partition_config);
                         break;
                 case FASTSOCIAL: 
-                        cfg.fastsocial(partition_config);
+                        cfg.fastsocial_separator(partition_config);
                         break;
                 case ECOSOCIAL: 
-                        cfg.ecosocial(partition_config);
+                        cfg.ecosocial_separator(partition_config);
                         break;
                 case STRONGSOCIAL: 
-                        cfg.strongsocial(partition_config);
+                        cfg.strongsocial_separator(partition_config);
                         break;
                 default: 
-                        cfg.eco(partition_config);
+                        cfg.eco_separator(partition_config);
                         break;
         }
 
