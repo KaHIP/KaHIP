@@ -248,6 +248,7 @@ target_compile_definitions(interface_static PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(interface_static PUBLIC ${OpenMP_CXX_LIBRARIES})
 set_target_properties(interface_static PROPERTIES PUBLIC_HEADER interface/kaHIP_interface.h)
 install(TARGETS interface_static 
+        ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include
         )
