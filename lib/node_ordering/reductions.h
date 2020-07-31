@@ -86,11 +86,11 @@ public:
 
         inline void print_histogram(std::ostream &stream) const {
                 stream << "level";
-                for (int i = 0; i < nested_dissection_reduction_type::num_types; ++i) {
+                for (unsigned int i = 0; i < nested_dissection_reduction_type::num_types; ++i) {
                         stream << " " << std::setw(8) << i;
                 }
                 stream << std::endl;
-                for (int i = 0; i < percent_sums.size(); ++i) {
+                for (unsigned int i = 0; i < percent_sums.size(); ++i) {
                         print_level(stream, i);
                         stream << std::endl;
                 }
