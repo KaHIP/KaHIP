@@ -470,11 +470,14 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
 
         partition_config.convergence_factor = 1;
         partition_config.reduction_order = {simplicial_nodes,
-                indistinguishable_nodes,
-                //twins,
-                //path_compression,
-                degree_2_nodes,
-                triangle_contraction};
+                                            degree_2_nodes};
+
+        //partition_config.reduction_order = {simplicial_nodes,
+                //indistinguishable_nodes,
+                ////twins,
+                ////path_compression,
+                //degree_2_nodes,
+                //triangle_contraction};
 
         partition_config.dissection_rec_limit = 120;
         partition_config.disable_reductions = false;

@@ -331,23 +331,23 @@ void node_separator(int* n,
         internal_nodeseparator_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, mode, num_separator_vertices, separator);
 }
 
-bool internal_parse_reduction_order(const std::string &&order, PartitionConfig &partition_config) {
-        std::istringstream stream(order);
-        while (!stream.eof()) {
-                int value;
-                stream >> value;
-                if (value >= 0 && value < nested_dissection_reduction_type::num_types) {
-                        partition_config.reduction_order.push_back((nested_dissection_reduction_type)value);
-                } else {
-                        std::cout << "Unknown reduction type " << value << std::endl;
-                        return false;
-                }
-        }
-        if (partition_config.reduction_order.empty()) {
-                partition_config.disable_reductions = true;
-        }
-        return true;
-}
+//bool internal_parse_reduction_order(const std::string &&order, PartitionConfig &partition_config) {
+        //std::istringstream stream(order);
+        //while (!stream.eof()) {
+                //int value;
+                //stream >> value;
+                //if (value >= 0 && value < nested_dissection_reduction_type::num_types) {
+                        //partition_config.reduction_order.push_back((nested_dissection_reduction_type)value);
+                //} else {
+                        //std::cout << "Unknown reduction type " << value << std::endl;
+                        //return false;
+                //}
+        //}
+        //if (partition_config.reduction_order.empty()) {
+                //partition_config.disable_reductions = true;
+        //}
+        //return true;
+//}
 
 void reduced_nd(int* n,
                 int* xadj,
@@ -369,11 +369,11 @@ void reduced_nd(int* n,
         partition_config.disable_reductions = false;
         partition_config.convergence_factor = 1;
         partition_config.reduction_order = {simplicial_nodes,
-                indistinguishable_nodes,
+                //indistinguishable_nodes,
                 //twins,
                 //path_compression,
-                degree_2_nodes,
-                triangle_contraction};
+                degree_2_nodes};
+                //triangle_contraction};
 
 
         partition_config.seed = seed;
@@ -448,11 +448,11 @@ void reduced_nd_fast(int* n,
         partition_config.disable_reductions = false;
         partition_config.convergence_factor = 1;
         partition_config.reduction_order = {simplicial_nodes,
-                indistinguishable_nodes,
+                //indistinguishable_nodes,
                 //twins,
                 //path_compression,
-                degree_2_nodes,
-                triangle_contraction};        
+                degree_2_nodes};
+                //triangle_contraction};
         
         partition_config.seed = seed;
         srand(partition_config.seed);
