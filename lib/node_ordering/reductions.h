@@ -47,7 +47,7 @@ public:
                                     int num_original_nodes,
                                     int num_reduced_nodes,
                                     int recursion_level = 0) {
-                while (recursion_level >= percent_sums.size()) {
+                while (recursion_level >= (int)percent_sums.size()) {
                         percent_sums.push_back(percent_array{});
                         application_counts.push_back(count_array{});
                 }
