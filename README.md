@@ -147,13 +147,30 @@ KaHIP can also compute node separators. In can do so with a standard node separa
 
 | Use Case | Programs |
 | ------------ | -------- |
-| Node Separators | partition_to_vertex_separator, node_separator |
 | 2-Way Separators | node_separator |
 | KWay Separators | use kaffpa to create k-partition, then partition_to_vertex_separator to create a separator |
 
 #### Example Runs
 ```console
 ./deploy/node_separator examples/rgg_n_2_15_s0.graph
+```
+
+### Node Ordering  
+Applications such as factorization can be sped up significantly for large sparse matrices by interpreting the matrix as a sparse graph and computing a node ordering that minimizes the so-called fill-in.
+By applying both new and existing data reduction rules exhaustively before nested dissection, we obtain improved quality and at the same time large improvements in running time on a variety of instances. If METIS is installed, the program also compiles the fast_node_ordering program, which runs reductions before running Metis to compute an ordering.
+
+| Use Case | Programs |
+| ------------ | -------- |
+| Node Ordering | node_ordering (with different preconfigurations) |
+| Fast Node Ordering  | fast_node_ordering |
+
+#### Example Runs
+```console
+./deploy/node_ordering examples/rgg_n_2_15_s0.graph
+```
+
+```console
+./deploy/fast_node_ordering examples/rgg_n_2_15_s0.graph
 ```
 
 ### Edge Partitioning 
