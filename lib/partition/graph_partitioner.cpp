@@ -23,11 +23,88 @@ graph_partitioner::~graph_partitioner() {
 
 }
 
+void graph_partitioner::perform_partitioning_krec_hierarchy(PartitionConfig & config, graph_access & G) {
+        m_global_k = config.k;
+        m_global_upper_bound = config.upper_bound_partition;
+        m_rnd_bal = random_functions::nextDouble(1,2);
+        perform_recursive_partitioning_kmodel_internal(config, G, config.group_sizes);
+}
+
 void graph_partitioner::perform_recursive_partitioning(PartitionConfig & config, graph_access & G) {
         m_global_k = config.k;
         m_global_upper_bound = config.upper_bound_partition;
         m_rnd_bal = random_functions::nextDouble(1,2);
         perform_recursive_partitioning_internal(config, G, 0, config.k-1);
+}
+
+void graph_partitioner::perform_recursive_partitioning_kmodel_internal(PartitionConfig & config, 
+                                                                graph_access & G, 
+                                                                std::vector< int > group_sizes) {
+
+        PartitionID num_parts = group_sizes[group_sizes.size()-1];
+        if( num_parts == 1 ) {
+                if( group_sizes.size() == 1 ) return;
+                group_sizes.pop_back();
+                return perform_recursive_partitioning_kmodel_internal( config, G, group_sizes);
+        } 
+
+        G.set_partition_count(num_parts);
+        
+        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        // configuration of bipartitioning
+        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        PartitionConfig kpart_config      = config;
+        kpart_config.k                    = num_parts;
+        kpart_config.stop_rule            = STOP_RULE_MULTIPLE_K;
+        kpart_config.num_vert_stop_factor = 100;
+        kpart_config.work_load            = G.number_of_nodes();
+        double epsilon                    = 0;
+        kpart_config.rebalance            = false;
+        kpart_config.softrebalance        = true;
+
+        if(config.k < 64) {
+                epsilon                    = m_rnd_bal/100.0;
+                kpart_config.rebalance     = false;
+                kpart_config.softrebalance = false;
+        } else {
+                epsilon                     = 1/100.0;
+        }
+        if(m_global_k == 2) {
+                epsilon = 3.0/100.0;
+        }
+
+        kpart_config.upper_bound_partition              = ceil((1+epsilon)*G.number_of_nodes()/(double)kpart_config.k);
+        kpart_config.kway_adaptive_limits_beta          = log(G.number_of_nodes());
+        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        // end configuration
+        // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        perform_partitioning(kpart_config, G);        
+        graph_extractor extractor;
+        group_sizes.pop_back();
+        int remaining_k = 1;
+        for( unsigned i = 0; i < group_sizes.size(); i++) {
+                remaining_k *= group_sizes[i];
+        }
+        if(remaining_k > 1) {
+                std::vector< PartitionID > partition_ids(G.number_of_nodes());
+                for( PartitionID block = 0; block < num_parts; block++) {
+                        graph_extractor ge; graph_access Q;
+                        std::vector<NodeID> mapping;
+                        ge.extract_block( G, Q, block, mapping);
+                        perform_recursive_partitioning_kmodel_internal( config, Q, group_sizes);
+
+                        Q.set_partition_count(remaining_k);
+                        forall_nodes(Q, node) {
+                                partition_ids[mapping[node]] = Q.getPartitionIndex(node) + block*remaining_k;
+                        } endfor
+                }
+                forall_nodes(G, node) {
+                        G.setPartitionIndex(node, partition_ids[node]);
+                } endfor
+                
+        }
+
+        G.set_partition_count(num_parts*remaining_k);
 }
 
 void graph_partitioner::perform_recursive_partitioning_internal(PartitionConfig & config, 
