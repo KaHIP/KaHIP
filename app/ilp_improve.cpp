@@ -140,8 +140,6 @@ int main(int argn, char **argv) {
 
         graph_io::writePartition(G, filename.str());
 
-
-
         return 0;
 }
 
