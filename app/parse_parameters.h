@@ -101,7 +101,11 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *level_split                          = arg_int0(NULL, "level_split", NULL, "Number of trial tree levels (1 means on each level a two trials are performed). Default: 2.");
         struct arg_int *toposort_iterations                  = arg_int0(NULL, "toposort_iterations", NULL, "Number of topo sort iterations). Default: 4.");
         struct arg_lit *most_balanced_flows                  = arg_lit0(NULL, "most_balanced_flows", "(Default: disabled)");
+#ifdef MODE_ILPIMPROVE
+        struct arg_str *input_partition                      = arg_str1(NULL, "input_partition", NULL, "Input partition to use.");
+#else
         struct arg_str *input_partition                      = arg_str0(NULL, "input_partition", NULL, "Input partition to use.");
+#endif
         struct arg_lit *recursive_bipartitioning             = arg_lit0(NULL, "recursive_bipartitioning", "Use recursive bipartitioning instead of kway methods.");
         struct arg_lit *suppress_output                      = arg_lit0(NULL, "suppress_output", "(Default: output enabled)");
         struct arg_lit *disable_max_vertex_weight_constraint = arg_lit0(NULL, "disable_max_vertex_weight_constraint", "Disables the max vertex weight constraint during the contraction.");
