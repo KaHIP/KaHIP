@@ -46,7 +46,8 @@ int main(int argn, char **argv)
         std::cout <<  "Reading graph " << graph_filename  << std::endl;
 
         parallel_graph_access G;
-        parallel_graph_io::readGraphWeightedMETISFast(G, graph_filename, rank, size);
+        PPartitionConfig config;
+        parallel_graph_io::readGraphWeighted(config, G, graph_filename, rank, size, MPI_COMM_WORLD);
         parallel_graph_io::writeGraphSequentiallyBinary(G, filename);
 
         MPI_Finalize();
