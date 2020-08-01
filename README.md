@@ -66,7 +66,8 @@ cd ..
 ```
 In this case, the binaries, libraries and headers are in the folder ./build as well as ./build/parallel/parallel_src/
 
-We also provide the option to link against TCMalloc. If you have it installed, run cmake with the additional option -DUSE_TCMALLOC=On.
+We also provide the option to link against TCMalloc. If you have it installed, run cmake with the additional option -DUSE_TCMALLOC=On. By default node ordering programs are also compiled. If you have Metis installed, the build script also compiles a faster node ordering program that uses reductions bevor calling Metis ND.
+If you use the option -DUSE_ILP and you have Gurobi installed, the build script compiles the ILP programs to improve a given partition (ilp_improve).
 
 
 Running Programs
@@ -208,6 +209,21 @@ excessively exploit the given communication system hierarchy.
 ```console
 ./deploy/kaffpa examples/rgg_n_2_15_s0.graph --k 256 --preconfiguration=eco --enable_mapping --hierarchy_parameter_string=4:8:8 --distance_parameter_string=1:10:100
 ```
+### ILP and ILP Improvements 
+We provide an ILP as well as an ILP to improve a given partition. We extend the neighborhood of the combination problem for multiple local searches by employing integer linear programming.
+This enables us to find even more complex combinations and hence to further improve solutions.
+However, out of the box those the ILPs for the problem typically do not scale to large inputs, in particular because the graph partitioning problem has a very large amount of symmetry -- given a partition of the graph, each permutation of the block IDs gives a solution having the same objective and balance. 
+We define a much smaller graph, called model, and solve the graph partitioning problem on the model to optimality by the integer linear program. Besides other things, this model enables us to use symmetry breaking, which allows us to scale to much larger inputs.
+
+
+| Use Case | Programs |
+| ------------ | -------- |
+| Exact Solver | ilp_exact |
+| Improvement via ILP | ilp_improve |
+
+#### Example Runs
+
+
 
 Linking the KaHIP Library 
 =====
