@@ -24,6 +24,8 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 *Faster IO*: we added an option to  kaffpa (option --mmap_io) that speedsup the IO of text files significantly -- sometimes by an order of magnitude.
 
+*Added Support for Vertex and Edge Weights in ParHIP*: we extended the IO functionality of ParHIP to read weighted graphs in the METIS format.
+
 
 ## NEW in v2.10: 
 *ParHIP (Parallel High Quality Partitioning):* Our distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks.
