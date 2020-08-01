@@ -67,6 +67,7 @@ cd ..
 In this case, the binaries, libraries and headers are in the folder ./build as well as ./build/parallel/parallel_src/
 
 We also provide the option to link against TCMalloc. If you have it installed, run cmake with the additional option -DUSE_TCMALLOC=On. By default node ordering programs are also compiled. If you have Metis installed, the build script also compiles a faster node ordering program that uses reductions bevor calling Metis ND.
+If you use the option -DUSE_ILP and you have Gurobi installed, the build script compiles the ILP programs to improve a given partition (ilp_improve).
 
 
 Running Programs
