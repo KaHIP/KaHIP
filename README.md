@@ -205,16 +205,22 @@ to processors as well as fast local search algorithms to further improve the map
 6that typically hold for applications and modern supercomputer systems such as sparse communication patterns and
 hierarchically organized communication systems, we arrive at significantly more powerful algorithms for these
 special QAPs. Our multilevel construction algorithms employ perfectly balanced graph partitioning techniques and
-excessively exploit the given communication system hierarchy.
+excessively exploit the given communication system hierarchy. Since v3.0 we included global multisection algorithms that directly partition the input network along the specified hierarchy to obtain an n-to-1 mapping and afterwards call 1-to-1 mapping algorithms to even further improve the mapping.
 
 | Use Case | Programs |
 | ------------ | -------- |
 | Mapping to Processor Networks | kaffpa, and use enable_mapping option with resp. perconfigurations |
+| Global Multisection | global_multisection with resp. perconfigurations |
 
 #### Example Runs
 ```console
 ./deploy/kaffpa examples/rgg_n_2_15_s0.graph --k 256 --preconfiguration=eco --enable_mapping --hierarchy_parameter_string=4:8:8 --distance_parameter_string=1:10:100
 ```
+
+```console
+./deploy/global_multisection examples/rgg_n_2_15_s0.graph --preconfiguration=eco  --hierarchy_parameter_string=4:3:3:3 --distance_parameter_string=1:10:100:200
+```
+
 ### ILP and ILP Improvements 
 We provide an ILP as well as an ILP to improve a given partition. We extend the neighborhood of the combination problem for multiple local searches by employing integer linear programming.
 This enables us to find even more complex combinations and hence to further improve solutions.

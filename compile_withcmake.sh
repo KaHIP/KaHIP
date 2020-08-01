@@ -28,6 +28,7 @@ cp ./build/partition_to_vertex_separator deploy/
 cp ./build/node_separator deploy/
 cp ./build/edge_partitioning deploy/
 cp ./build/node_ordering deploy/
+cp ./build/global_multisection deploy/
 
 if [[ -f "./build/fast_node_ordering" ]]; then 
         cp ./build/fast_node_ordering deploy/ 
