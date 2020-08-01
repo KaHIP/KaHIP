@@ -26,6 +26,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 *Added Support for Vertex and Edge Weights in ParHIP*: we extended the IO functionality of ParHIP to read weighted graphs in the METIS format.
 
+*Global Multisection Mapping*: we added global multisection n-to-1 process mapping algorithms. This compute better process mapping for parallel applications if information about the system hierarchy/architecture is known.
 
 ## NEW in v2.10: 
 *ParHIP (Parallel High Quality Partitioning):* Our distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks.
