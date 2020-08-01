@@ -67,8 +67,11 @@ cd ..
 In this case, the binaries, libraries and headers are in the folder ./build as well as ./build/parallel/parallel_src/
 
 We also provide the option to link against TCMalloc. If you have it installed, run cmake with the additional option -DUSE_TCMALLOC=On. By default node ordering programs are also compiled. If you have Metis installed, the build script also compiles a faster node ordering program that uses reductions bevor calling Metis ND.
-If you use the option -DUSE_ILP and you have Gurobi installed, the build script compiles the ILP programs to improve a given partition (ilp_improve).
+If you use the option -DUSE_ILP=On and you have Gurobi installed, the build script compiles the ILP programs to improve a given partition (ilp_improve). Alternatively, you can also pass these options to ./compile_withmake.sh for example:
 
+```console 
+./compile_withcmake -DUSE_ILP=On
+```
 
 Running Programs
 =====
@@ -213,7 +216,7 @@ excessively exploit the given communication system hierarchy.
 We provide an ILP as well as an ILP to improve a given partition. We extend the neighborhood of the combination problem for multiple local searches by employing integer linear programming.
 This enables us to find even more complex combinations and hence to further improve solutions.
 However, out of the box those the ILPs for the problem typically do not scale to large inputs, in particular because the graph partitioning problem has a very large amount of symmetry -- given a partition of the graph, each permutation of the block IDs gives a solution having the same objective and balance. 
-We define a much smaller graph, called model, and solve the graph partitioning problem on the model to optimality by the integer linear program. Besides other things, this model enables us to use symmetry breaking, which allows us to scale to much larger inputs.
+We define a much smaller graph, called model, and solve the graph partitioning problem on the model to optimality by the integer linear program. Besides other things, this model enables us to use symmetry breaking, which allows us to scale to much larger inputs. In order to compile these program you need to run cmake in the build process above as cmake ../ -DCMAKE_BUILD_TYPE=Release -DUSE_ILP=On or run ./compile_withcmake -DUSE_ILP=On.
 
 
 | Use Case | Programs |
@@ -223,6 +226,10 @@ We define a much smaller graph, called model, and solve the graph partitioning p
 
 #### Example Runs
 
+
+```console
+./deploy/ilp_improve ./examples/rgg_n_2_15_s0.graph --k 4 --input_partition=tmppartition4
+```
 
 
 Linking the KaHIP Library 
