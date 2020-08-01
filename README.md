@@ -213,10 +213,7 @@ excessively exploit the given communication system hierarchy.
 We provide an ILP as well as an ILP to improve a given partition. We extend the neighborhood of the combination problem for multiple local searches by employing integer linear programming.
 This enables us to find even more complex combinations and hence to further improve solutions.
 However, out of the box those the ILPs for the problem typically do not scale to large inputs, in particular because the graph partitioning problem has a very large amount of symmetry -- given a partition of the graph, each permutation of the block IDs gives a solution having the same objective and balance. 
-Hence, we adapt the integer linear program to improve a given input partition. 
-We do so by defining a much smaller graph, called model, and solve the graph partitioning problem on the model to optimality by the integer linear program. More specifically, we select vertices close to the cut of the given input partition for potential movement and contract all remaining vertices of a block into a single vertex. A feasible partition of this model corresponds to a partition of the input graph having the same balance and objective.
-Moreover, this model enables us to use symmetry breaking, which allows us to scale to much larger inputs.
-To make the approach even faster, we combine it with initial bounds on the objective provided by the input partition, as well as providing the input partition to the integer linear program solver.
+We define a much smaller graph, called model, and solve the graph partitioning problem on the model to optimality by the integer linear program. Besides other things, this model enables us to use symmetry breaking, which allows us to scale to much larger inputs.
 
 
 | Use Case | Programs |
