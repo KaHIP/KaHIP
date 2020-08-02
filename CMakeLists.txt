@@ -334,4 +334,10 @@ if(USE_ILP)
   target_include_directories(ilp_improve PUBLIC ${GUROBI_INCLUDE_DIR})
   target_compile_definitions(ilp_improve PRIVATE "-DMODE_ILPIMPROVE")
   target_link_libraries(ilp_improve ${OpenMP_CXX_LIBRARIES} ${GUROBI_LIBRARIES})
+
+  add_executable(ilp_exact app/ilp_exact.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
+  target_include_directories(ilp_exact PUBLIC ${GUROBI_INCLUDE_DIR})
+  target_compile_definitions(ilp_exact PRIVATE "-DMODE_ILPIMPROVE -DMODE_ILPEXACT")
+  target_link_libraries(ilp_exact ${OpenMP_CXX_LIBRARIES} ${GUROBI_LIBRARIES})
+
 endif()

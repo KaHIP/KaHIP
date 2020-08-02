@@ -327,10 +327,13 @@ int parse_parameters(int argn, char **argv,
                 label_propagation_iterations,
                 filename_output, 
 #elif defined MODE_ILPIMPROVE
-                k, input_partition, filename_output,
+                k,  filename_output, imbalance,
+                #ifndef MODE_ILPEXACT
+                input_partition,
                 ilp_mode, ilp_min_gain, ilp_bfs_depth,
                 ilp_overlap_presets,
                 ilp_limit_nonzeroes, ilp_overlap_runs,
+                #endif
                 ilp_timeout,
 #endif
 
