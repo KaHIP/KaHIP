@@ -224,7 +224,7 @@ excessively exploit the given communication system hierarchy. Since v3.0 we incl
 ./deploy/global_multisection examples/rgg_n_2_15_s0.graph --preconfiguration=eco  --hierarchy_parameter_string=4:3:3:3 --distance_parameter_string=1:10:100:200
 ```
 
-### ILP (exact solver) and ILP Improvements 
+### ILP (Exact Solver) and ILP Improvements 
 We provide an ILP as well as an ILP to improve a given partition. We extend the neighborhood of the combination problem for multiple local searches by employing integer linear programming.
 This enables us to find even more complex combinations and hence to further improve solutions.
 However, out of the box those the ILPs for the problem typically do not scale to large inputs, in particular because the graph partitioning problem has a very large amount of symmetry -- given a partition of the graph, each permutation of the block IDs gives a solution having the same objective and balance. 
