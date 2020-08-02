@@ -497,6 +497,7 @@ void reduced_nd_fast(int* n,
         delete[] metis_options;
 
 }
+#endif
 
 void internal_processmapping_call(PartitionConfig & partition_config, 
                           bool suppress_output, 
@@ -630,4 +631,3 @@ void process_mapping(int* n, int* vwgt, int* xadj,
 };
 
 
-#endif
