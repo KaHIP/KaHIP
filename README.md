@@ -240,6 +240,10 @@ We define a much smaller graph, called model, and solve the graph partitioning p
 ./deploy/ilp_improve ./examples/rgg_n_2_15_s0.graph --k 4 --input_partition=tmppartition4
 ```
 
+```console
+./deploy/ilp_exact ./examples/example_weighted.graph  --k 3
+```
+
 
 Linking the KaHIP Library 
 =====
