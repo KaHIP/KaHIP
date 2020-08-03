@@ -78,6 +78,7 @@ If you use the option -DUSE_ILP=On and you have Gurobi installed, the build scri
 ```console 
 ./compile_withcmake -DUSE_ILP=On
 ```
+Lastly, we also provide an option to support 64 bit edges. In order to use this, compile KaHIP with the option -D64BITMODE=On.
 
 Running Programs
 =====
