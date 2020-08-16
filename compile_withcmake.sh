@@ -44,6 +44,7 @@ fi
 
 
 cp ./build/libinterface_static.a deploy/libkahip.a
+cp ./build/libinterface.so deploy/libkahip.so
 cp ./build/parallel/parallel_src/dsp* ./deploy/distributed_edge_partitioning
 cp ./build/parallel/parallel_src/g* ./deploy
 cp ./build/parallel/parallel_src/parhip* ./deploy/parhip
