@@ -193,15 +193,15 @@ set(LIBMAPPING_SOURCE_FILES
   lib/mapping/construct_mapping.cpp)
 add_library(libmapping OBJECT ${LIBMAPPING_SOURCE_FILES})
 
-set(LIBSPAC_SOURCE_FILES OBJECT lib/spac/spac.cpp)
-add_library(libspac ${LIBSPAC_SOURCE_FILES})
+set(LIBSPAC_SOURCE_FILES lib/spac/spac.cpp)
+add_library(libspac OBJECT ${LIBSPAC_SOURCE_FILES})
 
-set(NODE_ORDERING_SOURCE_FILES OBJECT
+set(NODE_ORDERING_SOURCE_FILES 
   lib/node_ordering/min_degree_ordering.cpp
   lib/node_ordering/nested_dissection.cpp
   lib/node_ordering/ordering_tools.cpp
   lib/node_ordering/reductions.cpp)
-add_library(libnodeordering ${NODE_ORDERING_SOURCE_FILES})
+add_library(libnodeordering OBJECT ${NODE_ORDERING_SOURCE_FILES})
 
 # generate targets for each binary
 add_executable(kaffpa app/kaffpa.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
