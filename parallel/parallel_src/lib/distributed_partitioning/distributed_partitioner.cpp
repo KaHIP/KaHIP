@@ -174,7 +174,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 
                 parallel_block_down_propagation pbdp;
                 if( config.vcycle ) {
-                        // in this case we have to propagate the partitionindex down
+                        // in this case we have to propagate the partition index down
                         pbdp.propagate_block_down( communicator, config, G, Q);
                 }
         

@@ -41,14 +41,15 @@ class parallel_label_compress {
                         for( ULONG i = 0; i < config.label_iterations; i++) {
                                 NodeID prev_node = 0;
                                 forall_local_nodes(G, rnode) {
-                                        NodeID node = permutation[rnode]; // use the current random node
+                                        const NodeID node = permutation[rnode]; // use the current random node
 
                                         //move the node to the cluster that is most common in the neighborhood
                                         //second sweep for finding max and resetting array
-                                        PartitionID max_block   = G.getNodeLabel(node);
-                                        PartitionID old_block   = G.getNodeLabel(node);
+                                        const PartitionID old_block   = G.getNodeLabel(node);
+                                        const NodeWeight  node_weight = G.getNodeWeight(node);
                                         PartitionID max_value   = 0;
-                                        NodeWeight  node_weight = G.getNodeWeight(node);
+                                        PartitionID max_block   = G.getNodeLabel(node);
+
                                         bool own_block_balanced = G.getBlockSize(old_block) <= cluster_upperbound || !balance;
 
                                         if( G.getNodeDegree(node) == 0) {
@@ -68,10 +69,10 @@ class parallel_label_compress {
 
                                         } else {
                                                 forall_out_edges(G, e, node) {
-                                                        NodeID target             = G.getEdgeTarget(e);
-                                                        PartitionID cur_block     = G.getNodeLabel(target);
-                                                        hash_map[cur_block] += G.getEdgeWeight(e);
-                                                        PartitionID cur_value     = hash_map[cur_block];
+                                                        const NodeID target             = G.getEdgeTarget(e);
+                                                        const PartitionID cur_block     = G.getNodeLabel(target);
+                                                        hash_map[cur_block] += G.getEdgeWeight(e);              //add the edge weight*the PU comm cost
+                                                        const PartitionID cur_value     = hash_map[cur_block];
 
                                                         bool improvement = cur_value > max_value;
                                                         improvement |= cur_value == max_value && random_functions::nextBool();
