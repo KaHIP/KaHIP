@@ -21,11 +21,16 @@ public:
 
         void perform_partitioning(PartitionConfig & graph_partitioner_config, graph_access & G);
         void perform_recursive_partitioning(PartitionConfig & graph_partitioner_config, graph_access & G);
+        void perform_partitioning_krec_hierarchy(PartitionConfig & config, graph_access & G);
 
 private:
         void perform_recursive_partitioning_internal(PartitionConfig & graph_partitioner_config, 
                                                      graph_access & G, 
                                                      PartitionID lb, PartitionID ub);
+
+        void perform_recursive_partitioning_kmodel_internal(PartitionConfig & graph_partitioner_config, 
+                                                            graph_access & G, std::vector< int > group_sizes);
+
         void single_run( PartitionConfig & config, graph_access & G);
 
         unsigned m_global_k;

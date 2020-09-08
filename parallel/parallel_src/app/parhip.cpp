@@ -92,7 +92,9 @@ int main(int argn, char **argv) {
                 //compute some stats
                 EdgeWeight interPEedges = 0;
                 EdgeWeight localEdges = 0;
+                NodeWeight localWeight = 0;
                 forall_local_nodes(G, node) {
+                        localWeight += G.getNodeWeight(node);
                         forall_out_edges(G, e, node) {
                                 NodeID target = G.getEdgeTarget(e);
                                 if(!G.is_local_node(target)) {
@@ -105,8 +107,10 @@ int main(int argn, char **argv) {
 
                 EdgeWeight globalInterEdges = 0;
                 EdgeWeight globalIntraEdges = 0;
+                EdgeWeight globalWeight = 0;
                 MPI_Reduce(&interPEedges, &globalInterEdges, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, ROOT, communicator);
                 MPI_Reduce(&localEdges, &globalIntraEdges, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, ROOT, communicator);
+                MPI_Allreduce(&localWeight, &globalWeight, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
 
                 if( rank == ROOT ) {
                         std::cout <<  "log> ghost edges " <<  globalInterEdges/(double)G.number_of_global_edges() << std::endl;
@@ -126,7 +130,10 @@ int main(int argn, char **argv) {
 
                 } else {
                         partition_config.number_of_overall_nodes = G.number_of_global_nodes();
-                        partition_config.upper_bound_partition   = (1+epsilon)*ceil(G.number_of_global_nodes()/(double)partition_config.k);
+                        partition_config.upper_bound_partition   = (1+epsilon)*ceil(globalWeight/(double)partition_config.k);
+                        if( rank == ROOT) {
+                                std::cout <<  "upper bound on blocks " << partition_config.upper_bound_partition  << std::endl;
+                        }
                 }
 
 

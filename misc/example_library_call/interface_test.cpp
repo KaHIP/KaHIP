@@ -3,21 +3,6 @@
  *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
- ******************************************************************************
- * Copyright (C) 2013 Christian Schulz <christian.schulz@kit.edu>
- *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option)
- * any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
 #include <iostream>
@@ -53,5 +38,26 @@ int main(int argn, char **argv) {
         kaffpa(&n, vwgt, xadj, adjcwgt, adjncy, &nparts, &imbalance, false, 0, ECO, & edge_cut, part);
 
         std::cout <<  "edge cut " <<  edge_cut  << std::endl;
+
+        //void process_mapping(int* n, int* vwgt, int* xadj, 
+                   //int* adjcwgt, int* adjncy, 
+                   //int* hierarchy_parameter,  int* distance_parameter, int hierarchy_depth, 
+                   //int mode_partitioning, int mode_mapping,
+                   //double* imbalance,  
+                   //bool suppress_output, int seed,
+                   //int* edgecut, int* qap, int* part); 
+
+        int* hierarchy_parameter = new int[2];
+        int* distance_parameter = new int[2];
+        hierarchy_parameter[0] = 2;
+        hierarchy_parameter[1] = 2;
+        distance_parameter[0] = 1;
+        distance_parameter[1] = 100;
+        int qap = 0;
+
+        process_mapping(&n, vwgt, xadj, adjcwgt, adjncy, hierarchy_parameter, distance_parameter, 2, STRONG, MAPMODE_MULTISECTION, &imbalance, false, 0, & edge_cut, & qap, part);
+
+        std::cout <<  "edge cut " <<  edge_cut  << std::endl;
+        std::cout <<  "qap " <<  qap << std::endl;
                 
 }

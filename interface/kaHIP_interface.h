@@ -2,22 +2,6 @@
  * kaffpa_interface.h 
  *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
- *
- ******************************************************************************
- * Copyright (C) 2013-2015 Christian Schulz <christian.schulz@kit.edu>
- *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 2 of the License, or (at your option)
- * any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
 
@@ -37,6 +21,9 @@ const int FASTSOCIAL     = 3;
 const int ECOSOCIAL      = 4;
 const int STRONGSOCIAL   = 5;
 
+const int MAPMODE_MULTISECTION = 0;
+const int MAPMODE_BISECTION = 1;
+
 // same data structures as in metis 
 // edgecut and part are output parameters
 // part has to be an array of n ints
@@ -51,10 +38,34 @@ void kaffpa_balance_NE(int* n, int* vwgt, int* xadj,
                 double* imbalance,  bool suppress_output, int seed, int mode,
                 int* edgecut, int* part);
 
+// same data structures as in metis 
+// edgecut and part and qap are output parameters
+// part has to be an array of n ints
+void process_mapping(int* n, int* vwgt, int* xadj, 
+                   int* adjcwgt, int* adjncy,  
+                   int* hierarchy_parameter,  int* distance_parameter, int hierarchy_depth, 
+                   int mode_partitioning, int mode_mapping,
+                   double* imbalance,  
+                   bool suppress_output, int seed,
+                   int* edgecut, int* qap, int* part);
+
+
 void node_separator(int* n, int* vwgt, int* xadj, 
                     int* adjcwgt, int* adjncy, int* nparts, 
                     double* imbalance,  bool suppress_output, int seed, int mode,
                     int* num_separator_vertices, int** separator); 
+
+// takes an unweighted graph and performs reduced nested dissection
+// ordering is the output parameter, an array of n ints
+void reduced_nd(int* n, int* xadj, int* adjncy,
+                bool suppress_output, int seed, int mode,
+                int* ordering);
+
+#ifdef USEMETIS
+// reduced nested dissection with metis
+void reduced_nd_fast(int* n, int* xadj, int* adjncy,
+                      bool suppress_output, int seed, int* ordering);
+#endif
 
 #ifdef __cplusplus
 }

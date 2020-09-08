@@ -73,7 +73,7 @@ void initial_node_separator::compute_node_separator( const PartitionConfig & con
                         } endfor
                         best_separator_size = cur_separator_size;
                 
-                        std::cout <<  "improved initial separator size " <<  cur_separator_size  << std::endl;
+                        PRINT(std::cout <<  "improved initial separator size " <<  cur_separator_size  << std::endl;)
 			unsucc_counter = 0;
                 } else {
 			unsucc_counter++;

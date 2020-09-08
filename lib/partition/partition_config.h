@@ -8,6 +8,8 @@
 #ifndef PARTITION_CONFIG_DI1ES4T0
 #define PARTITION_CONFIG_DI1ES4T0
 
+#include <iosfwd>
+
 #include "definitions.h"
 
 // Configuration for the partitioning.
@@ -15,6 +17,7 @@ struct PartitionConfig
 {
         PartitionConfig() {}
 
+        bool use_mmap_io;
 
         //============================================================
         //=======================MATCHING=============================
@@ -362,6 +365,26 @@ struct PartitionConfig
 
         int grow_target;
 
+
+        //=======================================
+        //=========ILP LOCAL SEARCH==============
+        //=======================================
+        OptimizationMode ilp_mode;
+
+        int ilp_min_gain;
+
+        int ilp_bfs_depth;
+
+        int ilp_bfs_min_gain;
+
+        OverlapPresets ilp_overlap_presets;
+
+        int ilp_limit_nonzeroes;
+
+        int ilp_overlap_runs;
+
+        int ilp_timeout;
+
         //=======================================
         //===============QAP=====================
         //=======================================
@@ -385,6 +408,19 @@ struct PartitionConfig
         int max_recursion_levels_construction; 
 
         bool enable_mapping;
+
+        //=======================================
+        //========NODE ORDERING==================
+        //=======================================
+        unsigned int dissection_rec_limit;
+
+        bool disable_reductions;
+
+        std::vector<nested_dissection_reduction_type> reduction_order;
+
+        double convergence_factor;
+        
+        unsigned int max_simplicial_degree;
 
         //=======================================
         //===============Shared Mem OMP==========
