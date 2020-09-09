@@ -126,6 +126,7 @@ struct PPartitionConfig
 
         std::vector< int > group_sizes;
         std::vector< int > distances;
+        ConstructionAlgorithm construction_algorithm;
 
         //=======================================
         //===============integrated mapping =====

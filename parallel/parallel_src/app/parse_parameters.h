@@ -54,14 +54,14 @@ int parse_parameters(int argn, char **argv,
         //
 
         struct arg_lit *integrated_mapping                   = arg_lit0(NULL, "integrated_mapping", "Enable integrated mapping algorithms to map quotient graph onto processor graph defined by hierarchy and distance options. (Default: disabled)");
-        struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth.");
+        struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth; in total 4x8x8=256 PEs.");
         struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
 
         // Define argtable.
         void* argtable[] = {
 #ifdef PARALLEL_LABEL_COMPRESSION
                 help, filename, user_seed, k, inbalance, preconfiguration, vertex_degree_weights,
-		save_partition, save_partition_binary,
+		save_partition, save_partition_binary, integrated_mapping, hierarchy_parameter_string, distance_parameter_string,
 #elif defined TOOLBOX 
                 help, filename, k_opt, input_partition_filename, save_partition, save_partition_binary, converter_evaluate,
 #endif 
@@ -267,9 +267,14 @@ int parse_parameters(int argn, char **argv,
                 }
         }
 
+        //
+        // integrated mapping
+        //
+
         if(integrated_mapping->count > 0) {
                 partition_config.integrated_mapping = true;
-                //cfg.integrated_mapping(partition_config);
+//this function is supposed to set some parameters that I have not (yet?) copied them, see in SEA_mapping/app/configuration.h
+//cfg.integrated_mapping(partition_config);
                 if(!hierarchy_parameter_string->count) {
                         std::cout <<  "Please specify the hierarchy using the --hierarchy_parameter_string option."  << std::endl;
                         exit(0);
@@ -302,7 +307,7 @@ int parse_parameters(int argn, char **argv,
                 }
         }
 
-        //store the PE tree distances in artition_config.distances
+        //store the PE tree distances in partition_config.distances
         if(distance_parameter_string->count) {
                 std::istringstream f(distance_parameter_string->sval[0]);
                 std::string s;    
@@ -311,6 +316,20 @@ int parse_parameters(int argn, char **argv,
                         partition_config.distances.push_back(stoi(s));
                 }       
         }
+
+//next lines appear in main() at the SEA_mapping code; not sure if (and why) we need them
+/*
+        matrix* D=NULL;
+        std::vector< NodeID > *perm_rank = NULL;
+        if (partition_config.enable_mapping || partition_config.integrated_mapping) {
+                perm_rank = new std::vector< NodeID >(partition_config.k);
+                for( unsigned i = 0; i < perm_rank->size(); i++) {
+                        (*perm_rank)[i] = i;
+                }
+                partition_config.perm_rank = perm_rank;
+        }
+*/
+
 
         return 0;
 }
