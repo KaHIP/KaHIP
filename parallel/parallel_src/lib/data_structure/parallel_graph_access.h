@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "data_structure/balance_management.h"
+#include "data_structure/processor_tree.h"
 #include "definitions.h"
 #include "partition_config.h"
 #include "tools/timer.h"
