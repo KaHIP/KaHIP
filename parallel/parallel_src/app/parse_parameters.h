@@ -37,7 +37,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *label_iterations_refinement    = arg_int0(NULL, "label_iterations_refinement", NULL, "Number of label propagation iterations during refinement.");
         struct arg_int *num_tries                      = arg_int0(NULL, "num_tries", NULL, "Number of repetitions to perform.");
         struct arg_int *binary_io_window_size 	       = arg_int0(NULL, "binary_io_window_size", NULL, "Binary IO window size.");
-        struct arg_rex *initial_partitioning_algorithm = arg_rex0(NULL, "initial_partitioning_algorithm", "^(kaffpaEstrong|kaffpaEeco|kaffpaEfast|fastsocial|ecosocial|strongsocial|random)$", "PARTITIONER", REG_EXTENDED, "Initial partitioning algorithm to use. One of {kaffpaEstrong, kaffpaEeco, kaffpaEfast, fastsocial, ecosocial, strongsocial, random)." );
+        struct arg_rex *initial_partitioning_algorithm = arg_rex0(NULL, "initial_partitioning_algorithm", "^(kaffpaEstrong|kaffpaEeco|kaffpaEfast|fastsocial|ecosocial|strongsocial|random)$", "PARTITIONER", REG_EXTENDED, "Initial partitioning algorithm to use. One of {kaffpaEstrong, kaffpaEeco, kaffpaEfast, fastsocial, ecosocial, strongsocial, random}." );
         struct arg_int *num_vcycles                    = arg_int0(NULL, "num_vcycles", NULL, "Number of vcycles to perform.");
         struct arg_lit *no_refinement_in_last_iteration= arg_lit0(NULL, "no_refinement_in_last_iteration","No local search during last v-cycle.");
         struct arg_lit *converter_evaluate             = arg_lit0(NULL, "evaluate","Enable this tag the partition to be evaluated.");
@@ -49,6 +49,13 @@ int parse_parameters(int argn, char **argv,
         struct arg_dbl *ht_fill_factor                 = arg_dbl0(NULL, "ht_fill_factor", NULL, "");
         struct arg_int *n                              = arg_int0(NULL, "n", NULL, "");
         struct arg_end *end                            = arg_end(100);
+
+        //integrated mapping
+        //
+
+        struct arg_lit *integrated_mapping                   = arg_lit0(NULL, "integrated_mapping", "Enable integrated mapping algorithms to map quotient graph onto processor graph defined by hierarchy and distance options. (Default: disabled)");
+        struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth.");
+        struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
 
         // Define argtable.
         void* argtable[] = {
@@ -260,6 +267,50 @@ int parse_parameters(int argn, char **argv,
                 }
         }
 
+        if(integrated_mapping->count > 0) {
+                partition_config.integrated_mapping = true;
+                //cfg.integrated_mapping(partition_config);
+                if(!hierarchy_parameter_string->count) {
+                        std::cout <<  "Please specify the hierarchy using the --hierarchy_parameter_string option."  << std::endl;
+                        exit(0);
+                }
+
+                if(!distance_parameter_string->count) {
+                        std::cout <<  "Please specify the distances using the --distance_parameter_string option."  << std::endl;
+                        exit(0);
+                }
+        }
+
+        //check and store the hierarchy levels in partition_config.group_sizes
+        if(hierarchy_parameter_string->count) {
+                std::istringstream f(hierarchy_parameter_string->sval[0]);
+                std::string s;    
+                partition_config.group_sizes.clear();
+                while (getline(f, s, ':')) {
+                        partition_config.group_sizes.push_back(stoi(s));
+                }       
+
+                PartitionID old_k = partition_config.k;
+                partition_config.k = 1; // recompute k 
+                for( unsigned int i = 0; i < partition_config.group_sizes.size(); i++) {
+                        partition_config.k *= partition_config.group_sizes[i];
+                }
+                if( old_k != partition_config.k ) {
+                        std::cout <<  "number of processors defined through specified hierarchy does not match k!"  << std::endl;
+                        std::cout <<  "please specify k as " << partition_config.k  << std::endl;
+                        exit(0);
+                }
+        }
+
+        //store the PE tree distances in artition_config.distances
+        if(distance_parameter_string->count) {
+                std::istringstream f(distance_parameter_string->sval[0]);
+                std::string s;    
+                partition_config.distances.clear();
+                while (getline(f, s, ':')) {
+                        partition_config.distances.push_back(stoi(s));
+                }       
+        }
 
         return 0;
 }

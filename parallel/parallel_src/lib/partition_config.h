@@ -10,6 +10,8 @@
 
 #include "definitions.h"
 
+class matrix;
+
 // Configuration for the partitioning.
 struct PPartitionConfig
 {
@@ -70,9 +72,9 @@ struct PPartitionConfig
 
         int evolutionary_time_limit;
 
-	NodeWeight upper_bound_partition;
+        NodeWeight upper_bound_partition;
 
-	NodeWeight upper_bound_cluster;
+        NodeWeight upper_bound_cluster;
 
         NodeID total_num_labels;
 
@@ -94,7 +96,7 @@ struct PPartitionConfig
 
         bool eco;
 
-	int binary_io_window_size;
+        int binary_io_window_size;
 
         ULONG barabasi_albert_mindegree;
 
@@ -110,13 +112,27 @@ struct PPartitionConfig
 
         ULONG n;
 
-	bool save_partition;
+        bool save_partition;
 
-	bool save_partition_binary;
+        bool save_partition_binary;
 
         bool vertex_degree_weights;
 
         bool converter_evaluate;
+
+        //=======================================
+        //===============QAP=====================
+        //=======================================
+
+        std::vector< int > group_sizes;
+        std::vector< int > distances;
+
+        //=======================================
+        //===============integrated mapping =====
+        //=======================================
+
+        bool integrated_mapping;
+        matrix* D;
 
         //=======================================
         //===============Shared Mem OMP==========
