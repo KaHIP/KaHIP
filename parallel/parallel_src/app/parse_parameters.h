@@ -11,7 +11,14 @@
 
 #include <regex.h>
 #include <string.h>
+
 #include "configuration.h"
+
+// #include "data_structure/matrix/normal_matrix.h"
+// #include "data_structure/matrix/online_distance_matrix.h"
+// #include "data_structure/matrix/online_precalc_matrix.h"
+// #include "data_structure/matrix/online_binary_matrix.h"
+// #include "data_structure/matrix/full_matrix.h"
 
 int parse_parameters(int argn, char **argv, 
                      PPartitionConfig & partition_config, 
@@ -318,8 +325,9 @@ int parse_parameters(int argn, char **argv,
         }
 
 //next lines appear in main() at the SEA_mapping code; not sure if (and why) we need them
+//see for example SEA_mapping/app/fastmesh.cpp
 /*
-        matrix* D=NULL;
+        
         std::vector< NodeID > *perm_rank = NULL;
         if (partition_config.enable_mapping || partition_config.integrated_mapping) {
                 perm_rank = new std::vector< NodeID >(partition_config.k);
@@ -330,6 +338,35 @@ int parse_parameters(int argn, char **argv,
         }
 */
 
+//next lines are also taken from SEA_mapping/app/fastmesh.cpp
+        matrix* D=NULL;
+        
+        if ( partition_config.integrated_mapping ){
+                //commenting this out so I do not need to add construction_algorithm to partition config
+                //bool power_of_two = (partition_config.k & (partition_config.k-1)) == 0;
+                // if (power_of_two  /*&& !partition_config.enable_mapping && !partition_config.multisection */ ) {
+                //         partition_config.construction_algorithm = MAP_CONST_IDENTITY;
+                // }
+                
+
+                if (partition_config.use_bin_id) {
+                        D = new online_precalc_matrix(partition_config.k, partition_config.k);
+                        D->setPartitionConfig(partition_config);
+                } else if (partition_config.use_compact_bin_id) {
+                        D = new online_binary_matrix(partition_config.k, partition_config.k);
+                        D->setPartitionConfig(partition_config);
+                } else if (partition_config.full_matrix) {
+                        D = new full_matrix(partition_config.k, partition_config.k);
+                        D->setPartitionConfig(partition_config);
+                } else  
+                        if( partition_config.distance_construction_algorithm != DIST_CONST_HIERARCHY_ONLINE) {
+                                D = new normal_matrix(partition_config.k, partition_config.k);
+                        } else {
+                                D = new online_distance_matrix(partition_config.k, partition_config.k);
+                                D->setPartitionConfig(partition_config);
+                        }
+                partition_config.D = D;
+        }
 
         return 0;
 }
