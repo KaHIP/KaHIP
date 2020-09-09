@@ -8,11 +8,15 @@
 #ifndef MATRIX_BHHZ9T7P
 #define MATRIX_BHHZ9T7P
 
+#include "definitions.h"
+#include "partition/partition_config.h"
+
 class matrix {
 public:
         matrix(unsigned int dim_x, unsigned int dim_y) {};
         matrix() {};
         virtual ~matrix() {};
+        virtual void setPartitionConfig(PartitionConfig & config) {};
 
         virtual int  get_xy(unsigned int x, unsigned int y)            = 0;
         virtual void set_xy(unsigned int x, unsigned int y, int value) = 0;
