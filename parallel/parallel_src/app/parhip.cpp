@@ -136,7 +136,8 @@ int main(int argn, char **argv) {
                         }
                 }
 
-
+                if( rank == ROOT ) std::cout <<  "Start partitioning "  << std::endl;
+		
                 distributed_partitioner dpart;
                 dpart.perform_partitioning( communicator, partition_config, G);
 
@@ -177,6 +178,14 @@ int main(int argn, char **argv) {
                         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, communicator, &flag, &st);
                 };
 #endif
+
+		if( rank == ROOT ) {
+		  if (partition_config.integrated_mapping)
+		    std::cout <<  "Start mapping "  << std::endl;
+		}
+		
+		//processor_tree(partition_config.group_sizes,partition_config.group_sizes)
+		
 
                 if( partition_config.save_partition ) {
                         parallel_vector_io pvio;
