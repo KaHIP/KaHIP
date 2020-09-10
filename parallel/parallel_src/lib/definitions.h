@@ -68,6 +68,12 @@ typedef enum {
 	DEGREE_LEASTGHOSTNODESFIRST_NODEODERING
 } NodeOrderingType;
 
+typedef enum {
+        DIST_CONST_RANDOM, 
+        DIST_CONST_IDENTITY,
+        DIST_CONST_HIERARCHY,
+        DIST_CONST_HIERARCHY_ONLINE
+} DistanceConstructionAlgorithm;
 
 #endif
 
@@ -87,6 +93,3 @@ typedef enum {
   //rank + 12*size               MPI Tools
   //rank + 13*size               MPI Tools
   //rank + 100*size + x          Label Isends  
- 
-
-
