@@ -47,6 +47,20 @@ class processor_tree
   inline vector<int> get_traversalDescendants() {return traversalDescendants;};
   inline unsigned int get_numOfLevels() {return numOfLevels;};
 
+  void print() {
+    std::cout << " ===== Printing Tree Information ===== " << std::endl;
+    int numPUs = 1;
+    for( unsigned int i = 0; i < get_numOfLevels(); i++) {
+      std::cout << "Level ==" << i << "== Distance : "
+		<<   traversalDistances[i] << " Descedants : "
+		<<   traversalDescendants[i]  << std::endl;
+      numPUs *= traversalDescendants[i];
+    }
+    std::cout << "Total number of processors = " << numPUs << std::endl;
+    std::cout << " ===================================== " << std::endl;
+  }
+
+  
   
  private:
   unsigned int numOfLevels;

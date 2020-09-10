@@ -142,7 +142,7 @@ int main(int argn, char **argv) {
                         }
                 }
 
-
+                	
                 distributed_partitioner dpart;
                 dpart.perform_partitioning( communicator, partition_config, G);
 
@@ -183,6 +183,15 @@ int main(int argn, char **argv) {
                         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, communicator, &flag, &st);
                 };
 #endif
+
+		/* mapping activity after partitioning */
+		
+		if (partition_config.integrated_mapping) {		
+		  processor_tree T = processor_tree(partition_config.distances,partition_config.group_sizes);
+		  // if( rank == ROOT ) {
+		  //   T.print();
+		  // }
+		}
 
                 if( partition_config.save_partition ) {
                         parallel_vector_io pvio;
