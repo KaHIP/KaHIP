@@ -20,7 +20,7 @@ class processor_tree
     	@param[in] descendants[vector]: each vector element corresponds to the number of descendants on each level
 	@brief convention that ascending element positions (0,1,2, ...) corresponds to levels in the tree from higher to lower.
     */
-  processor_tree(const vector<uint64_t> &distances, const vector<uint64_t> descendants ) {
+  processor_tree(const vector<int> &distances, const vector<int> descendants ) {
     assert( distances.size() == descendants.size());
     traversalDistances = distances;
     traversalDescendants = descendants;
