@@ -93,7 +93,8 @@ EdgeWeight quotient_graph_refinement::perform_refinement(PartitionConfig & confi
                 bool something_changed = false;
 
 #ifndef NDEBUG  
-                EdgeWeight oldcut = initial_cut_value;
+                //to suppress "unused variable" warning
+                [[maybe_unused]]EdgeWeight oldcut = initial_cut_value;
 #endif
 
                 PartitionConfig cfg    = config;

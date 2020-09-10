@@ -14,7 +14,6 @@
 
 #include "configuration.h"
 
-//#include "data_structure/matrix/normal_matrix.h"
 // #include "data_structure/matrix/online_distance_matrix.h"
 // #include "data_structure/matrix/online_precalc_matrix.h"
 // #include "data_structure/matrix/online_binary_matrix.h"
@@ -324,6 +323,13 @@ int parse_parameters(int argn, char **argv,
                 }       
         }
 
+
+        if( partition_config.distances.size()!=partition_config.group_sizes.size() ){
+            std::cout << "ERROR: distances and hierarchy for the processor tree should have the same size " << std::endl;
+            std::cout<< partition_config.distances.size() << " vs " << partition_config.group_sizes.size() <<std::endl;
+            exit(0);
+        }
+
 //next lines appear in main() at the SEA_mapping code; not sure if (and why) we need them
 //see for example SEA_mapping/app/fastmesh.cpp
 /*
@@ -371,6 +377,7 @@ int parse_parameters(int argn, char **argv,
                 partition_config.D = D;
         }
 */
+
         return 0;
 }
 

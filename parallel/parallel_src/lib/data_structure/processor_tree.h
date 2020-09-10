@@ -27,7 +27,7 @@ class processor_tree
     numOfLevels = distances.size();
   }
   
-  ~processor_tree();
+  ~processor_tree(){};
 
   int getDistance_xy(int label_size, int x, int y) {
     int labelDiff = x ^ y;

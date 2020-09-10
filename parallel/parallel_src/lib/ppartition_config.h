@@ -133,7 +133,7 @@ struct PPartitionConfig
         //=======================================
 
         bool integrated_mapping;
-        matrix* D;
+        //matrix* D;
 
         //=======================================
         //======= Binary Online Distance ========
