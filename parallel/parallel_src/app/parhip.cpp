@@ -83,10 +83,15 @@ int main(int argn, char **argv) {
                 if( rank == ROOT ) std::cout <<  "took " <<  t.elapsed()  << std::endl;
                 if( rank == ROOT ) std::cout <<  "n:" <<  G.number_of_global_nodes() << " m: " <<  G.number_of_global_edges()  << std::endl;
 
-                //read processor tree if given
-                processor_tree PEtree( partition_config.distances, partition_config.group_sizes );
-                if( rank == ROOT ) std::cout <<  "read processor tree with " <<  PEtree.get_numOfLevels() << " levels"  << std::endl;
-//TODO: what to do when distance and hierarchy is not given
+
+		/* mapping activity : read processor tree if given */		
+		//if (partition_config.integrated_mapping) {	       
+		  processor_tree PEtree( partition_config.distances, partition_config.group_sizes );
+		  if( rank == ROOT ) {
+		    PEtree.print();
+		  }
+		//}
+		//TODO: what to do when distance and hierarchy is not given
                 
                 random_functions::setSeed(partition_config.seed);
                 parallel_graph_access::set_comm_rounds( partition_config.comm_rounds/size );
@@ -184,14 +189,6 @@ int main(int argn, char **argv) {
                 };
 #endif
 
-		/* mapping activity after partitioning */
-		
-		if (partition_config.integrated_mapping) {		
-		  processor_tree T = processor_tree(partition_config.distances,partition_config.group_sizes);
-		  // if( rank == ROOT ) {
-		  //   T.print();
-		  // }
-		}
 
                 if( partition_config.save_partition ) {
                         parallel_vector_io pvio;
