@@ -9,7 +9,7 @@
 #define DISTRIBUTED_PARTITIONER_ZYL2XF6R
 
 #include <vector>
-#include "partition_config.h"
+#include "ppartition_config.h"
 #include "data_structure/parallel_graph_access.h"
 #include "stop_rule.h"
 

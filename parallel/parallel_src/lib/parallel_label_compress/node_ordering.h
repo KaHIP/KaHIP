@@ -10,8 +10,8 @@
 
 #include <algorithm>
 
-#include "definitions.h"
-#include "partition_config.h"
+#include "pdefinitions.h"
+#include "ppartition_config.h"
 #include "data_structure/parallel_graph_access.h"
 #include "tools/random_functions.h"
 

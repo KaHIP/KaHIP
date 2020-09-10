@@ -8,9 +8,9 @@
 #ifndef DISTRIBUTED_QUALITY_METRICS_UAVSEXBT
 #define DISTRIBUTED_QUALITY_METRICS_UAVSEXBT
 
-#include "definitions.h"
+#include "pdefinitions.h"
 #include "data_structure/parallel_graph_access.h"
-#include "partition_config.h"
+#include "ppartition_config.h"
 
 class distributed_quality_metrics {
 public:

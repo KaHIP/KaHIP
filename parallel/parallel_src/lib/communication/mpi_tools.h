@@ -11,7 +11,7 @@
 #define MPI_TOOLS_HMESDXF2
 
 #include "data_structure/parallel_graph_access.h"
-#include "partition_config.h"
+#include "ppartition_config.h"
 
 class mpi_tools {
 public:

@@ -17,8 +17,8 @@
 #include <vector>
 
 #include "data_structure/balance_management.h"
-#include "definitions.h"
-#include "partition_config.h"
+#include "pdefinitions.h"
+#include "ppartition_config.h"
 #include "tools/timer.h"
 
 struct Node {

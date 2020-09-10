@@ -9,7 +9,7 @@
 #define PARALLEL_LABEL_COMPRESS_9ME4H8DK
 
 #include "data_structure/parallel_graph_access.h"
-#include "partition_config.h"
+#include "ppartition_config.h"
 #include "tools/random_functions.h"
 #include "hmap_wrapper.h"
 #include "node_ordering.h"

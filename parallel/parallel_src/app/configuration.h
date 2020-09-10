@@ -9,7 +9,7 @@
 #ifndef CONFIGURATION_3APG5V7ZA
 #define CONFIGURATION_3APG5V7ZA
 
-#include "partition_config.h"
+#include "ppartition_config.h"
 
 class configuration {
         public:

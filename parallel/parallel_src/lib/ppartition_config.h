@@ -8,7 +8,7 @@
 #ifndef PARTITION_CONFIG_DI1ES4T0A
 #define PARTITION_CONFIG_DI1ES4T0A
 
-#include "definitions.h"
+#include "pdefinitions.h"
 
 class matrix;
 
@@ -126,7 +126,7 @@ struct PPartitionConfig
 
         std::vector< int > group_sizes;
         std::vector< int > distances;
-        ConstructionAlgorithm construction_algorithm;
+        DistanceConstructionAlgorithm distance_construction_algorithm;
 
         //=======================================
         //===============integrated mapping =====
@@ -134,6 +134,17 @@ struct PPartitionConfig
 
         bool integrated_mapping;
         matrix* D;
+
+        //=======================================
+        //======= Binary Online Distance ========
+        //=======================================
+
+        std::vector<std::vector<int>>  *bin_id;
+        bool use_bin_id;
+        std::vector<unsigned int>  *compact_bin_id;
+        bool use_compact_bin_id;
+        int bit_sec_len;
+        int label_iterations_refinement_map;
 
         //=======================================
         //===============Shared Mem OMP==========
