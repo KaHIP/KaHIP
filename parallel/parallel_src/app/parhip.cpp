@@ -155,15 +155,13 @@ int main(int argn, char **argv) {
                 MPI_Barrier(communicator);
 
 		// mapping after partitioning ...
-		
-		
 
                 double running_time = t.elapsed();
                 distributed_quality_metrics qm;
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
 		EdgeWeight qap = edge_cut;
 		if (partition_config.integrated_mapping) {
-		  EdgeWeight qap = qm.total_qap( G, PEtree, communicator );
+		  qap = qm.total_qap( G, PEtree, communicator );
 		}
 		double balance  = qm.balance( partition_config, G, communicator );
                 PRINT(double balance_load  = qm.balance_load( partition_config, G, communicator );)
@@ -175,7 +173,7 @@ int main(int argn, char **argv) {
                         std::cout << "log>" << "=====================================" << std::endl;
                         std::cout <<  "log>total partitioning time elapsed " <<  running_time << std::endl;
                         std::cout <<  "log>final edge cut " <<  edge_cut  << std::endl;
-			std::cout <<  "log>final qap  " <<  qap  << std::endl;
+                        std::cout <<  "log>final qap  " <<  qap  << std::endl;
                         std::cout <<  "log>final balance "  <<  balance   << std::endl;
                         PRINT(std::cout <<  "log>final balance load "  <<  balance_load   << std::endl;)
                         PRINT(std::cout <<  "log>final balance load dist "  <<  balance_load_dist   << std::endl;)
