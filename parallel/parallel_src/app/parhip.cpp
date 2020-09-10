@@ -89,6 +89,7 @@ int main(int argn, char **argv) {
 		  processor_tree PEtree( partition_config.distances, partition_config.group_sizes );
 		  if( rank == ROOT ) {
 		    PEtree.print();
+		    PEtree.print_allPairDistances();
 		  }
 		//}
 		//TODO: what to do when distance and hierarchy is not given
@@ -163,7 +164,7 @@ int main(int argn, char **argv) {
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
 		EdgeWeight qap = edge_cut;
 		if (partition_config.integrated_mapping) {
-		  EdgeWeight qap = qm.total_qap( G, PEtree, communicator );
+		  //EdgeWeight qap = qm.total_qap( G, PEtree, communicator );
 		}
 		double balance  = qm.balance( partition_config, G, communicator );
                 PRINT(double balance_load  = qm.balance_load( partition_config, G, communicator );)

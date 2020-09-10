@@ -87,10 +87,11 @@ class parallel_label_compress {
                                                             hash_map[cur_block] += G.getEdgeWeight(e);
                                                         }else{
 //TODO: verify that these are the correct variables
-                                                            hash_map[cur_block] += 
+
+							  hash_map[cur_block] +=
+						 
 							    G.getEdgeWeight(e) * PEtree.getDistance_xy( label_size, old_block, cur_block) ;
-							    //		    G.getEdgeWeight(e) * PEtree.getDistance_xy( label_size, node, target) ;
-							    
+							  
                                                         }
                                                         const PartitionID cur_value     = hash_map[cur_block];
 
@@ -106,7 +107,7 @@ class parallel_label_compress {
                                                         bool balancing = own_block_balanced || cur_block != old_block;
                                                         if( improvement  && sizeconstraint && cycle && balancing) {
                                                                 max_value = cur_value;
-                                                                max_block = cur_block;
+								max_block = cur_block;
                                                         }
                                                 } endfor
                                         }

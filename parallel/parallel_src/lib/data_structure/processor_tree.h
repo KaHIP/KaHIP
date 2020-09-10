@@ -25,10 +25,18 @@ class processor_tree
     traversalDistances = distances;
     traversalDescendants = descendants;
     numOfLevels = distances.size();
+    for( unsigned int i = 0; i < get_numOfLevels(); i++)
+      numPUs *= traversalDescendants[i];
   }
   
   ~processor_tree(){};
 
+  /**	@brief Function to calculate communication costs between two application vertices (based on labels)
+    	@param[in] label_size[int]: size of the bit-label representation of the application graph
+    	@param[in] x, y[int]: application vertices ( = their label)
+	@brief[out] their communication cost based on the distances in the hierarchy of processor tree   
+    */
+  
   inline int getDistance_xy(int label_size, int x, int y) {
     int labelDiff = x ^ y;
     if(!labelDiff)
@@ -36,13 +44,13 @@ class processor_tree
     int count_leading_zeros = __builtin_clzll(labelDiff); // index of highest bit
     int total_n_bits = 8*sizeof(unsigned long long int) - 1;
     int idx = total_n_bits - count_leading_zeros;
-    
     assert(idx < label_size); // label of no more than label_size bits
     int j = label_size - idx - 1;
     if(j >= traversalDistances.size())
       return 0;
     return traversalDistances[j];
   }
+
 
   /* inline int getDistance_xy(unsigned int x, unsigned int y) { */
   /*   //now depending on x and y, generate distance */
@@ -60,27 +68,63 @@ class processor_tree
   /* }; */
   
 
+  /**	@brief Function to calculate communication costs between two PUs (based on labels)
+    	@param[in] x, y[int]: PU, nodes of the processor tree ( = their label)
+	@brief[out] their distances in the hierarchy of processor tree   
+    */
+  
+  inline int getDistance_PxPy(int x, int y) {
+    assert((x <= numPUs) and (y <= numPUs) );
+    int labelDiff = x ^ y;
+    if(!labelDiff)
+      return 0;
+    
+    int count_leading_zeros = __builtin_clzll(labelDiff); // index of highest bit
+    int total_n_bits = 8*sizeof(unsigned long long int) - 1;
+    int idx = total_n_bits - count_leading_zeros;
+    assert(idx <= numOfLevels); // index of no more than number of levels
+    if(idx >= traversalDistances.size())
+      return 0;
+    return traversalDistances[idx];
+  }
+
+
+  
   inline vector<int> get_traversalDistances() {return traversalDistances;};
   inline vector<int> get_traversalDescendants() {return traversalDescendants;};
   inline unsigned int get_numOfLevels() {return numOfLevels;};
+  inline unsigned int get_numPUs() {return numPUs;};
 
   void print() {
     std::cout << " ===== Printing Tree Information ===== " << std::endl;
-    int numPUs = 1;
     for( unsigned int i = 0; i < get_numOfLevels(); i++) {
       std::cout << "Level ==" << i << "== Distance : "
 		<<   traversalDistances[i] << " Descedants : "
 		<<   traversalDescendants[i]  << std::endl;
-      numPUs *= traversalDescendants[i];
     }
-    std::cout << "Total number of processors = " << numPUs << std::endl;
+    std::cout << "Total number of processors = " << get_numPUs() << std::endl;
     std::cout << " ===================================== " << std::endl;
   }
+
+
+  void print_allPairDistances() {
+    std::cout << " ========== Distance Matrix ==========" << std::endl;
+    std::cout << " ===================================== " << std::endl;
+    for( unsigned int i = 0; i < get_numPUs(); i++) {
+      for( unsigned int j = 0; j < get_numPUs(); j++) {
+	std::cout << getDistance_PxPy(i, j) << "  "; //<< std::endl;
+      }
+      std::cout  << std::endl;
+    }
+    std::cout << " ===================================== " << std::endl;
+  }
+
 
   
   
  private:
   unsigned int numOfLevels;
+  unsigned int numPUs = 1;
   // Q: make distances double?
   vector<int> traversalDistances;
   vector<int> traversalDescendants;
