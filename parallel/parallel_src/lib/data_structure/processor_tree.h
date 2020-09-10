@@ -34,8 +34,9 @@ class processor_tree
     if(!labelDiff)
       return 0;
     int count_leading_zeros = __builtin_clzll(labelDiff); // index of highest bit
-    int total_n_bits = 8*sizeof(unsigned long long int);
+    int total_n_bits = 8*sizeof(unsigned long long int) - 1;
     int idx = total_n_bits - count_leading_zeros;
+    
     assert(idx < label_size); // label of no more than label_size bits
     int j = label_size - idx - 1;
     if(j >= traversalDistances.size())
@@ -43,20 +44,20 @@ class processor_tree
     return traversalDistances[j];
   }
 
-  inline int getDistance_xy(unsigned int x, unsigned int y) {
-    //now depending on x and y, generate distance
-    int k = 0;
-    unsigned long long int xor_x_y = x ^ y;
-    int count_leading_zeros = __builtin_clzll(xor_x_y);
-    int total_n_bits = 8*sizeof(unsigned long long int);
-    int clz = total_n_bits - count_leading_zeros -1;
-    /* if (clz >= 0) { */
-    /*   k = (int)floor(clz / config.bit_sec_len);                       */
-    /*   return config.distances[k]; */
-    /* } else  { */
-    /*   return 0; */
-    /* }        */
-  };
+  /* inline int getDistance_xy(unsigned int x, unsigned int y) { */
+  /*   //now depending on x and y, generate distance */
+  /*   int k = 0; */
+  /*   unsigned long long int xor_x_y = x ^ y; */
+  /*   int count_leading_zeros = __builtin_clzll(xor_x_y); */
+  /*   int total_n_bits = 8*sizeof(unsigned long long int); */
+  /*   int clz = total_n_bits - count_leading_zeros -1; */
+  /*   /\* if (clz >= 0) { *\/ */
+  /*   /\*   k = (int)floor(clz / config.bit_sec_len);                       *\/ */
+  /*   /\*   return config.distances[k]; *\/ */
+  /*   /\* } else  { *\/ */
+  /*   /\*   return 0; *\/ */
+  /*   /\* }        *\/ */
+  /* }; */
   
 
   inline vector<int> get_traversalDistances() {return traversalDistances;};

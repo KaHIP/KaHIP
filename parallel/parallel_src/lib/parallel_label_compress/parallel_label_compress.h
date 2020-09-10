@@ -88,7 +88,9 @@ class parallel_label_compress {
                                                         }else{
 //TODO: verify that these are the correct variables
                                                             hash_map[cur_block] += 
-                                                                G.getEdgeWeight(e) * PEtree.getDistance_xy( label_size, old_block, cur_block) ;
+							    G.getEdgeWeight(e) * PEtree.getDistance_xy( label_size, old_block, cur_block) ;
+							    //		    G.getEdgeWeight(e) * PEtree.getDistance_xy( label_size, node, target) ;
+							    
                                                         }
                                                         const PartitionID cur_value     = hash_map[cur_block];
 
