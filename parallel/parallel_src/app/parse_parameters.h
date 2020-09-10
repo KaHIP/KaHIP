@@ -276,6 +276,7 @@ int parse_parameters(int argn, char **argv,
         //
         // integrated mapping
         //
+        partition_config.integrated_mapping = false;
 
         if(integrated_mapping->count > 0) {
                 partition_config.integrated_mapping = true;

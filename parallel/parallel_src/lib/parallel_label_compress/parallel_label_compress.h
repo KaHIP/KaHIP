@@ -39,8 +39,8 @@ class parallel_label_compress {
                                 random_functions::permutate_vector_fast( permutation, true);
                         }
 
-                        const int label_size = std::ceil( std::log2( G.number_of_global_nodes() ) );
-
+const int label_size = std::ceil( std::log2( G.number_of_global_nodes() ) ) +1;
+std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size <<  ", config.integrated_mapping " << config.integrated_mapping << std::endl;
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
