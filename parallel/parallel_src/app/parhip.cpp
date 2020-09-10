@@ -92,6 +92,7 @@ int main(int argn, char **argv) {
 		  }
 		//}
 		//TODO: what to do when distance and hierarchy is not given
+          //update: flag partition_config.integrated_mapping is set to true; use this flag later in refinement
                 
                 random_functions::setSeed(partition_config.seed);
                 parallel_graph_access::set_comm_rounds( partition_config.comm_rounds/size );

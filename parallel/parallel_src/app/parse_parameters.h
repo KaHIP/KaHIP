@@ -328,7 +328,12 @@ int parse_parameters(int argn, char **argv,
             std::cout << "ERROR: distances and hierarchy for the processor tree should have the same size " << std::endl;
             std::cout<< partition_config.distances.size() << " vs " << partition_config.group_sizes.size() <<std::endl;
             exit(0);
+        }else{
+            if( partition_config.distances.size()>0 ){
+                partition_config.integrated_mapping = true;
+            }
         }
+
 
 //next lines appear in main() at the SEA_mapping code; not sure if (and why) we need them
 //see for example SEA_mapping/app/fastmesh.cpp

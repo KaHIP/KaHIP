@@ -13,7 +13,7 @@ class processor_tree
 
   /** @brief Default constructor.
    */
-  processor_tree();
+  processor_tree(){};
 
   /**	@brief Constructor to create a processor tree based on leaves.
     	@param[in] distances[vector]: each vector element corresponds to the communication costs on each level from the leaves

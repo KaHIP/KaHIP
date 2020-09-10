@@ -8,7 +8,10 @@
 #ifndef PARALLEL_LABEL_COMPRESS_9ME4H8DK
 #define PARALLEL_LABEL_COMPRESS_9ME4H8DK
 
+#include <math.h>
+
 #include "data_structure/parallel_graph_access.h"
+#include "data_structure/processor_tree.h"
 #include "ppartition_config.h"
 #include "tools/random_functions.h"
 #include "hmap_wrapper.h"
@@ -22,7 +25,8 @@ class parallel_label_compress {
                 virtual ~parallel_label_compress() {};
 
                 void perform_parallel_label_compression( PPartitionConfig & config, 
-                                parallel_graph_access & G, bool balance, bool for_coarsening = true) {
+                                parallel_graph_access & G, bool balance, bool for_coarsening = true,
+                                processor_tree PEtree=processor_tree() ) {
 
                         if( config.label_iterations == 0) return;
                         NodeWeight cluster_upperbound = config.upper_bound_cluster;
@@ -34,6 +38,8 @@ class parallel_label_compress {
                         } else {
                                 random_functions::permutate_vector_fast( permutation, true);
                         }
+
+                        const int label_size = std::ceil( std::log2( G.number_of_global_nodes() ) );
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
@@ -71,7 +77,14 @@ class parallel_label_compress {
                                                 forall_out_edges(G, e, node) {
                                                         const NodeID target             = G.getEdgeTarget(e);
                                                         const PartitionID cur_block     = G.getNodeLabel(target);
-                                                        hash_map[cur_block] += G.getEdgeWeight(e);              //add the edge weight*the PU comm cost
+
+                                                        if( !config.integrated_mapping ){
+                                                            hash_map[cur_block] += G.getEdgeWeight(e);
+                                                        }else{
+//TODO: verify that these are the correct variables
+                                                            hash_map[cur_block] += 
+                                                                G.getEdgeWeight(e) * PEtree.getDistance_xy( label_size, old_block, cur_block) ;
+                                                        }
                                                         const PartitionID cur_value     = hash_map[cur_block];
 
                                                         bool improvement = cur_value > max_value;
