@@ -10,6 +10,7 @@
 
 #include "pdefinitions.h"
 #include "data_structure/parallel_graph_access.h"
+#include "data_structure/processor_tree.h"
 #include "ppartition_config.h"
 
 class distributed_quality_metrics {
@@ -26,9 +27,12 @@ public:
         double balance_load_dist( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator  );
         double balance_second( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator  );
 	EdgeWeight comm_vol( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator  );
-    EdgeWeight comm_bnd( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator );
+	EdgeWeight comm_bnd( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator );
 	EdgeWeight comm_vol_dist( parallel_graph_access & G, MPI_Comm communicator );
+
+	EdgeWeight total_qap( parallel_graph_access & G, processor_tree &PEtree, MPI_Comm communicator);
 };
+
 
 
 #endif /* end of include guard: DISTRIBUTED_QUALITY_METRICS_UAVSEXBT */

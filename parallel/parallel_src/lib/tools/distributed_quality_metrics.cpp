@@ -65,6 +65,29 @@ EdgeWeight distributed_quality_metrics::edge_cut( parallel_graph_access & G, MPI
         return global_cut/2;
 }
 
+
+EdgeWeight distributed_quality_metrics::total_qap( parallel_graph_access & G, processor_tree &PEtree, MPI_Comm communicator ) {
+        EdgeWeight local_qap = 0;
+	// TODO: decide if label_size is necessary or not!
+	int label_size = 0;
+        forall_local_nodes(G, node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+                        if( G.getNodeLabel( node ) != G.getNodeLabel(target)) {
+			  local_qap += G.getEdgeWeight(e) * PEtree.getDistance_xy(label_size,
+										  node,target);
+                        }
+                } endfor
+        } endfor
+
+        EdgeWeight global_qap = 0;
+        MPI_Allreduce(&local_qap, &global_qap, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+
+        return global_qap/2;
+}
+
+
+
 NodeWeight distributed_quality_metrics::local_max_block_weight( PPartitionConfig & config, parallel_graph_access & G, int * partition_map, MPI_Comm communicator ) {
         std::vector<PartitionID> block_weights(config.k, 0);
 
