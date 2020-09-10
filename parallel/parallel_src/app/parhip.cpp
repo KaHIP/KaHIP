@@ -18,6 +18,7 @@
 #include "communication/mpi_tools.h"
 #include "communication/dummy_operations.h"
 #include "data_structure/parallel_graph_access.h"
+#include "data_structure/processor_tree.h"
 #include "distributed_partitioning/distributed_partitioner.h"
 #include "io/parallel_graph_io.h"
 #include "io/parallel_vector_io.h"
@@ -136,8 +137,7 @@ int main(int argn, char **argv) {
                         }
                 }
 
-                if( rank == ROOT ) std::cout <<  "Start partitioning "  << std::endl;
-		
+                	
                 distributed_partitioner dpart;
                 dpart.perform_partitioning( communicator, partition_config, G);
 
@@ -179,13 +179,14 @@ int main(int argn, char **argv) {
                 };
 #endif
 
-		if( rank == ROOT ) {
-		  if (partition_config.integrated_mapping)
-		    std::cout <<  "Start mapping "  << std::endl;
+		/* mapping activity after partitioning */
+		
+		if (partition_config.integrated_mapping) {		
+		  processor_tree T = processor_tree(partition_config.distances,partition_config.group_sizes);
+		  // if( rank == ROOT ) {
+		  //   T.print();
+		  // }
 		}
-		
-		//processor_tree(partition_config.group_sizes,partition_config.group_sizes)
-		
 
                 if( partition_config.save_partition ) {
                         parallel_vector_io pvio;
