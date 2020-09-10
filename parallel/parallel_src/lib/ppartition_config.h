@@ -8,7 +8,7 @@
 #ifndef PARTITION_CONFIG_DI1ES4T0A
 #define PARTITION_CONFIG_DI1ES4T0A
 
-#include "definitions.h"
+#include "pdefinitions.h"
 
 class matrix;
 

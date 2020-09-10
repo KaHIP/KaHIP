@@ -8,7 +8,7 @@
 #ifndef DISTRIBUTED_QUALITY_METRICS_UAVSEXBT
 #define DISTRIBUTED_QUALITY_METRICS_UAVSEXBT
 
-#include "definitions.h"
+#include "pdefinitions.h"
 #include "data_structure/parallel_graph_access.h"
 #include "ppartition_config.h"
 

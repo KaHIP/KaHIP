@@ -11,7 +11,7 @@
 
 #include <vector>
 #include "data_structure/parallel_graph_access.h"
-#include "definitions.h"
+#include "pdefinitions.h"
 
 class dspac {
 public:
