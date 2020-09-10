@@ -1,6 +1,3 @@
-/* From TiMer processor_graph_access 
- */
-
 #ifndef PROCESSOR_TREE_H
 #define PROCESSOR_TREE_H
 
@@ -32,8 +29,8 @@ class processor_tree
   
   ~processor_tree();
 
-  int getDistance_xy(int label_size, uint64_t x, uint64_t y) {
-    uint64_t labelDiff = x ^ y;
+  int getDistance_xy(int label_size, int x, int y) {
+    int labelDiff = x ^ y;
     if(!labelDiff)
       return 0;
     int count_leading_zeros = __builtin_clzll(labelDiff); // index of highest bit
@@ -46,16 +43,16 @@ class processor_tree
     return traversalDistances[j];
   }
 
-  inline vector<uint64_t> get_traversalDistances() {return traversalDistances;};
-  inline vector<uint64_t> get_traversalDescendants() {return traversalDescendants;};
+  inline vector<int> get_traversalDistances() {return traversalDistances;};
+  inline vector<int> get_traversalDescendants() {return traversalDescendants;};
   inline unsigned int get_numOfLevels() {return numOfLevels;};
 
   
  private:
   unsigned int numOfLevels;
-  // Q: make distances dou
-  vector<uint64_t> traversalDistances;
-  vector<uint64_t> traversalDescendants;
+  // Q: make distances double?
+  vector<int> traversalDistances;
+  vector<int> traversalDescendants;
 
 };
   
