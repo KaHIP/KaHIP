@@ -156,8 +156,6 @@ int main(int argn, char **argv) {
                 MPI_Barrier(communicator);
 
 		// mapping after partitioning ...
-		
-		
 
                 double running_time = t.elapsed();
                 distributed_quality_metrics qm;
@@ -176,7 +174,7 @@ int main(int argn, char **argv) {
                         std::cout << "log>" << "=====================================" << std::endl;
                         std::cout <<  "log>total partitioning time elapsed " <<  running_time << std::endl;
                         std::cout <<  "log>final edge cut " <<  edge_cut  << std::endl;
-			std::cout <<  "log>final qap  " <<  qap  << std::endl;
+                        std::cout <<  "log>final qap  " <<  qap  << std::endl;
                         std::cout <<  "log>final balance "  <<  balance   << std::endl;
                         PRINT(std::cout <<  "log>final balance load "  <<  balance_load   << std::endl;)
                         PRINT(std::cout <<  "log>final balance load dist "  <<  balance_load_dist   << std::endl;)
