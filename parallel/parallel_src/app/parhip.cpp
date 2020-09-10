@@ -161,7 +161,10 @@ int main(int argn, char **argv) {
                 double running_time = t.elapsed();
                 distributed_quality_metrics qm;
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
-		EdgeWeight qap = qm.total_qap( G, PEtree, communicator );
+		EdgeWeight qap = edge_cut;
+		if (partition_config.integrated_mapping) {
+		  EdgeWeight qap = qm.total_qap( G, PEtree, communicator );
+		}
 		double balance  = qm.balance( partition_config, G, communicator );
                 PRINT(double balance_load  = qm.balance_load( partition_config, G, communicator );)
                 PRINT(double balance_load_dist  = qm.balance_load_dist( partition_config, G, communicator );)
