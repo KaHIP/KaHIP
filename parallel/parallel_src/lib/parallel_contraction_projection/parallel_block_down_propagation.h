@@ -9,7 +9,7 @@
 #define PARALLEL_BLOCK_DOWN_PROPAGATION_SRTCMH8F
 
 #include "data_structure/parallel_graph_access.h"
-#include "partition_config.h"
+#include "ppartition_config.h"
 
 class parallel_block_down_propagation {
 public:

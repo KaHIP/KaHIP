@@ -8,7 +8,7 @@
 #ifndef INITIAL_PARTITIONING_SFMCJN2U
 #define INITIAL_PARTITIONING_SFMCJN2U
 
-#include "partition_config.h"
+#include "ppartition_config.h"
 #include "data_structure/parallel_graph_access.h"
 
 class initial_partitioning_algorithm {

@@ -9,7 +9,7 @@
 #define STOP_RULE_23YOZ7GX
 
 #include "data_structure/parallel_graph_access.h"
-#include "partition_config.h"
+#include "ppartition_config.h"
 
 class stop_rule {
 public:

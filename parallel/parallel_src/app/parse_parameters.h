@@ -14,7 +14,7 @@
 
 #include "configuration.h"
 
-// #include "data_structure/matrix/normal_matrix.h"
+//#include "data_structure/matrix/normal_matrix.h"
 // #include "data_structure/matrix/online_distance_matrix.h"
 // #include "data_structure/matrix/online_precalc_matrix.h"
 // #include "data_structure/matrix/online_binary_matrix.h"
@@ -339,12 +339,15 @@ int parse_parameters(int argn, char **argv,
 */
 
 //next lines are also taken from SEA_mapping/app/fastmesh.cpp
+
+/*
         matrix* D=NULL;
         
         if ( partition_config.integrated_mapping ){
                 //commenting this out so I do not need to add construction_algorithm to partition config
                 //bool power_of_two = (partition_config.k & (partition_config.k-1)) == 0;
-                // if (power_of_two  /*&& !partition_config.enable_mapping && !partition_config.multisection */ ) {
+                // if (power_of_two  // && !partition_config.enable_mapping && !partition_config.multisection 
+                // ) {
                 //         partition_config.construction_algorithm = MAP_CONST_IDENTITY;
                 // }
                 
@@ -367,7 +370,7 @@ int parse_parameters(int argn, char **argv,
                         }
                 partition_config.D = D;
         }
-
+*/
         return 0;
 }
 

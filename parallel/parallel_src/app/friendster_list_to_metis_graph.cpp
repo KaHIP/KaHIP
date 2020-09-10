@@ -12,7 +12,7 @@
 #include <vector>
 #include <mpi.h>
 #include <argtable3.h>
-#include "partition_config.h"
+#include "ppartition_config.h"
 #include "parse_parameters.h"
 #include "data_structure/hashed_graph.h"
 #include "data_structure/parallel_graph_access.h"

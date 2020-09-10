@@ -24,7 +24,7 @@
 #include "io/parallel_vector_io.h"
 #include "macros_assertions.h"
 #include "parse_dspac_parameters.h"
-#include "partition_config.h"
+#include "ppartition_config.h"
 #include "random_functions.h"
 #include "timer.h"
 #include "tools/distributed_quality_metrics.h"

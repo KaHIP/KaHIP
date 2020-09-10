@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "io/parallel_graph_io.h"
-#include "partition_config.h"
+#include "ppartition_config.h"
 #include "configuration.h"
 
 using namespace std;

@@ -8,7 +8,7 @@
 #ifndef DISTRIBUTED_EVOLUTIONARY_PARTITIONING_OJ2RIKR7
 #define DISTRIBUTED_EVOLUTIONARY_PARTITIONING_OJ2RIKR7
 
-#include "partition_config.h"
+#include "ppartition_config.h"
 #include "data_structure/parallel_graph_access.h"
 
 class distributed_evolutionary_partitioning {
