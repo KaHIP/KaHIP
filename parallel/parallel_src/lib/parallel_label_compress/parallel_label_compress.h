@@ -26,7 +26,7 @@ class parallel_label_compress {
 
                 void perform_parallel_label_compression( PPartitionConfig & config, 
                                 parallel_graph_access & G, bool balance, bool for_coarsening = true,
-                                processor_tree PEtree=processor_tree() ) {
+                                 const processor_tree & PEtree = processor_tree()) {
 
                         if( config.label_iterations == 0) return;
                         NodeWeight cluster_upperbound = config.upper_bound_cluster;
@@ -46,7 +46,9 @@ class parallel_label_compress {
 
                         std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
                                 << ", config.integrated_mapping " << config.integrated_mapping << std::endl;
-			PEtree.print();
+
+			processor_tree Tree = PEtree;
+		        Tree.print();
 			
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
@@ -89,7 +91,7 @@ class parallel_label_compress {
                                                             hash_map[cur_block] += G.getEdgeWeight(e);
                                                         }else{
                                                             //TODO: verify that these are the correct variables
-                                                            hash_map[cur_block] += G.getEdgeWeight(e) * PEtree.getDistance_PxPy( old_block, cur_block) ;
+                                                            hash_map[cur_block] += G.getEdgeWeight(e) * Tree.getDistance_PxPy( old_block, cur_block) ;
                                                         }
                                                         const PartitionID cur_value     = hash_map[cur_block];
 
