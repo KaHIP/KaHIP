@@ -49,20 +49,33 @@ public:
 	}
 
 
-	/* inline int getDistance_xy(unsigned int x, unsigned int y) { */
-	/*   //now depending on x and y, generate distance */
-	/*   int k = 0; */
-	/*   unsigned long long int xor_x_y = x ^ y; */
-	/*   int count_leading_zeros = __builtin_clzll(xor_x_y); */
-	/*   int total_n_bits = 8*sizeof(unsigned long long int); */
-	/*   int clz = total_n_bits - count_leading_zeros -1; */
-	/*   /\* if (clz >= 0) { *\/ */
-	/*   /\*   k = (int)floor(clz / config.bit_sec_len);                       *\/ */
-	/*   /\*   return config.distances[k]; *\/ */
-	/*   /\* } else  { *\/ */
-	/*   /\*   return 0; *\/ */
-	/*   /\* }        *\/ */
-	/* }; */
+	inline int getDistance_xy(int x, int y) {
+	  //now depending on x and y, generate distance
+	  int k = 0;
+	  unsigned long long int xor_x_y = x ^ y;
+	  int count_leading_zeros = __builtin_clzll(xor_x_y);
+	  int total_n_bits = 8*sizeof(unsigned long long int);
+	  int clz = total_n_bits - count_leading_zeros -1;
+
+	  // -----
+	  int bit_sec_len = 1;
+	  int groups_size = traversalDescendants.size();
+	  assert ( groups_size == numOfLevels);
+	  for( unsigned k = 0; k < groups_size; k++) {
+	    int tmp = ceil(log2(traversalDescendants[k]));
+	    if (tmp > bit_sec_len) {
+	      bit_sec_len = tmp;
+	    }
+	  }
+	  // -----	  
+	  
+	  if (clz >= 0) {
+	    k = (int)floor(clz / bit_sec_len);
+	    return traversalDistances[k];
+	  } else  {
+	    return 0;
+	  }
+	};
 	
 
 	/**	@brief Function to calculate communication costs between two PUs (based on labels)
