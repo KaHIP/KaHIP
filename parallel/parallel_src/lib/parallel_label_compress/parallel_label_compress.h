@@ -46,6 +46,8 @@ class parallel_label_compress {
 
                         std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
                                 << ", config.integrated_mapping " << config.integrated_mapping << std::endl;
+			PEtree.print();
+			
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
@@ -87,7 +89,7 @@ class parallel_label_compress {
                                                             hash_map[cur_block] += G.getEdgeWeight(e);
                                                         }else{
                                                             //TODO: verify that these are the correct variables
-                                                            hash_map[cur_block] += G.getEdgeWeight(e) * PEtree.getDistance_xy( label_size, old_block, cur_block) ;
+                                                            hash_map[cur_block] += G.getEdgeWeight(e) * PEtree.getDistance_PxPy( old_block, cur_block) ;
                                                         }
                                                         const PartitionID cur_value     = hash_map[cur_block];
 

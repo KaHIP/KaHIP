@@ -18,7 +18,7 @@ public:
 		@brief convention that ascending element positions (0,1,2, ...) corresponds to levels in the tree from higher to lower. 
 	*/
 	processor_tree(const vector<int> &distances, const vector<int> descendants ) {
-		assert( distances.size() == descendants.size());
+	        assert( distances.size() == descendants.size());
 		traversalDistances = distances;
 		traversalDescendants = descendants;
 		numOfLevels = distances.size();
@@ -84,7 +84,11 @@ public:
 	*/
   
 	inline int getDistance_PxPy(int x, int y) {
-		assert((x <= numPUs) and (y <= numPUs) );
+	        std::cout << "x = " << x << " y = "
+			  <<   y << " numPUs = "
+			  <<   numPUs  << std::endl;
+	  
+		//assert((x <= numPUs) and (y <= numPUs) );
 		int labelDiff = x ^ y;
 		if(!labelDiff)
 			return 0;
