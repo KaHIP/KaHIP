@@ -573,7 +573,7 @@ inline bool complete_boundary::assert_boundaries_are_bnodes() {
                          PartitionID targets_partition = G.getPartitionIndex(target);
 
                          if(partition != targets_partition) {
-                                boundary_pair bp;
+                                [[maybe_unused]] boundary_pair bp;
                                 bp.k   = G.get_partition_count();
                                 bp.lhs = partition;
                                 bp.rhs = targets_partition;

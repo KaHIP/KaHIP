@@ -29,9 +29,11 @@ class parallel_label_compress {
 
                         std::vector< NodeID > permutation( G.number_of_local_nodes() );
                         if( for_coarsening ) {
+std::cout<<"will coarsen" << std::endl;
                                 node_ordering no; 
                                 no.order_nodes( config, G, permutation); 
                         } else {
+std::cout<<"will UNcoarsen" << std::endl;
                                 random_functions::permutate_vector_fast( permutation, true);
                         }
 
@@ -74,7 +76,7 @@ class parallel_label_compress {
                                                         PartitionID cur_value     = hash_map[cur_block];
 
                                                         bool improvement = cur_value > max_value;
-                                                        improvement |= cur_value == max_value && random_functions::nextBool();
+                                                         improvement |= cur_value == max_value && random_functions::nextBool();
 
                                                         bool sizeconstraint = G.getBlockSize(cur_block) + node_weight <= cluster_upperbound;
                                                         sizeconstraint |= cur_block == old_block;
