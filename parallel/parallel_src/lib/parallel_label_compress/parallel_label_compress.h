@@ -61,7 +61,7 @@ class parallel_label_compress {
 
                         std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
                                 << ", usePEdistances " << usePEdistances << std::endl;
-                        Tree.print();
+                     
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
@@ -108,7 +108,11 @@ class parallel_label_compress {
 //TODO: when coarsening, which are the blocks? is there a partition?
 //TODO: change when for_coarsening
 //TODO: does the hash map accepts negative values?
-                                                                cur_value += (-1) * G.getEdgeWeight(e) * PEtree.getDistance_PxPy( old_block, cur_block) ;
+							       std::cout <<  " SHOW : node ("
+									 <<  node << "," << target << ")  ->  ("
+									 << old_block << " m: " << cur_block <<  ")"  << std::endl;
+                                                                cur_value += (-1) * G.getEdgeWeight(e) * PEtree.getDistance_PxPy(old_block, cur_block) ;
+								
                                                         }else{
                                                                 cur_value += G.getEdgeWeight(e);
                                                         }

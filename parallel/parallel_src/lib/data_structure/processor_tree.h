@@ -84,11 +84,11 @@ public:
 	*/
   
 	inline int getDistance_PxPy(int x, int y) const {
-	        std::cout << "x = " << x << " y = "
-			  <<   y << " numPUs = "
-			  <<   numPUs  << std::endl;
+	        /* std::cout << "x = " << x << " y = " */
+		/* 	  <<   y << " numPUs = " */
+		/* 	  <<   numPUs  << std::endl; */
 	  
-		//assert((x <= numPUs) and (y <= numPUs) );
+		assert((x <= numPUs) and (y <= numPUs) );
 		int labelDiff = x ^ y;
 		if(!labelDiff)
 			return 0;
@@ -109,9 +109,9 @@ public:
 	inline unsigned int get_numOfLevels() const {return numOfLevels;};
 	inline unsigned int get_numPUs() const {return numPUs;};
 
-	void print() {
-        assert( traversalDistances.size()==get_numOfLevels() );
-        assert( traversalDescendants.size()==get_numOfLevels() );
+	void print() const {
+	  //assert( traversalDistances.size()==get_numOfLevels() );
+	  //assert( traversalDescendants.size()==get_numOfLevels() );
 		std::cout << " ===== Printing Tree Information ===== " << std::endl;
 		for( unsigned int i = 0; i < get_numOfLevels(); i++) {
 			std::cout << "Level ==" << i << "== Distance : "

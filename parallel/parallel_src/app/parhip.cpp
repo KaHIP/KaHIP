@@ -92,8 +92,6 @@ int main(int argn, char **argv) {
 		    PEtree.print_allPairDistances();
 		  }
 
-
-		  PEtree.print();
 		  
 		//}
 		//TODO: what to do when distance and hierarchy is not given
@@ -160,7 +158,7 @@ int main(int argn, char **argv) {
                 MPI_Barrier(communicator);
 
 
-		PEtree.print();
+
                 double running_time = t.elapsed();
                 distributed_quality_metrics qm;
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
