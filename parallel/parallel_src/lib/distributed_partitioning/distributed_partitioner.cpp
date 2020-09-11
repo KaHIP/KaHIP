@@ -73,7 +73,7 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
                         config.label_iterations_refinement = 0;
                 }
 
-                vcycle( communicator, config, G );
+                vcycle( communicator, config, G ); //uncoarsening, PE tree not used
 
                 if( rank == ROOT ) {
                         PRINT(std::cout <<  "log>cycle: " << m_cycle << " uncoarsening took " << m_t.elapsed()  << std::endl;)
@@ -125,7 +125,7 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
         }
 }
 
-void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G) {
+void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G, const processor_tree PEtree ) {
         PPartitionConfig config = partition_config;
 
         mpi_tools mpitools;
@@ -157,7 +157,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 
         //parallel_label_compress< std::unordered_map< NodeID, NodeWeight> > plc;
         parallel_label_compress< linear_probing_hashmap  > plc;
-        plc.perform_parallel_label_compression ( config, G, true);
+        plc.perform_parallel_label_compression ( config, G, true ); //when coarsening, PEtree is not used
 
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
@@ -190,7 +190,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 #endif
 
         if( !contraction_stop_decision.contraction_stop(config, G, Q)) {
-                vcycle( communicator, config, Q);
+                vcycle( communicator, config, Q, PEtree );
         } else {
 #ifndef NOOUTPUT
                 if( rank == ROOT ) {
@@ -247,7 +247,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
                 working_config.vcycle = false; // assure that we actually can improve the cut
 
                 parallel_label_compress< std::vector< NodeWeight> > plc_refinement;
-                plc_refinement.perform_parallel_label_compression( working_config, G, false, false);
+                plc_refinement.perform_parallel_label_compression( working_config, G, false, false, PEtree);
         }
 
 #ifndef NOOUTPUT

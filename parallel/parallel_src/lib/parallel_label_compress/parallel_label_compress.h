@@ -58,7 +58,7 @@ class parallel_label_compress {
 
                         std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
                                 << ", usePEdistances " << usePEdistances << std::endl;
-                        PEtree.print();
+                        //PEtree.print();
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
