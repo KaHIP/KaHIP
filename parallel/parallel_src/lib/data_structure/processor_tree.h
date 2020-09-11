@@ -110,6 +110,8 @@ public:
 	inline unsigned int get_numPUs() {return numPUs;};
 
 	void print() {
+        assert( traversalDistances.size()==get_numOfLevels() );
+        assert( traversalDescendants.size()==get_numOfLevels() );
 		std::cout << " ===== Printing Tree Information ===== " << std::endl;
 		for( unsigned int i = 0; i < get_numOfLevels(); i++) {
 			std::cout << "Level ==" << i << "== Distance : "
