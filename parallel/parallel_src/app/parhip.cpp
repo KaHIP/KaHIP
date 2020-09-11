@@ -155,7 +155,7 @@ int main(int argn, char **argv) {
 
                 	
                 distributed_partitioner dpart;
-                dpart.perform_partitioning( communicator, partition_config, G);
+                dpart.perform_partitioning( communicator, partition_config, G, PEtree);
 
                 MPI_Barrier(communicator);
 

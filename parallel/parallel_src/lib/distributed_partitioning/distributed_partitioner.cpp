@@ -52,10 +52,10 @@ void distributed_partitioner::perform_recursive_partitioning( MPI_Comm communica
 
 
 void distributed_partitioner::perform_partitioning( PPartitionConfig & partition_config, parallel_graph_access & G) {
-                perform_partitioning( MPI_COMM_WORLD, partition_config, G);
+        perform_partitioning( MPI_COMM_WORLD, partition_config, G);
 }
 
-void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G) {
+void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G, const processor_tree & PEtree) {
         timer t; 
         double elapsed = 0;
         m_cur_rnd_choice = 0;
@@ -125,7 +125,7 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
         }
 }
 
-void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G, const processor_tree PEtree ) {
+void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G, const processor_tree & PEtree) {
         PPartitionConfig config = partition_config;
 
         mpi_tools mpitools;
@@ -157,7 +157,9 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 
         //parallel_label_compress< std::unordered_map< NodeID, NodeWeight> > plc;
         parallel_label_compress< linear_probing_hashmap  > plc;
-        plc.perform_parallel_label_compression ( config, G, true ); //when coarsening, PEtree is not used
+	// TODO: decide if we want to pass PEtree as an argument during coarsening.
+	// For now we do think there is no need ...
+        plc.perform_parallel_label_compression ( config, G, true);
 
 #ifndef NOOUTPUT
         if( rank == ROOT ) {

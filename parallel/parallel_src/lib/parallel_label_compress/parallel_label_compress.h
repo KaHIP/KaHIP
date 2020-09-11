@@ -26,7 +26,7 @@ class parallel_label_compress {
 
                 void perform_parallel_label_compression( PPartitionConfig & config, 
                                 parallel_graph_access & G, bool balance, bool for_coarsening = true,
-                                processor_tree PEtree=processor_tree() ) {
+                                 const processor_tree & PEtree = processor_tree()) {
 
                         if( config.label_iterations == 0) return;
                         NodeWeight cluster_upperbound = config.upper_bound_cluster;
@@ -56,9 +56,12 @@ class parallel_label_compress {
                         int clz = __builtin_clzll(G.number_of_global_nodes()); // index of highest bit
                         const int label_size = 8*sizeof(unsigned long long int) - clz;
 
+			processor_tree Tree = PEtree;
+		        Tree.print();
+
                         std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
                                 << ", usePEdistances " << usePEdistances << std::endl;
-                        //PEtree.print();
+                        Tree.print();
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
@@ -107,7 +110,12 @@ class parallel_label_compress {
 //TODO: does the hash map accepts negative values?
                                                                 cur_value += (-1) * G.getEdgeWeight(e) * PEtree.getDistance_PxPy( old_block, cur_block) ;
                                                         }else{
+<<<<<<< HEAD
+                                                            //TODO: verify that these are the correct variables
+                                                            hash_map[cur_block] += G.getEdgeWeight(e) * Tree.getDistance_PxPy( old_block, cur_block) ;
+=======
                                                                 cur_value += G.getEdgeWeight(e);
+>>>>>>> 800bc46ad29d1af49f5d165ef7b7d7bd6893f419
                                                         }
 
                                                         hash_map[cur_block] = cur_value;
