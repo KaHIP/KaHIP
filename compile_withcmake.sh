@@ -14,7 +14,10 @@ rm -rf deploy
 #rm -rf build
 mkdir build
 cd build
-cmake ../ -DCMAKE_BUILD_TYPE=Debug $1
+cmake ../ \
+ -DCMAKE_BUILD_TYPE=Debug \
+ -DOPTIMIZED_OUTPUT=ON \
+ $1
 make -j $NCORES
 cd ..
 

@@ -75,7 +75,7 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                         //second sweep for finding max and resetting array
                                         const PartitionID old_block   = G.getNodeLabel(node);
                                         const NodeWeight  node_weight = G.getNodeWeight(node);
-                                        PartitionID max_value   = 0;
+                                        long long max_value   = std::numeric_limits<long long>::min();
                                         PartitionID max_block   = G.getNodeLabel(node);
 
                                         bool own_block_balanced = G.getBlockSize(old_block) <= cluster_upperbound || !balance;
@@ -123,7 +123,8 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                                         }
 //printf("%d %lld\n", __LINE__, cur_value );
                                                         hash_map[cur_block] = cur_value;
-//printf("%d %lld   v1=%lld, v2=%lld\n", __LINE__, hash_map[cur_block], node, target );
+// if( !for_coarsening )
+// printf("%d %lld   v1=%lld, v2=%lld\n", __LINE__, hash_map[cur_block], node, target );
                                                         bool improvement = cur_value > max_value;
                                                         improvement |= cur_value == max_value && random_functions::nextBool();
 
