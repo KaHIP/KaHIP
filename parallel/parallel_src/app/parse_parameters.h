@@ -62,12 +62,14 @@ int parse_parameters(int argn, char **argv,
         struct arg_lit *integrated_mapping                   = arg_lit0(NULL, "integrated_mapping", "Enable integrated mapping algorithms to map quotient graph onto processor graph defined by hierarchy and distance options. (Default: disabled)");
         struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth; in total 4x8x8=256 PEs.");
         struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
+        struct arg_lit *only_boundary                        = arg_lit0(NULL, "only_boundary", "when refinement, move boundary vertices only" );
 
         // Define argtable.
         void* argtable[] = {
 #ifdef PARALLEL_LABEL_COMPRESSION
                 help, filename, user_seed, k, inbalance, preconfiguration, vertex_degree_weights,
-		save_partition, save_partition_binary, integrated_mapping, hierarchy_parameter_string, distance_parameter_string,
+                save_partition, save_partition_binary, integrated_mapping, hierarchy_parameter_string, distance_parameter_string,
+                only_boundary, num_vcycles, label_iterations_refinement, label_iterations_coarsening, stop_factor,
 #elif defined TOOLBOX 
                 help, filename, k_opt, input_partition_filename, save_partition, save_partition_binary, converter_evaluate,
 #endif 
@@ -324,7 +326,6 @@ int parse_parameters(int argn, char **argv,
                 }       
         }
 
-
         if( partition_config.distances.size()!=partition_config.group_sizes.size() ){
             std::cout << "ERROR: distances and hierarchy for the processor tree should have the same size " << std::endl;
             std::cout<< partition_config.distances.size() << " vs " << partition_config.group_sizes.size() <<std::endl;
@@ -335,6 +336,9 @@ int parse_parameters(int argn, char **argv,
             }
         }
 
+        if( only_boundary->count ){
+            partition_config.only_boundary = true;
+        }
 
 //next lines appear in main() at the SEA_mapping code; not sure if (and why) we need them
 //see for example SEA_mapping/app/fastmesh.cpp

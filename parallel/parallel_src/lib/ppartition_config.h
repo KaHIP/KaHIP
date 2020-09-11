@@ -133,6 +133,7 @@ struct PPartitionConfig
         //=======================================
 
         bool integrated_mapping;
+        bool only_boundary=false;
         //matrix* D;
 
         //=======================================

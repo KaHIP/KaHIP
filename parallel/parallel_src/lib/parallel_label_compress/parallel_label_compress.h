@@ -60,7 +60,7 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                         const int label_size = 8*sizeof(unsigned long long int) - clz;
 
                         std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
-                                << ", usePEdistances " << usePEdistances << std::endl;
+                                << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
 
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
@@ -99,7 +99,7 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                                 forall_out_edges(G, e, node) {
 //TODO: check if this is correct and improves running time. move it outside of for?
                                                         //if doing refinement and the node is not a boundary node, skip it
-                                                        if( !for_coarsening && !is_boundary(node,G) ){
+                                                        if( config.only_boundary && !for_coarsening && !is_boundary(node,G) ){
                                                             break;
                                                         }
 
