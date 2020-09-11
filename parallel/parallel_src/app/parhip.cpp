@@ -91,7 +91,6 @@ int main(int argn, char **argv) {
 		    PEtree.print();
 		    PEtree.print_allPairDistances();
 		  }
-
 		  
 		//}
 		//TODO: what to do when distance and hierarchy is not given

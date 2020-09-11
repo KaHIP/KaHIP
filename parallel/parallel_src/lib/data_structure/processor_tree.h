@@ -47,61 +47,67 @@ public:
 			return 0;
 		return traversalDistances[j];
 	}
-
-
-	inline int getDistance_xy(int x, int y) const  {
-	  //now depending on x and y, generate distance
-	  int k = 0;
-	  unsigned long long int xor_x_y = x ^ y;
-	  int count_leading_zeros = __builtin_clzll(xor_x_y);
-	  int total_n_bits = 8*sizeof(unsigned long long int);
-	  int clz = total_n_bits - count_leading_zeros -1;
-
-	  // -----
-	  int bit_sec_len = 1;
-	  int groups_size = traversalDescendants.size();
-	  assert ( groups_size == numOfLevels);
-	  for( unsigned k = 0; k < groups_size; k++) {
-	    int tmp = ceil(log2(traversalDescendants[k]));
-	    if (tmp > bit_sec_len) {
-	      bit_sec_len = tmp;
-	    }
-	  }
-	  // -----	  
-	  
-	  if (clz >= 0) {
-	    k = (int)floor(clz / bit_sec_len);
-	    return traversalDistances[k];
-	  } else  {
-	    return 0;
-	  }
-	};
-	
+       
 
 	/**	@brief Function to calculate communication costs between two PUs (based on labels)
 		@param[in] x, y[int]: PU, nodes of the processor tree ( = their label)
 		@brief[out] their distances in the hierarchy of processor tree   
 	*/
-  
-	inline int getDistance_PxPy(int x, int y) const {
 
-	        /* std::cout << "x = " << x << " y = " */
-		/* 	  <<   y << " numPUs = " */
-		/* 	  <<   numPUs  << std::endl; */
-	  
-		assert((x <= numPUs) and (y <= numPUs) );
-		int labelDiff = x ^ y;
-		if(!labelDiff)
-			return 0;
+	inline int getDistance_PxPy(int x, int y) const {
+	        assert((x <= numPUs) and (y <= numPUs) );
+	        int groups_size = traversalDescendants.size();
+		assert ( groups_size == numOfLevels);
+                std::vector<unsigned int>  * compact_bin_id = new std::vector<unsigned int> (numPUs,0);
+
+		int bit_sec_len = 1;
+                for( unsigned k = 0; k < groups_size; k++) {
+		  int tmp = ceil(log2(traversalDescendants[k]));
+		  if (tmp > bit_sec_len) {
+		    bit_sec_len = tmp;
+		  }
+                }
+
+                for (unsigned i = 0; i < numPUs; i++) {
+		  unsigned int lay_id = i;
+                        for(int k=0; k < groups_size; k++) {
+                                int remainder = lay_id % traversalDescendants[k];
+                                lay_id = lay_id / traversalDescendants[k];
+                                (*compact_bin_id)[i] += remainder << (k*bit_sec_len);
+                        }
+                }
+
+                int k = 0;
+                unsigned long long int xor_x_y = (*compact_bin_id)[x] ^ (*compact_bin_id)[y];
+                int count_leading_zeros = __builtin_clzll(xor_x_y);
+                int total_n_bits = 8*sizeof(unsigned long long int);
+                int clz = total_n_bits - count_leading_zeros -1;
+                if (clz >= 0) {
+                        k = (int)floor(clz / bit_sec_len);                      
+                        return traversalDistances[k];
+                } else  {
+		  return 0;
+                }       
+
 		
-		int count_leading_zeros = __builtin_clzll(labelDiff); // index of highest bit
-		int total_n_bits = 8*sizeof(unsigned long long int) - 1;
-		int idx = total_n_bits - count_leading_zeros;
-		assert(idx <= numOfLevels); // index of no more than number of levels
-		if(idx >= traversalDistances.size())
-			return 0;
-		return traversalDistances[idx];
-	}
+ 	}	
+  
+	/* inline int getDistance_PxPy(int x, int y) const { */	  
+	/* 	assert((x <= numPUs) and (y <= numPUs) ); */
+	/* 	int labelDiff = x ^ y; */
+	/* 	if(!labelDiff) */
+	/* 		return 0; */
+	/* 	std::cout << "x = " << x << " y = "  <<   y << " labelDiff = " <<   labelDiff  << std::endl; */
+	/* 	int count_leading_zeros = __builtin_clzll(labelDiff); // index of highest bit */
+	/* 	int total_n_bits = 8*sizeof(unsigned long long int) - 1; */
+	/* 	int idx = total_n_bits - count_leading_zeros; */
+	/* 	assert(idx <= numOfLevels); // index of no more than number of levels */
+	/* 	//std::cout << "idx = " << idx  << " and labelDiff = " */
+	/* 	//	  << labelDiff << std::endl; */
+	/* 	if(idx >= traversalDistances.size()) */
+	/* 		return 0; */
+	/* 	return traversalDistances[idx]; */
+	/* } */
 
 
   
@@ -124,12 +130,13 @@ public:
 	}
 
 
-	void print_allPairDistances() {
+	void print_allPairDistances() const {
+	  
 		std::cout << " ========== Distance Matrix ==========" << std::endl;
 		std::cout << " ===================================== " << std::endl;
 		for( unsigned int i = 0; i < get_numPUs(); i++) {
-			for( unsigned int j = 0; j < get_numPUs(); j++) {
-				std::cout << getDistance_PxPy(i, j) << "  "; //<< std::endl;
+		  for( unsigned int j = 0; j < get_numPUs(); j++) {
+		    std::cout << getDistance_PxPy(i, j) << "  "; // << std::endl; //
 			}
 			std::cout  << std::endl;
 		}
@@ -140,6 +147,7 @@ public:
   
   
 private:
+	
 	unsigned int numOfLevels;
 	unsigned int numPUs = 1;
 	// Q: make distances double?
