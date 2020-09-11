@@ -73,7 +73,7 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
                         config.label_iterations_refinement = 0;
                 }
 
-                vcycle( communicator, config, G ); //uncoarsening, PE tree not used
+                vcycle( communicator, config, G, PEtree); 
 
                 if( rank == ROOT ) {
                         PRINT(std::cout <<  "log>cycle: " << m_cycle << " uncoarsening took " << m_t.elapsed()  << std::endl;)

@@ -31,17 +31,20 @@ class parallel_label_compress {
                         if( config.label_iterations == 0) return;
                         NodeWeight cluster_upperbound = config.upper_bound_cluster;
 
-//TODO: when coarsening, do we need to check all nodes? maybe we can limit to only boundary nodes
+//TODO: when refinement/uncoarsening, do we need to check all nodes? maybe we can limit to only boundary nodes
+// we need to uncoarsen all nodes but not to "refine" all nodes. Uncoarsening is done in parallel_contraction_projection?
                         std::vector< NodeID > permutation( G.number_of_local_nodes() );
                         if( for_coarsening ) {
+std::cout << __LINE__ << ": will coarsen" << std::endl;
                                 node_ordering no; 
-                                no.order_nodes( config, G, permutation); 
+                                no.order_nodes( config, G, permutation);
                         } else {
+std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                 random_functions::permutate_vector_fast( permutation, true);
                         }
 
                         //use distance if integrated mapping is activated and we do uncoarsening
-                        bool usePEdistances = !for_coarsening && config.integrated_mapping ? true : false ;
+                        const bool usePEdistances = !for_coarsening && config.integrated_mapping ? true : false ;
 
                         //checks, keep?
                         if( usePEdistances ){
@@ -53,15 +56,12 @@ class parallel_label_compress {
                                 assert( !usePEdistances );
                         }
 
-                        int clz = __builtin_clzll(G.number_of_global_nodes()); // index of highest bit
+                        const int clz = __builtin_clzll(G.number_of_global_nodes()); // index of highest bit
                         const int label_size = 8*sizeof(unsigned long long int) - clz;
-
-                        processor_tree Tree = PEtree;
-                        Tree.print();
 
                         std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
                                 << ", usePEdistances " << usePEdistances << std::endl;
-                        Tree.print();
+                        //Tree.print();
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
@@ -97,6 +97,12 @@ class parallel_label_compress {
 
                                         } else {
                                                 forall_out_edges(G, e, node) {
+//TODO: check if this is correct and improves running time. move it outside of for?
+                                                        //if doing refinement and the node is not a boundary node, skip it
+                                                        if( !for_coarsening && !is_boundary(node,G) ){
+                                                            break;
+                                                        }
+
                                                         const NodeID target             = G.getEdgeTarget(e);
                                                         const PartitionID cur_block     = G.getNodeLabel(target);
                                                         //PartitionID cur_value;
@@ -106,15 +112,14 @@ class parallel_label_compress {
 //TODO: verify that these are the correct variables
 //TODO: take minimum if PU distances are used or calculate negative
 //TODO: when coarsening, which are the blocks? is there a partition?
-//TODO: change when for_coarsening
 //TODO: does the hash map accepts negative values?
                                                                 cur_value += (-1) * G.getEdgeWeight(e) * PEtree.getDistance_PxPy( old_block, cur_block) ;
                                                         }else{
                                                                 cur_value += G.getEdgeWeight(e);
                                                         }
-
+//printf("%d %lld\n", __LINE__, cur_value );
                                                         hash_map[cur_block] = cur_value;
-
+//printf("%d %lld   v1=%lld, v2=%lld\n", __LINE__, hash_map[cur_block], node, target );
                                                         bool improvement = cur_value > max_value;
                                                         improvement |= cur_value == max_value && random_functions::nextBool();
 
@@ -148,6 +153,19 @@ class parallel_label_compress {
                         }
                 }
 
+        private:
+                bool is_boundary(NodeID node, parallel_graph_access & G) {
+
+                        PartitionID my_part = G.getNodeLabel(node);
+
+                        forall_out_edges(G, e, node) {
+                                NodeID target = G.getEdgeTarget(e);
+                                if ( G.getNodeLabel(target)!=my_part ) {
+                                        return true;
+                                }
+                        } endfor
+                        return false;
+                }
 };
 
 
