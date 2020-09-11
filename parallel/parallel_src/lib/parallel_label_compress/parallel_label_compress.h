@@ -38,14 +38,14 @@ class parallel_label_compress {
                         } else {
                                 random_functions::permutate_vector_fast( permutation, true);
                         }
-			
-			// const int label_size = std::ceil( std::log2( G.number_of_global_nodes() ) ) +1;
 
-			int clz = __builtin_clzll(G.number_of_global_nodes()); // index of highest bit
-			const int label_size = 8*sizeof(unsigned long long int) - clz; 	      	
-			
-			std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
-				  << ", config.integrated_mapping " << config.integrated_mapping << std::endl;
+                        // const int label_size = std::ceil( std::log2( G.number_of_global_nodes() ) ) +1;
+
+                        int clz = __builtin_clzll(G.number_of_global_nodes()); // index of highest bit
+                        const int label_size = 8*sizeof(unsigned long long int) - clz; 	      	
+
+                        std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
+                                << ", config.integrated_mapping " << config.integrated_mapping << std::endl;
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
@@ -86,12 +86,8 @@ class parallel_label_compress {
                                                         if( !config.integrated_mapping ){
                                                             hash_map[cur_block] += G.getEdgeWeight(e);
                                                         }else{
-//TODO: verify that these are the correct variables
-
-							  hash_map[cur_block] +=
-						 
-							    G.getEdgeWeight(e) * PEtree.getDistance_xy( label_size, old_block, cur_block) ;
-							  
+                                                            //TODO: verify that these are the correct variables
+                                                            hash_map[cur_block] += G.getEdgeWeight(e) * PEtree.getDistance_xy( label_size, old_block, cur_block) ;
                                                         }
                                                         const PartitionID cur_value     = hash_map[cur_block];
 
@@ -107,7 +103,7 @@ class parallel_label_compress {
                                                         bool balancing = own_block_balanced || cur_block != old_block;
                                                         if( improvement  && sizeconstraint && cycle && balancing) {
                                                                 max_value = cur_value;
-								max_block = cur_block;
+                                                                max_block = cur_block;
                                                         }
                                                 } endfor
                                         }
