@@ -109,10 +109,7 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                                         long long cur_value = 0 ;
 
                                                         if( usePEdistances ){
-//TODO: verify that these are the correct variables
-//TODO: take minimum if PU distances are used or calculate negative
 //TODO: when coarsening, which are the blocks? is there a partition?
-//TODO: does the hash map accepts negative values?
 							       /* std::cout <<  " SHOW : node (" */
 							       /* 		 <<  node << ", " << target << ")  ->  (" */
 							       /* 		 << old_block << ", " << cur_block <<  ")"  << std::endl; */
@@ -121,10 +118,9 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                                         }else{
                                                                 cur_value += G.getEdgeWeight(e);
                                                         }
-//printf("%d %lld\n", __LINE__, cur_value );
+
                                                         hash_map[cur_block] = cur_value;
-// if( !for_coarsening )
-// printf("%d %lld   v1=%lld, v2=%lld\n", __LINE__, hash_map[cur_block], node, target );
+
                                                         bool improvement = cur_value > max_value;
                                                         improvement |= cur_value == max_value && random_functions::nextBool();
 
