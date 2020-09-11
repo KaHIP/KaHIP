@@ -75,7 +75,7 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
                         config.label_iterations_refinement = 0;
                 }
 
-                vcycle( communicator, config, G, PEtree ); // NOT JUST UNCOARSENING! //uncoarsening, PE tree not used
+                vcycle( communicator, config, G, PEtree); 
 
                 if( rank == ROOT ) {
                         PRINT(std::cout <<  "log>cycle: " << m_cycle << " uncoarsening took " << m_t.elapsed()  << std::endl;)
@@ -162,7 +162,8 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         parallel_label_compress< linear_probing_hashmap  > plc;
 	// TODO: decide if we want to pass PEtree as an argument during coarsening.
 	// For now we do think there is no need ...
-        plc.perform_parallel_label_compression ( config, G, true , false, PEtree);
+        //plc.perform_parallel_label_compression ( config, G, true , false, PEtree);
+	plc.perform_parallel_label_compression ( config, G, true );
 
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
