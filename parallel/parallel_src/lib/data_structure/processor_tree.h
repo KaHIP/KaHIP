@@ -34,7 +34,7 @@ public:
 		@brief[out] their communication cost based on the distances in the hierarchy of processor tree   
 	*/
   
-	inline int getDistance_xy(int label_size, int x, int y) {
+	inline int getDistance_xy(int label_size, int x, int y) const  {
 		int labelDiff = x ^ y;
 		if(!labelDiff)
 			return 0;
@@ -49,7 +49,7 @@ public:
 	}
 
 
-	inline int getDistance_xy(int x, int y) {
+	inline int getDistance_xy(int x, int y) const  {
 	  //now depending on x and y, generate distance
 	  int k = 0;
 	  unsigned long long int xor_x_y = x ^ y;
@@ -83,7 +83,7 @@ public:
 		@brief[out] their distances in the hierarchy of processor tree   
 	*/
   
-	inline int getDistance_PxPy(int x, int y) {
+	inline int getDistance_PxPy(int x, int y) const {
 	        std::cout << "x = " << x << " y = "
 			  <<   y << " numPUs = "
 			  <<   numPUs  << std::endl;
@@ -104,10 +104,10 @@ public:
 
 
   
-	inline vector<int> get_traversalDistances() {return traversalDistances;};
-	inline vector<int> get_traversalDescendants() {return traversalDescendants;};
-	inline unsigned int get_numOfLevels() {return numOfLevels;};
-	inline unsigned int get_numPUs() {return numPUs;};
+	inline vector<int> get_traversalDistances() const {return traversalDistances;};
+	inline vector<int> get_traversalDescendants() const  {return traversalDescendants;};
+	inline unsigned int get_numOfLevels() const {return numOfLevels;};
+	inline unsigned int get_numPUs() const {return numPUs;};
 
 	void print() {
         assert( traversalDistances.size()==get_numOfLevels() );
