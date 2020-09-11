@@ -56,9 +56,10 @@ class parallel_label_compress {
                         int clz = __builtin_clzll(G.number_of_global_nodes()); // index of highest bit
                         const int label_size = 8*sizeof(unsigned long long int) - clz;
 
-                        std::cout << __FILE__ <<": "<< G.number_of_global_nodes() << " bit label size = " << label_size
+                        std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
                                 << ", usePEdistances " << usePEdistances << std::endl;
-                        
+                        PEtree.print();
+
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
@@ -96,7 +97,7 @@ class parallel_label_compress {
                                                         const NodeID target             = G.getEdgeTarget(e);
                                                         const PartitionID cur_block     = G.getNodeLabel(target);
                                                         //PartitionID cur_value;
-                                                        long long cur_value;
+                                                        long long cur_value = 0 ;
 
                                                         if( usePEdistances ){
 //TODO: verify that these are the correct variables
@@ -105,10 +106,10 @@ class parallel_label_compress {
 //TODO: change when for_coarsening
 //TODO: does the hash map accepts negative values?
                                                                 cur_value += (-1) * G.getEdgeWeight(e) * PEtree.getDistance_PxPy( old_block, cur_block) ;
-printf("%lld",cur_value);
                                                         }else{
                                                                 cur_value += G.getEdgeWeight(e);
                                                         }
+
                                                         hash_map[cur_block] = cur_value;
 
                                                         bool improvement = cur_value > max_value;

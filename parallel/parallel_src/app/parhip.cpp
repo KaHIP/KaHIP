@@ -91,7 +91,10 @@ int main(int argn, char **argv) {
 		    PEtree.print();
 		    PEtree.print_allPairDistances();
 		  }
-		   		    
+
+
+		  PEtree.print();
+		  
 		//}
 		//TODO: what to do when distance and hierarchy is not given
 	        //update: flag partition_config.integrated_mapping is set to true; use this flag later in refinement
@@ -156,8 +159,8 @@ int main(int argn, char **argv) {
 
                 MPI_Barrier(communicator);
 
-		// mapping after partitioning ...
 
+		PEtree.print();
                 double running_time = t.elapsed();
                 distributed_quality_metrics qm;
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
