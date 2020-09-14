@@ -66,7 +66,9 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
+
                         for( ULONG i = 0; i < config.label_iterations; i++) {
+                                ULONG numChanges = 0;
                                 NodeID prev_node = 0;
                                 forall_local_nodes(G, rnode) {
                                         const NodeID node = permutation[rnode]; // use the current random node
@@ -75,7 +77,7 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                         //second sweep for finding max and resetting array
                                         const PartitionID old_block   = G.getNodeLabel(node);
                                         const NodeWeight  node_weight = G.getNodeWeight(node);
-                                        long long max_value   = std::numeric_limits<long long>::min();
+                                        long long max_value = std::numeric_limits<long long>::lowest();
                                         PartitionID max_block   = G.getNodeLabel(node);
 
                                         bool own_block_balanced = G.getBlockSize(old_block) <= cluster_upperbound || !balance;
@@ -96,6 +98,12 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                                 }
 
                                         } else {
+
+
+multipling the distance by -1 and getting the maximum does not work:
+the distance with the nodes in the same block will be always larger.
+Need to create two function to be called here, one for coarsening and one for uncoarsening
+
                                                 forall_out_edges(G, e, node) {
 //TODO: check if this is correct and improves running time. move it outside of for?
                                                         //if doing refinement and the node is not a boundary node, skip it
@@ -110,11 +118,14 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
 
                                                         if( usePEdistances ){
 //TODO: when coarsening, which are the blocks? is there a partition?
-							       /* std::cout <<  " SHOW : node (" */
-							       /* 		 <<  node << ", " << target << ")  ->  (" */
-							       /* 		 << old_block << ", " << cur_block <<  ")"  << std::endl; */
-                                                                cur_value += (-1) * G.getEdgeWeight(e) * PEtree.getDistance_PxPy(old_block, cur_block) ;
-								
+							        // std::cout <<  " SHOW : node (" 
+							        // 		 <<  node << ", " << target << ")  ->  (" 
+							        // 		 << old_block << ", " << cur_block <<  ")"  << std::endl; 
+                                                                //if target is in the same block we count the pu distance as 1, not 0;
+//TODO: change it in the getDistance_PxPy() to return 1 instead of 0?
+                                                                long PUdist = PEtree.getDistance_PxPy(old_block, cur_block) ? PEtree.getDistance_PxPy(old_block, cur_block) : 1;
+                                                                cur_value += (-1) * G.getEdgeWeight(e) * PUdist ;
+
                                                         }else{
                                                                 cur_value += G.getEdgeWeight(e);
                                                         }
@@ -131,6 +142,8 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                                         cycle |= G.getSecondPartitionIndex( node ) == G.getSecondPartitionIndex(target);
 
                                                         bool balancing = own_block_balanced || cur_block != old_block;
+if(!for_coarsening) std::cout<< cur_value << " _ " << max_value << " impr " << improvement << ", sizec " << sizeconstraint 
+    << ", cycle " << cycle << ", bal " << balancing << std::endl ;
                                                         if( improvement  && sizeconstraint && cycle && balancing) {
                                                                 max_value = cur_value;
                                                                 max_block = cur_block;
@@ -143,15 +156,17 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
 
                                                 G.setBlockSize(old_block, G.getBlockSize(old_block) - node_weight);
                                                 G.setBlockSize(max_block, G.getBlockSize(max_block) + node_weight);
+                                                numChanges++;
                                         }
 
                                         prev_node = node;
                                         G.update_ghost_node_data(); 
                                         hash_map.clear();
 
-                                } endfor
+                                } endfor //for G nodes
                                 G.update_ghost_node_data_finish(); 
-                        }
+std::cout << "in iteration round " << i << ", we moved " << numChanges << " vertices" <<std::endl;
+                        }//for( ULONG i = 0; i < config.label_iterations; i++)
                 }
 
         private:
