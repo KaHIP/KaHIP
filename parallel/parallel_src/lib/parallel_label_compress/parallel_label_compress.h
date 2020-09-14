@@ -102,6 +102,7 @@ std::cout << __LINE__ << ": will refine" << std::endl;
 
                                         } else {
                                                 if( usePEdistances){
+                                                        assert( !config.vcycle );
                                                         max_block = refine_with_PU_distances(node, G, PEtree, config.only_boundary, cluster_upperbound);
                                                 }else{
                                                         max_block = coarse_or_refine(node, G, hash_map, cluster_upperbound, own_block_balanced, config.vcycle );
@@ -164,45 +165,53 @@ std::cout << __LINE__ << ": will refine" << std::endl;
                         std::map<PartitionID, EdgeWeight> ngbr_blocks;
 
                         forall_out_edges(G, e, node) {
-                            const NodeID target             = G.getEdgeTarget(e);
-                            const PartitionID ngbr_block    = G.getNodeLabel(target);
-                            ngbr_blocks[ngbr_block]        += G.getEdgeWeight(e);
+                                const NodeID target             = G.getEdgeTarget(e);
+                                const PartitionID ngbr_block    = G.getNodeLabel(target);
+                                ngbr_blocks[ngbr_block]        += G.getEdgeWeight(e);
                         }endfor
 
                         //go over the map, assign this vertex to all neighboring blocks and each time
                         //calculate the communication costs 
                         EdgeWeight min_comm_cost = std::numeric_limits<EdgeWeight>::max();
-PartitionID best_block = old_block;
+                        PartitionID best_block = old_block;
 
                         for( auto const& x : ngbr_blocks ){
-                            const PartitionID new_block = x.first;
-                            EdgeWeight comm_cost = 0;
-
-//check: if moving to new block is gonna cross the weight bound, do not consider this move
-bool sizeconstraint = G.getBlockSize(new_block) + node_weight <= cluster_upperbound;
-if( !sizeconstraint ){
-    continue;
-}
-
-                            //go over the map again to calculate the communication cost for the case
-                            //that the node is moved to new_block
-                            for( auto const& xx : ngbr_blocks ){
-                                const PartitionID ngbr_block = xx.first;
-                                const EdgeWeight comm_vol = xx.second;
-                                //skip costs for the same block
-                                if( ngbr_block==new_block ){
-                                    continue;
+                                //the candidate new block for the node
+                                const PartitionID new_block = x.first;
+//std::cout << __LINE__ <<": node " << node << ", old block = " << old_block << ", candidate new block " << new_block;
+                                //check: if moving to new block is gonna violate the weight bound, do not consider this move
+                                // if the new block is the old, then the size constraint is not violated
+                                bool sizeconstraint = new_block==old_block || G.getBlockSize(new_block) + node_weight <= cluster_upperbound;
+                                if( !sizeconstraint ){
+                                       continue;
                                 }
-                                //val is the weight of the edge
-                                comm_cost += PEtree.getDistance_PxPy(new_block, ngbr_block) * comm_vol;
-                            }
 
-                            if( comm_cost<min_comm_cost ){
-                                min_comm_cost = comm_cost;
-                                best_block = new_block;
-                            }
+                                EdgeWeight comm_cost = 0;
+                                //go over the map again to calculate the communication cost for the case
+                                //that the node is moved to new_block
+                                for( auto const& xx : ngbr_blocks ){
+                                        const PartitionID ngbr_block = xx.first;
+                                        const EdgeWeight comm_vol = xx.second;
+                                        //skip costs for the same block
+                                        if( ngbr_block==new_block ){
+                                            continue;
+                                        }
+                                        comm_cost += PEtree.getDistance_PxPy(new_block, ngbr_block) * comm_vol;
+                                }
+
+                                //if cost is equal the min, improve or not at random
+                                bool improvement = comm_cost < min_comm_cost;
+                                improvement |= comm_cost == min_comm_cost && random_functions::nextBool();
+
+                                if( improvement ){
+                                        min_comm_cost = comm_cost;
+                                        best_block = new_block;
+                                }
                         }
 
+if(best_block!=old_block){
+    std::cout<< "node " << node << " will move from block " << old_block << " to " << best_block << " with min cost " << min_comm_cost  << " num ngbr blocks = " << ngbr_blocks.size() << endl;
+}
                         return best_block;
                 }
 
