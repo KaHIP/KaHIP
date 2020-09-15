@@ -9,6 +9,7 @@
 #define PARALLEL_LABEL_COMPRESS_9ME4H8DK
 
 #include <math.h>
+#include <map>
 
 #include "data_structure/parallel_graph_access.h"
 #include "data_structure/processor_tree.h"
