@@ -30,7 +30,7 @@ public:
 	EdgeWeight comm_bnd( PPartitionConfig & config, parallel_graph_access & G, MPI_Comm communicator );
 	EdgeWeight comm_vol_dist( parallel_graph_access & G, MPI_Comm communicator );
 
-	EdgeWeight total_qap( parallel_graph_access & G, processor_tree &PEtree, MPI_Comm communicator);
+	EdgeWeight total_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator);
 };
 
 

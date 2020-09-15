@@ -214,6 +214,8 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
                 initial_partitioning_algorithm ip;
                 ip.perform_partitioning( communicator, config, Q );
 
+		
+
 #ifndef NOOUTPUT
                 if( rank == ROOT ) {
                         std::cout <<  "log>cycle: " << m_cycle << " initial partitioning took " <<  t.elapsed() << std::endl;
@@ -240,6 +242,14 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         }
 #endif
 
+
+	distributed_quality_metrics qm;
+	EdgeWeight qap = qm.total_qap( G, PEtree, communicator );
+	if( rank == ROOT ) {
+	  std::cout <<  "log>cycle:  after partitioning qap " <<  qap << std::endl;
+	}
+
+	
         t.restart();
         config.label_iterations = config.label_iterations_refinement;
 
