@@ -28,6 +28,7 @@ int parse_parameters(int argn, char **argv,
         // Setup argtable parameters.
         struct arg_lit *help                           = arg_lit0(NULL, "help","Print help.");
         struct arg_str *filename                       = arg_str1(NULL, NULL, "FILE", "Path to graph file to partition.");
+	struct arg_str *filename_output                      = arg_str0(NULL, "output_filename", NULL, "Specify the name of the output file (that contains the partition).");
         struct arg_str *input_partition_filename       = arg_str1(NULL, "input_partition", "FILE", "Path to partition file to convert.");
         struct arg_int *user_seed                      = arg_int0(NULL, "seed", NULL, "Seed to use for the PRNG.");
         struct arg_int *k                              = arg_int1(NULL, "k", NULL, "Number of blocks to partition the graph.");
@@ -67,7 +68,7 @@ int parse_parameters(int argn, char **argv,
         // Define argtable.
         void* argtable[] = {
 #ifdef PARALLEL_LABEL_COMPRESSION
-                help, filename, user_seed, k, inbalance, preconfiguration, vertex_degree_weights,
+	  help, filename, filename_output, user_seed, k, inbalance, preconfiguration, vertex_degree_weights,
                 save_partition, save_partition_binary, integrated_mapping, hierarchy_parameter_string, distance_parameter_string,
                 only_boundary, num_vcycles, label_iterations_refinement, label_iterations_coarsening, stop_factor,
                 no_refinement_in_last_iteration,
@@ -171,6 +172,10 @@ int parse_parameters(int argn, char **argv,
 	if(save_partition->count > 0) {
 		partition_config.save_partition = true;
 	}
+
+	if(filename_output->count > 0) {
+	        partition_config.filename_output = filename_output->sval[0];
+        }
 
 	if(save_partition_binary->count > 0) {
 		partition_config.save_partition_binary = true;

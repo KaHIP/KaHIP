@@ -86,6 +86,7 @@ inline void configuration::standard( PPartitionConfig & partition_config ) {
         partition_config.n                                      = 0;
 	partition_config.save_partition 			= false;
 	partition_config.save_partition_binary 			= false;
+	partition_config.filename_output                        = "";
         partition_config.vertex_degree_weights                  = false;
         partition_config.converter_evaluate                     = false;
 }

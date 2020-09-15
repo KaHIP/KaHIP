@@ -205,6 +205,19 @@ int main(int argn, char **argv) {
                         pvio.writePartitionSimpleParallel(G, filename);
                 }
 
+		// write the partition to the disc 
+		std::stringstream filename;
+		if(!partition_config.filename_output.compare("")) {
+		  filename << "tmppartition" << partition_config.k;
+		} else {
+		  filename << partition_config.filename_output;
+		}
+		parallel_vector_io pvio;
+		pvio.writePartitionSimpleParallel(G, filename.str());
+		if( rank == ROOT ) {
+		  std::cout << "writing partition to " << filename.str() << " ... " << std::endl;
+		}
+
                 if( partition_config.save_partition_binary ) {
                         parallel_vector_io pvio;
                         std::string filename("tmppartition.binp");
