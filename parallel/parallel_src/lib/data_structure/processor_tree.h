@@ -19,9 +19,9 @@ public:
 	*/
 	processor_tree(const vector<int> &distances, const vector<int> &descendants ) {
         assert( distances.size() == descendants.size());
-		traversalDistances = distances;
-		traversalDescendants = descendants;
-		numOfLevels = distances.size();
+		traversalDistances = distances.size()==0 ? std::vector<int>{0} : distances;
+		traversalDescendants = descendants.size()==0 ? std::vector<int>{0}  : descendants;
+		numOfLevels = distances.size()==0 ? 1 : distances.size();
 		for( unsigned int i = 0; i < get_numOfLevels(); i++)
 			numPUs *= traversalDescendants[i];
 	}
@@ -117,8 +117,8 @@ public:
 	inline unsigned int get_numPUs() const {return numPUs;};
 
 	void print() const {
-	  assert( traversalDistances.size()==get_numOfLevels() );
-	  assert( traversalDescendants.size()==get_numOfLevels() );
+	    assert( traversalDistances.size()==get_numOfLevels() );
+	    assert( traversalDescendants.size()==get_numOfLevels() );
 		std::cout << " ===== Printing Tree Information ===== " << std::endl;
 		for( unsigned int i = 0; i < get_numOfLevels(); i++) {
 			std::cout << "Level ==" << i << "== Distance : "
