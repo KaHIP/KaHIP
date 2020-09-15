@@ -31,15 +31,13 @@ class parallel_label_compress {
                         if( config.label_iterations == 0) return;
                         NodeWeight cluster_upperbound = config.upper_bound_cluster;
 
-//TODO: when refinement/uncoarsening, do we need to check all nodes? maybe we can limit to only boundary nodes
-// we need to uncoarsen all nodes but not to "refine" all nodes. Uncoarsening is done in parallel_contraction_projection?
                         std::vector< NodeID > permutation( G.number_of_local_nodes() );
                         if( for_coarsening ) {
-std::cout << __LINE__ << ": will coarsen" << std::endl;
+                                //std::cout <<    ": will coarsen" << std::endl;
                                 node_ordering no; 
                                 no.order_nodes( config, G, permutation);
                         } else {
-std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
+                                //std::cout << __LINE__ << ": will refine" << std::endl;
                                 random_functions::permutate_vector_fast( permutation, true);
                         }
 
@@ -56,26 +54,30 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                 assert( !usePEdistances );
                         }
 
-                        const int clz = __builtin_clzll(G.number_of_global_nodes()); // index of highest bit
-                        const int label_size = 8*sizeof(unsigned long long int) - clz;
-
-                        std::cout << "TEST print: "<< G.number_of_global_nodes() << " bit label size = " << label_size
-                                << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
-
+                        // std::cout << "TEST print: "<< G.number_of_global_nodes()
+                        //         << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
+
                         for( ULONG i = 0; i < config.label_iterations; i++) {
+                                ULONG numChanges = 0;
                                 NodeID prev_node = 0;
                                 forall_local_nodes(G, rnode) {
                                         const NodeID node = permutation[rnode]; // use the current random node
+
+                                        //TODO: evaluate how this affects quality and running time.
+                                        //when NOT coarsening and we check only boundary nodes and this node is NOT a boundary node, skip it
+                                        if( !for_coarsening && config.only_boundary && !is_boundary(node,G) ){
+                                            continue;
+                                        }
 
                                         //move the node to the cluster that is most common in the neighborhood
                                         //second sweep for finding max and resetting array
                                         const PartitionID old_block   = G.getNodeLabel(node);
                                         const NodeWeight  node_weight = G.getNodeWeight(node);
-                                        long long max_value   = std::numeric_limits<long long>::min();
+                                        
                                         PartitionID max_block   = G.getNodeLabel(node);
 
                                         bool own_block_balanced = G.getBlockSize(old_block) <= cluster_upperbound || !balance;
@@ -96,46 +98,13 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                                                 }
 
                                         } else {
-                                                forall_out_edges(G, e, node) {
-//TODO: check if this is correct and improves running time. move it outside of for?
-                                                        //if doing refinement and the node is not a boundary node, skip it
-                                                        if( config.only_boundary && !for_coarsening && !is_boundary(node,G) ){
-                                                            break;
-                                                        }
-
-                                                        const NodeID target             = G.getEdgeTarget(e);
-                                                        const PartitionID cur_block     = G.getNodeLabel(target);
-                                                        //PartitionID cur_value;
-                                                        long long cur_value = 0 ;
-
-                                                        if( usePEdistances ){
-//TODO: when coarsening, which are the blocks? is there a partition?
-							       /* std::cout <<  " SHOW : node (" */
-							       /* 		 <<  node << ", " << target << ")  ->  (" */
-							       /* 		 << old_block << ", " << cur_block <<  ")"  << std::endl; */
-                                                                cur_value += (-1) * G.getEdgeWeight(e) * PEtree.getDistance_PxPy(old_block, cur_block) ;
-								
-                                                        }else{
-                                                                cur_value += G.getEdgeWeight(e);
-                                                        }
-
-                                                        hash_map[cur_block] = cur_value;
-
-                                                        bool improvement = cur_value > max_value;
-                                                        improvement |= cur_value == max_value && random_functions::nextBool();
-
-                                                        bool sizeconstraint = G.getBlockSize(cur_block) + node_weight <= cluster_upperbound;
-                                                        sizeconstraint |= cur_block == old_block;
-
-                                                        bool cycle = !config.vcycle;
-                                                        cycle |= G.getSecondPartitionIndex( node ) == G.getSecondPartitionIndex(target);
-
-                                                        bool balancing = own_block_balanced || cur_block != old_block;
-                                                        if( improvement  && sizeconstraint && cycle && balancing) {
-                                                                max_value = cur_value;
-                                                                max_block = cur_block;
-                                                        }
-                                                } endfor
+                                                if( usePEdistances){
+                                                        assert( !config.vcycle );
+                                                        assert( config.only_boundary ? is_boundary(node,G):true );
+                                                        max_block = refine_with_PU_distances(node, G, PEtree, cluster_upperbound);
+                                                }else{
+                                                        max_block = coarse_or_refine(node, G, hash_map, cluster_upperbound, own_block_balanced, config.vcycle );
+                                                }
                                         }
 
                                         if( old_block != max_block ) {
@@ -143,16 +112,19 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
 
                                                 G.setBlockSize(old_block, G.getBlockSize(old_block) - node_weight);
                                                 G.setBlockSize(max_block, G.getBlockSize(max_block) + node_weight);
+                                                numChanges++;
                                         }
 
                                         prev_node = node;
                                         G.update_ghost_node_data(); 
                                         hash_map.clear();
 
-                                } endfor
+                                } endfor //for G nodes
                                 G.update_ghost_node_data_finish(); 
-                        }
+                                //std::cout << "in iteration round " << i << ", we moved " << numChanges << " vertices" <<std::endl;
+                        }//for( ULONG i = 0; i < config.label_iterations; i++)
                 }
+
 
         private:
                 bool is_boundary(NodeID node, parallel_graph_access & G) {
@@ -167,6 +139,110 @@ std::cout << __LINE__ << ": will UNcoarsen" << std::endl;
                         } endfor
                         return false;
                 }
+
+
+                PartitionID refine_with_PU_distances(
+                        const NodeID& node,
+                        parallel_graph_access& G,
+                        const processor_tree& PEtree,
+                        const NodeWeight& cluster_upperbound
+                ){
+
+                        const PartitionID old_block   = G.getNodeLabel(node);
+                        const NodeWeight  node_weight = G.getNodeWeight(node);
+
+                        //create the map with all neighboring blocks and the sum of the edge weights
+                        std::map<PartitionID, EdgeWeight> ngbr_blocks;
+
+                        forall_out_edges(G, e, node) {
+                                const NodeID target             = G.getEdgeTarget(e);
+                                const PartitionID ngbr_block    = G.getNodeLabel(target);
+                                ngbr_blocks[ngbr_block]        += G.getEdgeWeight(e);
+                        }endfor
+
+                        //go over the map, assign this vertex to all neighboring blocks and each time
+                        //calculate the communication costs 
+                        EdgeWeight min_comm_cost = std::numeric_limits<EdgeWeight>::max();
+                        PartitionID best_block = old_block;
+
+                        for( auto const& x : ngbr_blocks ){
+                                //the candidate new block for the node
+                                const PartitionID new_block = x.first;
+                                //check: if moving to new block is gonna violate the weight bound, do not consider this move
+                                // if the new block is the old, then the size constraint is not violated
+                                bool sizeconstraint = new_block==old_block || G.getBlockSize(new_block) + node_weight <= cluster_upperbound;
+                                if( !sizeconstraint ){
+                                       continue;
+                                }
+
+                                EdgeWeight comm_cost = 0;
+                                //go over the map again to calculate the communication cost for the case
+                                //that the node is moved to new_block
+                                for( auto const& xx : ngbr_blocks ){
+                                        const PartitionID ngbr_block = xx.first;
+                                        const EdgeWeight comm_vol = xx.second;
+                                        //skip costs for the same block
+                                        if( ngbr_block==new_block ){
+                                            continue;
+                                        }
+                                        comm_cost += PEtree.getDistance_PxPy(new_block, ngbr_block) * comm_vol;
+                                }
+
+                                //if cost is equal the min, improve or not at random
+                                bool improvement = comm_cost < min_comm_cost;
+                                improvement |= comm_cost == min_comm_cost && random_functions::nextBool();
+
+                                if( improvement ){
+                                        min_comm_cost = comm_cost;
+                                        best_block = new_block;
+                                }
+                        }
+
+                        // if(best_block!=old_block){
+                        //     std::cout<< "node " << node << " will move from block " << old_block << " to " << best_block << " with min cost " << min_comm_cost  << " num ngbr blocks = " << ngbr_blocks.size() << endl;
+                        // }
+                        return best_block;
+                }
+
+
+                PartitionID coarse_or_refine(
+                        const NodeID& node,
+                        parallel_graph_access& G,
+                        hmap_wrapper<T>& hash_map,
+                        const NodeWeight& cluster_upperbound,
+                        const bool& own_block_balanced,
+                        const bool& vcycle
+                ){
+                        PartitionID max_block           = G.getNodeLabel(node);
+                        PartitionID max_value           = 0;
+                        const NodeWeight node_weight    = G.getNodeWeight(node);
+                        const PartitionID old_block     = G.getNodeLabel(node);
+
+                        forall_out_edges(G, e, node) {
+                                NodeID target             = G.getEdgeTarget(e);
+                                PartitionID cur_block     = G.getNodeLabel(target);
+                                hash_map[cur_block] += G.getEdgeWeight(e);
+                                PartitionID cur_value     = hash_map[cur_block];
+
+                                bool improvement = cur_value > max_value;
+                                improvement |= cur_value == max_value && random_functions::nextBool();
+
+                                bool sizeconstraint = G.getBlockSize(cur_block) + node_weight <= cluster_upperbound;
+                                sizeconstraint |= cur_block == old_block;
+
+                                bool cycle = !vcycle;
+                                cycle |= G.getSecondPartitionIndex( node ) == G.getSecondPartitionIndex(target);
+
+                                bool balancing = own_block_balanced || cur_block != old_block;
+                                if( improvement  && sizeconstraint && cycle && balancing) {
+                                        max_value = cur_value;
+                                        max_block = cur_block;
+                                }
+                        } endfor
+
+                        return max_block;
+                }
+
 };
 
 

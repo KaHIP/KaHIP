@@ -73,7 +73,7 @@ inline void configuration::standard( PPartitionConfig & partition_config ) {
         partition_config.num_vcycles                            = 2;
         partition_config.num_tries                              = 10;
         partition_config.node_ordering                          = DEGREE_NODEORDERING;
-        partition_config.no_refinement_in_last_iteration        = false;
+        partition_config.no_refinement_in_last_iteration        = true;
         partition_config.ht_fill_factor                         = 1.6;
         partition_config.eco                                    = false;
 	partition_config.binary_io_window_size                  = 64;
