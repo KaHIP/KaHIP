@@ -36,6 +36,11 @@ int main(int argn, char **argv) {
         PPartitionConfig partition_config;
         std::string graph_filename;
 
+        std::string callingCommand = "";
+        for (int i = 0; i < argn; i++) {
+            callingCommand += std::string(argv[i]) + " ";
+        }  
+
         int ret_code = parse_parameters(argn, argv, 
                         partition_config, 
                         graph_filename); 
@@ -54,7 +59,10 @@ int main(int argn, char **argv) {
         MPI_Barrier(MPI_COMM_WORLD);
         {
                 t.restart();
-                if( rank == ROOT ) std::cout <<  "running collective dummy operations ";
+                if( rank == ROOT ){
+                        std::cout << "Calling command: " << callingCommand << std::endl;
+                        std::cout << "running collective dummy operations ";
+                    }
                 dummy_operations dop;
                 dop.run_collective_dummy_operations();
         }
@@ -84,17 +92,16 @@ int main(int argn, char **argv) {
                 if( rank == ROOT ) std::cout <<  "n:" <<  G.number_of_global_nodes() << " m: " <<  G.number_of_global_edges()  << std::endl;
 
 
-		/* mapping activity : read processor tree if given */		
-		//if (partition_config.integrated_mapping) {	       
-		  processor_tree PEtree( partition_config.distances, partition_config.group_sizes );
-		  if( rank == ROOT ) {
-		    PEtree.print();
-		    PEtree.print_allPairDistances();
-		  }
-		  
-		//}
-		//TODO: what to do when distance and hierarchy is not given
-	        //update: flag partition_config.integrated_mapping is set to true; use this flag later in refinement
+                /* mapping activity : read processor tree if given */
+                //if (partition_config.integrated_mapping)
+                processor_tree PEtree( partition_config.distances, partition_config.group_sizes );
+                if( rank == ROOT ) {
+                        PEtree.print();
+                        PEtree.print_allPairDistances();
+                }
+
+                //TODO: what to do when distance and hierarchy is not given
+                //update: flag partition_config.integrated_mapping is set to true; use this flag later in refinement
                 
                 random_functions::setSeed(partition_config.seed);
                 parallel_graph_access::set_comm_rounds( partition_config.comm_rounds/size );
