@@ -68,6 +68,8 @@ struct PPartitionConfig
 
         std::string graph_filename;
 
+        std::string filename_output;
+
         std::string input_partition_filename;
 
         int evolutionary_time_limit;

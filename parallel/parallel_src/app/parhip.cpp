@@ -162,8 +162,8 @@ int main(int argn, char **argv) {
                 distributed_quality_metrics qm;
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
 		EdgeWeight qap = 0;
-		if (partition_config.integrated_mapping)
-		  qap = qm.total_qap( G, PEtree, communicator );
+		// if (partition_config.integrated_mapping)
+		qap = qm.total_qap( G, PEtree, communicator );
 		double balance  = qm.balance( partition_config, G, communicator );
                 PRINT(double balance_load  = qm.balance_load( partition_config, G, communicator );)
                 PRINT(double balance_load_dist  = qm.balance_load_dist( partition_config, G, communicator );)
@@ -204,6 +204,19 @@ int main(int argn, char **argv) {
                         std::string filename(graph_filename+".txtpart");
                         pvio.writePartitionSimpleParallel(G, filename);
                 }
+
+		// write the partition to the disc 
+		std::stringstream filename;
+		if(!partition_config.filename_output.compare("")) {
+		  filename << "tmppartition" << partition_config.k;
+		} else {
+		  filename << partition_config.filename_output;
+		}
+		parallel_vector_io pvio;
+		pvio.writePartitionSimpleParallel(G, filename.str());
+		if( rank == ROOT ) {
+		  std::cout << "writing partition to " << filename.str() << " ... " << std::endl;
+		}
 
                 if( partition_config.save_partition_binary ) {
                         parallel_vector_io pvio;
