@@ -238,6 +238,8 @@ int parse_parameters(int argn, char **argv,
 
         if(no_refinement_in_last_iteration->count > 0) {
                 partition_config.no_refinement_in_last_iteration = true;
+        }else{
+                partition_config.no_refinement_in_last_iteration = false;
         }
 
         if(initial_partitioning_algorithm->count > 0) {
