@@ -160,10 +160,9 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 
         //parallel_label_compress< std::unordered_map< NodeID, NodeWeight> > plc;
         parallel_label_compress< linear_probing_hashmap  > plc;
-	// TODO: decide if we want to pass PEtree as an argument during coarsening.
-	// For now we do think there is no need ...
-        //plc.perform_parallel_label_compression ( config, G, true , false, PEtree);
-	plc.perform_parallel_label_compression ( config, G, true );
+        // TODO: decide if we want to pass PEtree as an argument during coarsening.
+        // For now we do think there is no need ...
+        plc.perform_parallel_label_compression ( config, G, true );
 
 #ifndef NOOUTPUT
         if( rank == ROOT ) {

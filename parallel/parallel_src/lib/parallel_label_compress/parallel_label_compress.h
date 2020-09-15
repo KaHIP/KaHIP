@@ -33,11 +33,11 @@ class parallel_label_compress {
 
                         std::vector< NodeID > permutation( G.number_of_local_nodes() );
                         if( for_coarsening ) {
-std::cout << __LINE__ << ": will coarsen" << std::endl;
+                                //std::cout <<    ": will coarsen" << std::endl;
                                 node_ordering no; 
                                 no.order_nodes( config, G, permutation);
                         } else {
-std::cout << __LINE__ << ": will refine" << std::endl;
+                                //std::cout << __LINE__ << ": will refine" << std::endl;
                                 random_functions::permutate_vector_fast( permutation, true);
                         }
 
@@ -54,12 +54,8 @@ std::cout << __LINE__ << ": will refine" << std::endl;
                                 assert( !usePEdistances );
                         }
 
-                        // const int clz = __builtin_clzll(G.number_of_global_nodes()); // index of highest bit
-                        // const int label_size = 8*sizeof(unsigned long long int) - clz;
-
-                        std::cout << "TEST print: "<< G.number_of_global_nodes()
-                                << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
-
+                        // std::cout << "TEST print: "<< G.number_of_global_nodes()
+                        //         << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
@@ -71,6 +67,7 @@ std::cout << __LINE__ << ": will refine" << std::endl;
                                 forall_local_nodes(G, rnode) {
                                         const NodeID node = permutation[rnode]; // use the current random node
 
+                                        //TODO: evaluate how this affects quality and running time.
                                         //when NOT coarsening and we check only boundary nodes and this node is NOT a boundary node, skip it
                                         if( !for_coarsening && config.only_boundary && !is_boundary(node,G) ){
                                             continue;
@@ -103,7 +100,8 @@ std::cout << __LINE__ << ": will refine" << std::endl;
                                         } else {
                                                 if( usePEdistances){
                                                         assert( !config.vcycle );
-                                                        max_block = refine_with_PU_distances(node, G, PEtree, config.only_boundary, cluster_upperbound);
+                                                        assert( config.only_boundary ? is_boundary(node,G):true );
+                                                        max_block = refine_with_PU_distances(node, G, PEtree, cluster_upperbound);
                                                 }else{
                                                         max_block = coarse_or_refine(node, G, hash_map, cluster_upperbound, own_block_balanced, config.vcycle );
                                                 }
@@ -123,7 +121,7 @@ std::cout << __LINE__ << ": will refine" << std::endl;
 
                                 } endfor //for G nodes
                                 G.update_ghost_node_data_finish(); 
-                                std::cout << "in iteration round " << i << ", we moved " << numChanges << " vertices" <<std::endl;
+                                //std::cout << "in iteration round " << i << ", we moved " << numChanges << " vertices" <<std::endl;
                         }//for( ULONG i = 0; i < config.label_iterations; i++)
                 }
 
@@ -147,19 +145,11 @@ std::cout << __LINE__ << ": will refine" << std::endl;
                         const NodeID& node,
                         parallel_graph_access& G,
                         const processor_tree& PEtree,
-                        const bool& only_boundary,
                         const NodeWeight& cluster_upperbound
                 ){
 
                         const PartitionID old_block   = G.getNodeLabel(node);
                         const NodeWeight  node_weight = G.getNodeWeight(node);
-
-                        //TODO: check if this is correct and improves running time.
-                        //TODO: this is already check before calling this function
-                        //if doing refinement and the node is not a boundary node, skip it
-                        if( only_boundary  && !is_boundary(node,G) ){
-                            return old_block;
-                        }
 
                         //create the map with all neighboring blocks and the sum of the edge weights
                         std::map<PartitionID, EdgeWeight> ngbr_blocks;
@@ -178,7 +168,6 @@ std::cout << __LINE__ << ": will refine" << std::endl;
                         for( auto const& x : ngbr_blocks ){
                                 //the candidate new block for the node
                                 const PartitionID new_block = x.first;
-//std::cout << __LINE__ <<": node " << node << ", old block = " << old_block << ", candidate new block " << new_block;
                                 //check: if moving to new block is gonna violate the weight bound, do not consider this move
                                 // if the new block is the old, then the size constraint is not violated
                                 bool sizeconstraint = new_block==old_block || G.getBlockSize(new_block) + node_weight <= cluster_upperbound;
@@ -209,9 +198,9 @@ std::cout << __LINE__ << ": will refine" << std::endl;
                                 }
                         }
 
-if(best_block!=old_block){
-    std::cout<< "node " << node << " will move from block " << old_block << " to " << best_block << " with min cost " << min_comm_cost  << " num ngbr blocks = " << ngbr_blocks.size() << endl;
-}
+                        // if(best_block!=old_block){
+                        //     std::cout<< "node " << node << " will move from block " << old_block << " to " << best_block << " with min cost " << min_comm_cost  << " num ngbr blocks = " << ngbr_blocks.size() << endl;
+                        // }
                         return best_block;
                 }
 
