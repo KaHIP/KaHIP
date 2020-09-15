@@ -68,8 +68,8 @@ EdgeWeight distributed_quality_metrics::edge_cut( parallel_graph_access & G, MPI
 
 EdgeWeight distributed_quality_metrics::total_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator ) {
         EdgeWeight local_qap = 0;
-	int clz = __builtin_clzll(G.number_of_global_nodes());
-	const int label_size = 8*sizeof(unsigned long long int) - clz;
+	// int clz = __builtin_clzll(G.number_of_global_nodes());
+	// const int label_size = 8*sizeof(unsigned long long int) - clz;
 
 	/* JUST FOR TESTING */
 	int rank;
