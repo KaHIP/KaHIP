@@ -92,13 +92,15 @@ int main(int argn, char **argv) {
                 if( rank == ROOT ) std::cout <<  "n:" <<  G.number_of_global_nodes() << " m: " <<  G.number_of_global_edges()  << std::endl;
 
 
-                /* mapping activity : read processor tree if given */
-                //if (partition_config.integrated_mapping)
+                // mapping activity : read processor tree if given 
                 processor_tree PEtree( partition_config.distances, partition_config.group_sizes );
                 if( rank == ROOT ) {
                         PEtree.print();
-                        PEtree.print_allPairDistances();
+                        if( PEtree.get_numPUs()<25){
+                                PEtree.print_allPairDistances();
+                        }
                 }
+                MPI_Barrier(MPI_COMM_WORLD); //for better printing
 
                 //TODO: what to do when distance and hierarchy is not given
                 //update: flag partition_config.integrated_mapping is set to true; use this flag later in refinement
@@ -180,6 +182,7 @@ int main(int argn, char **argv) {
                         std::cout << "log>" << "=====================================" << std::endl;
                         std::cout << "log>" << "============AND WE R DONE============" << std::endl;
                         std::cout << "log>" << "=====================================" << std::endl;
+                        std::cout << "log> METRICS" << std::endl;
                         std::cout << "log> total partitioning time elapsed " <<  running_time << std::endl;
                         std::cout << "log> final edge cut " <<  edge_cut  << std::endl;
                         std::cout << "log> final qap  " <<  qap  << std::endl;
