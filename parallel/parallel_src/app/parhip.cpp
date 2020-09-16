@@ -160,15 +160,8 @@ int main(int argn, char **argv) {
                 }
 
 
-		distributed_quality_metrics qm;
-		
-		// EdgeWeight initial_qap = 0;
-		// if (partition_config.integrated_mapping)
-		//   initial_qap = qm.total_qap( G, PEtree, communicator );
-		// if( rank == ROOT ) {
-		//   std::cout << "log>initial_objective " << initial_qap  << std::endl;
-		// }
-		
+
+				
                 distributed_partitioner dpart;
                 dpart.perform_partitioning( communicator, partition_config, G, PEtree);
 
@@ -177,7 +170,7 @@ int main(int argn, char **argv) {
 
 
                 double running_time = t.elapsed();
-
+		distributed_quality_metrics qm;
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
                 EdgeWeight qap = 0;
                 //if tree is empty, qap is not to be calculated
