@@ -157,7 +157,16 @@ int main(int argn, char **argv) {
                         }
                 }
 
-                	
+
+		distributed_quality_metrics qm;
+		
+		// EdgeWeight initial_qap = 0;
+		// if (partition_config.integrated_mapping)
+		//   initial_qap = qm.total_qap( G, PEtree, communicator );
+		// if( rank == ROOT ) {
+		//   std::cout << "log>initial_objective " << initial_qap  << std::endl;
+		// }
+		
                 distributed_partitioner dpart;
                 dpart.perform_partitioning( communicator, partition_config, G, PEtree);
 
@@ -166,16 +175,17 @@ int main(int argn, char **argv) {
 
 
                 double running_time = t.elapsed();
-                distributed_quality_metrics qm;
+
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
                 EdgeWeight qap = 0;
-                //if tree is empty, qap is not be calculated
+                //if tree is empty, qap is not to be calculated
                 if (partition_config.integrated_mapping)
                         qap = qm.total_qap( G, PEtree, communicator );
                 double balance  = qm.balance( partition_config, G, communicator );
                 PRINT(double balance_load  = qm.balance_load( partition_config, G, communicator );)
                 PRINT(double balance_load_dist  = qm.balance_load_dist( partition_config, G, communicator );)
 
+		
                 if( rank == ROOT ) {
                         std::cout << "log>" << "=====================================" << std::endl;
                         std::cout << "log>" << "============AND WE R DONE============" << std::endl;
@@ -184,6 +194,8 @@ int main(int argn, char **argv) {
                         std::cout <<  "log>final edge cut " <<  edge_cut  << std::endl;
                         std::cout <<  "log>final qap  " <<  qap  << std::endl;
                         std::cout <<  "log>final balance "  <<  balance   << std::endl;
+
+			
                         PRINT(std::cout <<  "log>final balance load "  <<  balance_load   << std::endl;)
                         PRINT(std::cout <<  "log>final balance load dist "  <<  balance_load_dist   << std::endl;)
                 }
@@ -222,9 +234,7 @@ int main(int argn, char **argv) {
 		}
 		parallel_vector_io pvio;
 		pvio.writePartitionSimpleParallel(G, filename.str());
-		if( rank == ROOT ) {
-		  std::cout << "writing partition to " << filename.str() << " ... " << std::endl;
-		}
+
 
                 if( partition_config.save_partition_binary ) {
                         parallel_vector_io pvio;

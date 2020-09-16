@@ -31,6 +31,21 @@ public:
 	EdgeWeight comm_vol_dist( parallel_graph_access & G, MPI_Comm communicator );
 
 	EdgeWeight total_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator);
+
+
+	
+	//private: 
+
+	EdgeWeight initialobjective;
+	double blc;
+        int m_num_levels;
+        timer t_c;
+	timer t_i;
+	timer t_p;
+	timer t_r;
+
+
+
 };
 
 
