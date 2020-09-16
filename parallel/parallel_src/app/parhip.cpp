@@ -206,32 +206,33 @@ int main(int argn, char **argv) {
                 };
 #endif
 
+                // write the partition to the disc
+                std::string filename = "partition_"+ std::to_string(partition_config.k);
+                if( !partition_config.filename_output.empty() ){
+                       filename = partition_config.filename_output;
+                }
 
                 if( partition_config.save_partition ) {
+                        if( partition_config.filename_output.empty() ){
+                                filename += ".txtp";
+                        }
                         parallel_vector_io pvio;
-                        std::string filename(graph_filename+".txtpart");
                         pvio.writePartitionSimpleParallel(G, filename);
                 }
 
-		// write the partition to the disc 
-		std::stringstream filename;
-		if(!partition_config.filename_output.compare("")) {
-		  filename << "tmppartition" << partition_config.k;
-		} else {
-		  filename << partition_config.filename_output;
-		}
-		parallel_vector_io pvio;
-		pvio.writePartitionSimpleParallel(G, filename.str());
-		if( rank == ROOT ) {
-		  std::cout << "writing partition to " << filename.str() << " ... " << std::endl;
-		}
-
                 if( partition_config.save_partition_binary ) {
+                        if( partition_config.filename_output.empty() ){
+                                filename += ".binp";
+                        }
                         parallel_vector_io pvio;
-                        std::string filename("tmppartition.binp");
                         pvio.writePartitionBinaryParallelPosix(partition_config, G, filename);
                 }
-        }
+
+                if( rank == ROOT && (partition_config.save_partition || partition_config.save_partition_binary) ) {
+                        std::cout << "wrote partition to " << filename << " ... " << std::endl;
+                }
+
+        }//if( communicator != MPI_COMM_NULL) 
 
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Finalize();
