@@ -54,22 +54,22 @@ public:
 		@brief[out] their distances in the hierarchy of processor tree   
 	*/
 
-	inline int getDistance_PxPy(int x, int y) const {
-	        assert((x <= numPUs) and (y <= numPUs) );
-	        int groups_size = traversalDescendants.size();
-		assert ( groups_size == numOfLevels);
+        inline int getDistance_PxPy(int x, int y) const {
+               assert((x <= numPUs) and (y <= numPUs) );
+                int groups_size = traversalDescendants.size();
+                assert ( groups_size == numOfLevels);
                 std::vector<unsigned int>  * compact_bin_id = new std::vector<unsigned int> (numPUs,0);
 
-		int bit_sec_len = 1;
+                int bit_sec_len = 1;
                 for( unsigned k = 0; k < groups_size; k++) {
-		  int tmp = ceil(log2(traversalDescendants[k]));
-		  if (tmp > bit_sec_len) {
-		    bit_sec_len = tmp;
-		  }
+                    int tmp = ceil(log2(traversalDescendants[k]));
+                    if (tmp > bit_sec_len) {
+                            bit_sec_len = tmp;
+                    }
                 }
 
                 for (unsigned i = 0; i < numPUs; i++) {
-		  unsigned int lay_id = i;
+                        unsigned int lay_id = i;
                         for(int k=0; k < groups_size; k++) {
                                 int remainder = lay_id % traversalDescendants[k];
                                 lay_id = lay_id / traversalDescendants[k];
@@ -79,16 +79,15 @@ public:
 
                 int k = 0;
                 unsigned long long int xor_x_y = (*compact_bin_id)[x] ^ (*compact_bin_id)[y];
-		if (!xor_x_y) return 0;
+                if (!xor_x_y) return 0;
                 int count_leading_zeros = __builtin_clzll(xor_x_y);
                 int total_n_bits = 8*sizeof(unsigned long long int);
                 int clz = total_n_bits - count_leading_zeros -1;
-/* std::cout<< x << ", " << y << " <-> count_leading_zeros= " << count_leading_zeros << ",total_n_bits= "<< total_n_bits<< ",clz= " << clz <<std::endl; */
                 if (clz >= 0) {
-                        k = (int)floor(clz / bit_sec_len);                      
+                        k = (int)floor(clz / bit_sec_len);
                         return traversalDistances[k];
                 } else  {
-		  return 0;
+                        return 0;
                 }       
 
 		
