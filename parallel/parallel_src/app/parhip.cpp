@@ -36,11 +36,6 @@ int main(int argn, char **argv) {
         PPartitionConfig partition_config;
         std::string graph_filename;
 
-        std::string callingCommand = "";
-        for (int i = 0; i < argn; i++) {
-            callingCommand += std::string(argv[i]) + " ";
-        }  
-
         int ret_code = parse_parameters(argn, argv, 
                         partition_config, 
                         graph_filename); 
@@ -60,6 +55,11 @@ int main(int argn, char **argv) {
         {
                 t.restart();
                 if( rank == ROOT ){
+                        //the running time of this is calculated in the dummy operation but I think it is negligible
+                        std::string callingCommand = "";
+                        for (int i = 0; i < argn; i++) {
+                            callingCommand += std::string(argv[i]) + " ";
+                        }
                         std::cout << "Calling command: " << callingCommand << std::endl;
                         std::cout << "running collective dummy operations ";
                     }
