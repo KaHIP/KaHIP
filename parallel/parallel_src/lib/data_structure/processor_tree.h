@@ -82,6 +82,7 @@ public:
                 int count_leading_zeros = __builtin_clzll(xor_x_y);
                 int total_n_bits = 8*sizeof(unsigned long long int);
                 int clz = total_n_bits - count_leading_zeros -1;
+std::cout<< x << ", " << y << " <-> count_leading_zeros= " << count_leading_zeros << ",total_n_bits= "<< total_n_bits<< ",clz= " << clz <<std::endl;
                 if (clz >= 0) {
                         k = (int)floor(clz / bit_sec_len);                      
                         return traversalDistances[k];
