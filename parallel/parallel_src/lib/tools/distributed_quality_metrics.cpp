@@ -355,7 +355,7 @@ EdgeWeight distributed_quality_metrics::comm_bnd( PPartitionConfig & config, par
                         percent_bnd_nodes[i] = (double( global_num_bnd_nodes[i]))/(global_num_bnd_nodes[i]+global_num_inner_nodes[i]);
                 }
                 
-                std::cout <<  " _debug_ > total inner nodes= " << total_inner_nodes <<  "   __ total nodes must be: " << total_nodes << std::endl;
+                assert( total_inner_nodes+total_bnd_nodes==total_nodes );
                 std::cout <<  "log> total bnd nodes " <<  total_bnd_nodes << std::endl;
                 std::cout <<  "log> max bnd nodes " <<  max_bnd_nodes << std::endl;
                 std::cout <<  "log> max percentage of bnd nodes " << *std::max_element(percent_bnd_nodes.begin(), percent_bnd_nodes.end())  << std::endl;

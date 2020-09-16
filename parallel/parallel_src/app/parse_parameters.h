@@ -28,7 +28,7 @@ int parse_parameters(int argn, char **argv,
         // Setup argtable parameters.
         struct arg_lit *help                           = arg_lit0(NULL, "help","Print help.");
         struct arg_str *filename                       = arg_str1(NULL, NULL, "FILE", "Path to graph file to partition.");
-	struct arg_str *filename_output                      = arg_str0(NULL, "output_filename", NULL, "Specify the name of the output file (that contains the partition).");
+        struct arg_str *filename_output                = arg_str0(NULL, "filename_output", NULL, "Specify the name of the output file (that contains the partition).");
         struct arg_str *input_partition_filename       = arg_str1(NULL, "input_partition", "FILE", "Path to partition file to convert.");
         struct arg_int *user_seed                      = arg_int0(NULL, "seed", NULL, "Seed to use for the PRNG.");
         struct arg_int *k                              = arg_int1(NULL, "k", NULL, "Number of blocks to partition the graph.");
