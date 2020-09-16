@@ -221,7 +221,7 @@ EdgeWeight two_way_flow_refinement::iterativ_flow_iteration(PartitionConfig & co
         }
 
 
-        ASSERT_TRUE(lhs_part_weight < config.upper_bound_partition && rhs_part_weight < config.upper_bound_partition);
+        //ASSERT_TRUE(lhs_part_weight < config.upper_bound_partition && rhs_part_weight < config.upper_bound_partition);
         EdgeWeight improvement = cut-best_cut;
         cut = best_cut;
         return improvement;
