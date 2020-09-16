@@ -60,7 +60,7 @@ int parse_parameters(int argn, char **argv,
         //integrated mapping
         //
 
-        struct arg_lit *integrated_mapping                   = arg_lit0(NULL, "integrated_mapping", "Enable integrated mapping algorithms to map quotient graph onto processor graph defined by hierarchy and distance options. (Default: disabled)");
+        //struct arg_lit *integrated_mapping                   = arg_lit0(NULL, "integrated_mapping", "Enable integrated mapping algorithms to map quotient graph onto processor graph defined by hierarchy and distance options. (Default: disabled)");
         struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth; in total 4x8x8=256 PEs.");
         struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
         struct arg_lit *only_boundary                        = arg_lit0(NULL, "only_boundary", "when refinement, move boundary vertices only" );
@@ -69,7 +69,7 @@ int parse_parameters(int argn, char **argv,
         void* argtable[] = {
 #ifdef PARALLEL_LABEL_COMPRESSION
 	  help, filename, filename_output, user_seed, k, inbalance, preconfiguration, vertex_degree_weights,
-                save_partition, save_partition_binary, integrated_mapping, hierarchy_parameter_string, distance_parameter_string,
+                save_partition, save_partition_binary, hierarchy_parameter_string, distance_parameter_string,
                 only_boundary, num_vcycles, label_iterations_refinement, label_iterations_coarsening, stop_factor,
                 no_refinement_in_last_iteration,
 #elif defined TOOLBOX 
@@ -287,21 +287,6 @@ int parse_parameters(int argn, char **argv,
         // integrated mapping
         //
         partition_config.integrated_mapping = false;
-
-        if(integrated_mapping->count > 0) {
-                partition_config.integrated_mapping = true;
-//this function is supposed to set some parameters that I have not (yet?) copied them, see in SEA_mapping/app/configuration.h
-//cfg.integrated_mapping(partition_config);
-                if(!hierarchy_parameter_string->count) {
-                        std::cout <<  "Please specify the hierarchy using the --hierarchy_parameter_string option."  << std::endl;
-                        exit(0);
-                }
-
-                if(!distance_parameter_string->count) {
-                        std::cout <<  "Please specify the distances using the --distance_parameter_string option."  << std::endl;
-                        exit(0);
-                }
-        }
 
         //check and store the hierarchy levels in partition_config.group_sizes
         if(hierarchy_parameter_string->count) {

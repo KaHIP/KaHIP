@@ -56,7 +56,7 @@ class parallel_label_compress {
                         }
 
                         // std::cout << "TEST print: "<< G.number_of_global_nodes()
-                        //         << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
+                                // << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);

@@ -71,6 +71,11 @@ EdgeWeight distributed_quality_metrics::total_qap( parallel_graph_access & G, co
 	// int clz = __builtin_clzll(G.number_of_global_nodes());
 	// const int label_size = 8*sizeof(unsigned long long int) - clz;
 
+    //probably the tree is not initialized
+    if( PEtree.get_numPUs()<=1){
+        return 0;
+    }
+
 	/* JUST FOR TESTING */
 	int rank;
         MPI_Comm_rank( communicator, &rank);
@@ -87,6 +92,7 @@ EdgeWeight distributed_quality_metrics::total_qap( parallel_graph_access & G, co
 			  // 	      << G.getNodeLabel( node ) << ", " << G.getNodeLabel( target )
 			  // 	      << ")" << std::endl;
 			  // }
+
 			  local_qap += G.getEdgeWeight(e) * PEtree.getDistance_PxPy(G.getNodeLabel( node ),G.getNodeLabel( target));
                         }
                 } endfor

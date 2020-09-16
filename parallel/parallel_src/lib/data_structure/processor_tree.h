@@ -20,7 +20,7 @@ public:
 	processor_tree(const vector<int> &distances, const vector<int> &descendants ) {
         assert( distances.size() == descendants.size());
 		traversalDistances = distances.size()==0 ? std::vector<int>{0} : distances;
-		traversalDescendants = descendants.size()==0 ? std::vector<int>{0}  : descendants;
+		traversalDescendants = descendants.size()==0 ? std::vector<int>{1}  : descendants; //TODO: should this be 0 or 1
 		numOfLevels = distances.size()==0 ? 1 : distances.size();
 		for( unsigned int i = 0; i < get_numOfLevels(); i++)
 			numPUs *= traversalDescendants[i];
