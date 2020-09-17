@@ -31,13 +31,9 @@ public:
         void check_labels( MPI_Comm comm, PPartitionConfig & config, parallel_graph_access & G);
         static void generate_random_choices( PPartitionConfig & config ) ;
 private: 
-        distributed_quality_metrics vcycle( MPI_Comm communicator, PPartitionConfig & config,
-					    parallel_graph_access & G,
-					    const  processor_tree & PEtree = processor_tree());
-
         void vcycle( MPI_Comm communicator, PPartitionConfig & config,
 		     parallel_graph_access & G,
-		     distributed_quality_metrics & qm,
+		     distributed_quality_metrics & qm ,
 		     const  processor_tree & PEtree = processor_tree()
 		     );
 	
