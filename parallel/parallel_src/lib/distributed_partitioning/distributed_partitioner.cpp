@@ -62,16 +62,14 @@ distributed_quality_metrics distributed_partitioner::perform_partitioning( MPI_C
         PPartitionConfig config = partition_config;
         config.vcycle = false;
 
-	
         PEID rank;
         MPI_Comm_rank( communicator, &rank);
 
-	distributed_quality_metrics qm;
+        distributed_quality_metrics qm;
 
-	// if( rank == ROOT )
-	//   qm.print();
+        // if( rank == ROOT )
+        //   qm.print();
 
-	
         for( int cycle = 0; cycle < partition_config.num_vcycles; cycle++) {
                 t.restart();
                 m_cycle = cycle;
@@ -80,7 +78,7 @@ distributed_quality_metrics distributed_partitioner::perform_partitioning( MPI_C
                         config.label_iterations_refinement = 0;
                 }
 
-		vcycle( communicator, config, G, qm, PEtree);
+        vcycle( communicator, config, G, qm, PEtree);
        
 
 		if( rank == ROOT ) {
@@ -207,27 +205,25 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 #endif
 
         if( !contraction_stop_decision.contraction_stop(config, G, Q)) {
-
-
-
                 if( config.refinement_focus ){
-                        double contraction_factor = Q.number_of_global_nodes() / (double) G.number_of_global_nodes(); 
+                        double contraction_factor = Q.number_of_global_nodes() / (double) G.number_of_global_nodes();
+                        if( rank == ROOT ) std::cout << "contraction_factor = " << contraction_factor << std::endl;
+                        contraction_factor = std::min( 1.0/config.coarsening_factor , contraction_factor);
                         config.cluster_coarsening_factor *= contraction_factor; //multiply to keep the same contraction factor in every level
                 }
-	        vcycle( communicator, config, Q, qm, PEtree );
+                vcycle( communicator, config, Q, qm, PEtree );
 
         } else {
-	        if( rank == ROOT ) vec[0] +=  m_t.elapsed();
+                if( rank == ROOT ) vec[0] +=  m_t.elapsed();
 #ifndef NOOUTPUT
                 if( rank == ROOT ) {
-		        std::cout << "log>" << "=====================================" << std::endl;
+                        std::cout << "log>" << "=====================================" << std::endl;
                         std::cout << "log>" << "================ IP =================" << std::endl;
                         std::cout << "log>" << "=====================================" << std::endl;
                         std::cout <<  "log>cycle: " << m_cycle << " total number of levels " <<  (m_level+1) << std::endl;
                         std::cout <<  "log>cycle: " << m_cycle << " number of coarsest nodes " <<  Q.number_of_global_nodes() << std::endl;
                         std::cout <<  "log>cycle: " << m_cycle << " number of coarsest edges " <<  Q.number_of_global_edges() << std::endl;
-			std::cout <<  "log>cycle_m: " << m_cycle << " coarsening took  " <<  vec[0] << std::endl;
-			
+                        std::cout <<  "log>cycle_m: " << m_cycle << " coarsening took  " <<  vec[0] << std::endl;
                 }
 #endif
 		

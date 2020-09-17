@@ -138,6 +138,7 @@ struct PPartitionConfig
         bool only_boundary = false;
         bool refinement_focus = false;
         int max_coarsening_levels = 4;
+        double coarsening_factor = 3; //should be greater than 2
 
         //=======================================
         //======= Binary Online Distance ========

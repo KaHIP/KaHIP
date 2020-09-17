@@ -52,7 +52,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_lit *save_partition_binary	       = arg_lit0(NULL, "save_partition_binary","Enable this tag if you want to store the partition to disk in a binary format.");
         struct arg_lit *vertex_degree_weights          = arg_lit0(NULL, "vertex_degree_weights","Use 1+deg(v) as vertex weights.");
         struct arg_rex *node_ordering                  = arg_rex0(NULL, "node_ordering", "^(random|degree|leastghostnodesfirst_degree|degree_leastghostnodesfirst)$", "VARIANT", REG_EXTENDED, "Type of node ordering to use for the clustering algorithm. (Default: degree) [random|degree|leastghostnodesfirst_degree|degree_leastghostnodesfirst]." );
-        struct arg_rex *preconfiguration               = arg_rex1(NULL, "preconfiguration", "^(ecosocial|fastsocial|ultrafastsocial|ecomesh|fastmesh|ultrafastmesh|mapping)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: fast) [ecosocial|fastsocial|ultrafastsocial|ecomesh|fastmesh|ultrafastmesh|mapping]." );
+        struct arg_rex *preconfiguration               = arg_rex1(NULL, "preconfiguration", "^(ecosocial|fastsocial|ultrafastsocial|mappingsocial|ecomesh|fastmesh|ultrafastmesh|mappingmesh)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: fast) [ecosocial|fastsocial|ultrafastsocial|mappingsocial|ecomesh|fastmesh|ultrafastmesh|mappingmesh]." );
         struct arg_dbl *ht_fill_factor                 = arg_dbl0(NULL, "ht_fill_factor", NULL, "");
         struct arg_int *n                              = arg_int0(NULL, "n", NULL, "");
         struct arg_end *end                            = arg_end(100);
@@ -156,9 +156,14 @@ int parse_parameters(int argn, char **argv,
                 } else if (strcmp("ultrafastmesh", preconfiguration->sval[0]) == 0) {
                         cfg.ultrafast(partition_config);
                         partition_config.cluster_coarsening_factor = 20000;
-                } else if (strcmp("mapping", preconfiguration->sval[0]) == 0) {
+                } else if (strcmp("mappingmesh", preconfiguration->sval[0]) == 0) {
                         cfg.mapping(partition_config);
-                        partition_config.refinement_focus = true;
+                        partition_config.coarsening_factor = 3;
+                        //partition_config.max_coarsening_levels = 6;
+                } else if (strcmp("mappingsocial", preconfiguration->sval[0]) == 0) {
+                        cfg.mapping(partition_config);
+                        partition_config.coarsening_factor = 5;
+                        //partition_config.max_coarsening_levels = 6;
                 } else {
                         fprintf(stderr, "Invalid preconfconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);
