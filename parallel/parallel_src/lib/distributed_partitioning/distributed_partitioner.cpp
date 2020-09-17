@@ -84,8 +84,6 @@ distributed_quality_metrics distributed_partitioner::perform_partitioning( MPI_C
        
 
 		if( rank == ROOT ) {
-		        PRINT(std::cout << "log>part: "  << std::endl;)
-		        qm.print();
 		        PRINT(std::cout <<  "log>part: " << m_cycle << " qap " << qm.get_initial_qap()  << std::endl;)
 		        PRINT(std::cout <<  "log>cycle: " << m_cycle << " uncoarsening took " << m_t.elapsed()  << std::endl;)
                 }
@@ -210,9 +208,9 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         if( !contraction_stop_decision.contraction_stop(config, G, Q)) {
 	        vcycle( communicator, config, Q, qm, PEtree );
         } else {
+	        if( rank == ROOT ) vec[0] +=  m_t.elapsed();
 #ifndef NOOUTPUT
                 if( rank == ROOT ) {
-		        vec[0] +=  m_t.elapsed();
 		        std::cout << "log>" << "=====================================" << std::endl;
                         std::cout << "log>" << "================ IP =================" << std::endl;
                         std::cout << "log>" << "=====================================" << std::endl;
@@ -230,8 +228,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
                 ip.perform_partitioning( communicator, config, Q );
 
 		
-		if( rank == ROOT )
-		        vec[1] += t.elapsed();
+		if( rank == ROOT ) vec[1] += t.elapsed();
 
 		
 #ifndef NOOUTPUT
@@ -271,11 +268,13 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 	  qm.set_initial_cut(cut);
 	  EdgeWeight  qap = qm.total_qap( G, PEtree, communicator );
 	  qm.set_initial_qap( qap );
+#ifndef NOOUTPUT
 	  if( rank == ROOT ) {
 	    std::cout <<  "log>cycle_m: SETTING INITIAL METRICS " << std::endl;
 	    std::cout <<  "log>cycle_m: initial partitioning cut " <<  qm.get_initial_cut()  << std::endl;
 	    std::cout <<  "log>cycle_m: initial partitioning qap " <<  qm.get_initial_qap() << std::endl;
 	  }
+#endif
 	}
 	counter++;
 	
@@ -296,23 +295,19 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         }
 
 	// after refinement
-	EdgeWeight  qap = qm.total_qap( G, PEtree, communicator );
+	//EdgeWeight qap = qm.total_qap( G, PEtree, communicator);
 	if( rank == ROOT ) vec[2] += t.elapsed();
 #ifndef NOOUTPUT
 
         if( rank == ROOT ) {
 	        std::cout << "log>cycle: initial partitioning qap " <<  qm.get_initial_qap() << std::endl;
-                std::cout << "log>cycle: after refinement qap " <<  qap << std::endl;
+                //std::cout << "log>cycle: after refinement qap " << qap  << std::endl;
 
                 std::cout <<  "log>cycle_m: " << m_cycle <<" level: " << m_level << " label compression refinement took " << vec[2]  << std::endl;
         }
 #endif
         m_level--;
-	if( rank == ROOT ) {
-	  std::cout <<  "log>cycle_m: " << m_cycle << "  add timing and printing  "  << std::endl;
-	  qm.add_timing(vec);
-	  qm.print();
-	}
+	if( rank == ROOT ) qm.add_timing(vec);
 
 }
 

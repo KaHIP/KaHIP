@@ -111,9 +111,6 @@ EdgeWeight distributed_quality_metrics::total_qap( parallel_graph_access & G, co
 }
 
 
-void distributed_quality_metrics::set_initial_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator) {
-  initial_qap = total_qap(G, PEtree, communicator );
-}
 
 void distributed_quality_metrics::add_timing(std::vector<double> vec) {
   assert(vec.size() == ml_time.size());

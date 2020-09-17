@@ -33,7 +33,6 @@ public:
 
 	EdgeWeight total_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator);
 
-	void set_initial_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator);
 	void set_initial_qap(EdgeWeight qap) {initial_qap = qap;};
 	void set_initial_cut(EdgeWeight cut) {initial_cut = cut;};
 	void add_timing(std::vector<double> vec);
