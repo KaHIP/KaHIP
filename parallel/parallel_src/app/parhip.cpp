@@ -106,7 +106,7 @@ int main(int argn, char **argv) {
                         //of the clusters when coarsening, it should be more than 2, thus, coarsening_factor should be greater than 2
                         const double coarsening_factor = 2; 
                         partition_config.cluster_coarsening_factor = G.number_of_global_nodes() / (coarsening_factor*partition_config.k);
-                        const int coarsening_levels = 4;
+                        const int coarsening_levels = partition_config.max_coarsening_levels;
                         partition_config.stop_factor = G.number_of_global_nodes()/(coarsening_factor*(coarsening_levels-1));
                 }
 
