@@ -9,10 +9,10 @@
 #include <numeric>
 #include "distributed_quality_metrics.h"
 
-distributed_quality_metrics::distributed_quality_metrics() : initial_qap(0), mt_time(3,0.0){  
+distributed_quality_metrics::distributed_quality_metrics() : initial_qap(0), initial_cut(0), ml_time(3,0.0){  
 }
 
-distributed_quality_metrics::distributed_quality_metrics(EdgeWeight qap) : initial_qap(qap), mt_time(3,0.0){
+distributed_quality_metrics::distributed_quality_metrics(EdgeWeight qap, EdgeWeight cut) : initial_qap(qap), initial_cut(cut), ml_time(3,0.0){
 }
 
 
@@ -116,17 +116,18 @@ void distributed_quality_metrics::set_initial_qap( parallel_graph_access & G, co
 }
 
 void distributed_quality_metrics::add_timing(std::vector<double> vec) {
-  assert(vec.size() == mt_time.size());
+  assert(vec.size() == ml_time.size());
   for( int i = 0; i < vec.size(); i++) {
-    mt_time[i] += vec[i];
+    ml_time[i] += vec[i];
   }
 }
 
 void distributed_quality_metrics::print() {
   std::cout << "log>qm: initial_qap " <<  initial_qap << std::endl;
-  std::cout << "log>qm: coarse_time " <<  mt_time[0] << std::endl;
-  std::cout << "log>qm: inpart_time " <<  mt_time[1] << std::endl;
-  std::cout << "log>qm: refine_time " <<  mt_time[2] << std::endl;
+  std::cout << "log>qm: initial_cut " <<  initial_cut << std::endl;
+  std::cout << "log>qm: coarse_time " <<  ml_time[0] << std::endl;
+  std::cout << "log>qm: inpart_time " <<  ml_time[1] << std::endl;
+  std::cout << "log>qm: refine_time " <<  ml_time[2] << std::endl;
 }
 
 

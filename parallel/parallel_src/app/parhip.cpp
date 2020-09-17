@@ -191,7 +191,8 @@ int main(int argn, char **argv) {
                         std::cout << "log> total partitioning time elapsed " <<  running_time << std::endl;
 			std::cout << "log> total coarse time " <<  qm.get_coarse_time() << std::endl;
 			std::cout << "log> total inpart time " <<  qm.get_inpart_time() << std::endl;
-			std::cout << "log> total refine time " <<  qm.get_refine_time() << std::endl;			
+			std::cout << "log> total refine time " <<  qm.get_refine_time() << std::endl;
+			std::cout << "log> initial edge cut  " <<  qm.get_initial_cut()  << std::endl;
                         std::cout << "log> final edge cut " <<  edge_cut  << std::endl;
 			std::cout << "log> initial qap  " <<  qm.get_initial_qap()  << std::endl;
                         std::cout << "log> final qap  " <<  qap  << std::endl;

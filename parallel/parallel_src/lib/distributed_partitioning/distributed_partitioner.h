@@ -35,6 +35,12 @@ private:
 					    parallel_graph_access & G,
 					    const  processor_tree & PEtree = processor_tree());
 
+        void vcycle( MPI_Comm communicator, PPartitionConfig & config,
+		     parallel_graph_access & G,
+		     distributed_quality_metrics & qm,
+		     const  processor_tree & PEtree = processor_tree()
+		     );
+	
         stop_rule contraction_stop_decision;
         NodeWeight m_total_graph_weight;
         NodeID m_cur_rnd_choice;
