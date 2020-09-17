@@ -80,10 +80,6 @@ int main(int argn, char **argv) {
                         PRINT(std::cout <<  "log> cluster coarsening factor is set to " <<  partition_config.cluster_coarsening_factor  << std::endl;)
                 }
 
-                //TODO: not sure about this but I think it makes more sense not to divide it. If not divided, coarsening will stop when the global 
-                //number of vertices of the coarsest graph is less than stop_factor*k. If we divide by k, then stop_factor is the global size limit
-                //for the coarsest graph
-                partition_config.stop_factor /= partition_config.k;
                 if(rank != 0) partition_config.seed = partition_config.seed*size+rank; 
 
                 srand(partition_config.seed);
@@ -94,8 +90,9 @@ int main(int argn, char **argv) {
                 if( rank == ROOT ) std::cout <<  "took " <<  t.elapsed()  << std::endl;
                 if( rank == ROOT ) std::cout <<  "n:" <<  G.number_of_global_nodes() << " m: " <<  G.number_of_global_edges()  << std::endl;
 
-
+                //
                 // mapping activity : read processor tree if given 
+                //
                 processor_tree PEtree( partition_config.distances, partition_config.group_sizes );
                 if( rank == ROOT ) {
                         PEtree.print();
@@ -103,6 +100,24 @@ int main(int argn, char **argv) {
                                 PEtree.print_allPairDistances();
                         }
                 }
+                
+                if( partition_config.refinement_focus ){
+                        //in this version, the coarsening factor depends on the input size. As cluster_coarsening_factor sets a limit to the size
+                        //of the clusters when coarsening, it should be more than 2, thus, coarsening_factor should be greater than 2
+                        const double coarsening_factor = 2; 
+                        partition_config.cluster_coarsening_factor = G.number_of_global_nodes() / (coarsening_factor*partition_config.k);
+                        const int coarsening_levels = 4;
+                        partition_config.stop_factor = G.number_of_global_nodes()/(coarsening_factor*(coarsening_levels-1));
+                }
+
+                //TODO: not sure about this but I think it makes more sense not to divide it. If not divided, coarsening will stop when the global 
+                //number of vertices of the coarsest graph is less than stop_factor*k. If we divide by k, then stop_factor is the limit for the global size
+                //of the coarsest graph
+                if( rank == ROOT ) {
+                        std::cout << "log> coarsening will stop if coarsest graph has less than " << partition_config.stop_factor << " vertices" << std::endl;
+                }
+                partition_config.stop_factor /= partition_config.k;
+                
                 MPI_Barrier(MPI_COMM_WORLD); //for better printing
 
                 //TODO: what to do when distance and hierarchy is not given

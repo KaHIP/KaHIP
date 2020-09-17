@@ -378,8 +378,10 @@ distributed_quality_metrics distributed_partitioner::vcycle( MPI_Comm communicat
 #endif
 
         if( !contraction_stop_decision.contraction_stop(config, G, Q)) {
-                double contraction_factor = Q.number_of_global_nodes() / (double) G.number_of_global_nodes(); 
-                config.cluster_coarsening_factor *= contraction_factor; //multiply to keep the same contraction factor in every level
+                if( config.refinement_focus ){
+                        double contraction_factor = Q.number_of_global_nodes() / (double) G.number_of_global_nodes(); 
+                        config.cluster_coarsening_factor *= contraction_factor; //multiply to keep the same contraction factor in every level
+                }
                 vcycle( communicator, config, Q, PEtree );
         } else {
 #ifndef NOOUTPUT

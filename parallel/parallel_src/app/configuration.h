@@ -21,6 +21,7 @@ class configuration {
                 void fast( PPartitionConfig & config );
                 void eco( PPartitionConfig & config );
                 void strong( PPartitionConfig & config );
+                void mapping( PPartitionConfig & config );
 };
 
 inline void configuration::ultrafast( PPartitionConfig & partition_config ) {
@@ -48,8 +49,15 @@ inline void configuration::eco( PPartitionConfig & partition_config ) {
 }
 
 inline void configuration::strong( PPartitionConfig & partition_config ) {
-        partition_config.initial_partitioning_algorithm = KAFFPAESTRONGSNW;
+        partition_config.initial_partitioning_algorithm  = KAFFPAESTRONGSNW;
 
+}
+inline void configuration::mapping( PPartitionConfig & partition_config ) {
+        partition_config.initial_partitioning_algorithm  = KAFFPAEULTRAFASTSNW;
+        partition_config.no_refinement_in_last_iteration = false;
+        //TODO: try other values or calculate as a percentage of the input size?
+        partition_config.stop_factor                     = 18000; 
+        partition_config.num_vcycles                     = 1;
 }
 inline void configuration::standard( PPartitionConfig & partition_config ) {
         partition_config.seed                                   = 0;
