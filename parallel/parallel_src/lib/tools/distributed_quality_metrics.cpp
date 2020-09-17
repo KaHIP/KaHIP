@@ -9,9 +9,12 @@
 #include <numeric>
 #include "distributed_quality_metrics.h"
 
-distributed_quality_metrics::distributed_quality_metrics() {
-                
+distributed_quality_metrics::distributed_quality_metrics() : initial_qap(0), mt_time(3,0.0){  
 }
+
+distributed_quality_metrics::distributed_quality_metrics(EdgeWeight qap) : initial_qap(qap), mt_time(3,0.0){
+}
+
 
 distributed_quality_metrics::~distributed_quality_metrics() {
                         
@@ -107,6 +110,24 @@ EdgeWeight distributed_quality_metrics::total_qap( parallel_graph_access & G, co
         return global_qap/2;
 }
 
+
+void distributed_quality_metrics::set_initial_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator) {
+  initial_qap = total_qap(G, PEtree, communicator );
+}
+
+void distributed_quality_metrics::add_timing(std::vector<double> vec) {
+  assert(vec.size() == mt_time.size());
+  for( int i = 0; i < vec.size(); i++) {
+    mt_time[i] += vec[i];
+  }
+}
+
+void distributed_quality_metrics::print() {
+  std::cout << "log>qm: initial_qap " <<  initial_qap << std::endl;
+  std::cout << "log>qm: coarse_time " <<  mt_time[0] << std::endl;
+  std::cout << "log>qm: inpart_time " <<  mt_time[1] << std::endl;
+  std::cout << "log>qm: refine_time " <<  mt_time[2] << std::endl;
+}
 
 
 NodeWeight distributed_quality_metrics::local_max_block_weight( PPartitionConfig & config, parallel_graph_access & G, int * partition_map, MPI_Comm communicator ) {

@@ -16,6 +16,7 @@
 class distributed_quality_metrics {
 public:
         distributed_quality_metrics();
+	distributed_quality_metrics(EdgeWeight qap);
         virtual ~distributed_quality_metrics();
 
         EdgeWeight local_edge_cut( parallel_graph_access & G, int * partition_map, MPI_Comm communicator );
@@ -32,18 +33,20 @@ public:
 
 	EdgeWeight total_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator);
 
-
+	void set_initial_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator);
+	void set_initial_qap(EdgeWeight qap) {initial_qap = qap;};
+	void add_timing(std::vector<double> vec);
+	EdgeWeight get_initial_qap() { return initial_qap; };
+        std::vector< double > get_cycle_time() { return mt_time; };
+        double get_coarse_time() { return mt_time[0]; };
+	double get_inpart_time() { return mt_time[1]; };
+	double get_refine_time() { return mt_time[2]; };
+	void print();
 	
-	//private: 
+private: 
 
-	EdgeWeight initialobjective;
-	double blc;
-        int m_num_levels;
-        timer t_c;
-	timer t_i;
-	timer t_p;
-	timer t_r;
-
+	EdgeWeight initial_qap;
+        std::vector< double > mt_time;
 
 
 };
