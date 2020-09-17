@@ -135,8 +135,9 @@ struct PPartitionConfig
         //=======================================
 
         bool integrated_mapping;
-        bool only_boundary=false;
-        //matrix* D;
+        bool only_boundary = false;
+        bool refinement_focus = false;
+        int max_coarsening_levels = 4;
 
         //=======================================
         //======= Binary Online Distance ========
