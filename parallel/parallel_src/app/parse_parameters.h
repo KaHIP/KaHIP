@@ -71,7 +71,7 @@ int parse_parameters(int argn, char **argv,
 	  help, filename, filename_output, user_seed, k, inbalance, preconfiguration, vertex_degree_weights,
                 save_partition, save_partition_binary, hierarchy_parameter_string, distance_parameter_string,
                 only_boundary, num_vcycles, label_iterations_refinement, label_iterations_coarsening, stop_factor,
-                no_refinement_in_last_iteration,
+                no_refinement_in_last_iteration, cluster_coarsening_factor,
 #elif defined TOOLBOX 
                 help, filename, k_opt, input_partition_filename, save_partition, save_partition_binary, converter_evaluate,
 #endif 

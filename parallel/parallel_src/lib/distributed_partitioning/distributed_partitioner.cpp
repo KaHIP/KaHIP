@@ -135,7 +135,7 @@ distributed_quality_metrics distributed_partitioner::perform_partitioning( MPI_C
                 if(config.eco) {
                         MPI_Bcast(&(config.cluster_coarsening_factor), 1, MPI_DOUBLE, ROOT, communicator);
                         
-                        //std::cout << "cf " << config.cluster_coarsening_factor  << std::endl;
+                        std::cout << "eco configuration, cluster_coarsening_factor " << config.cluster_coarsening_factor  << std::endl;
                 }
                 config.evolutionary_time_limit = 0;
                 elapsed += t.elapsed();
@@ -348,6 +348,7 @@ distributed_quality_metrics distributed_partitioner::vcycle( MPI_Comm communicat
 
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
+                std::cout <<  "log> cluster upper bound used is " << config.upper_bound_cluster << std::endl;
                 std::cout <<  "log>cycle: " << m_cycle << " level: " << m_level  << " parallel label compression took " <<  t.elapsed() << std::endl;
         }
 #endif
@@ -377,6 +378,8 @@ distributed_quality_metrics distributed_partitioner::vcycle( MPI_Comm communicat
 #endif
 
         if( !contraction_stop_decision.contraction_stop(config, G, Q)) {
+                double contraction_factor = Q.number_of_global_nodes() / (double) G.number_of_global_nodes(); 
+                config.cluster_coarsening_factor *= contraction_factor; //multiply to keep the same contraction factor in every level
                 vcycle( communicator, config, Q, PEtree );
         } else {
 #ifndef NOOUTPUT

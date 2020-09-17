@@ -80,6 +80,9 @@ int main(int argn, char **argv) {
                         PRINT(std::cout <<  "log> cluster coarsening factor is set to " <<  partition_config.cluster_coarsening_factor  << std::endl;)
                 }
 
+                //TODO: not sure about this but I think it makes more sense not to divide it. If not divided, coarsening will stop when the global 
+                //number of vertices of the coarsest graph is less than stop_factor*k. If we divide by k, then stop_factor is the global size limit
+                //for the coarsest graph
                 partition_config.stop_factor /= partition_config.k;
                 if(rank != 0) partition_config.seed = partition_config.seed*size+rank; 
 
