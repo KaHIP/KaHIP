@@ -96,7 +96,7 @@ int main(int argn, char **argv) {
                 processor_tree PEtree( partition_config.distances, partition_config.group_sizes );
                 if( rank == ROOT ) {
                         PEtree.print();
-                        if( PEtree.get_numPUs()<25){
+                        if( PEtree.get_numPUs()<11){
                                 PEtree.print_allPairDistances();
                         }
                 }
@@ -107,7 +107,9 @@ int main(int argn, char **argv) {
                         const double coarsening_factor = partition_config.coarsening_factor; 
                         partition_config.cluster_coarsening_factor = G.number_of_global_nodes() / (coarsening_factor*partition_config.k);
                         const int coarsening_levels = partition_config.max_coarsening_levels;
-                        partition_config.stop_factor = G.number_of_global_nodes()/(coarsening_factor*(coarsening_levels-1));
+                        if( !partition_config.stop_factor ){
+                               partition_config.stop_factor = G.number_of_global_nodes()/(coarsening_factor*(coarsening_levels-1));
+                        }
                 }
 
                 //TODO: not sure about this but I think it makes more sense not to divide it. If not divided, coarsening will stop when the global 
