@@ -149,7 +149,7 @@ struct PPartitionConfig
         std::vector<unsigned int>  *compact_bin_id;
         bool use_compact_bin_id;
         int bit_sec_len;
-        int label_iterations_refinement_map;
+        //int label_iterations_refinement_map;
 
         //=======================================
         //===============Shared Mem OMP==========

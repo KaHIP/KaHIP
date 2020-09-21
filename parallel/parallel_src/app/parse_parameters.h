@@ -156,14 +156,20 @@ int parse_parameters(int argn, char **argv,
                 } else if (strcmp("ultrafastmesh", preconfiguration->sval[0]) == 0) {
                         cfg.ultrafast(partition_config);
                         partition_config.cluster_coarsening_factor = 20000;
-                } else if (strcmp("mappingmesh", preconfiguration->sval[0]) == 0) {
+                } else if (strcmp("mappingmesh", preconfiguration->sval[0]) == 0 || strcmp("mappingsocial", preconfiguration->sval[0]) == 0 ) {
                         cfg.mapping(partition_config);
-                        partition_config.coarsening_factor = 3;
-                        //partition_config.max_coarsening_levels = 6;
-                } else if (strcmp("mappingsocial", preconfiguration->sval[0]) == 0) {
-                        cfg.mapping(partition_config);
-                        partition_config.coarsening_factor = 5;
-                        //partition_config.max_coarsening_levels = 6;
+                        if(stop_factor->count > 0) {
+                                partition_config.stop_factor = stop_factor->ival[0];
+                        }else{
+                                partition_config.stop_factor = 0;
+                        }
+                        if (strcmp("mappingmesh", preconfiguration->sval[0]) == 0){
+                                partition_config.coarsening_factor = 3;
+                                //partition_config.max_coarsening_levels = 6;
+                        }else{ //social
+                                partition_config.coarsening_factor = 5;
+                                //partition_config.max_coarsening_levels = 6;
+                        }
                 } else {
                         fprintf(stderr, "Invalid preconfconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
                         exit(0);

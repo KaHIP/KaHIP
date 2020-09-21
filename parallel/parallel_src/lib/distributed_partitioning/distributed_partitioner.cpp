@@ -226,7 +226,8 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
                         std::cout <<  "log>cycle_m: " << m_cycle << " coarsening took  " <<  vec[0] << std::endl;
                 }
 #endif
-		
+                qm.set_initial_numNodes( Q.number_of_global_nodes() );
+                qm.set_initial_numEdges( Q.number_of_global_edges() );
                 t.restart();
 
                 initial_partitioning_algorithm ip;
