@@ -58,6 +58,7 @@ inline void configuration::mapping( PPartitionConfig & partition_config ) {
         partition_config.num_vcycles                     = 1;
         partition_config.refinement_focus                = true;
         partition_config.stop_factor                     = 0;
+        partition_config.label_iterations_coarsening     = 2;
 }
 inline void configuration::standard( PPartitionConfig & partition_config ) {
         partition_config.seed                                   = 0;
