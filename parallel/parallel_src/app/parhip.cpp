@@ -109,6 +109,10 @@ int main(int argn, char **argv) {
                         const int coarsening_levels = partition_config.max_coarsening_levels;
                         if( !partition_config.stop_factor ){
                                partition_config.stop_factor = G.number_of_global_nodes()/(coarsening_factor*(coarsening_levels-1));
+                               //set a minimum for the global size of the coarsest graph as this greatly affects the time for initial partitioning
+                               //this way, each PE will have 2000 vertices
+                               //TODO: maybe differentiate between meshes and complex networks?
+                               partition_config.stop_factor = std::min( partition_config.stop_factor, size*3000 );
                         }
                 }
 
