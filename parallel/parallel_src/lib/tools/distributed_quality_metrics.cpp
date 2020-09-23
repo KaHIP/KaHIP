@@ -107,7 +107,7 @@ EdgeWeight distributed_quality_metrics::total_qap( parallel_graph_access & G, co
 	// if( rank == ROOT ) 
 	//   std::cout <<  " PRINT : total_global_qap " << global_qap << std::endl;
 	
-        return global_qap/2;
+        return global_qap;
 }
 
 
