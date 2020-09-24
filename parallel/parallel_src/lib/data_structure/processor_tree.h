@@ -4,6 +4,8 @@
 using namespace std;
 
 #include <vector>
+//#include <iostream>
+#include <bitset>
 
 class processor_tree
 {
@@ -25,6 +27,19 @@ public:
 		for( unsigned int i = 0; i < get_numOfLevels(); i++)
 			numPUs *= traversalDescendants[i];
 	}
+
+	/* processor_tree(const vector<int> &distances, const vector<int> &descendants , MPI_Comm communicator ) { */
+	/*   assert( distances.size() == descendants.size()); */
+	/*   traversalDistances = distances.size()==0 ? std::vector<int>{0} : distances; */
+	/*   traversalDescendants = descendants.size()==0 ? std::vector<int>{1}  : descendants; //TODO: should this be 0 or 1 */
+	/*   numOfLevels = distances.size()==0 ? 1 : distances.size(); */
+	/*   for( unsigned int i = 0; i < get_numOfLevels(); i++) */
+	/*     numPUs *= traversalDescendants[i]; */
+	/*   buildProcGraph(communicator); */
+	/*   build_predecessorMatrix(); */
+	  
+	/* } */
+
   
 	~processor_tree(){};
 
@@ -130,7 +145,7 @@ public:
 		std::cout << " ===================================== " << std::endl;
 	}
 
-
+	
 	void print_allPairDistances() const {
 	  
 		std::cout << " ========== Distance Matrix ==========" << std::endl;
@@ -142,18 +157,298 @@ public:
 			std::cout  << std::endl;
 		}
 		std::cout << " ===================================== " << std::endl;
+	        printDistance_PxPy(1,1);
 	}
 
 
+
+        inline int printDistance_PxPy(int x, int y) const {
+               assert((x <= numPUs) and (y <= numPUs) );
+                int groups_size = traversalDescendants.size();
+                assert ( groups_size == numOfLevels);
+                std::vector<unsigned int>  * compact_bin_id = new std::vector<unsigned int> (numPUs,0);
+
+                int bit_sec_len = 1;
+                for( unsigned k = 0; k < groups_size; k++) {
+                    int tmp = ceil(log2(traversalDescendants[k]));
+                    if (tmp > bit_sec_len) {
+                            bit_sec_len = tmp;
+                    }
+                }
+
+                for (unsigned i = 0; i < numPUs; i++) {
+                        unsigned int lay_id = i;
+                        for(int k=0; k < groups_size; k++) {
+                                int remainder = lay_id % traversalDescendants[k];
+                                lay_id = lay_id / traversalDescendants[k];
+                                (*compact_bin_id)[i] += remainder << (k*bit_sec_len);
+                        }
+                }
+		
+		for (unsigned i = 0; i < numPUs; i++) {
+		  std::cout << (*compact_bin_id)[i] << ", "
+			    << std::bitset<8>( (*compact_bin_id)[i])<< std::endl;
+		}
+		
+                int k = 0;
+                unsigned long long int xor_x_y = (*compact_bin_id)[x] ^ (*compact_bin_id)[y];
+                if (!xor_x_y) return 0;
+                int count_leading_zeros = __builtin_clzll(xor_x_y);
+                int total_n_bits = 8*sizeof(unsigned long long int);
+                int clz = total_n_bits - count_leading_zeros -1;
+                if (clz >= 0) {
+                        k = (int)floor(clz / bit_sec_len);
+                        return traversalDistances[k];
+                } else  {
+                        return 0;
+                }       
+
+		
+ 	}	
+
+
+	// TODO: check later if I want to store in processor_tree class
+	/* void build_predecessorMatrix() const { */
+	/*   int nodesNo = proc.number_of_nodes();	   */
+	/*   for (int i = 0; i < nodesNo; i++) { */
+	/*     vector<int> row(nodesNo); */
+	/*     predecessorMatrix.push_back(row); */
+	/*   } */
+	/*   for (int i = 0; i < nodesNo; i++) { */
+	/*     for (int j = 0; j < nodesNo; j++) { */
+	/*       bool done = false; */
+	/*       int start = i; */
+	/*       int target = j; */
+	/*       int tempsave; */
+	/*       while (start != target) { */
+	/* 	if (start > target) { */
+	/* 	  tempsave = start;	   */
+	/* 	  start = proc.getEdgeTarget(proc.get_first_edge(start)); */
+	/* 	  if ((start == j) && !done) { */
+	/* 	    proc.predecessorMatrix[i][j] = tempsave; */
+	/* 	  } */
+	/* 	} else { */
+	/* 	  target = proc.getEdgeTarget(proc.get_first_edge(target)); */
+	/* 	  if (!done) { */
+	/* 	    proc.predecessorMatrix[i][j] = proc.getEdgeTarget(proc.get_first_edge(j)); */
+	/* 	    done = true; */
+	/* 	  } */
+	/* 	} */
+	/*       } // while */
+	/*     } */
+	/*   } */
+	/* } */
+
+	// creating the predecessorMatrix, not really storing it (yet)
+	// check where it is needed, if it is not much needed keep it like that
+	vector< vector<int>> build_predecessorMatrix(parallel_graph_access & P) const {
+	  vector< vector<int> > predecessorMatrix;
+	  int nodesNo = P.number_of_global_nodes();
+
+	  for (int i = 0; i < nodesNo; i++) {
+	    vector<int> row(nodesNo);
+	    predecessorMatrix.push_back(row);
+	  }
+	  for (int i = 0; i < nodesNo; i++) {
+	    for (int j = 0; j < nodesNo; j++) {
+	      bool done = false;
+	      int start = i;
+	      int target = j;
+	      int tempsave;
+	      while (start != target) {
+		if (start > target) {
+		  tempsave = start;	  
+		  start = P.getEdgeTarget(P.get_first_edge(start));
+		  if ((start == j) && !done) {
+		    predecessorMatrix[i][j] = tempsave;
+		  }
+		} else {
+		  target = P.getEdgeTarget(P.get_first_edge(target));
+		  if (!done) {
+		    predecessorMatrix[i][j] = P.getEdgeTarget(P.get_first_edge(j));
+		    done = true;
+		  }
+		}
+	      }
+	    } // while
+	  }  // for  
+	  return predecessorMatrix;
+	}
+	
+	void build_parallelPGraph (parallel_graph_access & cg, MPI_Comm communicator) const {
+
+	  vector<int> vec(numOfLevels + 1, 1);
+	  NodeID k = 0;
+	  int j;
+	  for (j = 0; j < numOfLevels; j++) {
+	    vec[j+1] = traversalDescendants[j]*vec[j];
+	    k += vec[j];
+	  }
+	  k += vec[j];
+	  
+	  EdgeID nmbEdges = (EdgeID)(k-1) * 2; // todo maybe *2
+
+  	  int rank, comm_size;
+  	  MPI_Comm_rank( communicator, &rank);
+	  MPI_Comm_size( communicator, &comm_size);
+	  
+	  // pe p reads the lines p*ceil(n/size) to (p+1)floor(n/size) lines of that file
+	  ULONG from  = rank     * ceil(k / (double)comm_size);
+	  ULONG to    = (rank+1) * ceil(k / (double)comm_size) - 1;
+	  to = std::min<unsigned long>(to, k-1);
+
+	  ULONG local_no_nodes = to - from + 1;
+	  unsigned ksq = k * k;
+	  
+	  //MPI_Barrier(communicator);
+
+
+	  vector<int> nodes;
+	  vector<int> nodeWeights;
+	  vector<int> edges;
+	  vector<int> edgeWeights;
+	  
+	  int sizeOfThisLevel = 1;
+	  int startOfLastLevel = 0;
+	  int startOfThisLevel = 0;
+	  int startOfNextLevel = 1;
+	  int numEdges = 0;
+	  int numNodes = 1;
   
+	  nodes.push_back(0);
+	  nodeWeights.push_back(0);
+  
+
+	  for (unsigned int i = 0; i < traversalDescendants.size(); i++) {    
+	    //add edges for all nodes in level i
+	    for (int j = 0; j < sizeOfThisLevel; j++) {
+	      //edge to parent
+	      if (i > 0) {
+		edges.push_back(startOfLastLevel + (j / traversalDescendants[i-1]));
+		edgeWeights.push_back(traversalDistances[i-1]);
+	      }
+	      
+	      for (int l = 0; l < traversalDescendants[i]; l++) {
+		edges.push_back(startOfNextLevel + l + j * traversalDescendants[i]);
+		edgeWeights.push_back(traversalDistances[i]);
+		numEdges++;
+	      }
+	    }
+	    //add new nodes for level i+1
+	    for (int j = 0; j < (sizeOfThisLevel * traversalDescendants[i]) ; j++) {
+	      if (i + 1 == traversalDescendants.size()) {
+		nodes.push_back(numEdges);
+		nodeWeights.push_back(1);
+	      } else {
+		nodes.push_back(numEdges + j * traversalDescendants[i + 1]);
+		nodeWeights.push_back(0);
+	      }
+	      numNodes++;
+	      numEdges++;
+	      
+	    }
+	    startOfLastLevel = startOfThisLevel;
+	    startOfThisLevel += sizeOfThisLevel;
+	    sizeOfThisLevel *= traversalDescendants[i];
+	    startOfNextLevel += sizeOfThisLevel;
+	  }
+	  
+	  for (int j = 0; j < sizeOfThisLevel; j++) {
+	    edges.push_back(startOfLastLevel + (j / traversalDescendants[traversalDescendants.size() - 1]));
+	    edgeWeights.push_back(traversalDistances[traversalDistances.size() - 1]);
+	  }
+	  nodes.push_back(numEdges);
+
+	  std::cout <<  "numNodes: " << numNodes << " numEdges: " << numEdges << std::endl;
+	  std::cout <<  "k: " << k << " nmbEdges: " << nmbEdges << std::endl;
+	  
+
+
+
+/* 	  inline int graph_access::build_from_metis_weighted(int n, int* xadj, int* adjncy, int * vwgt, int* adjwgt) { */
+/*         graphref = new basicGraph(); */
+/*         start_construction(n, xadj[n]); */
+/*         for( unsigned i = 0; i < (unsigned)n; i++) { */
+/*                 NodeID node = new_node(); */
+/*                 setNodeWeight(node, vwgt[i]); */
+/*                 setPartitionIndex(node, 0); */
+
+/*                 for( unsigned e = xadj[i]; e < (unsigned)xadj[i+1]; e++) { */
+/*                         EdgeID e_bar = new_edge(node, adjncy[e]); */
+/*                         setEdgeWeight(e_bar, adjwgt[e]); */
+/*                 } */
+/*         }        */
+/*         finish_construction(); */
+/*         return 0; */
+/* } */
+	  // proc.build_from_metis_weighted(numNodes, &nodes[0], &edges[0], &nodeWeights[0], &edgeWeights[0]);  	  
+	  cg.start_construction((NodeID) local_no_nodes, nmbEdges,(NodeID) k, nmbEdges);
+	  cg.set_range(from, to);
+  
+	  std::vector< NodeID > vertex_dist( comm_size+1, 0 );
+	  for( PEID peID = 0; peID <= comm_size; peID++) {
+	    vertex_dist[peID] = peID * ceil(k / (double)comm_size); // from positions
+	  }
+	  cg.set_range_array(vertex_dist);
+
+	  
+	  for (NodeID i = 0; i < local_no_nodes; ++i) {
+	    NodeID node = cg.new_node();
+	    cg.setNodeWeight(node, 1);
+	    cg.setNodeLabel(node, from+node);
+	    cg.setSecondPartitionIndex(node, 0);
+	    for(unsigned j = nodes[i]; j < nodes[i+1]; j++) {
+	    	EdgeID e = cg.new_edge(node, edges[j]);
+	    	cg.setEdgeWeight(e, edgeWeights[e]);
+	    } // for
+	  }
+	  cg.finish_construction(); 
+	  // check if barier is needed
+	  MPI_Barrier(communicator);
+
+	  /* if (rank == ROOT) { */
+	  /*   std::cout << " proc_graph nodes " << cg.number_of_global_nodes() */
+	  /* 	      << " proc_graph edges " << cg.number_of_global_edges() << std::endl; */
+	  /* } */
+
+	    /* forall_local_nodes(cg,u) { */
+	    /*   forall_out_edges(cg, edgeP, u) { */
+	    /* 	unsigned int start = u; */
+	    /* 	unsigned int target = cg.getEdgeTarget(edgeP); */
+	    /* 	cout << "edgeP[" << start << "][" << target << "]: "  << */
+	    /* 	  cg.getEdgeWeight(edgeP) << "\n"; */
+
+	    /*   } endfor */
+	    /* 	  } endfor */
+
+
+	}
   
 private:
+
+	int64_t flipPosition(int64_t pos, int64_t l) {
+	  int64_t ll = l;
+	  int64_t entryAtPosition = (ll >> pos) % 2;
+	  if(entryAtPosition == 1) {
+	    ll-= (1LL << pos);
+	  } else {
+	    ll+= (1LL << pos);
+	  }
+	  return ll;
+	}
+
 	
 	unsigned int numOfLevels;
 	unsigned int numPUs = 1;
 	// Q: make distances double?
 	vector<int> traversalDistances;
 	vector<int> traversalDescendants;
+
+	/* parallel_graph_access & P; */
+	/* vector< vector<int> > predecessorMatrix; */
+	
+
+	
 
 };
 

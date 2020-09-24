@@ -54,16 +54,14 @@ public:
 	  
 
 		    
-    /* JUST FOR TESTING */
+
   	  int rank, comm_size;
   	  MPI_Comm_rank( communicator, &rank);
 	  MPI_Comm_size( communicator, &comm_size);
 
-
-
 	  
 	  unsigned k = PEtree.get_numPUs();//number of nodes in C
-
+	  
 	  // pe p reads the lines p*ceil(n/size) to (p+1)floor(n/size) lines of that file
 	  ULONG from  = rank     * ceil(k / (double)comm_size);
 	  ULONG to    = (rank+1) * ceil(k / (double)comm_size) - 1;
@@ -71,8 +69,6 @@ public:
 
 	  ULONG local_no_nodes = to - from + 1;
 
-	  std::vector< std::vector< NodeID > > local_edge_lists;
-	  local_edge_lists.resize(local_no_nodes);
 
 
 	  unsigned ksq = k * k;
@@ -124,57 +120,37 @@ public:
     cg.setSecondPartitionIndex(node, 0);
     for(unsigned j = 0; j < k; j ++) {
       unsigned indexC = ((i * k) + j);
-      std::cout <<  " indexC " << indexC << std::endl;
+      //std::cout <<  " indexC " << indexC << std::endl;
       if(edgeWeights[indexC] != 0) {
-	cout << i << ", " << j<< "  \n";
+	//cout << i << ", " << j<< "  \n";
 	EdgeID e = cg.new_edge(i, j);
 	//cg.setEdgeWeight(e, 1);
 	cg.setEdgeWeight(e, edgeWeights[indexC]);
       }
     }
   }
-  /* /\* //build cg from k, nmbEdges, edgeWeights[] *\/ */
-  /* cg.start_construction((NodeID) k, nmbEdges,(NodeID) k, nmbEdges); */
-  /* for(unsigned i = 0; i < k; i++) {   */
-  /*   NodeID u = cg.new_node(); */
-  /*   cg.setNodeWeight(u, 1); */
-  /*   cg.setNodeLabel(u, 0); */
-  /*   for(unsigned j = 0; j < k; j ++) { */
-  /*     //     if( i < j ) { */
-  /* 	unsigned indexC = ((i * k) + j); */
-  /*     	std::cout <<  " indexC " << indexC << std::endl; */
-  /* 	if(edgeWeights[indexC] != 0) { */
-  /* 	  cout << i << ", " << j<< "  \n"; */
-  /* 	  EdgeID e = cg.new_edge(i, j); */
-  /* 	  //cg.setEdgeWeight(e, 1); */
-  /* 	  //cg.setEdgeWeight(e, edgeWeights[indexC]); */
-  /* 	} */
-  /* 	//   } */
-  /*   } */
-  /* } */
 
   cg.finish_construction(); 
   MPI_Barrier(communicator);
 
   cout << "cg.number_of_global_nodes() = " << cg.number_of_global_nodes()
-     << ", cg.number_of_local_nodes()" << cg.number_of_global_edges() << "\n";
+     << ", cg.number_of_local_nodes() = " << cg.number_of_global_edges() << "\n";
 
-//if (rank == ROOT) {
-   forall_local_nodes(cg,i) {
-     forall_out_edges(cg, edgeG, i) {
-       unsigned int start = i;
-       unsigned int target = cg.getEdgeTarget(edgeG);
-       cout << "edge[" << start << "][" << target << "]: "  <<
-	 cg.getEdgeWeight(edgeG) << "\n";
 
-     } endfor
-	 } endfor
+   /* forall_local_nodes(cg,i) { */
+   /*   forall_out_edges(cg, edgeG, i) { */
+   /*     unsigned int start = i; */
+   /*     unsigned int target = cg.getEdgeTarget(edgeG); */
+   /*     cout << "edge[" << start << "][" << target << "]: "  << */
+   /* 	 cg.getEdgeWeight(edgeG) << "\n"; */
 
-	     //}
+   /*   } endfor */
+   /* 	 } endfor */
+
  
 	  
-  	  PartitionID n = C.number_of_global_nodes();
-  	  cout << "C.number_of_global_nodes() = " << n << ", C.number_of_local_nodes()" << C.number_of_local_nodes() << "\n";
+  PartitionID n = C.number_of_global_nodes();
+  cout << "C.number_of_global_nodes() = " << n << ", C.number_of_local_nodes() = " << C.number_of_local_nodes() << "\n";
   
   	  //compute maximum congestion, maximum dilation, average dilation
   	  int local_sumDilation = 0;
@@ -183,9 +159,18 @@ public:
   	  int np = PEtree.get_numPUs();
 	  cout << "np = " << np  << "\n";
   	  vector<int> local_qap(np, 0);
-  	  int maxCongestion = 0;
+
+	  vector<int> congestion(ksq, 0);
+	  
+	  int maxCongestion = 0;
+	  int local_maxCongestion = 0;
   	  double avgDilation = 0.0;
 
+	  // create and build processor parallel_graph_access object
+	  parallel_graph_access P(communicator);
+	  vector< vector<int>> predecessorMatrix;
+	  PEtree.build_parallelPGraph(P, communicator);
+	  predecessorMatrix = PEtree.build_predecessorMatrix(P);
 
 	  forall_local_nodes(cg, i) {
   	    forall_out_edges(cg, edgeC, i) {
@@ -199,18 +184,79 @@ public:
   	  	  int distance = PEtree.getDistance_PxPy(cg.getNodeLabel( start ),cg.getNodeLabel( target));
   	  	  int currDilation = distance * (cg.getEdgeWeight(edgeC));
   	  	  cout << "D[" << start << "][" << target << "]: "  << distance  << " -> currDilation"  << currDilation << "\n";
-  	  	  //local_qap[C.getNodeLabel( target)] += C.getEdgeWeight(edgeC);
 		  local_sumDilation += currDilation;
-		  if(currDilation > local_maxDilation) {
+		  if(currDilation > local_maxDilation)
 		    local_maxDilation = currDilation;
-		  }
+		  
+		  //update congestion[]
+		  unsigned int current = target;
+		  unsigned int next = target;
+		  while (current != start) {
+		    current = predecessorMatrix[start][current];
+		    if (next >= current) {
+		      
+		      /* for(PartitionID j = 0; j < np; j++) { */
+		      /* 	if( j == next) { */
+		      /* 	  PartitionID uBlock = C.getNodeLabel(current); */
+		      /* 	  unsigned indexP = (unsigned) ((uBlock * k) + j); */
+		      /* 	  congestion[indexP] += cg.getEdgeWeight(edgeC); */
+		      /* 	} */
+		      /* } */
+		      forall_out_edges(P, edgeP, current) {
+		      	if(P.getEdgeTarget(edgeP) == next) {
+		      	  congestion[edgeP] += cg.getEdgeWeight(edgeC);
+		      	}
+		      } endfor
+			  
+		    } else {
+		      /* for(PartitionID j = 0; j < np; j++) { */
+		      /* 	if( j == current) { */
+		      /* 	  PartitionID uBlock = C.getNodeLabel(next); */
+		      /* 	  unsigned indexP = (unsigned) ((uBlock * k) + j); */
+		      /* 	  congestion[indexP] += cg.getEdgeWeight(edgeC); */
+		      /* 	} */
+		      /* } */
+		      
+		      forall_out_edges(P, edgeP, next) {
+		      	if (P.getEdgeTarget(edgeP) == current) {
+		      	  congestion[edgeP] += cg.getEdgeWeight(edgeC);
+		      	}
+		      } endfor
+		    }
+		    next = current;
+		  } // while
+		  //update congestion[]		  
 		}
 	      }
   	    } endfor
-		} endfor
+        } endfor
 		    
 
-	  
+	 /* //update congestion[] */
+	 /*  for(PartitionID j = 0; j < np; j++) { */
+	 /*    for(PartitionID l = 0; l < np; l++) { */
+	 /*      // TODO: cureful here division with 0!! */
+	 /*      unsigned indexP = (unsigned) ((j * k) + l); */
+	 /*      (congestion[indexP]) /= PEtree.getDistance_PxPy(j,l); */
+	 /*    } */
+	 /*  } */
+	 forall_local_edges(P, edgeP) {
+	    (congestion[edgeP]) /= P.getEdgeWeight(edgeP);//recall that edge weight indicates bandwidth
+	  } endfor
+
+	  /* for(PartitionID j = 0; j < ksq; j++) { */
+	  /*   if (congestion[j] > local_maxCongestion) { */
+	  /*     local_maxCongestion = congestion[j]; */
+	  /*   } */
+	  /* } */
+	 forall_local_edges(P, edgeP) {
+	    if (congestion[edgeP] > local_maxCongestion) {
+	      local_maxCongestion = congestion[edgeP];
+	    }
+	  } endfor
+
+	  MPI_Allreduce(&local_maxCongestion, &maxCongestion, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, communicator);	    
+	  //update congestion[]
 	  
   	  /* forall_local_nodes(C, i) { */
   	  /*   forall_out_edges(C, edgeC, i) { */
@@ -250,8 +296,8 @@ public:
   	  /*   } */
   	  /* } */
   //cout << rank << " local_maxDilation::" << local_maxDilation << "\n";
-  cout << rank << " local_sumDilation::" << local_sumDilation
-       << " num edges " << (cg.number_of_global_edges() / 2)<< "\n";
+	  cout << rank << " local_sumDilation::" << local_sumDilation
+	       << " num edges " << (cg.number_of_global_edges() / 2)<< "\n";
 
   	  int global_maxDilation = 0;
   	  MPI_Allreduce(&local_maxDilation, &global_maxDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, communicator);
