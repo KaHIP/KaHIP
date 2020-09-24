@@ -291,7 +291,6 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
                 config.total_num_labels = config.k;
                 config.upper_bound_cluster = config.upper_bound_partition;
 
-
                 G.init_balance_management( config );
                 PPartitionConfig working_config = config;
                 working_config.vcycle = false; // assure that we actually can improve the cut

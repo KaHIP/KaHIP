@@ -43,8 +43,9 @@ class parallel_label_compress {
                         }
 
                         //use distance if integrated mapping is activated and we do uncoarsening
-                        const bool usePEdistances = !for_coarsening && config.integrated_mapping ? true : false ;
-
+                        //and we do not ignore the tree
+                        const bool usePEdistances = !for_coarsening && config.integrated_mapping && !config.ignore_PEtree ? true : false ;
+                        
                         //checks, keep?
                         if( usePEdistances ){
                                 //tree should not be empty

@@ -65,6 +65,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
         struct arg_lit *only_boundary                        = arg_lit0(NULL, "only_boundary", "when refinement, move boundary vertices only" );
         struct arg_int *max_coarsening_levels                    = arg_int0(NULL, "max_coarsening_levels", NULL, "Max number of coarsening levels to perform.");
+        struct arg_lit *ignore_PEtree                        = arg_lit0(NULL, "ignore_PEtree", "Even if the PE tree is given, ignore it during refinement; used to measure the qap metrics when a PE tree exists but it is ignored" );
 
         // Define argtable.
         void* argtable[] = {
@@ -72,7 +73,7 @@ int parse_parameters(int argn, char **argv,
 	  help, filename, filename_output, user_seed, k, inbalance, preconfiguration, vertex_degree_weights,
                 save_partition, save_partition_binary, hierarchy_parameter_string, distance_parameter_string,
                 only_boundary, num_vcycles, label_iterations_refinement, label_iterations_coarsening, stop_factor,
-                no_refinement_in_last_iteration, cluster_coarsening_factor, max_coarsening_levels, 
+                no_refinement_in_last_iteration, cluster_coarsening_factor, max_coarsening_levels, ignore_PEtree,
 #elif defined TOOLBOX 
                 help, filename, k_opt, input_partition_filename, save_partition, save_partition_binary, converter_evaluate,
 #endif 
@@ -167,7 +168,7 @@ int parse_parameters(int argn, char **argv,
                                 partition_config.coarsening_factor = 3;
                                 //partition_config.max_coarsening_levels = 6;
                         }else{ //social
-                                partition_config.coarsening_factor = 5;
+                                partition_config.coarsening_factor = 30;
                                 //partition_config.max_coarsening_levels = 6;
                         }
                 } else {
@@ -347,9 +348,12 @@ int parse_parameters(int argn, char **argv,
                 partition_config.integrated_mapping = true;
             }
         }
-
+        
         if( only_boundary->count ){
             partition_config.only_boundary = true;
+        }
+        if( ignore_PEtree->count ){
+            partition_config.ignore_PEtree = true;
         }
 
 //next lines appear in main() at the SEA_mapping code; not sure if (and why) we need them

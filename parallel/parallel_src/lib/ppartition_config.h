@@ -135,6 +135,7 @@ struct PPartitionConfig
         //=======================================
 
         bool integrated_mapping;
+        bool ignore_PEtree = false;
         bool only_boundary = false;
         bool refinement_focus = false;
         int max_coarsening_levels = 4;
