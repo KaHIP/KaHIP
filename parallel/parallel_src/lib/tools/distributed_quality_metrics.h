@@ -37,6 +37,8 @@ public:
 
 	void set_initial_qap(EdgeWeight qap) {initial_qap = qap;};
 	void set_initial_cut(EdgeWeight cut) {initial_cut = cut;};
+    void set_initial_numNodes(NodeWeight size) {initial_numNodes = size;};
+    void set_initial_numEdges(NodeWeight size) {initial_numEdges = size;};
 	void add_timing(std::vector<double> vec);
 	EdgeWeight get_initial_qap() { return initial_qap; };
 	EdgeWeight get_initial_cut() { return initial_cut; };
@@ -44,6 +46,8 @@ public:
         double get_coarse_time() { return ml_time[0]; };
 	double get_inpart_time() { return ml_time[1]; };
 	double get_refine_time() { return ml_time[2]; };
+    NodeWeight get_initial_numNodes(){ return initial_numNodes; };
+    NodeWeight get_initial_numEdges(){ return initial_numEdges; };
 	void print();
 
 
@@ -319,9 +323,9 @@ public:
 	
 private: 
 
-	EdgeWeight initial_qap, initial_cut;
+        EdgeWeight initial_qap, initial_cut, initial_numEdges=0;
         std::vector< double > ml_time;
-
+        NodeWeight initial_numNodes = 0;
 
 };
 

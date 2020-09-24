@@ -130,10 +130,6 @@ int main(int argn, char **argv) {
                 MPI_Comm_rank( communicator, &rank);
                 MPI_Comm_size( communicator, &size);
 
-                if(rank == ROOT) {
-                        PRINT(std::cout <<  "log> cluster coarsening factor is set to " <<  partition_config.cluster_coarsening_factor  << std::endl;)
-                }
-
                 if(rank != 0) partition_config.seed = partition_config.seed*size+rank; 
 
                 srand(partition_config.seed);
@@ -190,9 +186,17 @@ int main(int argn, char **argv) {
                         const int coarsening_levels = partition_config.max_coarsening_levels;
                         if( !partition_config.stop_factor ){
                                partition_config.stop_factor = G.number_of_global_nodes()/(coarsening_factor*(coarsening_levels-1));
+                               //set a minimum for the global size of the coarsest graph as this greatly affects the time for initial partitioning
+                               //this way, each PE will have 2000 vertices
+                               //TODO: maybe differentiate between meshes and complex networks?
+                               partition_config.stop_factor = std::min( partition_config.stop_factor, size*3000 );
                         }
                 }
-
+                
+                if(rank == ROOT) {
+                        PRINT(std::cout <<  "log> cluster coarsening factor is set to " <<  partition_config.cluster_coarsening_factor  << std::endl;)
+                }
+                
                 //TODO: not sure about this but I think it makes more sense not to divide it. If not divided, coarsening will stop when the global 
                 //number of vertices of the coarsest graph is less than stop_factor*k. If we divide by k, then stop_factor is the limit for the global size
                 //of the coarsest graph
@@ -211,7 +215,7 @@ int main(int argn, char **argv) {
                 parallel_graph_access::set_comm_rounds_up( partition_config.comm_rounds/size);
                 distributed_partitioner::generate_random_choices( partition_config );
 
-                G.printMemoryUsage(std::cout);
+                //G.printMemoryUsage(std::cout);
 
                 //compute some stats
                 EdgeWeight interPEedges = 0;
@@ -260,17 +264,11 @@ int main(int argn, char **argv) {
                         }
                 }
 
-
-
-				
                 distributed_partitioner dpart;
-		distributed_quality_metrics qm;
-		
+                distributed_quality_metrics qm;
                 qm = dpart.perform_partitioning( communicator, partition_config, G, PEtree);
 
                 MPI_Barrier(communicator);
-
-
 
                 double running_time = t.elapsed();
 		
@@ -291,21 +289,20 @@ int main(int argn, char **argv) {
                 PRINT(double balance_load_dist  = qm.balance_load_dist( partition_config, G, communicator );)
 
 
-
-		
-		
                 if( rank == ROOT ) {
                         std::cout << "log>" << "=====================================" << std::endl;
                         std::cout << "log>" << "============AND WE R DONE============" << std::endl;
                         std::cout << "log>" << "=====================================" << std::endl;
                         std::cout << "log> METRICS" << std::endl;
                         std::cout << "log> total partitioning time elapsed " <<  running_time << std::endl;
-			std::cout << "log> total coarse time " <<  qm.get_coarse_time() << std::endl;
-			std::cout << "log> total inpart time " <<  qm.get_inpart_time() << std::endl;
-			std::cout << "log> total refine time " <<  qm.get_refine_time() << std::endl;
-			std::cout << "log> initial edge cut  " <<  qm.get_initial_cut()  << std::endl;
+                        std::cout << "log> total coarse time " <<  qm.get_coarse_time() << std::endl;
+                        std::cout << "log> total inpart time " <<  qm.get_inpart_time() << std::endl;
+                        std::cout << "log> total refine time " <<  qm.get_refine_time() << std::endl;
+                        std::cout << "log> initial numNodes " <<  qm.get_initial_numNodes() << std::endl;
+                        std::cout << "log> initial numEdges " <<  qm.get_initial_numEdges() << std::endl;
+                        std::cout << "log> initial edge cut  " <<  qm.get_initial_cut()  << std::endl;
                         std::cout << "log> final edge cut " <<  edge_cut  << std::endl;
-			std::cout << "log> initial qap  " <<  qm.get_initial_qap()  << std::endl;
+                        std::cout << "log> initial qap  " <<  qm.get_initial_qap()  << std::endl;
                         std::cout << "log> final qap  " <<  qap  << std::endl;
                         std::cout << "log> final balance "  <<  balance   << std::endl;
                         PRINT(std::cout << "log> final balance load "  <<  balance_load   << std::endl;)

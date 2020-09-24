@@ -54,9 +54,12 @@ inline void configuration::strong( PPartitionConfig & partition_config ) {
 }
 inline void configuration::mapping( PPartitionConfig & partition_config ) {
         partition_config.initial_partitioning_algorithm  = KAFFPAEULTRAFASTSNW;
+        //partition_config.initial_partitioning_algorithm  = KAFFPAEFASTSNW;
         partition_config.no_refinement_in_last_iteration = false;
         partition_config.num_vcycles                     = 1;
         partition_config.refinement_focus                = true;
+        partition_config.stop_factor                     = 0;
+        partition_config.label_iterations_coarsening     = 2;
 }
 inline void configuration::standard( PPartitionConfig & partition_config ) {
         partition_config.seed                                   = 0;

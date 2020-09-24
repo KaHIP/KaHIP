@@ -228,7 +228,8 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 			cout << "G.number_of_global_nodes() = " << G.number_of_global_nodes() << ", G.number_of_local_nodes()" << G.number_of_local_nodes() << "\n";
                 }
 #endif
-		
+                qm.set_initial_numNodes( Q.number_of_global_nodes() );
+                qm.set_initial_numEdges( Q.number_of_global_edges() );
                 t.restart();
 
                 initial_partitioning_algorithm ip;
@@ -291,7 +292,6 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         if( config.label_iterations != 0 ) {
                 config.total_num_labels = config.k;
                 config.upper_bound_cluster = config.upper_bound_partition;
-
 
                 G.init_balance_management( config );
                 PPartitionConfig working_config = config;
