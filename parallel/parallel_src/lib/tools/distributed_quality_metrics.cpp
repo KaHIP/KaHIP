@@ -95,12 +95,13 @@ EdgeWeight distributed_quality_metrics::total_qap( parallel_graph_access & G, co
 			  // 	      << G.getNodeLabel( node ) << ", " << G.getNodeLabel( target )
 			  // 	      << ")" << std::endl;
 			  // }
-
+			  //local_qap += G.getEdgeWeight(e);
 			  local_qap += G.getEdgeWeight(e) * PEtree.getDistance_PxPy(G.getNodeLabel( node ),G.getNodeLabel( target));
                         }
                 } endfor
         } endfor
 
+	    std::cout <<  " PRINT " << rank << " : local_qap " << local_qap << std::endl;
         EdgeWeight global_qap = 0;
         MPI_Allreduce(&local_qap, &global_qap, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
 

@@ -8,6 +8,8 @@
 #ifndef DISTRIBUTED_QUALITY_METRICS_UAVSEXBT
 #define DISTRIBUTED_QUALITY_METRICS_UAVSEXBT
 
+
+
 #include "pdefinitions.h"
 #include "data_structure/parallel_graph_access.h"
 #include "data_structure/processor_tree.h"
@@ -43,6 +45,231 @@ public:
 	double get_inpart_time() { return ml_time[1]; };
 	double get_refine_time() { return ml_time[2]; };
 	void print();
+
+
+/******************************************************/
+/*                  evaluateMapping                   */
+/******************************************************/
+	void evaluateMapping(parallel_graph_access & C, const processor_tree & PEtree, MPI_Comm communicator) {
+	  
+
+		    
+    /* JUST FOR TESTING */
+  	  int rank, comm_size;
+  	  MPI_Comm_rank( communicator, &rank);
+	  MPI_Comm_size( communicator, &comm_size);
+
+
+
+	  
+	  unsigned k = PEtree.get_numPUs();//number of nodes in C
+
+	  // pe p reads the lines p*ceil(n/size) to (p+1)floor(n/size) lines of that file
+	  ULONG from  = rank     * ceil(k / (double)comm_size);
+	  ULONG to    = (rank+1) * ceil(k / (double)comm_size) - 1;
+	  to = std::min<unsigned long>(to, k-1);
+
+	  ULONG local_no_nodes = to - from + 1;
+
+	  std::vector< std::vector< NodeID > > local_edge_lists;
+	  local_edge_lists.resize(local_no_nodes);
+
+
+	  unsigned ksq = k * k;
+	  parallel_graph_access cg(communicator);
+	  
+	  //find number of edges in C and edge weights
+	  EdgeWeight edgeWeights[ksq];
+	  for(unsigned i = 0; i < ksq ; i ++) {
+	    edgeWeights[i] = 0;
+	  }
+	  unsigned nmbEdges = 0;
+	  forall_local_nodes(C,u) {
+	    PartitionID uBlock = C.getNodeLabel(u);
+	    forall_out_edges(C, e, u) {
+	      NodeID v = C.getEdgeTarget(e);
+	      PartitionID vBlock = C.getNodeLabel(v);
+	      //cout << "uBlock and vBlock are " << uBlock << " and " << vBlock << endl;
+	      if(uBlock != vBlock) {
+		unsigned indexC = (unsigned) ((uBlock * k) + vBlock);
+		if(edgeWeights[indexC] == 0) {
+		  nmbEdges++;
+		}
+		(edgeWeights[indexC])++;
+	      }
+	    } endfor    
+		} endfor
+
+   for(PartitionID i = 0; i < ksq; i++) {
+     std::cout <<  " PRINT " << rank << " : edgeWeights[" << i << "] = "
+	       << edgeWeights[i] << std::endl;
+   }
+
+   MPI_Barrier(communicator);
+
+
+  cg.start_construction((NodeID) local_no_nodes, nmbEdges,(NodeID) k, nmbEdges);
+  cg.set_range(from, to);
+  
+  std::vector< NodeID > vertex_dist( comm_size+1, 0 );
+  for( PEID peID = 0; peID <= comm_size; peID++) {
+    vertex_dist[peID] = peID * ceil(k / (double)comm_size); // from positions
+  }
+  cg.set_range_array(vertex_dist);
+  
+  for (NodeID i = 0; i < local_no_nodes; ++i) {
+    NodeID node = cg.new_node();
+    cg.setNodeWeight(node, 1);
+    cg.setNodeLabel(node, from+node);
+    cg.setSecondPartitionIndex(node, 0);
+    for(unsigned j = 0; j < k; j ++) {
+      unsigned indexC = ((i * k) + j);
+      std::cout <<  " indexC " << indexC << std::endl;
+      if(edgeWeights[indexC] != 0) {
+	cout << i << ", " << j<< "  \n";
+	EdgeID e = cg.new_edge(i, j);
+	//cg.setEdgeWeight(e, 1);
+	cg.setEdgeWeight(e, edgeWeights[indexC]);
+      }
+    }
+  }
+  /* /\* //build cg from k, nmbEdges, edgeWeights[] *\/ */
+  /* cg.start_construction((NodeID) k, nmbEdges,(NodeID) k, nmbEdges); */
+  /* for(unsigned i = 0; i < k; i++) {   */
+  /*   NodeID u = cg.new_node(); */
+  /*   cg.setNodeWeight(u, 1); */
+  /*   cg.setNodeLabel(u, 0); */
+  /*   for(unsigned j = 0; j < k; j ++) { */
+  /*     //     if( i < j ) { */
+  /* 	unsigned indexC = ((i * k) + j); */
+  /*     	std::cout <<  " indexC " << indexC << std::endl; */
+  /* 	if(edgeWeights[indexC] != 0) { */
+  /* 	  cout << i << ", " << j<< "  \n"; */
+  /* 	  EdgeID e = cg.new_edge(i, j); */
+  /* 	  //cg.setEdgeWeight(e, 1); */
+  /* 	  //cg.setEdgeWeight(e, edgeWeights[indexC]); */
+  /* 	} */
+  /* 	//   } */
+  /*   } */
+  /* } */
+
+  cg.finish_construction(); 
+  MPI_Barrier(communicator);
+
+  cout << "cg.number_of_global_nodes() = " << cg.number_of_global_nodes()
+     << ", cg.number_of_local_nodes()" << cg.number_of_global_edges() << "\n";
+
+//if (rank == ROOT) {
+   forall_local_nodes(cg,i) {
+     forall_out_edges(cg, edgeG, i) {
+       unsigned int start = i;
+       unsigned int target = cg.getEdgeTarget(edgeG);
+       cout << "edge[" << start << "][" << target << "]: "  <<
+	 cg.getEdgeWeight(edgeG) << "\n";
+
+     } endfor
+	 } endfor
+
+	     //}
+ 
+	  
+  	  PartitionID n = C.number_of_global_nodes();
+  	  cout << "C.number_of_global_nodes() = " << n << ", C.number_of_local_nodes()" << C.number_of_local_nodes() << "\n";
+  
+  	  //compute maximum congestion, maximum dilation, average dilation
+  	  int local_sumDilation = 0;
+  	  int local_maxDilation = 0;
+	  
+  	  int np = PEtree.get_numPUs();
+	  cout << "np = " << np  << "\n";
+  	  vector<int> local_qap(np, 0);
+  	  int maxCongestion = 0;
+  	  double avgDilation = 0.0;
+
+
+	  forall_local_nodes(cg, i) {
+  	    forall_out_edges(cg, edgeC, i) {
+	      if( i < cg.getEdgeTarget(edgeC) ) {
+  	  /* 	//only one edge direction considered */
+  	  /* 	//find dilation of edgeC, update sumDilation, maxDilation */
+  	  /* 	// the mapping is already included within C, don't need to map vertices */
+  	  	unsigned int start = i;
+  	  	unsigned int target = cg.getEdgeTarget(edgeC);
+		if( cg.getNodeLabel( start ) != cg.getNodeLabel(target)) {
+  	  	  int distance = PEtree.getDistance_PxPy(cg.getNodeLabel( start ),cg.getNodeLabel( target));
+  	  	  int currDilation = distance * (cg.getEdgeWeight(edgeC));
+  	  	  cout << "D[" << start << "][" << target << "]: "  << distance  << " -> currDilation"  << currDilation << "\n";
+  	  	  //local_qap[C.getNodeLabel( target)] += C.getEdgeWeight(edgeC);
+		  local_sumDilation += currDilation;
+		  if(currDilation > local_maxDilation) {
+		    local_maxDilation = currDilation;
+		  }
+		}
+	      }
+  	    } endfor
+		} endfor
+		    
+
+	  
+	  
+  	  /* forall_local_nodes(C, i) { */
+  	  /*   forall_out_edges(C, edgeC, i) { */
+	  /*     //  	      if( i < C.getEdgeTarget(edgeC) ) { */
+  	  /* /\* 	//only one edge direction considered *\/ */
+  	  /* /\* 	//find dilation of edgeC, update sumDilation, maxDilation *\/ */
+  	  /* /\* 	// the mapping is already included within C, don't need to map vertices *\/ */
+  	  /* 	unsigned int start = i; */
+  	  /* 	unsigned int target = C.getEdgeTarget(edgeC); */
+	  /* 	if( C.getNodeLabel( start ) != C.getNodeLabel(target)) { */
+  	  /* 	  //int distance = PEtree.getDistance_PxPy(C.getNodeLabel( start ),C.getNodeLabel( target)); */
+  	  /* 	  //int currDilation = distance * (C.getEdgeWeight(edgeC)); */
+  	  /* 	  //cout << "D[" << start << "][" << target << "]: "  << distance  << " -> currDilation"  << currDilation << "\n"; */
+  	  /* 	  local_qap[C.getNodeLabel( target)] += C.getEdgeWeight(edgeC); */
+	  /* 	} */
+	  /* 	//} */
+  	  /*   } endfor */
+	  /* 	} endfor */
+		    
+
+	  /* MPI_Barrier(communicator); */
+	  
+  	  /* for(PartitionID i = 0; i < np; i++) { */
+	  /*   std::cout <<  " PRINT " << rank << " : local_qap[" << i << "] = " << local_qap[i] << std::endl; */
+	  /* } */
+	  
+  	  /* for(PartitionID i = 0; i < np; i++) { */
+  	  /*   //if( i != rank) { */
+	  /*     if( i < rank ) { */
+  	  /*     int distance = PEtree.getDistance_PxPy(i,rank); */
+  	  /*     int currDilation = distance * local_qap[i]; */
+  	  /*     cout << "D[" << i << "][" << rank << "]: "  << distance  << ", C.getEdgeWeight = " << local_qap[i] << " -> currDilation = "  << currDilation << "\n"; */
+  	  /*     local_sumDilation += currDilation; */
+  	  /*     if(currDilation > local_maxDilation) { */
+  	  /* 	local_maxDilation = currDilation; */
+  	  /*     } */
+  	  /*   } */
+  	  /* } */
+  //cout << rank << " local_maxDilation::" << local_maxDilation << "\n";
+  cout << rank << " local_sumDilation::" << local_sumDilation
+       << " num edges " << (cg.number_of_global_edges() / 2)<< "\n";
+
+  	  int global_maxDilation = 0;
+  	  MPI_Allreduce(&local_maxDilation, &global_maxDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, communicator);
+  	  int global_sumDilation = 0;
+  	  MPI_Allreduce(&local_sumDilation, &global_sumDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+
+
+  if( rank == ROOT ) {
+    cout << "max_congestion::" << maxCongestion << "\n";
+    cout << "max_dilation::" << global_maxDilation << "\n";
+    //cout << "Sum dilation: " << 2*sumDilation << "\n";
+    cout << "sum_dilation::" <<  global_sumDilation << "\n";
+    avgDilation = ((double) global_sumDilation) / ((double) (cg.number_of_global_edges() / 2));
+    cout << "avg_dilation::" << avgDilation << "\n";
+  }
+
+}
+	
 	
 private: 
 

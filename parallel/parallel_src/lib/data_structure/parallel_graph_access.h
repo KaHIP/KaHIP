@@ -323,7 +323,7 @@ public:
                                 m_gnc->add_adjacent_processor(add_data.peID);
                         }
                 }
-
+		
                 EdgeID e_bar = e;
                 ++e;
 
