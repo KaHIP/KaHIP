@@ -241,39 +241,70 @@ public:
 
 	// creating the predecessorMatrix, not really storing it (yet)
 	// check where it is needed, if it is not much needed keep it like that
-	vector< vector<int>> build_predecessorMatrix(parallel_graph_access & P) const {
-	  vector< vector<int> > predecessorMatrix;
+        void build_predecessorMatrix(parallel_graph_access & P, vector< vector<int>> & predecessorMatrix) const {
 	  int nodesNo = P.number_of_global_nodes();
-
-	  for (int i = 0; i < nodesNo; i++) {
-	    vector<int> row(nodesNo);
-	    predecessorMatrix.push_back(row);
-	  }
-	  for (int i = 0; i < nodesNo; i++) {
+	  //for (int i = 0; i < nodesNo; i++) {
+	  //for (int j = 0; j < nodesNo; j++) {
+	  forall_local_nodes(P, i) {
 	    for (int j = 0; j < nodesNo; j++) {
+	    //forall_out_edges(P, e, j) {
 	      bool done = false;
 	      int start = i;
 	      int target = j;
 	      int tempsave;
 	      while (start != target) {
-		if (start > target) {
-		  tempsave = start;	  
-		  start = P.getEdgeTarget(P.get_first_edge(start));
-		  if ((start == j) && !done) {
-		    predecessorMatrix[i][j] = tempsave;
-		  }
-		} else {
-		  target = P.getEdgeTarget(P.get_first_edge(target));
-		  if (!done) {
-		    predecessorMatrix[i][j] = P.getEdgeTarget(P.get_first_edge(j));
-		    done = true;
-		  }
-		}
-	      }
-	    } // while
-	  }  // for  
-	  return predecessorMatrix;
+	      	if (start > target) {
+	      	  tempsave = start;
+	      	  //std::cout <<  "tempsave =  " << tempsave << std::endl;
+		  std::cout <<  "first edge =  " << P.get_first_edge(start) << std::endl;
+	      	  start = P.getEdgeTarget(P.get_first_edge(start));
+	      	  if ((start == j) && !done) {
+	      	    predecessorMatrix[i][j] = tempsave;
+	      	  }
+	      	} else {
+		  /* std::cout <<  "first edge =  " << P.get_first_edge(target) << std::endl; */
+	      	  target = P.getEdgeTarget(P.get_first_edge(target));
+	      	  if (!done) {
+	      	    predecessorMatrix[i][j] = P.getEdgeTarget(P.get_first_edge(j));
+	      	    done = true;
+	      	  }
+	      	}
+	      } // while
+	    } // for
+	  } endfor  // for
 	}
+
+
+
+  /* for (int i = 0; i < nodesNo; i++) { */
+  /*   for (int j = 0; j < nodesNo; j++) { */
+  /*     bool done = false; */
+  /*     int distance = 0; */
+  /*     int start = i; */
+  /*     int target = j; */
+  /*     int tempsave; */
+  /*     while (start != target) { */
+  /* 	if (start > target) { */
+  /* 	  tempsave = start;	   */
+  /* 	  distance += proc.getEdgeWeight(proc.get_first_edge(start)); */
+  /* 	  start = proc.getEdgeTarget(proc.get_first_edge(start)); */
+  /* 	  if ((start == j) && !done) { */
+  /* 	    proc.predecessorMatrix[i][j] = tempsave; */
+  /* 	  } */
+  /* 	} else { */
+  /* 	  distance += proc.getEdgeWeight(proc.get_first_edge(target));  */
+  /* 	  target = proc.getEdgeTarget(proc.get_first_edge(target)); */
+  /* 	  if (!done) { */
+  /* 	    proc.predecessorMatrix[i][j] = proc.getEdgeTarget(proc.get_first_edge(j)); */
+  /* 	    done = true; */
+  /* 	  } */
+  /* 	} */
+  /*     } */
+  /*     proc.distanceMatrix[i][j] = distance; */
+  /*   } */
+  /* }     */
+	
+
 	
 	void build_parallelPGraph (parallel_graph_access & cg, MPI_Comm communicator) const {
 
@@ -298,7 +329,6 @@ public:
 	  to = std::min<unsigned long>(to, k-1);
 
 	  ULONG local_no_nodes = to - from + 1;
-	  unsigned ksq = k * k;
 	  
 	  //MPI_Barrier(communicator);
 
@@ -362,35 +392,18 @@ public:
 	  std::cout <<  "numNodes: " << numNodes << " numEdges: " << numEdges << std::endl;
 	  std::cout <<  "k: " << k << " nmbEdges: " << nmbEdges << std::endl;
 	  
-
-
-
-/* 	  inline int graph_access::build_from_metis_weighted(int n, int* xadj, int* adjncy, int * vwgt, int* adjwgt) { */
-/*         graphref = new basicGraph(); */
-/*         start_construction(n, xadj[n]); */
-/*         for( unsigned i = 0; i < (unsigned)n; i++) { */
-/*                 NodeID node = new_node(); */
-/*                 setNodeWeight(node, vwgt[i]); */
-/*                 setPartitionIndex(node, 0); */
-
-/*                 for( unsigned e = xadj[i]; e < (unsigned)xadj[i+1]; e++) { */
-/*                         EdgeID e_bar = new_edge(node, adjncy[e]); */
-/*                         setEdgeWeight(e_bar, adjwgt[e]); */
-/*                 } */
-/*         }        */
-/*         finish_construction(); */
-/*         return 0; */
-/* } */
-	  // proc.build_from_metis_weighted(numNodes, &nodes[0], &edges[0], &nodeWeights[0], &edgeWeights[0]);  	  
+	  // cg.build_from_metis_weighted(numNodes, &nodes[0], &edges[0], &nodeWeights[0], &edgeWeights[0]);
+	  MPI_Barrier(communicator);
 	  cg.start_construction((NodeID) local_no_nodes, nmbEdges,(NodeID) k, nmbEdges);
 	  cg.set_range(from, to);
-  
+  	  std::cout <<  "Breakpoint 1 "<< std::endl;
 	  std::vector< NodeID > vertex_dist( comm_size+1, 0 );
 	  for( PEID peID = 0; peID <= comm_size; peID++) {
 	    vertex_dist[peID] = peID * ceil(k / (double)comm_size); // from positions
 	  }
 	  cg.set_range_array(vertex_dist);
 
+  	  std::cout <<  "Breakpoint 2 "<< std::endl;
 	  
 	  for (NodeID i = 0; i < local_no_nodes; ++i) {
 	    NodeID node = cg.new_node();
@@ -403,9 +416,8 @@ public:
 	    } // for
 	  }
 	  cg.finish_construction(); 
-	  // check if barier is needed
 	  MPI_Barrier(communicator);
-
+  	  std::cout <<  "Breakpoint 3 "<< std::endl;
 	  /* if (rank == ROOT) { */
 	  /*   std::cout << " proc_graph nodes " << cg.number_of_global_nodes() */
 	  /* 	      << " proc_graph edges " << cg.number_of_global_edges() << std::endl; */

@@ -30,59 +30,6 @@
 #include "tools/distributed_quality_metrics.h"
 
 
-/******************************************************/
-/*                  buildCommGraph                    */
-/******************************************************/
-// parallel_graph_access & buildCommGraph (parallel_graph_access & G, PPartitionConfig & partition_config,) {
-
-//   unsigned k = partition_config.k;//number of nodes in C
-//   unsigned ksq = k * k;
-//   parallel_graph_access & C(communicator);
-  
-//   //find number of edges in C and edge weights
-//   EdgeWeight edgeWeights[ksq];
-//   for(unsigned i = 0; i < ksq ; i ++) {
-//     edgeWeights[i] = 0;
-//   }
-//   unsigned nmbEdges = 0;
-//   forall_local_nodes(G,u) {
-//     PartitionID uBlock = G.getNodeLabel(u);
-//     forall_out_edges(G, e, u) {
-//       NodeID v = G.getEdgeTarget(e);
-//       PartitionID vBlock = G.getNodeLabel(v);
-//       //cout << "uBlock and vBlock are " << uBlock << " and " << vBlock << endl;
-//       if(uBlock != vBlock) {
-// 	unsigned indexC = (unsigned) ((uBlock * k) + vBlock);
-// 	if(edgeWeights[indexC] == 0) {
-// 	  nmbEdges++;
-// 	}
-// 	(edgeWeights[indexC])++;
-//       }
-//     } endfor    
-//   } endfor
-
-//   //build C from k, nmbEdges, edgeWeights[]
-//   C.start_construction((NodeID) k, nmbEdges,(NodeID) k, nmbEdges);
-//   for(unsigned i = 0; i < k; i++) {
-//     NodeID u = C.new_node();    
-//     C.setNodeWeight(u, 1);
-//     C.setNodeLabel(u, 0);
-//     for(unsigned j = 0; j < k; j ++) {
-//       unsigned indexC = ((i * k) + j);
-//       if(edgeWeights[indexC] != 0) {
-// 	EdgeID e = C.new_edge(i, j);
-// 	C.setEdgeWeight(e, edgeWeights[indexC]);
-//       }
-//     }
-//   }
-//   C.finish_construction();
-
-//   return C;
-// }
-
-
-
-
 int main(int argn, char **argv) {
 
         MPI_Init(&argn, &argv);    /* starts MPI */
@@ -151,31 +98,52 @@ int main(int argn, char **argv) {
                         }
                 }
 
-		parallel_graph_access p_G(communicator);
-		vector< vector<int>> predecessorMatrix;
-		// should be just a function, not really a method
-		PEtree.build_parallelPGraph(p_G, communicator);
-		if (rank == ROOT) {
-		  std::cout << " proc_graph nodes " << p_G.number_of_global_nodes()
-			    << " proc_graph edges " << p_G.number_of_global_edges() << std::endl;
-		}
-		forall_local_nodes(p_G,u) {
-		  forall_out_edges(p_G, edgeP, u) {
-		    unsigned int start = u;
-		    unsigned int target = p_G.getEdgeTarget(edgeP);
-		    cout << "edgeP[" << start << "][" << target << "]: "  <<
-		      p_G.getEdgeWeight(edgeP) << "\n";
+		
+		// forall_local_nodes(G,u) {
+	      	//   forall_out_edges(G, edge, u) {
+	      	//     unsigned int start = u;
+	      	//     unsigned int target = G.getEdgeTarget(edge);
+	      	//     cout << "edgeG[" << start << "][" << target << "]: "
+		// 	 << " (" << G.getNodeLabel(start) << ", " << G.getNodeLabel(target)
+		// 	 << ") w: " << G.getEdgeWeight(edge) << "\n";
+		//   } endfor
+	      	//   } endfor
+		
+		// parallel_graph_access p_G(communicator);
+		// vector< vector<int>> predecessorMatrix;
+		// PEtree.build_parallelPGraph(p_G, communicator);
+		// if (rank == ROOT) {
+		//   std::cout << " proc_graph nodes " << p_G.number_of_global_nodes()
+		// 	    << " proc_graph edges " << p_G.number_of_global_edges() << std::endl;
+		// }
+	      // 	forall_local_nodes(p_G,u) {
+	      // 	  forall_out_edges(p_G, edgeP, u) {
+	      // 	    unsigned int start = u;
+	      // 	    unsigned int target = p_G.getEdgeTarget(edgeP);
+	      // 	    cout << "edgeP[" << start << "][" << target << "]: "  <<
+	      // 	      p_G.getEdgeWeight(edgeP) << "\n";
 		    
-		  } endfor
-		      } endfor
-	        predecessorMatrix = PEtree.build_predecessorMatrix(p_G);
-		std::cout << " Predecessor " << std::endl;
-		for (unsigned int i = 0; i < p_G.number_of_global_nodes(); i++) {
-		  for (unsigned int j = 0; j < p_G.number_of_global_nodes(); j++) {
-		    std::cout << predecessorMatrix[i][j] << " ";
-		  }
-		  std::cout <<  std::endl;
-		}
+	      // 	  } endfor
+	      // 	      } endfor
+	      // if (rank == ROOT) {
+	      // 	for (int u = 0; u < p_G.number_of_global_nodes(); u++) {
+	      // 	  forall_out_edges(p_G, edgeP, u) {
+	      // 	    unsigned int start = u;
+	      // 	    unsigned int target = p_G.getEdgeTarget(edgeP);
+	      // 	    cout << "edgeP[" << start << "][" << target << "]: "  <<
+	      // 	      p_G.getEdgeWeight(edgeP) << "\n";
+	      // 	  } endfor
+	      // 	}
+	      //  }
+		//std::cout << " A - Predecessor " << std::endl;
+	        //predecessorMatrix = PEtree.build_predecessorMatrix(p_G);
+		//std::cout << " B - Predecessor " << std::endl;
+		// for (unsigned int i = 0; i < p_G.number_of_global_nodes(); i++) {
+		//   for (unsigned int j = 0; j < p_G.number_of_global_nodes(); j++) {
+		//     std::cout << predecessorMatrix[i][j] << " ";
+		//   }
+		//   std::cout <<  std::endl;
+		// }
 	        
 		
                 if( partition_config.refinement_focus ){
@@ -276,9 +244,9 @@ int main(int argn, char **argv) {
 		// std::cout << "maria>" << "=====================================" << std::endl;
 	        // C = buildCommGraph(G,partition_config, C);
 	        // std::cout << "maria>" << "=====================================" << std::endl;
-               	
-		qm.evaluateMapping(G, PEtree, communicator);
-		
+               	//if (rank == ROOT) {
+		qm.evaluateMapping2(G, PEtree, communicator);
+		  //}
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
                 EdgeWeight qap = 0;
                 //if tree is empty, qap is not to be calculated

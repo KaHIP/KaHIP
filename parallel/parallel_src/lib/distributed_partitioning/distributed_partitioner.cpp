@@ -316,7 +316,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         m_level--;
 	if( rank == ROOT ) qm.add_timing(vec);
 	  cout << "Q.number_of_global_nodes() = " << Q.number_of_global_nodes() << ", Q.number_of_local_nodes()" << Q.number_of_local_nodes() << "\n";
-	qm.evaluateMapping(Q,PEtree, communicator);
+	  //qm.evaluateMapping(Q,PEtree, communicator);
 }
 
 
