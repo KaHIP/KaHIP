@@ -186,7 +186,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         {
                 parallel_contraction parallel_contract;
                 parallel_contract.contract_to_distributed_quotient( communicator, config, G, Q); // contains one Barrier
-		cout << "Q.number_of_global_nodes() = " << Q.number_of_global_nodes() << ", Q.number_of_local_nodes()" << Q.number_of_local_nodes() << "\n";
+
                 parallel_block_down_propagation pbdp;
                 if( config.vcycle ) {
                         // in this case we have to propagate the partition index down
@@ -224,8 +224,6 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
                         std::cout <<  "log>cycle: " << m_cycle << " number of coarsest nodes " <<  Q.number_of_global_nodes() << std::endl;
                         std::cout <<  "log>cycle: " << m_cycle << " number of coarsest edges " <<  Q.number_of_global_edges() << std::endl;
                         std::cout <<  "log>cycle_m: " << m_cycle << " coarsening took  " <<  vec[0] << std::endl;
-			cout << "Q.number_of_global_nodes() = " << Q.number_of_global_nodes() << " Q.number_of_global_edges() = " << Q.number_of_global_edges() << ", Q.number_of_local_nodes()" << Q.number_of_local_nodes() << "\n";
-			cout << "G.number_of_global_nodes() = " << G.number_of_global_nodes() << ", G.number_of_local_nodes()" << G.number_of_local_nodes() << "\n";
                 }
 #endif
                 qm.set_initial_numNodes( Q.number_of_global_nodes() );
@@ -315,8 +313,6 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 #endif
         m_level--;
 	if( rank == ROOT ) qm.add_timing(vec);
-	  cout << "Q.number_of_global_nodes() = " << Q.number_of_global_nodes() << ", Q.number_of_local_nodes()" << Q.number_of_local_nodes() << "\n";
-	  //qm.evaluateMapping(Q,PEtree, communicator);
 }
 
 

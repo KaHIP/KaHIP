@@ -93,74 +93,11 @@ int main(int argn, char **argv) {
                 processor_tree PEtree( partition_config.distances, partition_config.group_sizes );
                 if( rank == ROOT ) {
                         PEtree.print();
-                        if( PEtree.get_numPUs()<20){
+                        if( PEtree.get_numPUs()<11){
                                 PEtree.print_allPairDistances();
                         }
                 }
 
-		
-		// forall_local_nodes(G,u) {
-	      	//   forall_out_edges(G, edge, u) {
-	      	//     unsigned int start = u;
-	      	//     unsigned int target = G.getEdgeTarget(edge);
-	      	//     cout << "edgeG[" << start << "][" << target << "]: "
-		// 	 << " (" << G.getNodeLabel(start) << ", " << G.getNodeLabel(target)
-		// 	 << ") w: " << G.getEdgeWeight(edge) << "\n";
-		//   } endfor
-	      	//   } endfor
-
-		
-		// parallel_graph_access P(communicator);
-		// vector< vector<int>> predecessorMatrix;
-		// PEtree.build_parallelPGraph(P, communicator);
-		// if (rank == ROOT) {
-		//   std::cout << " proc_graph nodes " << P.number_of_global_nodes()
-		// 	    << " proc_graph edges " << P.number_of_global_edges() << std::endl;
-		// }
-		
-		// forall_local_nodes(P,i) {
-		//   forall_out_edges(P, edgeP, i) {
-		//     unsigned int start = i;
-		//     unsigned int target = P.getEdgeTarget(edgeP);
-		//     cout << "R: " << rank << " edgeP[" << start << "][" << target << "]: -> ( "
-		// 	 << P.getNodeLabel( start ) << ", " << P.getNodeLabel( target )
-		// 	 << ") - > "
-		// 	 <<  P.getEdgeWeight(edgeP) << "\n";
-		//   } endfor
-		//       } endfor
-
-
-		
-	      // 	forall_local_nodes(p_G,u) {
-	      // 	  forall_out_edges(p_G, edgeP, u) {
-	      // 	    unsigned int start = u;
-	      // 	    unsigned int target = p_G.getEdgeTarget(edgeP);
-	      // 	    cout << "edgeP[" << start << "][" << target << "]: "  <<
-	      // 	      p_G.getEdgeWeight(edgeP) << "\n";
-		    
-	      // 	  } endfor
-	      // 	      } endfor
-	      // if (rank == ROOT) {
-	      // 	for (int u = 0; u < p_G.number_of_global_nodes(); u++) {
-	      // 	  forall_out_edges(p_G, edgeP, u) {
-	      // 	    unsigned int start = u;
-	      // 	    unsigned int target = p_G.getEdgeTarget(edgeP);
-	      // 	    cout << "edgeP[" << start << "][" << target << "]: "  <<
-	      // 	      p_G.getEdgeWeight(edgeP) << "\n";
-	      // 	  } endfor
-	      // 	}
-	      //  }
-		//std::cout << " A - Predecessor " << std::endl;
-	        //predecessorMatrix = PEtree.build_predecessorMatrix(p_G);
-		//std::cout << " B - Predecessor " << std::endl;
-		// for (unsigned int i = 0; i < p_G.number_of_global_nodes(); i++) {
-		//   for (unsigned int j = 0; j < p_G.number_of_global_nodes(); j++) {
-		//     std::cout << predecessorMatrix[i][j] << " ";
-		//   }
-		//   std::cout <<  std::endl;
-		// }
-	        
-		
                 if( partition_config.refinement_focus ){
                         //in this version, the coarsening factor depends on the input size. As cluster_coarsening_factor sets a limit to the size
                         //of the clusters when coarsening, it should be more than 2, thus, coarsening_factor should be greater than 2
@@ -255,14 +192,8 @@ int main(int argn, char **argv) {
 
                 double running_time = t.elapsed();
 		
-                // parallel_graph_access & C; //(communicator);
-		// std::cout << "maria>" << "=====================================" << std::endl;
-	        // C = buildCommGraph(G,partition_config, C);
-	        // std::cout << "maria>" << "=====================================" << std::endl;
-               	//if (rank == ROOT) {
-		qm.evaluateMapping2(G, PEtree, communicator);
-		  //}
-		std::cout << "maria>" << "=====================================" << std::endl;
+		qm.evaluateMapping(G, PEtree, communicator);
+
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
                 EdgeWeight qap = 0;
                 //if tree is empty, qap is not to be calculated
@@ -274,6 +205,7 @@ int main(int argn, char **argv) {
 
 
                 if( rank == ROOT ) {
+
                         std::cout << "log>" << "=====================================" << std::endl;
                         std::cout << "log>" << "============AND WE R DONE============" << std::endl;
                         std::cout << "log>" << "=====================================" << std::endl;
@@ -285,10 +217,16 @@ int main(int argn, char **argv) {
                         std::cout << "log> initial numNodes " <<  qm.get_initial_numNodes() << std::endl;
                         std::cout << "log> initial numEdges " <<  qm.get_initial_numEdges() << std::endl;
                         std::cout << "log> initial edge cut  " <<  qm.get_initial_cut()  << std::endl;
+			
                         std::cout << "log> final edge cut " <<  edge_cut  << std::endl;
                         std::cout << "log> initial qap  " <<  qm.get_initial_qap()  << std::endl;
                         std::cout << "log> final qap  " <<  qap  << std::endl;
                         std::cout << "log> final balance "  <<  balance   << std::endl;
+			std::cout << "log> max congestion " <<  qm.get_max_congestion() << std::endl;
+                        std::cout << "log> max dilation " <<  qm.get_max_dilation() << std::endl;
+                        std::cout << "log> sum dilation " <<  qm.get_sum_dilation() << std::endl;
+                        std::cout << "log> avg dilation  " << qm.get_avg_dilation()  << std::endl;
+			
                         PRINT(std::cout << "log> final balance load "  <<  balance_load   << std::endl;)
                         PRINT(std::cout << "log> final balance load dist "  <<  balance_load_dist   << std::endl;)
                 }

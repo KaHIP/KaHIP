@@ -46,6 +46,10 @@ public:
         double get_coarse_time() { return ml_time[0]; };
 	double get_inpart_time() { return ml_time[1]; };
 	double get_refine_time() { return ml_time[2]; };
+	int get_max_congestion() { return max_congestion; };
+	int get_max_dilation() { return max_dilation; };
+	int get_sum_dilation() { return sum_dilation; };
+	double get_avg_dilation() { return avg_dilation; };
 	NodeWeight get_initial_numNodes(){ return initial_numNodes; };
 	NodeWeight get_initial_numEdges(){ return initial_numEdges; };
 	void print();
@@ -54,7 +58,7 @@ public:
 	/******************************************************/
 	void evaluateMapping(parallel_graph_access & C, const processor_tree & PEtree,
 			     MPI_Comm communicator);
-	void evaluateMapping2(parallel_graph_access & C, const processor_tree & PEtree,
+	void evaluateMappingDEBUG(parallel_graph_access & C, const processor_tree & PEtree,
 			      MPI_Comm communicator);
 
 	
@@ -63,6 +67,8 @@ private:
 
         EdgeWeight initial_qap, initial_cut, initial_numEdges=0;
         std::vector< double > ml_time;
+	int max_congestion, max_dilation, sum_dilation = 0;
+	double avg_dilation = 0.0;
         NodeWeight initial_numNodes = 0;
 
 };
