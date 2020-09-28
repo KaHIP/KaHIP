@@ -305,9 +305,6 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 #ifndef NOOUTPUT
 
         if( rank == ROOT ) {
-	        std::cout << "log>cycle: initial partitioning qap " <<  qm.get_initial_qap() << std::endl;
-                //std::cout << "log>cycle: after refinement qap " << qap  << std::endl;
-
                 std::cout <<  "log>cycle_m: " << m_cycle <<" level: " << m_level << " label compression refinement took " << vec[2]  << std::endl;
         }
 #endif
