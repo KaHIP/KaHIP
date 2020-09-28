@@ -413,7 +413,7 @@ public:
 	  std::vector< NodeID > vertex_dist( comm_size+1, 0 );
 	  for( PEID peID = 0; peID <= comm_size; peID++) {
 	    vertex_dist[peID] = peID * ceil(k / (double)comm_size); // from positions
-	    std::cout <<  " R " << rank << " vertex_dist[" << peID << "] = " << vertex_dist[peID] << std::endl;
+	    std::cout <<  " R " << rank << " proc_vertex_dist[" << peID << "] = " << vertex_dist[peID] << std::endl;
 	  }
 	  cg.set_range_array(vertex_dist);
 
@@ -528,10 +528,10 @@ public:
 	  }
 	  nodes.push_back(numEdges);
 
-	  std::cout <<  "numNodes: " << numNodes << " numEdges: " << numEdges << std::endl;
+	  //std::cout <<  "numNodes: " << numNodes << " numEdges: " << numEdges << std::endl;
 	  std::cout <<  "k: " << k << " nmbEdges: " << nmbEdges << std::endl;
 
-	    std::cout <<  " R " << rank << " from: " << from << " to: " << to << std::endl;
+	    std::cout <<  "proc R " << rank << " from: " << from << " to: " << to << std::endl;
 	  
 	  /* for (int i = 0; i < local_edge_lists.size(); i++) { */
 	  /*   std::cout << "R:" << rank << " node: " << i << " "; */
@@ -543,16 +543,14 @@ public:
 	  cg.start_construction((NodeID) local_no_nodes, nmbEdges,(NodeID) k, nmbEdges);
 	  cg.set_range(from, to);
 
-	  std::cout <<  "Breakpoint 1 "<< std::endl;
 
 	  std::vector< NodeID > vertex_dist( comm_size+1, 0 );
 	  for( PEID peID = 0; peID <= comm_size; peID++) {
 	    vertex_dist[peID] = peID * ceil(k / (double)comm_size); // from positions
-	    std::cout <<  " R " << rank << " vertex_dist[" << peID << "] = " << vertex_dist[peID] << std::endl;
+	    std::cout <<  " R " << rank << " proc vertex_dist[" << peID << "] = " << vertex_dist[peID] << std::endl;
 	  }
 	  cg.set_range_array(vertex_dist);
 
-  	  std::cout <<  "Breakpoint 2 "<< std::endl;
 	  
 	  for (NodeID i = 0; i < local_no_nodes; ++i) {
 	    NodeID node = cg.new_node();
@@ -566,7 +564,7 @@ public:
 	  }
 	  cg.finish_construction(); 
 	  MPI_Barrier(communicator);
-  	  std::cout <<  "Breakpoint 3 "<< std::endl;
+
 	  /* if (rank == ROOT) { */
 	  /*   std::cout << " proc_graph nodes " << cg.number_of_global_nodes() */
 	  /* 	      << " proc_graph edges " << cg.number_of_global_edges() << std::endl; */

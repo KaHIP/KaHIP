@@ -262,6 +262,7 @@ int main(int argn, char **argv) {
                	//if (rank == ROOT) {
 		qm.evaluateMapping2(G, PEtree, communicator);
 		  //}
+		std::cout << "maria>" << "=====================================" << std::endl;
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
                 EdgeWeight qap = 0;
                 //if tree is empty, qap is not to be calculated
