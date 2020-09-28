@@ -151,12 +151,12 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         MPI_Barrier(communicator);
 
 	
-	//for (int i = 0; i < local_edge_lists.size(); i++) {
-	  //std::cout << "R:" << rank << " node: " << i << " ";
-	  //for (int j = 0; j < local_edge_lists[i].size(); j++)
-	    //std::cout <<  local_edge_lists[i][j] -1 << "  ";
-	  //std::cout << std::endl;
-	//}
+	// for (int i = 0; i < local_edge_lists.size(); i++) {
+	//   std::cout << "R:" << rank << " node: " << i << " ";
+	//   for (int j = 0; j < local_edge_lists[i].size(); j++)
+	//     std::cout <<  local_edge_lists[i][j] -1 << "  ";
+	//   std::cout << std::endl;
+	// }
 	
         G.start_construction(local_no_nodes, 2*edge_counter, nmbNodes, 2*nmbEdges);
         G.set_range(from, to);

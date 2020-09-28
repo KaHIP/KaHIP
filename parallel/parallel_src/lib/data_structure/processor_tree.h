@@ -256,7 +256,7 @@ public:
 	      	if (start > target) {
 	      	  tempsave = start;
 	      	  //std::cout <<  "tempsave =  " << tempsave << std::endl;
-		  std::cout <<  "first edge =  " << P.get_first_edge(start) << std::endl;
+		  //std::cout <<  "first edge =  " << P.get_first_edge(start) << std::endl;
 	      	  start = P.getEdgeTarget(P.get_first_edge(start));
 	      	  if ((start == j) && !done) {
 	      	    predecessorMatrix[i][j] = tempsave;
@@ -306,7 +306,7 @@ public:
 	
 
 	
-	void build_parallelPGraph (parallel_graph_access & cg, MPI_Comm communicator) const {
+	void build_parallelPGraph(parallel_graph_access & cg, MPI_Comm communicator) const {
 
 	  vector<int> vec(numOfLevels + 1, 1);
 	  NodeID k = 0;
@@ -391,15 +391,29 @@ public:
 
 	  std::cout <<  "numNodes: " << numNodes << " numEdges: " << numEdges << std::endl;
 	  std::cout <<  "k: " << k << " nmbEdges: " << nmbEdges << std::endl;
+
+	  std::cout <<  " R " << rank << " from: " << from << " to: " << to << std::endl;
 	  
 	  // cg.build_from_metis_weighted(numNodes, &nodes[0], &edges[0], &nodeWeights[0], &edgeWeights[0]);
 	  MPI_Barrier(communicator);
+
+	  for (NodeID i = 0; i < local_no_nodes; ++i) {
+	    std::cout << "R:" << rank << " node: " << i << " ";
+	    for(unsigned j = nodes[i]; j < nodes[i+1]; j++) {
+	      std::cout <<  edges[j] << "  ";
+	    }
+	      std::cout << std::endl;
+	  }
+	  
 	  cg.start_construction((NodeID) local_no_nodes, nmbEdges,(NodeID) k, nmbEdges);
 	  cg.set_range(from, to);
-  	  std::cout <<  "Breakpoint 1 "<< std::endl;
+
+	  std::cout <<  "Breakpoint 1 "<< std::endl;
+
 	  std::vector< NodeID > vertex_dist( comm_size+1, 0 );
 	  for( PEID peID = 0; peID <= comm_size; peID++) {
 	    vertex_dist[peID] = peID * ceil(k / (double)comm_size); // from positions
+	    std::cout <<  " R " << rank << " vertex_dist[" << peID << "] = " << vertex_dist[peID] << std::endl;
 	  }
 	  cg.set_range_array(vertex_dist);
 
@@ -435,7 +449,146 @@ public:
 
 
 	}
+
+	void build_processorGraph(parallel_graph_access & cg, MPI_Comm communicator) const {
+
+	  vector<int> vec(numOfLevels + 1, 1);
+	  NodeID k = 0;
+	  int j;
+	  for (j = 0; j < numOfLevels; j++) {
+	    vec[j+1] = traversalDescendants[j]*vec[j];
+	    k += vec[j];
+	  }
+	  k += vec[j];
+	  
+	  EdgeID nmbEdges = (EdgeID)(k-1) * 2; // todo maybe *2
+
+  	  int rank, comm_size;
+  	  MPI_Comm_rank( communicator, &rank);
+	  MPI_Comm_size( communicator, &comm_size);
+	  
+	  ULONG from  = 0;
+	  ULONG to    = k - 1;
+	  ULONG local_no_nodes = to - from + 1;
+
+
+	  vector<int> nodes;
+	  vector<int> nodeWeights;
+	  vector<int> edges;
+	  vector<int> edgeWeights;
+	  
+	  int sizeOfThisLevel = 1;
+	  int startOfLastLevel = 0;
+	  int startOfThisLevel = 0;
+	  int startOfNextLevel = 1;
+	  int numEdges = 0;
+	  int numNodes = 1;
   
+	  nodes.push_back(0);
+	  nodeWeights.push_back(0);
+  
+
+	  for (unsigned int i = 0; i < traversalDescendants.size(); i++) {    
+	    //add edges for all nodes in level i
+	    for (int j = 0; j < sizeOfThisLevel; j++) {
+	      //edge to parent
+	      if (i > 0) {
+		edges.push_back(startOfLastLevel + (j / traversalDescendants[i-1]));
+		edgeWeights.push_back(traversalDistances[i-1]);
+	      }
+	      
+	      for (int l = 0; l < traversalDescendants[i]; l++) {
+		edges.push_back(startOfNextLevel + l + j * traversalDescendants[i]);
+		edgeWeights.push_back(traversalDistances[i]);
+		numEdges++;
+	      }
+	    }
+	    //add new nodes for level i+1
+	    for (int j = 0; j < (sizeOfThisLevel * traversalDescendants[i]) ; j++) {
+	      if (i + 1 == traversalDescendants.size()) {
+		nodes.push_back(numEdges);
+		nodeWeights.push_back(1);
+	      } else {
+		nodes.push_back(numEdges + j * traversalDescendants[i + 1]);
+		nodeWeights.push_back(0);
+	      }
+	      numNodes++;
+	      numEdges++;
+	      
+	    }
+	    startOfLastLevel = startOfThisLevel;
+	    startOfThisLevel += sizeOfThisLevel;
+	    sizeOfThisLevel *= traversalDescendants[i];
+	    startOfNextLevel += sizeOfThisLevel;
+	  }
+	  
+	  for (int j = 0; j < sizeOfThisLevel; j++) {
+	    edges.push_back(startOfLastLevel + (j / traversalDescendants[traversalDescendants.size() - 1]));
+	    edgeWeights.push_back(traversalDistances[traversalDistances.size() - 1]);
+	  }
+	  nodes.push_back(numEdges);
+
+	  std::cout <<  "numNodes: " << numNodes << " numEdges: " << numEdges << std::endl;
+	  std::cout <<  "k: " << k << " nmbEdges: " << nmbEdges << std::endl;
+
+	    std::cout <<  " R " << rank << " from: " << from << " to: " << to << std::endl;
+	  
+	  /* for (int i = 0; i < local_edge_lists.size(); i++) { */
+	  /*   std::cout << "R:" << rank << " node: " << i << " "; */
+	  /*   for (int j = 0; j < local_edge_lists[i].size(); j++) */
+	  /*     std::cout <<  local_edge_lists[i][j] -1 << "  "; */
+	  /*   std::cout << std::endl; */
+	  /* } */
+	  
+	  cg.start_construction((NodeID) local_no_nodes, nmbEdges,(NodeID) k, nmbEdges);
+	  cg.set_range(from, to);
+
+	  std::cout <<  "Breakpoint 1 "<< std::endl;
+
+	  std::vector< NodeID > vertex_dist( comm_size+1, 0 );
+	  for( PEID peID = 0; peID <= comm_size; peID++) {
+	    vertex_dist[peID] = peID * ceil(k / (double)comm_size); // from positions
+	    std::cout <<  " R " << rank << " vertex_dist[" << peID << "] = " << vertex_dist[peID] << std::endl;
+	  }
+	  cg.set_range_array(vertex_dist);
+
+  	  std::cout <<  "Breakpoint 2 "<< std::endl;
+	  
+	  for (NodeID i = 0; i < local_no_nodes; ++i) {
+	    NodeID node = cg.new_node();
+	    cg.setNodeWeight(node, 1);
+	    cg.setNodeLabel(node, from+node);
+	    cg.setSecondPartitionIndex(node, 0);
+	    for(unsigned j = nodes[i]; j < nodes[i+1]; j++) {
+	    	EdgeID e = cg.new_edge(node, edges[j]);
+	    	cg.setEdgeWeight(e, edgeWeights[e]);
+	    } // for
+	  }
+	  cg.finish_construction(); 
+	  MPI_Barrier(communicator);
+  	  std::cout <<  "Breakpoint 3 "<< std::endl;
+	  /* if (rank == ROOT) { */
+	  /*   std::cout << " proc_graph nodes " << cg.number_of_global_nodes() */
+	  /* 	      << " proc_graph edges " << cg.number_of_global_edges() << std::endl; */
+	  /* } */
+
+	    /* forall_local_nodes(cg,u) { */
+	    /*   forall_out_edges(cg, edgeP, u) { */
+	    /* 	unsigned int start = u; */
+	    /* 	unsigned int target = cg.getEdgeTarget(edgeP); */
+	    /* 	cout << "edgeP[" << start << "][" << target << "]: "  << */
+	    /* 	  cg.getEdgeWeight(edgeP) << "\n"; */
+
+	    /*   } endfor */
+	    /* 	  } endfor */
+
+
+	}
+
+
+
+
+	
 private:
 
 	int64_t flipPosition(int64_t pos, int64_t l) {

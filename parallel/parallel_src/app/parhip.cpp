@@ -108,14 +108,29 @@ int main(int argn, char **argv) {
 		// 	 << ") w: " << G.getEdgeWeight(edge) << "\n";
 		//   } endfor
 	      	//   } endfor
+
 		
-		// parallel_graph_access p_G(communicator);
+		// parallel_graph_access P(communicator);
 		// vector< vector<int>> predecessorMatrix;
-		// PEtree.build_parallelPGraph(p_G, communicator);
+		// PEtree.build_parallelPGraph(P, communicator);
 		// if (rank == ROOT) {
-		//   std::cout << " proc_graph nodes " << p_G.number_of_global_nodes()
-		// 	    << " proc_graph edges " << p_G.number_of_global_edges() << std::endl;
+		//   std::cout << " proc_graph nodes " << P.number_of_global_nodes()
+		// 	    << " proc_graph edges " << P.number_of_global_edges() << std::endl;
 		// }
+		
+		// forall_local_nodes(P,i) {
+		//   forall_out_edges(P, edgeP, i) {
+		//     unsigned int start = i;
+		//     unsigned int target = P.getEdgeTarget(edgeP);
+		//     cout << "R: " << rank << " edgeP[" << start << "][" << target << "]: -> ( "
+		// 	 << P.getNodeLabel( start ) << ", " << P.getNodeLabel( target )
+		// 	 << ") - > "
+		// 	 <<  P.getEdgeWeight(edgeP) << "\n";
+		//   } endfor
+		//       } endfor
+
+
+		
 	      // 	forall_local_nodes(p_G,u) {
 	      // 	  forall_out_edges(p_G, edgeP, u) {
 	      // 	    unsigned int start = u;
