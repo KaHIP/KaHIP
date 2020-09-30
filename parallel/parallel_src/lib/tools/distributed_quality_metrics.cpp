@@ -604,7 +604,7 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 
 	    
 	 for(unsigned i = 0; i < ksq ; i ++)
-	    MPI_Allreduce(&congestion[i], &global_congestion[i], 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+	    MPI_Allreduce(&congestion[i], &global_congestion[i], 1, MPI_INT, MPI_SUM, communicator);
 
 	 // if (rank == ROOT) {
 	 //   forall_local_edges(P, edgeP) {
@@ -628,8 +628,8 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 	 int global_maxDilation = 0;
 	 int global_sumDilation = 0;
 	  
-	 MPI_Allreduce(&local_maxDilation, &global_maxDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, communicator);
-	 MPI_Allreduce(&local_sumDilation, &global_sumDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+	 MPI_Allreduce(&local_maxDilation, &global_maxDilation, 1, MPI_INT, MPI_MAX, communicator);
+	 MPI_Allreduce(&local_sumDilation, &global_sumDilation, 1, MPI_INT, MPI_SUM, communicator);
 
 
 	 if( rank == ROOT ) {
