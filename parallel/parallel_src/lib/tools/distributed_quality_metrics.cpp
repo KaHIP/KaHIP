@@ -10,10 +10,10 @@
 #include "distributed_quality_metrics.h"
 
 
-distributed_quality_metrics::distributed_quality_metrics() : initial_qap(0), initial_cut(0), ml_time(3,0.0){  
+distributed_quality_metrics::distributed_quality_metrics() : initial_qap(0), initial_cut(0), ml_time(3,0.0), max_congestion(0), max_dilation(0), avg_dilation(0.0), sum_dilation(0) {  
 }
 
-distributed_quality_metrics::distributed_quality_metrics(EdgeWeight qap, EdgeWeight cut) : initial_qap(qap), initial_cut(cut), ml_time(3,0.0){
+distributed_quality_metrics::distributed_quality_metrics(EdgeWeight qap, EdgeWeight cut) : initial_qap(qap), initial_cut(cut), ml_time(3,0.0), max_congestion(0), max_dilation(0), avg_dilation(0.0), sum_dilation(0){
 }
 
 
