@@ -186,14 +186,25 @@ int main(int argn, char **argv) {
 
                 distributed_partitioner dpart;
                 distributed_quality_metrics qm;
-                qm = dpart.perform_partitioning( communicator, partition_config, G, PEtree);
-
-                MPI_Barrier(communicator);
-
-                double running_time = t.elapsed();
+		std::cout << "log>" << "================ START ===================" << std::endl;
+		    
+		try{
+		  //qm = dpart.perform_partitioning( communicator, partition_config, G, PEtree);
+		  dpart.perform_partitioning( communicator, partition_config, G, qm, PEtree);
+		} 
+		catch (std::bad_alloc & exception) 
+		  { 
+		    std::cerr << " !!! bad_alloc detected: " << exception.what(); 
+		  } 
 		
-		qm.evaluateMapping(G, PEtree, communicator);
+                MPI_Barrier(communicator);
+		if (rank == ROOT)
+		  cout << "Before evaluating mapping :: \n";
+                double running_time = t.elapsed();
 
+		
+		qm.evaluateMappingDEBUG(G, PEtree, communicator);
+	      
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
                 EdgeWeight qap = 0;
                 //if tree is empty, qap is not to be calculated

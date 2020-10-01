@@ -551,6 +551,7 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 	    predecessorMatrix.push_back(row);
 	  }
 	  PEtree.create_predecessorMatrix(P, predecessorMatrix);
+
 	  // if (rank == ROOT) {
 	  //   PEtree.print_predecessorMatrix(P, predecessorMatrix);
 	  // }	  
@@ -725,8 +726,15 @@ void distributed_quality_metrics::evaluateMappingDEBUG(parallel_graph_access & C
 	  // TODO: Do I really need it? Since I have an allreduce command just above.. 
 	  MPI_Barrier(communicator);
 
-	  std::cout <<  " R " << rank << " local_no_nodes = "  << local_no_nodes  << "( from:" << from << ", to:" << to << ") nmbEdges = " << nmbEdges << " k = " << k << std::endl;
-	  cg.start_construction((NodeID) local_no_nodes, nmbEdges,(NodeID) k, nmbEdges);
+	  int total_nmbEdges = 0;
+	  for(PartitionID i = 0; i < ksq; i++) {
+	    if(!global_edgeWeights[i]) total_nmbEdges++; 
+	  }
+
+	  std::cout <<  " R " << rank << " local_no_nodes = "  << local_no_nodes  << "( from:" << from << ", to:" << to << ") local nmbEdges = " << nmbEdges << " k = " << k
+		    << " total_nmbEdges = " << total_nmbEdges << std::endl;
+	  // TODO MARIA: check again!!!! if the number of edges for local and total are correct!!
+	  cg.start_construction((NodeID) local_no_nodes, 2*nmbEdges,(NodeID) k, 2*total_nmbEdges);
 	  cg.set_range(from, to);
   
 	  std::vector< NodeID > vertex_dist( comm_size+1, 0 );
@@ -759,17 +767,17 @@ void distributed_quality_metrics::evaluateMappingDEBUG(parallel_graph_access & C
 
 	  cout << "R: " << rank << " cg.global_nodes = " << cg.number_of_global_nodes() << ", cg.global_edges = " << cg.number_of_global_edges() << " cg.local_nodes = " << cg.number_of_local_nodes() << " cg._local_edges " << cg.number_of_local_edges() << "\n";
 					       
-	  //parallel print of cg
-	  // forall_local_nodes(cg,i) {
-	  //   forall_out_edges(cg, edge, i) {
-	  //     unsigned int start = i;
-	  //     unsigned int target = cg.getEdgeTarget(edge);
-	  //     cout << "R: " << rank << " edge[" << start << "][" << target << "]: -> ( "
-	  // 	   << cg.getNodeLabel( start ) << ", " << cg.getNodeLabel( target )
-	  // 	   << ") - > "
-	  // 	   <<  cg.getEdgeWeight(edge) << "\n";
-	  //   } endfor
-	  // 	} endfor
+  // 	  //parallel print of cg
+  // 	  // forall_local_nodes(cg,i) {
+  // 	  //   forall_out_edges(cg, edge, i) {
+  // 	  //     unsigned int start = i;
+  // 	  //     unsigned int target = cg.getEdgeTarget(edge);
+  // 	  //     cout << "R: " << rank << " edge[" << start << "][" << target << "]: -> ( "
+  // 	  // 	   << cg.getNodeLabel( start ) << ", " << cg.getNodeLabel( target )
+  // 	  // 	   << ") - > "
+  // 	  // 	   <<  cg.getEdgeWeight(edge) << "\n";
+  // 	  //   } endfor
+  // 	  // 	} endfor
 
   
   	  //compute maximum congestion, maximum dilation, average dilation
@@ -779,239 +787,239 @@ void distributed_quality_metrics::evaluateMappingDEBUG(parallel_graph_access & C
   	  int np = PEtree.get_numPUs();
   	  vector<int> local_qap(np, 0);
 
-	  // int * congestion = new int[ksq];
-	  // int * global_congestion = new int[ksq];
-	  // for (int i= 0; i < ksq; i++) {
-	  //   congestion[i] = 0;
-	  //   global_congestion[i] = 0;
-	  // }
-	  // if (rank == ROOT) {
-	  //   std::cout << "Printing congestion" << "\n";
-	  // for (int i= 0; i < ksq; i++) {
-	  //   std::cout << congestion[i] << "\n";
-	  // }
-	  // }
-	  vector<int> congestion(ksq, 0);
-	  vector<int> global_congestion(ksq, 0);
+  	  // int * congestion = new int[ksq];
+  	  // int * global_congestion = new int[ksq];
+  	  // for (int i= 0; i < ksq; i++) {
+  	  //   congestion[i] = 0;
+  	  //   global_congestion[i] = 0;
+  	  // }
+  	  // if (rank == ROOT) {
+  	  //   std::cout << "Printing congestion" << "\n";
+  	  // for (int i= 0; i < ksq; i++) {
+  	  //   std::cout << congestion[i] << "\n";
+  	  // }
+  	  // }
+  	  vector<int> congestion(ksq, 0);
+  	  vector<int> global_congestion(ksq, 0);
 																															       
 	  
-	  //int maxCongestion = 0;
-	  int local_maxCongestion = 0;
+  	  //int maxCongestion = 0;
+  	  int local_maxCongestion = 0;
   	  double avgDilation = 0.0;
 
-	  // // create and build processor parallel_graph_access object
-	  // parallel_graph_access P(communicator);
-	  // vector< vector<int>> predecessorMatrix;
-	  // PEtree.build_parallelPGraph(P, communicator);
-	  // predecessorMatrix = PEtree.build_predecessorMatrix(P);
-	  // // create and build processor parallel_graph_access object
+  	  // // create and build processor parallel_graph_access object
+  	  // parallel_graph_access P(communicator);
+  	  // vector< vector<int>> predecessorMatrix;
+  	  // PEtree.build_parallelPGraph(P, communicator);
+  	  // predecessorMatrix = PEtree.build_predecessorMatrix(P);
+  	  // // create and build processor parallel_graph_access object
 
 
-	  parallel_graph_access P(communicator);
-	  //PEtree.build_parallelPGraph(P, communicator);
-	  PEtree.create_procGraph(P, communicator);
+  	  parallel_graph_access P(communicator);
+  	  //PEtree.build_parallelPGraph(P, communicator);
+  	  PEtree.create_procGraph(P, communicator);
 
-	  forall_local_nodes(P,i) {
-	    forall_out_edges(P, edgeP, i) {
-	      unsigned int start = i;
-	      unsigned int target = P.getEdgeTarget(edgeP);
-	      cout << "R: " << rank << " edge[" << start << "][" << target << "]: -> ( "
-	  	   << P.getNodeLabel( start ) << ", " << P.getNodeLabel( target )
-	  	   << ") - > "
-	  	   <<  P.getEdgeWeight(edgeP) << "\n";
-	    } endfor
-	  	} endfor
+  	  forall_local_nodes(P,i) {
+  	    forall_out_edges(P, edgeP, i) {
+  	      unsigned int start = i;
+  	      unsigned int target = P.getEdgeTarget(edgeP);
+  	      cout << "R: " << rank << " edge[" << start << "][" << target << "]: -> ( "
+  	  	   << P.getNodeLabel( start ) << ", " << P.getNodeLabel( target )
+  	  	   << ") - > "
+  	  	   <<  P.getEdgeWeight(edgeP) << "\n";
+  	    } endfor
+  	  	} endfor
 
-	  // TODO: maybe I do not need it!
-	  MPI_Barrier(communicator);
-	  int nodesNo = P.number_of_global_nodes();
+  	  // TODO: maybe I do not need it!
+  	  MPI_Barrier(communicator);
+  	  int nodesNo = P.number_of_global_nodes();
 	  
-	  std::cout <<  "Breakpoint 4 : " << rank << " PROCS HAVE DUBLICATED PROC GRAPH OF SIZE =  " << nodesNo << std::endl;
+  	  std::cout <<  "Breakpoint 4 : " << rank << " PROCS HAVE DUBLICATED PROC GRAPH OF SIZE =  " << nodesNo << std::endl;
 
 
 
-	  vector< vector<int>> predecessorMatrix;
-	  for (int i = 0; i < nodesNo; i++) {
-	    vector<int> row(nodesNo);
-	    predecessorMatrix.push_back(row);
-	  }
-	  PEtree.create_predecessorMatrix(P, predecessorMatrix);
-	    if (rank == ROOT) {	   
-	    std::cout <<  " R: "<< rank << " PredecessorMatrix "<< std::endl;
-	    for (int i = 0; i < nodesNo; i++) {
-	      for (int j = 0; j < nodesNo; j++) {
-		std::cout << predecessorMatrix[i][j] << " ";
-	      }
-	      std::cout <<  std::endl;
-	    }
-	  }
+  	  vector< vector<int>> predecessorMatrix;
+  	  for (int i = 0; i < nodesNo; i++) {
+  	    vector<int> row(nodesNo);
+  	    predecessorMatrix.push_back(row);
+  	  }
+  	  PEtree.create_predecessorMatrix(P, predecessorMatrix);
+  	    if (rank == ROOT) {	   
+  	    std::cout <<  " R: "<< rank << " PredecessorMatrix "<< std::endl;
+  	    for (int i = 0; i < nodesNo; i++) {
+  	      for (int j = 0; j < nodesNo; j++) {
+  		std::cout << predecessorMatrix[i][j] << " ";
+  	      }
+  	      std::cout <<  std::endl;
+  	    }
+  	  }
 	  
-	  MPI_Barrier(communicator);
-	  std::cout <<  "Breakpoint 5 " << rank << " : ALL PROCS HAVE DUBLICATED PREDECESSORMATRIX "<< std::endl;
+  	  MPI_Barrier(communicator);
+  	  std::cout <<  "Breakpoint 5 " << rank << " : ALL PROCS HAVE DUBLICATED PREDECESSORMATRIX "<< std::endl;
 
-	  forall_local_nodes(cg, i) {
+  	  forall_local_nodes(cg, i) {
   	    forall_out_edges(cg, edgeC, i) {
-	      // if I compute all edges instead of having the following commented
-	      // if-check, I do #mpi-processes more work (but I avoid mpi_allreduce functions).
-	      // it is not working for sumDilation
-	      if( cg.getNodeLabel(i) < cg.getNodeLabel(cg.getEdgeTarget(edgeC)) ) {
+  	      // if I compute all edges instead of having the following commented
+  	      // if-check, I do #mpi-processes more work (but I avoid mpi_allreduce functions).
+  	      // it is not working for sumDilation
+  	      if( cg.getNodeLabel(i) < cg.getNodeLabel(cg.getEdgeTarget(edgeC)) ) {
   	  /* 	//only one edge direction considered */
   	  	unsigned int start = i;
   	  	unsigned int target = cg.getEdgeTarget(edgeC);
   	  	  int distance = PEtree.getDistance_PxPy(cg.getNodeLabel( start ),cg.getNodeLabel( target));
   	  	  int currDilation = distance * (cg.getEdgeWeight(edgeC));
-  	  	  cout << " R: " << rank << " D[" << cg.getNodeLabel( start ) << "]["
-		       << cg.getNodeLabel( target ) << "]: " << " (" << start << ", "
-		       << target << ") d:" << distance   << ",  cg.getEdgeWeight = "
-		       <<  cg.getEdgeWeight(edgeC) << " -> currDilation "  << currDilation << "\n";
-		  local_sumDilation += currDilation;
-		  if(currDilation > local_maxDilation)
-		    local_maxDilation = currDilation;
+  	  	  // cout << " R: " << rank << " D[" << cg.getNodeLabel( start ) << "]["
+  		  //      << cg.getNodeLabel( target ) << "]: " << " (" << start << ", "
+  		  //      << target << ") d:" << distance   << ",  cg.getEdgeWeight = "
+  		  //      <<  cg.getEdgeWeight(edgeC) << " -> currDilation "  << currDilation << "\n";
+  		  local_sumDilation += currDilation;
+  		  if(currDilation > local_maxDilation)
+  		    local_maxDilation = currDilation;
 
 
 
-		  start = cg.getNodeLabel(i);
-		  target = cg.getNodeLabel(cg.getEdgeTarget(edgeC));
-		  //update congestion[]
-		  unsigned int current = target;
-		  unsigned int next = target;
-		  while (current != start) {
-		    current = predecessorMatrix[start][current];
-		    if (next >= current) {
+  		  start = cg.getNodeLabel(i);
+  		  target = cg.getNodeLabel(cg.getEdgeTarget(edgeC));
+  		  //update congestion[]
+  		  unsigned int current = target;
+  		  unsigned int next = target;
+  		  while (current != start) {
+  		    current = predecessorMatrix[start][current];
+  		    if (next >= current) {
 		      
-		      forall_out_edges(P, edgeP, current) {
-		      	if(P.getEdgeTarget(edgeP) == next) {
-		      	  congestion[edgeP] += cg.getEdgeWeight(edgeC);
-			  std::cout << "For (start, target) " << start << ", " << target << " of cg: (current, next) (" << current << ", "
-			  	    << next  << ") affects edge " << edgeP << " with w = "<< cg.getEdgeWeight(edgeC) << std::endl;
-		      	}
-		      } endfor
+  		      forall_out_edges(P, edgeP, current) {
+  		      	if(P.getEdgeTarget(edgeP) == next) {
+  		      	  congestion[edgeP] += cg.getEdgeWeight(edgeC);
+  			  // std::cout << "For (start, target) " << start << ", " << target << " of cg: (current, next) (" << current << ", "
+  			  // 	    << next  << ") affects edge " << edgeP << " with w = "<< cg.getEdgeWeight(edgeC) << std::endl;
+  		      	}
+  		      } endfor
 			  
-		    } else {
-		      forall_out_edges(P, edgeP, next) {
-		      	if (P.getEdgeTarget(edgeP) == current) {
-		      	  congestion[edgeP] += cg.getEdgeWeight(edgeC);
-			  std::cout << "For (start, target) " << start << ", " << target << " of cg: (current, next) (" << current << ", "
-			  	    << next  << ") affects edge " << edgeP << " with w = "<< cg.getEdgeWeight(edgeC) << std::endl;
-		      	}
-		      } endfor
-		    }
-		    next = current;
-		  } // while
-		  //update congestion[]	
+  		    } else {
+  		      forall_out_edges(P, edgeP, next) {
+  		      	if (P.getEdgeTarget(edgeP) == current) {
+  		      	  congestion[edgeP] += cg.getEdgeWeight(edgeC);
+  			  // std::cout << "For (start, target) " << start << ", " << target << " of cg: (current, next) (" << current << ", "
+  			  // 	    << next  << ") affects edge " << edgeP << " with w = "<< cg.getEdgeWeight(edgeC) << std::endl;
+  		      	}
+  		      } endfor
+  		    }
+  		    next = current;
+  		  } // while
+  		  //update congestion[]	
 		  		  
-	      }
+  	      }
 	
   	    } endfor
         } endfor
 
 
 
-	    // std::cout << "R" << rank << ": printing comm-graph" << std::endl;
-	    // forall_local_nodes(cg, i) {
-	    // forall_out_edges(cg, edgeC, i) {
-	    //   if( i < cg.getEdgeTarget(edgeC) ) {
-	    // 	/* 	//only one edge direction considered */
+  	    // std::cout << "R" << rank << ": printing comm-graph" << std::endl;
+  	    // forall_local_nodes(cg, i) {
+  	    // forall_out_edges(cg, edgeC, i) {
+  	    //   if( i < cg.getEdgeTarget(edgeC) ) {
+  	    // 	/* 	//only one edge direction considered */
   	    // 	unsigned int start = i;
   	    // 	unsigned int target = cg.getEdgeTarget(edgeC);
-	    // 	unsigned int first = cg.getNodeLabel(start);
-	    // 	unsigned int second = cg.getNodeLabel(target);
-	    // 	std::cout << "R" << rank << ": (start, target)" << start << ", " << target
-	    // 		  << " of cg: (first, second) (" << first << ", " << second << ")"
-	    // 		  << std::endl;
+  	    // 	unsigned int first = cg.getNodeLabel(start);
+  	    // 	unsigned int second = cg.getNodeLabel(target);
+  	    // 	std::cout << "R" << rank << ": (start, target)" << start << ", " << target
+  	    // 		  << " of cg: (first, second) (" << first << ", " << second << ")"
+  	    // 		  << std::endl;
 		        
-	    //   }
-	    // } endfor
-	    // 	}endfor
+  	    //   }
+  	    // } endfor
+  	    // 	}endfor
 	    
 
-	  //   forall_local_nodes(cg, i) {
-	  //   //for(PartitionID i = 0; i < cg.number_of_global_nodes(); i++) {
-	  //   forall_out_edges(cg, edgeC, i) {
-	  //     // if I compute all edges instead of having the following commented
-	  //     // if-check, I do #mpi-processes more work (but I avoid mpi_allreduce functions).
-	  //     if( cg.getNodeLabel(i) < cg.getNodeLabel(cg.getEdgeTarget(edgeC)) ) {
+  	  //   forall_local_nodes(cg, i) {
+  	  //   //for(PartitionID i = 0; i < cg.number_of_global_nodes(); i++) {
+  	  //   forall_out_edges(cg, edgeC, i) {
+  	  //     // if I compute all edges instead of having the following commented
+  	  //     // if-check, I do #mpi-processes more work (but I avoid mpi_allreduce functions).
+  	  //     if( cg.getNodeLabel(i) < cg.getNodeLabel(cg.getEdgeTarget(edgeC)) ) {
   	  // /* 	//only one edge direction considered */
   	  // /* 	//find dilation of edgeC, update sumDilation, maxDilation */
   	  // 	//unsigned int start = i;
   	  // 	//unsigned int target = cg.getEdgeTarget(edgeC);
 
-	  // 	unsigned int start = cg.getNodeLabel(i);
+  	  // 	unsigned int start = cg.getNodeLabel(i);
   	  // 	unsigned int target = cg.getNodeLabel(cg.getEdgeTarget(edgeC));
-	  // 	  //update congestion[]
-	  // 	  unsigned int current = target;
-	  // 	  unsigned int next = target;
-	  // 	  while (current != start) {
-	  // 	    current = predecessorMatrix[start][current];
-	  // 	    if (next >= current) {
+  	  // 	  //update congestion[]
+  	  // 	  unsigned int current = target;
+  	  // 	  unsigned int next = target;
+  	  // 	  while (current != start) {
+  	  // 	    current = predecessorMatrix[start][current];
+  	  // 	    if (next >= current) {
 		      
-	  // 	      forall_out_edges(P, edgeP, current) {
-	  // 	      	if(P.getEdgeTarget(edgeP) == next) {
-	  // 	      	  congestion[edgeP] += cg.getEdgeWeight(edgeC);
-	  // 		  std::cout << "For (start, target) " << start << ", " << target << " of cg: (current, next) (" << current << ", "
-	  // 		  	    << next  << ") affects edge " << edgeP << " with w = "<< cg.getEdgeWeight(edgeC) << std::endl;
-	  // 	      	}
-	  // 	      } endfor
+  	  // 	      forall_out_edges(P, edgeP, current) {
+  	  // 	      	if(P.getEdgeTarget(edgeP) == next) {
+  	  // 	      	  congestion[edgeP] += cg.getEdgeWeight(edgeC);
+  	  // 		  std::cout << "For (start, target) " << start << ", " << target << " of cg: (current, next) (" << current << ", "
+  	  // 		  	    << next  << ") affects edge " << edgeP << " with w = "<< cg.getEdgeWeight(edgeC) << std::endl;
+  	  // 	      	}
+  	  // 	      } endfor
 			  
-	  // 	    } else {
-	  // 	      forall_out_edges(P, edgeP, next) {
-	  // 	      	if (P.getEdgeTarget(edgeP) == current) {
-	  // 	      	  congestion[edgeP] += cg.getEdgeWeight(edgeC);
-	  // 		  std::cout << "For (start, target) " << start << ", " << target << " of cg: (current, next) (" << current << ", "
-	  // 		  	    << next  << ") affects edge " << edgeP << " with w = "<< cg.getEdgeWeight(edgeC) << std::endl;
-	  // 	      	}
-	  // 	      } endfor
-	  // 	    }
-	  // 	    next = current;
-	  // 	  } // while
-	  // 	  //update congestion[]		  	  
-	  // 	  }
+  	  // 	    } else {
+  	  // 	      forall_out_edges(P, edgeP, next) {
+  	  // 	      	if (P.getEdgeTarget(edgeP) == current) {
+  	  // 	      	  congestion[edgeP] += cg.getEdgeWeight(edgeC);
+  	  // 		  std::cout << "For (start, target) " << start << ", " << target << " of cg: (current, next) (" << current << ", "
+  	  // 		  	    << next  << ") affects edge " << edgeP << " with w = "<< cg.getEdgeWeight(edgeC) << std::endl;
+  	  // 	      	}
+  	  // 	      } endfor
+  	  // 	    }
+  	  // 	    next = current;
+  	  // 	  } // while
+  	  // 	  //update congestion[]		  	  
+  	  // 	  }
   	  //   } endfor
-	  // 	 } endfor
+  	  // 	 } endfor
 
 
-	 MPI_Barrier(communicator);
+  	 MPI_Barrier(communicator);
 	  
-	 forall_local_edges(P, edgeP) {
-	    std::cout << "R: " << rank << "cong[" << edgeP << "] = " << congestion[edgeP] << std::endl;
-	      } endfor
+  	 forall_local_edges(P, edgeP) {
+  	    std::cout << "R: " << rank << "cong[" << edgeP << "] = " << congestion[edgeP] << std::endl;
+  	      } endfor
 
-	  // MPI_Bcast(partition_map, n, MPI_INT, ROOT, communicator);
-		  //MPI_Allreduce(congestion, global_congestion, ksq, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
-	 for(unsigned i = 0; i < ksq ; i ++)
-	    MPI_Allreduce(&congestion[i], &global_congestion[i], 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+  	  // MPI_Bcast(partition_map, n, MPI_INT, ROOT, communicator);
+  		  //MPI_Allreduce(congestion, global_congestion, ksq, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+  	 for(unsigned i = 0; i < ksq ; i ++)
+  	    MPI_Allreduce(&congestion[i], &global_congestion[i], 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
 
-	 if (rank == ROOT) {
-	   forall_local_edges(P, edgeP) {
-	     std::cout <<  "global_cong[" << edgeP << "] = " << global_congestion[edgeP] << std::endl;
-	   } endfor
-	       }
+  	 if (rank == ROOT) {
+  	   forall_local_edges(P, edgeP) {
+  	     std::cout <<  "global_cong[" << edgeP << "] = " << global_congestion[edgeP] << std::endl;
+  	   } endfor
+  	       }
 	 
-	 forall_local_edges(P, edgeP) {
-	    (global_congestion[edgeP]) /= P.getEdgeWeight(edgeP);//edge weight indicates bandwidth
-	 } endfor
+  	 forall_local_edges(P, edgeP) {
+  	    (global_congestion[edgeP]) /= P.getEdgeWeight(edgeP);//edge weight indicates bandwidth
+  	 } endfor
 	      
-	 forall_local_edges(P, edgeP) {
-	    if (global_congestion[edgeP] > local_maxCongestion) {
-	      local_maxCongestion = global_congestion[edgeP];
-	    }
-	  } endfor
+  	 forall_local_edges(P, edgeP) {
+  	    if (global_congestion[edgeP] > local_maxCongestion) {
+  	      local_maxCongestion = global_congestion[edgeP];
+  	    }
+  	  } endfor
 
-	 MPI_Barrier(communicator);
-	 int global_maxCongestion = local_maxCongestion;
-	 //MPI_Allreduce(&local_maxCongestion, &global_maxCongestion, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, communicator);
+  	 MPI_Barrier(communicator);
+  	 int global_maxCongestion = local_maxCongestion;
+  	 //MPI_Allreduce(&local_maxCongestion, &global_maxCongestion, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, communicator);
 
 	  
-	 int global_maxDilation = 0;
-	 int global_sumDilation = 0;
+  	 int global_maxDilation = 0;
+  	 int global_sumDilation = 0;
 
-	   cout << rank << " local_sumDilation::" << local_sumDilation  << " num edges " << (cg.number_of_global_edges() / 2)<< "\n";
-	  // cout << rank << " local_maxDilation::" << local_maxDilation << "\n";
-	  // Have to divide by 2 (I compute local_sumDilation twice for each edge-pair)
-	  local_sumDilation /= 2; 
+  	   cout << rank << " local_sumDilation::" << local_sumDilation  << " num edges " << (cg.number_of_global_edges() / 2)<< "\n";
+  	  // cout << rank << " local_maxDilation::" << local_maxDilation << "\n";
+  	  // Have to divide by 2 (I compute local_sumDilation twice for each edge-pair)
+  	  local_sumDilation /= 2; 
 	  
-	  MPI_Allreduce(&local_maxDilation, &global_maxDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, communicator);
-	  MPI_Allreduce(&local_sumDilation, &global_sumDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+  	  MPI_Allreduce(&local_maxDilation, &global_maxDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, communicator);
+  	  MPI_Allreduce(&local_sumDilation, &global_sumDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
 
 
   if( rank == ROOT ) {

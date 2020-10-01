@@ -25,6 +25,9 @@ public:
         void perform_recursive_partitioning( PPartitionConfig & config, parallel_graph_access & G);
 
         distributed_quality_metrics perform_partitioning( MPI_Comm comm, PPartitionConfig & partition_config, parallel_graph_access & G, const  processor_tree & PEtree = processor_tree());
+
+	void perform_partitioning( MPI_Comm comm, PPartitionConfig & partition_config, parallel_graph_access & G, distributed_quality_metrics & qm, const processor_tree & PEtree = processor_tree());
+	
         void perform_recursive_partitioning( MPI_Comm comm, PPartitionConfig & partition_config, parallel_graph_access & G);
 
         void check( MPI_Comm comm, PPartitionConfig & config, parallel_graph_access & G);
