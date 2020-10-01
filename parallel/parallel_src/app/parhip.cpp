@@ -191,8 +191,8 @@ int main(int argn, char **argv) {
                 MPI_Barrier(communicator);
 
                 double running_time = t.elapsed();
-		
-		qm.evaluateMapping(G, PEtree, communicator);
+
+                //qm.evaluateMapping(G, PEtree, communicator);
 
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
                 EdgeWeight qap = 0;

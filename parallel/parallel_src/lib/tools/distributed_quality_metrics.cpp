@@ -979,7 +979,9 @@ void distributed_quality_metrics::evaluateMappingDEBUG(parallel_graph_access & C
 	  // MPI_Bcast(partition_map, n, MPI_INT, ROOT, communicator);
 		  //MPI_Allreduce(congestion, global_congestion, ksq, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
 	 for(unsigned i = 0; i < ksq ; i ++)
-	    MPI_Allreduce(&congestion[i], &global_congestion[i], 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+	    //MPI_Allreduce(&congestion[i], &global_congestion[i], 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+        //update: the vectors are of type int
+        MPI_Allreduce(&congestion[i], &global_congestion[i], 1, MPI_INT, MPI_SUM, communicator);
 
 	 if (rank == ROOT) {
 	   forall_local_edges(P, edgeP) {
@@ -1002,8 +1004,8 @@ void distributed_quality_metrics::evaluateMappingDEBUG(parallel_graph_access & C
 	 //MPI_Allreduce(&local_maxCongestion, &global_maxCongestion, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, communicator);
 
 	  
-	 int global_maxDilation = 0;
-	 int global_sumDilation = 0;
+	 ULONG global_maxDilation = 0;
+	 ULONG global_sumDilation = 0;
 
 	   cout << rank << " local_sumDilation::" << local_sumDilation  << " num edges " << (cg.number_of_global_edges() / 2)<< "\n";
 	  // cout << rank << " local_maxDilation::" << local_maxDilation << "\n";
