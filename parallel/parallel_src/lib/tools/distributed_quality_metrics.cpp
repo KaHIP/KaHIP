@@ -1007,20 +1007,19 @@ void distributed_quality_metrics::evaluateMappingDEBUG(parallel_graph_access & C
 
   	 MPI_Barrier(communicator);
 	  
-  	 forall_local_edges(P, edgeP) {
-  	    std::cout << "R: " << rank << "cong[" << edgeP << "] = " << congestion[edgeP] << std::endl;
-  	      } endfor
+	 forall_local_edges(P, edgeP) {
+	    std::cout << "R: " << rank << "cong[" << edgeP << "] = " << congestion[edgeP] << std::endl;
+	      } endfor
 
-  	  // MPI_Bcast(partition_map, n, MPI_INT, ROOT, communicator);
-  		  //MPI_Allreduce(congestion, global_congestion, ksq, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
-  	 for(unsigned i = 0; i < ksq ; i ++)
-  	    MPI_Allreduce(&congestion[i], &global_congestion[i], 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+	 for(unsigned i = 0; i < ksq ; i ++)
+	   MPI_Allreduce(&congestion[i], &global_congestion[i], 1, MPI_INT, MPI_SUM, communicator);
 
-  	 if (rank == ROOT) {
-  	   forall_local_edges(P, edgeP) {
-  	     std::cout <<  "global_cong[" << edgeP << "] = " << global_congestion[edgeP] << std::endl;
-  	   } endfor
-  	       }
+	 if (rank == ROOT) {
+	   forall_local_edges(P, edgeP) {
+	     std::cout <<  "global_cong[" << edgeP << "] = " << global_congestion[edgeP] << std::endl;
+	   } endfor
+	       }
+
 	 
   	 forall_local_edges(P, edgeP) {
   	    (global_congestion[edgeP]) /= P.getEdgeWeight(edgeP);//edge weight indicates bandwidth
@@ -1044,8 +1043,8 @@ void distributed_quality_metrics::evaluateMappingDEBUG(parallel_graph_access & C
   	  // cout << rank << " local_maxDilation::" << local_maxDilation << "\n";
   	  // Have to divide by 2 (I compute local_sumDilation twice for each edge-pair)
 	  
-  	  MPI_Allreduce(&local_maxDilation, &global_maxDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_MAX, communicator);
-  	  MPI_Allreduce(&local_sumDilation, &global_sumDilation, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+  	  MPI_Allreduce(&local_maxDilation, &global_maxDilation, 1, MPI_INT, MPI_MAX, communicator);
+  	  MPI_Allreduce(&local_sumDilation, &global_sumDilation, 1, MPI_INT, MPI_SUM, communicator);
 
 
   if( rank == ROOT ) {

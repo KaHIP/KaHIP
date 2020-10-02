@@ -10,14 +10,31 @@ if [[ "$unamestr" == "Darwin" ]]; then
         NCORES=`sysctl -n hw.ncpu`
 fi
 
+VER="Debug"
+if [ $# -eq 0 ]; then
+        echo "No arguments supplied"
+else
+        if [ $1 = "Release" ]; then
+                VER="Release"
+                #echo "Version set to $VER"
+        elif [ $1 = "Debug" ]; then
+                :
+        else
+                echo "Wrong input value $1"
+                exit 1
+        fi 
+fi
+
+echo "version set to $VER"
+
 rm -rf deploy
 #rm -rf build
 mkdir build
 cd build
 cmake ../ \
- -DCMAKE_BUILD_TYPE=Debug \
+ -DCMAKE_BUILD_TYPE=VER \
  -DOPTIMIZED_OUTPUT=ON \
- $1
+
 make -j $NCORES
 cd ..
 
