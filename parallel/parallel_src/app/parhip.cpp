@@ -186,7 +186,7 @@ int main(int argn, char **argv) {
 
                 distributed_partitioner dpart;
                 distributed_quality_metrics qm;
-		std::cout << "log>" << "================ START ===================" << std::endl;
+
 		    
 		try{
 		  //qm = dpart.perform_partitioning( communicator, partition_config, G, PEtree);
@@ -198,12 +198,10 @@ int main(int argn, char **argv) {
 		  } 
 		
                 MPI_Barrier(communicator);
-		if (rank == ROOT)
-		  cout << "Before evaluating mapping :: \n";
                 double running_time = t.elapsed();
 
 		
-		qm.evaluateMappingDEBUG(G, PEtree, communicator);
+		qm.evaluateMapping(G, PEtree, communicator);
 	      
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
                 EdgeWeight qap = 0;

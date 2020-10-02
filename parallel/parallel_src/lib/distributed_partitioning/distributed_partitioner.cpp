@@ -68,8 +68,8 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
 
 
 
-        if( rank == ROOT )
-                 qm.print();
+        // if( rank == ROOT )
+        //          qm.print();
 
         for( int cycle = 0; cycle < partition_config.num_vcycles; cycle++) {
                 t.restart();
@@ -132,8 +132,8 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
                 
         }
 	
-        if( rank == ROOT )
-                 qm.print();
+        // if( rank == ROOT )
+        //          qm.print();
   
   
 }
@@ -268,8 +268,6 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 
         {
                 parallel_contraction parallel_contract;
-		if( rank == ROOT )
-		  std::cout << "log>" << "=============  parallel_contract ===============" << std::endl;
                 parallel_contract.contract_to_distributed_quotient( communicator, config, G, Q); // contains one Barrier
 
                 parallel_block_down_propagation pbdp;
@@ -280,8 +278,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         
                 MPI_Barrier(communicator);
         }
-              
-	std::cout << "log>" << "=============  after bar ===============" << std::endl;
+
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
                 std::cout <<  "log>cycle: " << m_cycle << " level: " << m_level << " contraction took " <<  t.elapsed() << std::endl;
