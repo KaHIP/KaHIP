@@ -435,11 +435,18 @@ EdgeWeight distributed_quality_metrics::comm_vol_dist( parallel_graph_access & G
 void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, const processor_tree & PEtree, MPI_Comm communicator) {
 	  
 
-          int rank, comm_size;
+      int rank, comm_size;
   	  MPI_Comm_rank( communicator, &rank);
 	  MPI_Comm_size( communicator, &comm_size);
 	  unsigned k = PEtree.get_numPUs();//number of nodes in C
 	  unsigned ksq = k * k;
+
+      if( k==1 ){
+         if( rank==0 ){
+            std::cout << "#Warning: PE tree seems empty; will not evaluate mapping metrics." << std::endl;
+         }
+         return;
+      }
 	  
 	  // construct the communication graph based on C
 	  parallel_graph_access cg(communicator);
@@ -465,11 +472,12 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 	      NodeID v = C.getEdgeTarget(e);
 	      PartitionID vBlock = C.getNodeLabel(v);
 	      if(uBlock != vBlock) {
-	  	unsigned indexC = (unsigned) ((uBlock * k) + vBlock);
-	  	if(edgeWeights[indexC] == 0) {
-	  	  nmbEdges++;
-	  	}
-	  	(edgeWeights[indexC])++;
+    	  	unsigned indexC = (unsigned) ((uBlock * k) + vBlock);
+            assert(indexC<ksq);
+    	  	if(edgeWeights[indexC] == 0) {
+    	  	  nmbEdges++;
+    	  	}
+    	  	(edgeWeights[indexC])++;
 	      }
 	    } endfor    
 	  } endfor
@@ -628,7 +636,9 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 	 //       }
 	 
 	 forall_local_edges(P, edgeP) {
-	    (global_congestion[edgeP]) /= P.getEdgeWeight(edgeP);//edge weight indicates bandwidth
+        const EdgeWeight edgeW = P.getEdgeWeight(edgeP);
+        assert( edgeW!=0 );
+	    (global_congestion[edgeP]) /= edgeW;//edge weight indicates bandwidth
 	 } endfor
 
 	 int global_maxCongestion = 0;

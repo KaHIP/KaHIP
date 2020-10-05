@@ -56,8 +56,8 @@ class parallel_label_compress {
                                 assert( !usePEdistances );
                         }
 
-                        // std::cout << "TEST print: "<< G.number_of_global_nodes()
-                                // << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
+std::cout << "TEST print: "<< G.number_of_global_nodes()
+        << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
@@ -118,12 +118,13 @@ class parallel_label_compress {
                                         }
 
                                         prev_node = node;
-                                        G.update_ghost_node_data(); 
+                                        //G.update_ghost_node_data(); 
                                         hash_map.clear();
 
                                 } endfor //for G nodes
+std::cout << "in iteration round " << i << ", we moved " << numChanges << " vertices" <<std::endl;
                                 G.update_ghost_node_data_finish(); 
-                                //std::cout << "in iteration round " << i << ", we moved " << numChanges << " vertices" <<std::endl;
+std::cout << "updated ghost nodes" << std::endl;
                         }//for( ULONG i = 0; i < config.label_iterations; i++)
                 }
 
@@ -222,6 +223,10 @@ class parallel_label_compress {
 
                         forall_out_edges(G, e, node) {
                                 NodeID target             = G.getEdgeTarget(e);
+                                if ( target==node ){
+                                    //self loop
+                                    continue;
+                                }
                                 PartitionID cur_block     = G.getNodeLabel(target);
                                 hash_map[cur_block] += G.getEdgeWeight(e);
                                 PartitionID cur_value     = hash_map[cur_block];
