@@ -43,7 +43,7 @@ class flow_solver {
                 cType  *cap;                 /* array of capacities */
                 node   *source;              /* source node pointer */
                 node   *sink;                /* sink node pointer */
-                long   dMax;                 /* maximum label */
+                long   dMax=0;                 /* maximum label */
                 long   aMax;                 /* maximum actie node label */
                 long   aMin;                 /* minimum active node label */
                 double flow;                 /* flow value */
