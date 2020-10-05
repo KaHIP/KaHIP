@@ -233,7 +233,6 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         PEID rank;
         MPI_Comm_rank( communicator, &rank);
 
-	
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
                 std::cout << "log>" << "=====================================" << std::endl;
@@ -249,19 +248,20 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         //
         config.upper_bound_cluster = config.upper_bound_partition/(1.0*config.cluster_coarsening_factor);
         G.init_balance_management( config );
-std::cout << "before parallel label compress, rank " << rank << std::endl;
+
         //parallel_label_compress< std::unordered_map< NodeID, NodeWeight> > plc;
         parallel_label_compress< linear_probing_hashmap  > plc;
         // TODO: decide if we want to pass PEtree as an argument during coarsening.
         // For now we do think there is no need ...
         plc.perform_parallel_label_compression ( config, G, true );
 
-//#ifndef NOOUTPUT
+#ifndef NOOUTPUT
         if( rank == ROOT ) {
-                std::cout <<  "log> cluster upper bound used is " << config.upper_bound_cluster << std::endl;
+                std::cout <<  "log> cluster upper bound used is " << config.upper_bound_cluster << ", update step size= " << config.update_step_size 
+                << std::endl;
                 std::cout <<  "log>cycle: " << m_cycle << " level: " << m_level  << " parallel label compression took " <<  t.elapsed() << std::endl;
         }
-//#endif
+#endif
 
         parallel_graph_access Q(communicator);
         t.restart();

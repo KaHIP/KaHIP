@@ -64,8 +64,10 @@ int parse_parameters(int argn, char **argv,
         struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth; in total 4x8x8=256 PEs.");
         struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
         struct arg_lit *only_boundary                        = arg_lit0(NULL, "only_boundary", "when refinement, move boundary vertices only" );
-        struct arg_int *max_coarsening_levels                    = arg_int0(NULL, "max_coarsening_levels", NULL, "Max number of coarsening levels to perform.");
+        struct arg_int *max_coarsening_levels                = arg_int0(NULL, "max_coarsening_levels", NULL, "Max number of coarsening levels to perform.");
         struct arg_lit *ignore_PEtree                        = arg_lit0(NULL, "ignore_PEtree", "Even if the PE tree is given, ignore it during refinement; used to measure the qap metrics when a PE tree exists but it is ignored" );
+        struct arg_int *update_step_size                     = arg_int0(NULL, "update_step_size", NULL, "Every how many nodes to update ghost nodes.");
+        struct arg_lit *adjustable_update_step               = arg_lit0(NULL, "adjustable_update_step", "When coarsening/refining,  automatically adjust the update step" );
 
         // Define argtable.
         void* argtable[] = {
@@ -73,7 +75,8 @@ int parse_parameters(int argn, char **argv,
 	  help, filename, filename_output, user_seed, k, inbalance, preconfiguration, vertex_degree_weights,
                 save_partition, save_partition_binary, hierarchy_parameter_string, distance_parameter_string,
                 only_boundary, num_vcycles, label_iterations_refinement, label_iterations_coarsening, stop_factor,
-                no_refinement_in_last_iteration, cluster_coarsening_factor, max_coarsening_levels, ignore_PEtree,
+                no_refinement_in_last_iteration, cluster_coarsening_factor, max_coarsening_levels, ignore_PEtree, 
+                update_step_size, adjustable_update_step,
 #elif defined TOOLBOX 
                 help, filename, k_opt, input_partition_filename, save_partition, save_partition_binary, converter_evaluate,
 #endif 
@@ -223,6 +226,14 @@ int parse_parameters(int argn, char **argv,
         
         if (max_coarsening_levels->count > 0) {
                 partition_config.max_coarsening_levels = max_coarsening_levels->ival[0];
+        }
+  
+        if (update_step_size->count > 0) {
+                partition_config.update_step_size = update_step_size->ival[0];
+        }
+        
+        if (adjustable_update_step->count > 0) {
+                partition_config.adjustable_update_step = true;
         }
 
         if (comm_rounds->count > 0) {
