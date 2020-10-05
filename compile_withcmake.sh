@@ -32,7 +32,7 @@ rm -rf deploy
 mkdir build
 cd build
 cmake ../ \
- -DCMAKE_BUILD_TYPE=VER \
+ -DCMAKE_BUILD_TYPE=$VER \
  -DOPTIMIZED_OUTPUT=ON \
 
 make -j $NCORES
