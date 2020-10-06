@@ -10,6 +10,22 @@ if [[ "$unamestr" == "Darwin" ]]; then
         NCORES=`sysctl -n hw.ncpu`
 fi
 
+VER="Release"
+if [ $# -eq 0 ]; then
+        echo "No arguments supplied"
+else
+        if [ $1 = "Release" ]; then
+                :
+        elif [ $1 = "Debug" ]; then
+                VER="Debug"
+        else
+                echo "Wrong input value $1"
+                exit 1
+        fi 
+fi
+
+echo "version set to $VER"
+
 rm -rf deploy
 rm -rf build
 mkdir build
@@ -17,6 +33,7 @@ cd build
 
 #specific paths for compiler in lise
 cmake \
+-DCMAKE_BUILD_TYPE=$VER \
 -DCMAKE_C_COMPILER=/sw/compiler/gcc/9.2.0/skl/bin/gcc \
 -DCMAKE_CXX_COMPILER=/sw/compiler/gcc/9.2.0/skl/bin/g++ \
 ../
