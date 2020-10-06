@@ -36,6 +36,7 @@ cmake \
 -DCMAKE_BUILD_TYPE=$VER \
 -DCMAKE_C_COMPILER=/sw/compiler/gcc/9.2.0/skl/bin/gcc \
 -DCMAKE_CXX_COMPILER=/sw/compiler/gcc/9.2.0/skl/bin/g++ \
+-DOPTIMIZED_OUTPUT=ON \
 ../
 
 make -j $NCORES
