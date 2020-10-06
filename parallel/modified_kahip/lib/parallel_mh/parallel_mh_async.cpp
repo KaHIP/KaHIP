@@ -91,7 +91,7 @@ void parallel_mh_async::perform_partitioning(const PartitionConfig & partition_c
         }
 
         collect_best_partitioning(G, partition_config);
-        m_island->print();
+        //m_island->print();
 
         //print logfile (for convergence plots)
         if( partition_config.mh_print_log ) {

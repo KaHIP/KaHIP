@@ -10,6 +10,7 @@
 
 #include <math.h>
 #include <map>
+#include <chrono>
 
 #include "data_structure/parallel_graph_access.h"
 #include "data_structure/processor_tree.h"
@@ -28,6 +29,10 @@ class parallel_label_compress {
                 void perform_parallel_label_compression( PPartitionConfig & config, 
                                 parallel_graph_access & G, bool balance, bool for_coarsening = true,
                                  const processor_tree & PEtree = processor_tree()) {
+
+                        PEID rank;
+                        MPI_Comm communicator = MPI_COMM_WORLD;
+                        MPI_Comm_rank( communicator, &rank);
 
                         if( config.label_iterations == 0) return;
                         NodeWeight cluster_upperbound = config.upper_bound_cluster;
@@ -56,18 +61,37 @@ class parallel_label_compress {
                                 assert( !usePEdistances );
                         }
 
-std::cout << "TEST print: "<< G.number_of_global_nodes()
-        << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
+                        if(rank==ROOT){
+                            std::cout << "TEST print: "<< G.number_of_global_nodes()
+                                    << ", usePEdistances " << usePEdistances << ", only_boundary " << config.only_boundary << std::endl;
+                            std::cout <<"log> will do " << config.label_iterations << " rounds of label propagation" << std::endl;
+                        }
 
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
 
+                        int updateSize = config.update_step_size;
+                        double total_ghost_update_time = 0.0;
+                        int num_update_calls = 0;
+
+
                         for( ULONG i = 0; i < config.label_iterations; i++) {
                                 ULONG numChanges = 0;
                                 NodeID prev_node = 0;
+                                ULONG numSeenNodes = 0;
+
+                                if( config.adjustable_update_step ){
+                                        updateSize = std::max( int (config.update_step_size/(config.label_iterations-i)), 1 );
+                                }
+                                if(rank==ROOT){
+                                     std::cout << "log> level " << i << ", will update ghost nodes every " << updateSize << " seen nodes" << std::endl;
+                                }
+
+
                                 forall_local_nodes(G, rnode) {
                                         const NodeID node = permutation[rnode]; // use the current random node
+                                        numSeenNodes++;
 
                                         //TODO: evaluate how this affects quality and running time.
                                         //when NOT coarsening and we check only boundary nodes and this node is NOT a boundary node, skip it
@@ -118,15 +142,31 @@ std::cout << "TEST print: "<< G.number_of_global_nodes()
                                         }
 
                                         prev_node = node;
-                                        //G.update_ghost_node_data(); 
+
+                                        if( numSeenNodes%updateSize==0 ){
+                                                num_update_calls++;
+                                                std::chrono::time_point<std::chrono::steady_clock> startTime =  std::chrono::steady_clock::now();
+                                                G.update_ghost_node_data();
+                                                std::chrono::duration<double> endTime = std::chrono::steady_clock::now() - startTime;
+                                                total_ghost_update_time += endTime.count();
+                                        }
+
                                         hash_map.clear();
 
                                 } endfor //for G nodes
-std::cout << "in iteration round " << i << ", we moved " << numChanges << " vertices" <<std::endl;
+                                //std::cout << "in iteration round " << i << ", we moved " << numChanges << " vertices" <<std::endl;
                                 G.update_ghost_node_data_finish(); 
-std::cout << "updated ghost nodes" << std::endl;
+                                //std::cout << "updated ghost nodes" << std::endl;
                         }//for( ULONG i = 0; i < config.label_iterations; i++)
+
+                double max_update_time = 0.0;
+                MPI_Reduce(&total_ghost_update_time, &max_update_time, 1, MPI_DOUBLE, MPI_MAX, ROOT, MPI_COMM_WORLD);
+                
+                if(rank==ROOT ){
+                        std::cout << "log> update ghost was called " << num_update_calls << " times and elapsed time was " << max_update_time << std::endl;
                 }
+                
+                }//void perform_parallel_label_compression()
 
 
         private:
