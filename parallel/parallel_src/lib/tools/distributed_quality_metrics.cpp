@@ -72,44 +72,27 @@ EdgeWeight distributed_quality_metrics::edge_cut( parallel_graph_access & G, MPI
 
 EdgeWeight distributed_quality_metrics::total_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator ) {
         EdgeWeight local_qap = 0;
-	// int clz = __builtin_clzll(G.number_of_global_nodes());
-	// const int label_size = 8*sizeof(unsigned long long int) - clz;
+        //probably the tree is not initialized
+        if( PEtree.get_numPUs()<=1){
+                return 0;
+        }
 
-    //probably the tree is not initialized
-    if( PEtree.get_numPUs()<=1){
-        return 0;
-    }
+        //int rank;
+        //MPI_Comm_rank( communicator, &rank);
 
-	/* JUST FOR TESTING */
-	int rank;
-        MPI_Comm_rank( communicator, &rank);
-	// if( rank == ROOT ) 
-	//   std::cout <<  " PRINT : label_size " << label_size << std::endl;
-
-	
         forall_local_nodes(G, node) {
                 forall_out_edges(G, e, node) {
                         NodeID target = G.getEdgeTarget(e);
                         if( G.getNodeLabel( node ) != G.getNodeLabel(target)) {
-			  // if( rank == ROOT ) {
-			  //   std::cout << "(" << node << ", " << target << ") -> ( "
-			  // 	      << G.getNodeLabel( node ) << ", " << G.getNodeLabel( target )
-			  // 	      << ")" << std::endl;
-			  // }
-			  //local_qap += G.getEdgeWeight(e);
-			  local_qap += G.getEdgeWeight(e) * PEtree.getDistance_PxPy(G.getNodeLabel( node ),G.getNodeLabel( target));
+                                local_qap += G.getEdgeWeight(e) * PEtree.getDistance_PxPy(G.getNodeLabel( node ),G.getNodeLabel( target));
                         }
                 } endfor
         } endfor
 
-	//std::cout <<  " PRINT " << rank << " : local_qap " << local_qap << std::endl;
         EdgeWeight global_qap = 0;
         MPI_Allreduce(&local_qap, &global_qap, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
 
-	// if( rank == ROOT ) 
-	//   std::cout <<  " PRINT : total_global_qap " << global_qap << std::endl;
-	
-        return global_qap;
+        return global_qap/2;
 }
 
 
