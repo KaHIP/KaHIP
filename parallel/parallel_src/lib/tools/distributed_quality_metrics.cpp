@@ -431,6 +431,7 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
          return;
       }
 	  
+      //TODO?: maybe this can be replicates, i.e., not a parallel graph, just a regular graph replicated in every PE
 	  // construct the communication graph based on C
 	  parallel_graph_access cg(communicator);
 	  //PEtree.create_commGraph(C, cg, communicator);
@@ -448,6 +449,7 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 	  for(unsigned i = 0; i < ksq ; i ++) {
 	    edgeWeights[i] = 0;
 	  }
+      //TODO: probably this is not calculated properly, problem with assertion later when called with high (>40?) number of PEs
 	  unsigned nmbEdges = 0;
 	  forall_local_nodes(C,u) {
 	    PartitionID uBlock = C.getNodeLabel(u);
@@ -505,9 +507,16 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 	    for(unsigned j = 0; j < k; j ++) {
 	      unsigned indexC = (((i + vertex_dist[rank]) * k) + j);
 	      if(global_edgeWeights[indexC] != 0) {
-	  	EdgeID e = cg.new_edge(i, j);
-		edge_count++;
-	  	cg.setEdgeWeight(e, global_edgeWeights[indexC]);
+            assert(edge_count<total_nmbEdges-1 );
+
+            if( edge_count>2*nmbEdges-2){
+                std::cout << rank << ": " << edge_count << " __ locM= "<< 2*nmbEdges << " globM= " << total_nmbEdges << std::endl; 
+            }
+            assert(edge_count<2*nmbEdges );
+            
+            EdgeID e = cg.new_edge(i, j);
+            edge_count++;
+            cg.setEdgeWeight(e, global_edgeWeights[indexC]);
 	      }
 	    }
 	  }
@@ -525,7 +534,7 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 					       
 	  //parallel print of cg
 	  // forall_local_nodes(cg,i) {
-	  //   forall_out_edges(cg, edge, i) {
+	  //    forall_out_edges(cg, edge, i) {
 	  //     unsigned int start = i;
 	  //     unsigned int target = cg.getEdgeTarget(edge);
 	  //     cout << "R: " << rank << " edge[" << start << "][" << target << "]: -> ( "
