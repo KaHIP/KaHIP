@@ -18,6 +18,7 @@ processor_tree::processor_tree(const vector<int> &distances, const vector<int> &
   numOfLevels = distances.size()==0 ? 1 : distances.size();
   for( unsigned int i = 0; i < get_numOfLevels(); i++)
     numPUs *= traversalDescendants[i];
+  setCompactRep();
 }
 
 /* processor_tree::processor_tree(const vector<int> &distances, const vector<int> &descendants , MPI_Comm communicator ) { */
@@ -31,7 +32,30 @@ processor_tree::processor_tree(const vector<int> &distances, const vector<int> &
 /*   build_predecessorMatrix(); */
 /* } */
 
-  
+
+void processor_tree::setCompactRep() {
+
+        int groups_size = traversalDescendants.size();
+	assert ( groups_size == numOfLevels);
+	compact_bin_id = new std::vector<unsigned int> (numPUs,0);
+	
+	bit_sec_len = 1;
+	for( unsigned k = 0; k < groups_size; k++) {
+	  int tmp = ceil(log2(traversalDescendants[k]));
+	  if (tmp > bit_sec_len) {
+	    bit_sec_len = tmp;
+	  }
+	}
+
+	for (unsigned i = 0; i < numPUs; i++) {
+	  unsigned int lay_id = i;
+	  for(int k=0; k < groups_size; k++) {
+	    int remainder = lay_id % traversalDescendants[k];
+	    lay_id = lay_id / traversalDescendants[k];
+	    (*compact_bin_id)[i] += remainder << (k*bit_sec_len);
+	  }
+	}
+}
 
 void processor_tree::print() const {
         assert( traversalDistances.size()==get_numOfLevels() );
