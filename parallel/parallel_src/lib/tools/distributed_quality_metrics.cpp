@@ -72,44 +72,27 @@ EdgeWeight distributed_quality_metrics::edge_cut( parallel_graph_access & G, MPI
 
 EdgeWeight distributed_quality_metrics::total_qap( parallel_graph_access & G, const processor_tree &PEtree, MPI_Comm communicator ) {
         EdgeWeight local_qap = 0;
-	// int clz = __builtin_clzll(G.number_of_global_nodes());
-	// const int label_size = 8*sizeof(unsigned long long int) - clz;
+        //probably the tree is not initialized
+        if( PEtree.get_numPUs()<=1){
+                return 0;
+        }
 
-    //probably the tree is not initialized
-    if( PEtree.get_numPUs()<=1){
-        return 0;
-    }
+        //int rank;
+        //MPI_Comm_rank( communicator, &rank);
 
-	/* JUST FOR TESTING */
-	int rank;
-        MPI_Comm_rank( communicator, &rank);
-	// if( rank == ROOT ) 
-	//   std::cout <<  " PRINT : label_size " << label_size << std::endl;
-
-	
         forall_local_nodes(G, node) {
                 forall_out_edges(G, e, node) {
                         NodeID target = G.getEdgeTarget(e);
                         if( G.getNodeLabel( node ) != G.getNodeLabel(target)) {
-			  // if( rank == ROOT ) {
-			  //   std::cout << "(" << node << ", " << target << ") -> ( "
-			  // 	      << G.getNodeLabel( node ) << ", " << G.getNodeLabel( target )
-			  // 	      << ")" << std::endl;
-			  // }
-			  //local_qap += G.getEdgeWeight(e);
-			  local_qap += G.getEdgeWeight(e) * PEtree.getDistance_PxPy(G.getNodeLabel( node ),G.getNodeLabel( target));
+                                local_qap += G.getEdgeWeight(e) * PEtree.getDistance_PxPy(G.getNodeLabel( node ),G.getNodeLabel( target));
                         }
                 } endfor
         } endfor
 
-	//std::cout <<  " PRINT " << rank << " : local_qap " << local_qap << std::endl;
         EdgeWeight global_qap = 0;
         MPI_Allreduce(&local_qap, &global_qap, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
 
-	// if( rank == ROOT ) 
-	//   std::cout <<  " PRINT : total_global_qap " << global_qap << std::endl;
-	
-        return global_qap;
+        return global_qap/2;
 }
 
 
@@ -448,6 +431,7 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
          return;
       }
 	  
+      //TODO?: maybe this can be replicates, i.e., not a parallel graph, just a regular graph replicated in every PE
 	  // construct the communication graph based on C
 	  parallel_graph_access cg(communicator);
 	  //PEtree.create_commGraph(C, cg, communicator);
@@ -465,6 +449,7 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 	  for(unsigned i = 0; i < ksq ; i ++) {
 	    edgeWeights[i] = 0;
 	  }
+      //TODO: probably this is not calculated properly, problem with assertion later when called with high (>40?) number of PEs
 	  unsigned nmbEdges = 0;
 	  forall_local_nodes(C,u) {
 	    PartitionID uBlock = C.getNodeLabel(u);
@@ -522,9 +507,16 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 	    for(unsigned j = 0; j < k; j ++) {
 	      unsigned indexC = (((i + vertex_dist[rank]) * k) + j);
 	      if(global_edgeWeights[indexC] != 0) {
-	  	EdgeID e = cg.new_edge(i, j);
-		edge_count++;
-	  	cg.setEdgeWeight(e, global_edgeWeights[indexC]);
+            assert(edge_count<total_nmbEdges-1 );
+
+            if( edge_count>2*nmbEdges-2){
+                std::cout << rank << ": " << edge_count << " __ locM= "<< 2*nmbEdges << " globM= " << total_nmbEdges << std::endl; 
+            }
+            assert(edge_count<2*nmbEdges );
+            
+            EdgeID e = cg.new_edge(i, j);
+            edge_count++;
+            cg.setEdgeWeight(e, global_edgeWeights[indexC]);
 	      }
 	    }
 	  }
@@ -542,7 +534,7 @@ void distributed_quality_metrics::evaluateMapping(parallel_graph_access & C, con
 					       
 	  //parallel print of cg
 	  // forall_local_nodes(cg,i) {
-	  //   forall_out_edges(cg, edge, i) {
+	  //    forall_out_edges(cg, edge, i) {
 	  //     unsigned int start = i;
 	  //     unsigned int target = cg.getEdgeTarget(edge);
 	  //     cout << "R: " << rank << " edge[" << start << "][" << target << "]: -> ( "
