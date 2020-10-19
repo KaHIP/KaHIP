@@ -18,6 +18,7 @@
 #include "tools/random_functions.h"
 #include "hmap_wrapper.h"
 #include "node_ordering.h"
+#include "system_info.h"
 
 
 template <typename T> 
@@ -157,15 +158,19 @@ class parallel_label_compress {
                                 //std::cout << "in iteration round " << i << ", we moved " << numChanges << " vertices" <<std::endl;
                                 G.update_ghost_node_data_finish(); 
                                 //std::cout << "updated ghost nodes" << std::endl;
+
+                                [[maybe_unused]] double myMem;
+                                getFreeRam(MPI_COMM_WORLD, myMem, true);
+
                         }//for( ULONG i = 0; i < config.label_iterations; i++)
 
-                double max_update_time = 0.0;
-                MPI_Reduce(&total_ghost_update_time, &max_update_time, 1, MPI_DOUBLE, MPI_MAX, ROOT, MPI_COMM_WORLD);
-                
-                if(rank==ROOT ){
-                        std::cout << "log> update ghost was called " << num_update_calls << " times and elapsed time was " << max_update_time << std::endl;
-                }
-                
+                        double max_update_time = 0.0;
+                        MPI_Reduce(&total_ghost_update_time, &max_update_time, 1, MPI_DOUBLE, MPI_MAX, ROOT, MPI_COMM_WORLD);
+                        
+                        if(rank==ROOT ){
+                                std::cout << "log> update ghost was called " << num_update_calls << " times and elapsed time was " << max_update_time << std::endl;
+                        }
+                        
                 }//void perform_parallel_label_compression()
 
 
