@@ -48,27 +48,6 @@ public:
 
         inline int getDistance_PxPy(int x, int y) const {
                assert((x <= numPUs) and (y <= numPUs) );
-                int groups_size = traversalDescendants.size();
-                assert ( groups_size == numOfLevels);
-                std::vector<unsigned int>  * compact_bin_id = new std::vector<unsigned int> (numPUs,0);
-
-                int bit_sec_len = 1;
-                for( unsigned k = 0; k < groups_size; k++) {
-                    int tmp = ceil(log2(traversalDescendants[k]));
-                    if (tmp > bit_sec_len) {
-                            bit_sec_len = tmp;
-                    }
-                }
-
-                for (unsigned i = 0; i < numPUs; i++) {
-                        unsigned int lay_id = i;
-                        for(int k=0; k < groups_size; k++) {
-                                int remainder = lay_id % traversalDescendants[k];
-                                lay_id = lay_id / traversalDescendants[k];
-                                (*compact_bin_id)[i] += remainder << (k*bit_sec_len);
-                        }
-                }
-
                 int k = 0;
                 unsigned long long int xor_x_y = (*compact_bin_id)[x] ^ (*compact_bin_id)[y];
                 if (!xor_x_y) return 0;
@@ -85,22 +64,6 @@ public:
 		
  	}	
   
-	/* inline int getDistance_PxPy(int x, int y) const { */	  
-	/* 	assert((x <= numPUs) and (y <= numPUs) ); */
-	/* 	int labelDiff = x ^ y; */
-	/* 	if(!labelDiff) */
-	/* 		return 0; */
-	/* 	std::cout << "x = " << x << " y = "  <<   y << " labelDiff = " <<   labelDiff  << std::endl; */
-	/* 	int count_leading_zeros = __builtin_clzll(labelDiff); // index of highest bit */
-	/* 	int total_n_bits = 8*sizeof(unsigned long long int) - 1; */
-	/* 	int idx = total_n_bits - count_leading_zeros; */
-	/* 	assert(idx <= numOfLevels); // index of no more than number of levels */
-	/* 	//std::cout << "idx = " << idx  << " and labelDiff = " */
-	/* 	//	  << labelDiff << std::endl; */
-	/* 	if(idx >= traversalDistances.size()) */
-	/* 		return 0; */
-	/* 	return traversalDistances[idx]; */
-	/* } */
 
 
   
@@ -117,7 +80,7 @@ public:
 	void create_procGraph(parallel_graph_access & cg, MPI_Comm communicator) const;
 	void create_parallelprocGraph(parallel_graph_access & cg, MPI_Comm communicator) const;
 	void create_commGraph(parallel_graph_access & C, parallel_graph_access & cg, MPI_Comm communicator) const;
-
+	void setCompactRep();
 
 	
 private:
@@ -125,10 +88,11 @@ private:
 	
 	unsigned int numOfLevels;
 	unsigned int numPUs = 1;
-	// Q: make distances double?
 	vector<int> traversalDistances;
 	vector<int> traversalDescendants;
-
+	std::vector<unsigned int>  * compact_bin_id;
+	int bit_sec_len;
+	
 	/* parallel_graph_access & P; */
 	/* vector< vector<int> > predecessorMatrix; */
 	
