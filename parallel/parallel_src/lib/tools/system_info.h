@@ -76,18 +76,22 @@ unsigned long long getFreeRam(const MPI_Comm communicator, double& myMem, bool p
         return result;
     };
 
-    /*const double*/ myMem = getValue()/kb;
+    myMem = getValue()/kb;
 
     if( printMessage ){
+        double maxMem;
+        MPI_Reduce( &myMem, &maxMem, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD );
         if( rank==0 ){
                 std::cout << "totalPhysMem: " << (totalPhysMem/mb) << 
                 " MB, physMemUsed: " << physMemUsed/mb << 
-                " MB, free ram: " << freeRam/mb << std::endl;
+                " MB, free ram: " << freeRam/mb << 
+                " max mem used: " << maxMem << " MB" << std::endl;
         }
-        std::cout<< "PE "<<  rank <<
+
+        //std::cout<< "PE "<<  rank <<
                 //" MB, shared ram: " << sharedRam/mb <<
                 //" MB, buffered ram: " << buffRam/mb << " MB, " <<
-                ": I am using: " << myMem << " MB" << std::endl;
+                //": I am using: " << myMem << " MB" << std::endl;
     }
 
     return freeRam;
