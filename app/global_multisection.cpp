@@ -102,6 +102,18 @@ int main(int argn, char **argv) {
 
         std::cout <<  "performing partitioning! overall k=" <<  partition_config.k  << std::endl;
         partitioner.perform_partitioning_krec_hierarchy(partition_config, G);
+
+        if( partition_config.kaffpa_perfectly_balance ) {
+                double epsilon                         = partition_config.imbalance/100.0;
+                partition_config.upper_bound_partition = (1+epsilon)*ceil(partition_config.largest_graph_weight/(double)partition_config.k);
+
+                complete_boundary boundary(&G);
+                boundary.build();
+
+                cycle_refinement cr;
+                cr.perform_refinement(partition_config, G, boundary);
+        }
+
         std::cout << "multisectioning took " << t.elapsed()  << std::endl;
 
         t.restart();
