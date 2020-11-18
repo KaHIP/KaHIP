@@ -61,8 +61,8 @@ int parse_parameters(int argn, char **argv,
         //
 
         //struct arg_lit *integrated_mapping                   = arg_lit0(NULL, "integrated_mapping", "Enable integrated mapping algorithms to map quotient graph onto processor graph defined by hierarchy and distance options. (Default: disabled)");
-        struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth; in total 4x8x8=256 PEs.");
-        struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
+        struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth; in total 4x8x8=256 PEs. The first number describes the bottom level, i.e. the leaves and each number a level above. ");
+        struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth. The first number describes the bottom level, i.e. the leaves and each number a level above.");
         struct arg_lit *only_boundary                        = arg_lit0(NULL, "only_boundary", "when refinement, move boundary vertices only" );
         struct arg_int *max_coarsening_levels                = arg_int0(NULL, "max_coarsening_levels", NULL, "Max number of coarsening levels to perform.");
         struct arg_lit *ignore_PEtree                        = arg_lit0(NULL, "ignore_PEtree", "Even if the PE tree is given, ignore it during refinement; used to measure the qap metrics when a PE tree exists but it is ignored" );

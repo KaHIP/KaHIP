@@ -6,9 +6,9 @@ The motivation is to extend ParHIP so that it also perform mapping when doing re
 
 Below are the necessary additions to the code. These were performed mostly during September-October, 2020.
 
-## Necassary technical changes
+## Necessary technical changes
 
-The system description whould somehow be given to ParHIP through the command line. As we only target near-homegeneous tree system this can be done using two extra arguments: **`hierarchy_parameter_string`** 
+The system description would somehow be given to ParHIP through the command line. As we only target near-homegeneous tree system this can be done using two extra arguments: **`hierarchy_parameter_string`** 
 and **`distance_parameter_string`**. Both parameters is a sequence of numbers separated by `:`. 
 If hierarchy_parameter_string=a1:a2:a3:...:ai:...:ak this means that the system has k levels, the nodes in level `i-1` have `ai` "children" and in total we have a1\*a2\*...\*ak leaves. 
 In this system description
@@ -38,13 +38,13 @@ During the refinement steps, in each PE independently, we go over its local veri
 we visit all of its neighbors and we 
 gather all the blocks where each neighbor belong to, notated `R(v)`.
 At this point, `v` belongs to block `P(v)`. Then, we check, for all blocks in `R(v)`, if reassigning
-`v` to one of these blocks would improve the communication costs. We find the assignement that offers the maximum improvement and we update `P(v)` and continue to the next.
+`v` to one of these blocks would improve the communication costs. We find the assignment that offers the maximum improvement and we update `P(v)` and continue to the next.
 Every a certain number of local nodes are visited, PEs communicate in order to update the ghost nodes partition.
 When all local nodes are visited, we repeat the same procedure. How many label propagation iterations
 we will perform is controlled by the command line parameter `label_iterations_refinement`.
 The whole procedure is repeated on every uncoarsening step until we get the original graph.
 
-## Miscellanous additions and changes
+## Miscellaneous additions and changes
 
 The information about the system description are held in a processor_tree, found in `parallel/parallel_src/lib/data_structure/processor_tree.h`. The processor tree is constructed 
 using the command line parameters mentioned above. 
@@ -53,5 +53,5 @@ by using bit label operations.
 
 In `parallel/parallel_src/lib/tools` we added two new classes. The `distributed_quality_metrics` 
 calculate various metric related to mapping like CoCo, max and total dilation and congestion.
-In `system_info.h` we offer a function to output the memory usage of the application at runtime 
+In `system_info.h` we offer a function to output the memory usage of the application at run-time 
 mostly for debugging purposes.

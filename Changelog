@@ -1,3 +1,7 @@
+KaHIP_hu
+------------------------------------------------------------------------
+- added mapping in parallel refinement that uses the distances of the Processing Elements (PEs) when the system has a tree format.
+
 KaHIP-2.10
 ------------------------------------------------------------------------
 - added edge partitioning algorithms
