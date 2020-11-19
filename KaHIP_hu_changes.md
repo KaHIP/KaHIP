@@ -58,8 +58,10 @@ After a certain number of local nodes are visited, PEs communicate in order to u
 When all local nodes are visited, we repeat the same procedure. How many label propagation iterations
 we will perform is controlled by the command line parameter `label_iterations_refinement`.
 The whole procedure is repeated on every uncoarsening step until we get the original graph.
-
-![PEcommTree](./img/PEcommTree.png)
+  
+<figure>
+<img src="./img/PEcommTree.png" alt="tree" style="float: center; margin: 10em 10em 1em 2em" >
+</figure>
 
 In the tree above, all same color PEs have communication cost 1, cost between red and green
 is 40 and cost between red or green and orange is 1600.
