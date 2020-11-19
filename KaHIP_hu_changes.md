@@ -19,7 +19,7 @@ tree system this can be done using two extra arguments: **`hierarchy_parameter_s
 and **`distance_parameter_string`**. 
 
 Both parameters is a sequence of numbers separated by `:`. 
-If hierarchy_parameter_string=a1:a2:a3:...:ai:...:ak this means that the system has k levels, the nodes in level `i-1` have `ai` "children" and in total we have a1\*a2\*...\*ak leaves. 
+If hierarchy_parameter_string=a1:a2:a3:...:ai:...:ak this means that the system has k levels, the nodes in level `i-1` have `ai` "children" and in total we have a1&times;a2&times;...&times;ak leaves. 
 In this system description
 only the leaves are PEs and intermediate tree nodes account for sockets, racks, compute nodes etc.
 Similarly, distance_parameter_string=d1:d2:...:dk gives the communication costs, ie, the "distance"  between leaves/PEs: leaves that have the same "father" in the tree have cost d1, the same "grandfather" have cost d2 etc. In other words, the communication cost between two leaves is relevant to the level
@@ -30,9 +30,9 @@ than PEs in the same node.
 Example: A system has 4 compute nodes, where each node has 2 sockets, each sockets 4 CPUs and each CPU 6 cores. The communication costs is 1 for PEs in the same core, 5 for PEs in the same CPU but different cores, 20 for PEs in the same socket but different CPU and 100 for PEs in different compute node.
 Then, ParHIP will be called like 
 
-`mpirun -n 4 parhip file.graph --hierarchy_parameter_string=6:4:2:4 --distance_parameter_string=1:5:20:100 --k=192 --preconfiguration= ...`
+>mpirun -n 4 parhip file.graph --hierarchy_parameter_string=6:4:2:4 --distance_parameter_string=1:5:20:100 --k=192 --preconfiguration= ...
 
-**Note**: `k` must be equal a1\*a2\*...\*ak.
+**Note**: `k` must be equal a1&times;a2&times;...&times;ak.
 
 
 ## Algorithmic changes
@@ -58,6 +58,11 @@ After a certain number of local nodes are visited, PEs communicate in order to u
 When all local nodes are visited, we repeat the same procedure. How many label propagation iterations
 we will perform is controlled by the command line parameter `label_iterations_refinement`.
 The whole procedure is repeated on every uncoarsening step until we get the original graph.
+
+![PEcommTree](./img/PEcommTree.png)
+
+In the tree above, all same color PEs have communication cost 1, cost between red and green
+is 40 and cost between red or green and orange is 1600.
 
 
 ## Miscellaneous additions and changes
