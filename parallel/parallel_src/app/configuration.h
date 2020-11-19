@@ -9,7 +9,7 @@
 #ifndef CONFIGURATION_3APG5V7ZA
 #define CONFIGURATION_3APG5V7ZA
 
-#include "partition_config.h"
+#include "ppartition_config.h"
 
 class configuration {
         public:
@@ -21,6 +21,7 @@ class configuration {
                 void fast( PPartitionConfig & config );
                 void eco( PPartitionConfig & config );
                 void strong( PPartitionConfig & config );
+                void mapping( PPartitionConfig & config );
 };
 
 inline void configuration::ultrafast( PPartitionConfig & partition_config ) {
@@ -48,8 +49,17 @@ inline void configuration::eco( PPartitionConfig & partition_config ) {
 }
 
 inline void configuration::strong( PPartitionConfig & partition_config ) {
-        partition_config.initial_partitioning_algorithm = KAFFPAESTRONGSNW;
+        partition_config.initial_partitioning_algorithm  = KAFFPAESTRONGSNW;
 
+}
+inline void configuration::mapping( PPartitionConfig & partition_config ) {
+        partition_config.initial_partitioning_algorithm  = KAFFPAEULTRAFASTSNW;
+        //partition_config.initial_partitioning_algorithm  = KAFFPAEFASTSNW;
+        partition_config.no_refinement_in_last_iteration = false;
+        partition_config.num_vcycles                     = 1;
+        partition_config.refinement_focus                = true;
+        partition_config.stop_factor                     = 0;
+        partition_config.label_iterations_coarsening     = 2;
 }
 inline void configuration::standard( PPartitionConfig & partition_config ) {
         partition_config.seed                                   = 0;
@@ -86,6 +96,7 @@ inline void configuration::standard( PPartitionConfig & partition_config ) {
         partition_config.n                                      = 0;
 	partition_config.save_partition 			= false;
 	partition_config.save_partition_binary 			= false;
+	partition_config.filename_output                        = "";
         partition_config.vertex_degree_weights                  = false;
         partition_config.converter_evaluate                     = false;
 }

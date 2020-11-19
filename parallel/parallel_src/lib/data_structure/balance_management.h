@@ -10,7 +10,7 @@
 
 #include <vector>
 #include <unordered_map>
-#include "definitions.h"
+#include "pdefinitions.h"
 
 /* This class gives you the amount of weight that is currently in a block.
  * The information can be inaccurate but correct after a call of 

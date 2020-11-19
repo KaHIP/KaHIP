@@ -1,0 +1,28 @@
+%  tiny_01.graph
+%  A very small example of an unweighted graph
+%  stored in the METIS graph file format.
+%
+%  The first non-comment line lists 
+%  the number of vertices (7) and edges (11).
+%
+%  The next line notes that vertex 1 is connected to vertices 5, 3 and 2.
+%  Subsequent lines list the neighbors of successive vertices.
+%
+%  Notice that each edge is listed twice.  There are 11 edges,
+%  but 22 edge entries.
+%
+ 10 14
+%
+%  Here begins the list of vertex neighbors for each vertex:
+%
+ 2  8
+ 1  3  6
+ 2  4  5
+ 3  5
+ 3  4  6  7
+ 2  5  7  8
+ 6  5  8  9
+ 1  6  7
+ 7  10
+ 9
+ 

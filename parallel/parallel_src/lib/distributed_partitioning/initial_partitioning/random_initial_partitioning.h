@@ -9,7 +9,7 @@
 #define RANDOM_INITIAL_PARTITIONING_FM8LJSI0
 
 #include <mpi.h>
-#include "partition_config.h"
+#include "ppartition_config.h"
 
 class parallel_graph_access;
 

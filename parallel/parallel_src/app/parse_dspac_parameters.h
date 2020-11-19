@@ -28,12 +28,14 @@ int parse_dspac_parameters(int argn, char **argv, PPartitionConfig &partition_co
     struct arg_rex *preconfiguration = arg_rex1(NULL, "preconfiguration", "^(ecosocial|fastsocial|ultrafastsocial|ecomesh|fastmesh|ultrafastmesh)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: fast) [ecosocial|fastsocial|ultrafastsocial|ecomesh|fastmesh|ultrafastmesh]." );
     struct arg_lit *save_partition		       = arg_lit0(NULL, "save_partition","Enable this tag if you want to store the partition to disk.");
     struct arg_lit *save_partition_binary	       = arg_lit0(NULL, "save_partition_binary","Enable this tag if you want to store the partition to disk in a binary format.");
+    struct arg_str *filename_output = arg_str0(NULL, "output_filename", NULL, "Specify the name of the output file (that contains the partition).");
+
     struct arg_int *imbalance = arg_int0(NULL, "imbalance", NULL, "Desired imbalance. Default: 3%");
     struct arg_end *end = arg_end(100);
 
     // Define argtable.
     void *argtable[] = {
-            help, filename, k, seed, infinity, preconfiguration, imbalance, save_partition, save_partition_binary, end
+      help, filename, k, seed, infinity, preconfiguration, imbalance, save_partition, save_partition_binary, filename_output, end
 		
     };
 
@@ -115,6 +117,10 @@ int parse_dspac_parameters(int argn, char **argv, PPartitionConfig &partition_co
             partition_config.save_partition_binary = true;
     }
 
+    if(filename_output->count > 0) {
+            partition_config.filename_output = filename_output->sval[0];
+    }
+    
     if (imbalance->count > 0) {
         partition_config.epsilon = imbalance->ival[0];
         partition_config.inbalance = imbalance->ival[0];

@@ -11,9 +11,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "definitions.h"
+#include "pdefinitions.h"
 #include "data_structure/parallel_graph_access.h"
-#include "partition_config.h"
+#include "ppartition_config.h"
 
 class edge_balanced_graph_io {
 public:

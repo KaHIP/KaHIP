@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "parallel_graph_io.h"
-#include "partition_config.h"
+#include "ppartition_config.h"
 
 const ULONG fileTypeVersionNumberPartition = 1;
 const ULONG header_count_partition         = 2;

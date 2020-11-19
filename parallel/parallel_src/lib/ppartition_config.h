@@ -8,7 +8,9 @@
 #ifndef PARTITION_CONFIG_DI1ES4T0A
 #define PARTITION_CONFIG_DI1ES4T0A
 
-#include "definitions.h"
+#include "pdefinitions.h"
+
+class matrix;
 
 // Configuration for the partitioning.
 struct PPartitionConfig
@@ -66,13 +68,15 @@ struct PPartitionConfig
 
         std::string graph_filename;
 
+        std::string filename_output;
+
         std::string input_partition_filename;
 
         int evolutionary_time_limit;
 
-	NodeWeight upper_bound_partition;
+        NodeWeight upper_bound_partition;
 
-	NodeWeight upper_bound_cluster;
+        NodeWeight upper_bound_cluster;
 
         NodeID total_num_labels;
 
@@ -94,7 +98,7 @@ struct PPartitionConfig
 
         bool eco;
 
-	int binary_io_window_size;
+        int binary_io_window_size;
 
         ULONG barabasi_albert_mindegree;
 
@@ -110,13 +114,45 @@ struct PPartitionConfig
 
         ULONG n;
 
-	bool save_partition;
+        bool save_partition;
 
-	bool save_partition_binary;
+        bool save_partition_binary;
 
         bool vertex_degree_weights;
 
         bool converter_evaluate;
+
+        //=======================================
+        //===============QAP=====================
+        //=======================================
+
+        std::vector< int > group_sizes;
+        std::vector< int > distances;
+        DistanceConstructionAlgorithm distance_construction_algorithm;
+
+        //=======================================
+        //===============integrated mapping =====
+        //=======================================
+
+        bool integrated_mapping;
+        bool ignore_PEtree = false;
+        bool only_boundary = false;
+        bool refinement_focus = false;
+        int max_coarsening_levels = 4;
+        double coarsening_factor = 3; //should be greater than 2
+        int update_step_size = 1;
+        bool adjustable_update_step = false;
+
+        //=======================================
+        //======= Binary Online Distance ========
+        //=======================================
+
+        std::vector<std::vector<int>>  *bin_id;
+        bool use_bin_id;
+        std::vector<unsigned int>  *compact_bin_id;
+        bool use_compact_bin_id;
+        int bit_sec_len;
+        //int label_iterations_refinement_map;
 
         //=======================================
         //===============Shared Mem OMP==========

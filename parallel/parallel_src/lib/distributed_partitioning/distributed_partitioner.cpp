@@ -52,19 +52,25 @@ void distributed_partitioner::perform_recursive_partitioning( MPI_Comm communica
 
 
 void distributed_partitioner::perform_partitioning( PPartitionConfig & partition_config, parallel_graph_access & G) {
-                perform_partitioning( MPI_COMM_WORLD, partition_config, G);
+        perform_partitioning( MPI_COMM_WORLD, partition_config, G);
 }
 
-void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G) {
+void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G, distributed_quality_metrics & qm, const processor_tree & PEtree) {
+
         timer t; 
         double elapsed = 0;
         m_cur_rnd_choice = 0;
         PPartitionConfig config = partition_config;
         config.vcycle = false;
-        
+
         PEID rank;
         MPI_Comm_rank( communicator, &rank);
-        
+
+
+
+        // if( rank == ROOT )
+        //          qm.print();
+
         for( int cycle = 0; cycle < partition_config.num_vcycles; cycle++) {
                 t.restart();
                 m_cycle = cycle;
@@ -73,10 +79,12 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
                         config.label_iterations_refinement = 0;
                 }
 
-                vcycle( communicator, config, G );
+		vcycle( communicator, config, G, qm, PEtree);
+       
 
-                if( rank == ROOT ) {
-                        PRINT(std::cout <<  "log>cycle: " << m_cycle << " uncoarsening took " << m_t.elapsed()  << std::endl;)
+		if( rank == ROOT ) {
+		        PRINT(std::cout <<  "log>part: " << m_cycle << " qap " << qm.get_initial_qap()  << std::endl;)
+		        PRINT(std::cout <<  "log>cycle: " << m_cycle << " uncoarsening took " << m_t.elapsed()  << std::endl;)
                 }
 #ifndef NDEBUG
                 check_labels(communicator, config, G);
@@ -85,7 +93,7 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
                 elapsed += t.elapsed();
 
 #ifndef NOOUTPUT
-                distributed_quality_metrics qm;
+
                 EdgeWeight edge_cut = qm.edge_cut( G, communicator );
                 double balance      = qm.balance( config, G, communicator );
 
@@ -116,20 +124,107 @@ void distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPart
                 if(config.eco) {
                         MPI_Bcast(&(config.cluster_coarsening_factor), 1, MPI_DOUBLE, ROOT, communicator);
                         
-                        //std::cout << "cf " << config.cluster_coarsening_factor  << std::endl;
+                        std::cout << "eco configuration, cluster_coarsening_factor " << config.cluster_coarsening_factor  << std::endl;
                 }
                 config.evolutionary_time_limit = 0;
                 elapsed += t.elapsed();
                 MPI_Barrier(communicator);
                 
         }
+	
+        // if( rank == ROOT )
+        //          qm.print();
+  
+  
 }
 
-void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G) {
+distributed_quality_metrics distributed_partitioner::perform_partitioning( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G, const processor_tree & PEtree) {
+        timer t; 
+        double elapsed = 0;
+        m_cur_rnd_choice = 0;
+        PPartitionConfig config = partition_config;
+        config.vcycle = false;
+
+        PEID rank;
+        MPI_Comm_rank( communicator, &rank);
+
+        distributed_quality_metrics qm;
+
+        // if( rank == ROOT )
+        //   qm.print();
+
+        for( int cycle = 0; cycle < partition_config.num_vcycles; cycle++) {
+                t.restart();
+                m_cycle = cycle;
+
+                if(cycle+1 == partition_config.num_vcycles && partition_config.no_refinement_in_last_iteration) {
+                        config.label_iterations_refinement = 0;
+                }
+
+        vcycle( communicator, config, G, qm, PEtree);
+       
+
+		if( rank == ROOT ) {
+		        PRINT(std::cout <<  "log>part: " << m_cycle << " qap " << qm.get_initial_qap()  << std::endl;)
+		        PRINT(std::cout <<  "log>cycle: " << m_cycle << " uncoarsening took " << m_t.elapsed()  << std::endl;)
+                }
+#ifndef NDEBUG
+                check_labels(communicator, config, G);
+#endif
+
+                elapsed += t.elapsed();
+
+#ifndef NOOUTPUT
+
+                EdgeWeight edge_cut = qm.edge_cut( G, communicator );
+                double balance      = qm.balance( config, G, communicator );
+
+                if( rank == ROOT ) {
+                        std::cout <<  "log>cycle: " << cycle << " k " <<  config.k << " cut " << edge_cut << " balance " << balance << " time " <<  elapsed  << std::endl;
+                }
+#endif 
+                t.restart();
+                m_t.restart();
+                if( cycle+1 < config.num_vcycles ) {
+                        forall_local_nodes(G, node) {
+                                G.setSecondPartitionIndex(node, G.getNodeLabel(node));
+                                G.setNodeLabel(node, G.getGlobalID(node));
+                        } endfor
+
+                        forall_ghost_nodes(G, node) {
+                                G.setSecondPartitionIndex(node, G.getNodeLabel(node));
+                                G.setNodeLabel(node, G.getGlobalID(node));
+                        } endfor
+                }
+
+                config.vcycle = true;
+
+                if( rank == ROOT && config.eco ) {
+                        config.cluster_coarsening_factor = m_cf[m_cur_rnd_choice++];
+                }
+
+                if(config.eco) {
+                        MPI_Bcast(&(config.cluster_coarsening_factor), 1, MPI_DOUBLE, ROOT, communicator);
+                        
+                        std::cout << "eco configuration, cluster_coarsening_factor " << config.cluster_coarsening_factor  << std::endl;
+                }
+                config.evolutionary_time_limit = 0;
+                elapsed += t.elapsed();
+                MPI_Barrier(communicator);
+                
+        }
+	
+	return qm;
+}
+
+
+void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & partition_config, parallel_graph_access & G, distributed_quality_metrics &qm, const processor_tree & PEtree) {
         PPartitionConfig config = partition_config;
 
         mpi_tools mpitools;
-        timer t; 
+        timer t;
+	
+	std::vector< double > vec(3, 0.0);
 
         if( m_total_graph_weight == std::numeric_limits< NodeWeight >::max() ) {
                 m_total_graph_weight = G.number_of_global_nodes();
@@ -137,7 +232,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 
         PEID rank;
         MPI_Comm_rank( communicator, &rank);
-        
+
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
                 std::cout << "log>" << "=====================================" << std::endl;
@@ -146,8 +241,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         }
 #endif
         t.restart();
-
-        
+	 
         m_level++;
         config.label_iterations = config.label_iterations_coarsening;
         config.total_num_labels = G.number_of_global_nodes();
@@ -157,10 +251,14 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 
         //parallel_label_compress< std::unordered_map< NodeID, NodeWeight> > plc;
         parallel_label_compress< linear_probing_hashmap  > plc;
-        plc.perform_parallel_label_compression ( config, G, true);
+        // TODO: decide if we want to pass PEtree as an argument during coarsening.
+        // For now we do think there is no need ...
+        plc.perform_parallel_label_compression ( config, G, true );
 
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
+                std::cout <<  "log> cluster upper bound used is " << config.upper_bound_cluster << ", update step size= " << config.update_step_size 
+                << std::endl;
                 std::cout <<  "log>cycle: " << m_cycle << " level: " << m_level  << " parallel label compression took " <<  t.elapsed() << std::endl;
         }
 #endif
@@ -174,13 +272,12 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 
                 parallel_block_down_propagation pbdp;
                 if( config.vcycle ) {
-                        // in this case we have to propagate the partitionindex down
+                        // in this case we have to propagate the partition index down
                         pbdp.propagate_block_down( communicator, config, G, Q);
                 }
         
                 MPI_Barrier(communicator);
         }
-              
 
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
@@ -190,8 +287,17 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 #endif
 
         if( !contraction_stop_decision.contraction_stop(config, G, Q)) {
-                vcycle( communicator, config, Q);
+                if( config.refinement_focus ){
+                        double contraction_factor = Q.number_of_global_nodes() / (double) G.number_of_global_nodes();
+                        if( rank == ROOT ) std::cout << "contraction_factor = " << contraction_factor << std::endl;
+                        contraction_factor = std::min( 1.0/config.coarsening_factor , contraction_factor);
+                        config.cluster_coarsening_factor *= contraction_factor; //multiply to keep the same contraction factor in every level
+                }
+
+                vcycle( communicator, config, Q, qm, PEtree );
+
         } else {
+                if( rank == ROOT ) vec[0] +=  m_t.elapsed();
 #ifndef NOOUTPUT
                 if( rank == ROOT ) {
                         std::cout << "log>" << "=====================================" << std::endl;
@@ -200,22 +306,31 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
                         std::cout <<  "log>cycle: " << m_cycle << " total number of levels " <<  (m_level+1) << std::endl;
                         std::cout <<  "log>cycle: " << m_cycle << " number of coarsest nodes " <<  Q.number_of_global_nodes() << std::endl;
                         std::cout <<  "log>cycle: " << m_cycle << " number of coarsest edges " <<  Q.number_of_global_edges() << std::endl;
-                        std::cout <<  "log>cycle: " << m_cycle << " coarsening took  " <<  m_t.elapsed()  << std::endl;
+                        std::cout <<  "log>cycle_m: " << m_cycle << " coarsening took  " <<  vec[0] << std::endl;
                 }
 #endif
+                qm.set_initial_numNodes( Q.number_of_global_nodes() );
+                qm.set_initial_numEdges( Q.number_of_global_edges() );
                 t.restart();
 
                 initial_partitioning_algorithm ip;
                 ip.perform_partitioning( communicator, config, Q );
 
+		
+		if( rank == ROOT ) vec[1] += t.elapsed();
+
+		
 #ifndef NOOUTPUT
                 if( rank == ROOT ) {
-                        std::cout <<  "log>cycle: " << m_cycle << " initial partitioning took " <<  t.elapsed() << std::endl;
+                        std::cout <<  "log>cycle_m: " << m_cycle << " initial partitioning took " << vec[1]  << std::endl;
                 }
                 m_t.restart();
 #endif
         }
 
+
+
+	
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
                 std::cout << "log>" << "=====================================" << std::endl;
@@ -225,6 +340,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 #endif
 
         t.restart();
+
         parallel_projection parallel_project;
         parallel_project.parallel_project( communicator, G, Q ); // contains a Barrier
 
@@ -234,6 +350,23 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         }
 #endif
 
+	static int counter = 0;	
+	if (!counter) {
+	  
+	  EdgeWeight cut = qm.edge_cut(G, communicator);
+	  qm.set_initial_cut(cut);
+	  EdgeWeight  qap = qm.total_qap( G, PEtree, communicator );
+	  qm.set_initial_qap( qap );
+#ifndef NOOUTPUT
+	  if( rank == ROOT ) {
+	    std::cout <<  "log>cycle_m: SETTING INITIAL METRICS " << std::endl;
+	    std::cout <<  "log>cycle_m: initial partitioning cut " <<  qm.get_initial_cut()  << std::endl;
+	    std::cout <<  "log>cycle_m: initial partitioning qap " <<  qm.get_initial_qap() << std::endl;
+	  }
+#endif
+	}
+	counter++;
+	
         t.restart();
         config.label_iterations = config.label_iterations_refinement;
 
@@ -241,22 +374,29 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
                 config.total_num_labels = config.k;
                 config.upper_bound_cluster = config.upper_bound_partition;
 
-
                 G.init_balance_management( config );
                 PPartitionConfig working_config = config;
                 working_config.vcycle = false; // assure that we actually can improve the cut
 
                 parallel_label_compress< std::vector< NodeWeight> > plc_refinement;
-                plc_refinement.perform_parallel_label_compression( working_config, G, false, false);
+                plc_refinement.perform_parallel_label_compression( working_config, G, false, false, PEtree);
         }
 
+	// after refinement
+	//EdgeWeight qap = qm.total_qap( G, PEtree, communicator);
+	if( rank == ROOT ) vec[2] += t.elapsed();
 #ifndef NOOUTPUT
+
         if( rank == ROOT ) {
-                std::cout <<  "log>cycle: " << m_cycle <<" level: " << m_level << " label compression refinement took " <<  t.elapsed() << std::endl;
+                std::cout <<  "log>cycle_m: " << m_cycle <<" level: " << m_level << " label compression refinement took " << vec[2]  << std::endl;
         }
 #endif
         m_level--;
+	if( rank == ROOT ) qm.add_timing(vec);
 }
+
+
+
 
 void distributed_partitioner::check_labels( MPI_Comm communicator, PPartitionConfig & config, parallel_graph_access & G) {
         PEID m_rank, m_size;

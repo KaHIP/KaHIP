@@ -12,8 +12,8 @@
 #include <random>
 #include <vector>
 
-#include "definitions.h"
-#include "partition_config.h"
+#include "pdefinitions.h"
+#include "ppartition_config.h"
 
 typedef std::mt19937 MersenneTwister;
 

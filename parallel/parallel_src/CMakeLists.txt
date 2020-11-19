@@ -16,6 +16,7 @@ set(LIBPARALLEL_SOURCE_FILES
   lib/data_structure/balance_management.cpp
   lib/data_structure/balance_management_refinement.cpp
   lib/data_structure/balance_management_coarsening.cpp
+  lib/data_structure/processor_tree.cpp
   lib/parallel_label_compress/node_ordering.cpp
   lib/parallel_contraction_projection/parallel_contraction.cpp
   lib/parallel_contraction_projection/parallel_block_down_propagation.cpp
@@ -36,6 +37,7 @@ target_include_directories(libparallel PUBLIC $<TARGET_PROPERTY:libmodified_kahi
 
 set(LIBGRAPH2BGF_SOURCE_FILES
   lib/data_structure/parallel_graph_access.cpp
+  lib/data_structure/processor_tree.cpp
   lib/io/parallel_graph_io.cpp
   lib/data_structure/balance_management.cpp
   lib/data_structure/balance_management_refinement.cpp
@@ -44,6 +46,7 @@ add_library(libgraph2bgf OBJECT ${LIBGRAPH2BGF_SOURCE_FILES})
 
 set(LIBEDGELIST_SOURCE_FILES
   lib/data_structure/parallel_graph_access.cpp
+  lib/data_structure/processor_tree.cpp
   lib/io/parallel_graph_io.cpp
   lib/data_structure/balance_management.cpp
   lib/data_structure/balance_management_refinement.cpp
