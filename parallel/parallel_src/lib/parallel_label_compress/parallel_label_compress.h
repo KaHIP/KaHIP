@@ -159,8 +159,12 @@ class parallel_label_compress {
                                 G.update_ghost_node_data_finish(); 
                                 //std::cout << "updated ghost nodes" << std::endl;
 
-                                [[maybe_unused]] double myMem;
-                                getFreeRam(MPI_COMM_WORLD, myMem, true);
+                                //
+                                //uncomment to display memory usage
+                                //
+                                //[[maybe_unused]] double myMem;
+                                //getFreeRam(MPI_COMM_WORLD, myMem, true);
+                                //
 
                         }//for( ULONG i = 0; i < config.label_iterations; i++)
 

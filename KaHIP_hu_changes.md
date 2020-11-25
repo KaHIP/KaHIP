@@ -84,7 +84,16 @@ mostly for debugging purposes.
 
 ### Installation
 
-Use or adpat the `compile_withcmake.sh` scripts and follow the standart KaHip instructions.
+Use or adapt the `compile_withcmake.sh` scripts and follow the standart KaHip instructions.
+
+**For Apple clang**: in some apple compiler you may need to pass certain flags for OpenMP.
+For example,
+
+>
+-DOpenMP_CXX_FLAGS="-Xpreprocessor -fopenmp -I/ usr/local/opt/libomp/include" \\ <br>
+-DOpenMP_CXX_LIB_NAMES="omp" \\ <br>
+-DOpenMP_omp_LIBRARY=/usr/local/opt/libomp/lib/libomp.dylib
+
 
 ### Run ParHip
 

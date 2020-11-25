@@ -8,6 +8,8 @@
 #ifndef SYSTEM_INFO_UAA1EX3T
 #define SYSTEM_INFO_UAA1EX3T
 
+#ifdef __GNUC__ //apple clang does not have the sys/* libraries
+
 #include <mpi.h>
 #include <string.h>
 
@@ -88,14 +90,17 @@ unsigned long long getFreeRam(const MPI_Comm communicator, double& myMem, bool p
                 " max mem used: " << maxMem << " MB" << std::endl;
         }
 
-        //std::cout<< "PE "<<  rank <<
-                //" MB, shared ram: " << sharedRam/mb <<
-                //" MB, buffered ram: " << buffRam/mb << " MB, " <<
-                //": I am using: " << myMem << " MB" << std::endl;
     }
 
     return freeRam;
 }
 
+#else //for other compilers
+
+unsigned long getFreeRam(){
+    std::cout<< "Memory usage for non-gcc compilers is not supported " <<std::endl;
+}
+
+#endif //check for apple clang
 
 #endif /* end of include guard: SYSTEM_INFO_UAA1EX3T */

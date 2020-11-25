@@ -15,6 +15,8 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 </p>
 
 
+## For the HU version see file KaH
+
 ## NEW in v3.00: 
 *Node Ordering Algorithms*: Many applications rely on time-intensive matrix operations, such as factorization, which can be sped up significantly for large sparse matrices by interpreting the matrix as a sparse graph and computing a node ordering that minimizes the so-called fill-in. Here, we added new algorithms to compute fill-in reduced orderings in graphs.
 
@@ -45,7 +47,7 @@ Installation Notes
 You can download KaHIP with the following command line:
 
 ```console
-git clone https://github.com/KaHIP/KaHIP
+git clone https://github.com/hu-macsy/KaHIP
 ```
 
 ## Compiling KaHIP: 
