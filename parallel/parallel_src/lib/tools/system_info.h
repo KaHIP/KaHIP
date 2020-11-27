@@ -8,7 +8,7 @@
 #ifndef SYSTEM_INFO_UAA1EX3T
 #define SYSTEM_INFO_UAA1EX3T
 
-#ifdef __GNUC__ //apple clang does not have the sys/* libraries
+#ifndef __APPLE__ //macOS does not have the sys/* libraries
 
 #include <mpi.h>
 #include <string.h>
