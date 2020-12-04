@@ -1,4 +1,4 @@
-KaHIP v3.00  [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b4dc07be37694dc4841beba6ba038c19)](https://app.codacy.com/manual/schulzchristian/KaHIP?utm_source=github.com&utm_medium=referral&utm_content=schulzchristian/KaHIP&utm_campaign=Badge_Grade_Dashboard)
+KaHIP v3.10  [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b4dc07be37694dc4841beba6ba038c19)](https://app.codacy.com/manual/schulzchristian/KaHIP?utm_source=github.com&utm_medium=referral&utm_content=schulzchristian/KaHIP&utm_campaign=Badge_Grade_Dashboard)
 [![Build Status](https://travis-ci.org/KaHIP/KaHIP.svg?branch=master)](https://travis-ci.org//KaHIP) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fschulzchristian%2FKaHIP.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fschulzchristian%2FKaHIP?ref=badge_shield)
@@ -15,7 +15,9 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 </p>
 
 
-## NEW in v3.00: 
+## NEW in v3.10:
+**Support for Python**: KaHIP can now also be used in Python. See below how to do that.
+
 *Node Ordering Algorithms*: Many applications rely on time-intensive matrix operations, such as factorization, which can be sped up significantly for large sparse matrices by interpreting the matrix as a sparse graph and computing a node ordering that minimizes the so-called fill-in. Here, we added new algorithms to compute fill-in reduced orderings in graphs.
 
 *ILPs For Even Higher Quality*: ILPs typically don't scale to large instances. We adapt them to heuristically improve a given partition.  We do so by defining a much smaller model that allows us to use symmetry breaking and other techniques that make the approach scalable. We include ILPs that can be used as a post-processing step to improve high-quality partitions even further. The codes are now included in KaHIP.
@@ -284,6 +286,47 @@ int main(int argn, char **argv) {
         std::cout <<  "edge cut " <<  edge_cut  << std::endl;
 }
 ```
+Using KaHIP in Python
+=====
+KaHIP can also be used in Python. If you want to use it in Python run 
+```console
+./compile_withcmake.sh BUILDPYTHONMODULE
+```
+to build the Python model. This will build the Python module and also put an example callkahipfrompython.py into the deploy folder. You can run this by typing the follwing in the deploy folder:
+```console
+python3 callkahipfrompython.py 
+```
+Note that we only provide preliminary support, i.e. you may need to change some paths to Python inside the compile_withcmake file. An example can also be found below:
+
+```python
+import kahip;
+
+#build adjacency array representation of the graph
+xadj           = [0,2,5,7,9,12];
+adjncy         = [1,4,0,2,4,1,3,2,4,0,1,3];
+vwgt           = [1,1,1,1,1,1]
+adjcwgt        = [1,1,1,1,1,1,1,1,1,1,1,1]
+supress_output = 0
+imbalance      = 0.03
+nblocks        = 2 
+seed           = 0
+
+# set mode 
+#const int FAST           = 0;
+#const int ECO            = 1;
+#const int STRONG         = 2;
+#const int FASTSOCIAL     = 3;
+#const int ECOSOCIAL      = 4;
+#const int STRONGSOCIAL   = 5;
+mode = 0 
+
+edgecut, blocks = kahip.kaffpa(vwgt, xadj, adjcwgt, 
+                              adjncy,  nblocks, imbalance, 
+                              supress_output, seed, mode)
+
+print(edgecut)
+print(blocks)
+```
 
 Licence
 =====
@@ -414,3 +457,4 @@ Daniel Seemaier
 Darren Strash
 
 Jesper Larsson Träff
+

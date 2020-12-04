@@ -9,12 +9,16 @@ fi
 if [[ "$unamestr" == "Darwin" ]]; then
         NCORES=`sysctl -n hw.ncpu`
 fi
-
+ 
 rm -rf deploy
 rm -rf build
 mkdir build
 cd build
+if [ "$1" == "BUILDPYTHONMODULE" ]; then
+cmake ../ -DCMAKE_BUILD_TYPE=Release 
+else 
 cmake ../ -DCMAKE_BUILD_TYPE=Release $1
+fi
 make -j $NCORES
 cd ..
 
@@ -55,4 +59,14 @@ cp ./parallel/parallel_src/interface/parhip_interface.h deploy/
 
 mkdir deploy/parallel
 cp ./build/parallel/modified_kahip/lib*.a deploy/parallel/libkahip.a
+
+# maybe adapt paths here and python version here
+if [ "$1" == "BUILDPYTHONMODULE" ]; then
+cd misc/pymodule/
+g++ -O3 -Wall -shared -std=c++11 -fPIC `python3.5 -m pybind11 --includes` kahip.cpp -L../../deploy/ -lkahip -o kahip`python3.5-config --extension-suffix` -Ipybind11/include -I/usr/include/python3.5m/
+cd ..; cd ..;
+cp misc/pymodule/call* deploy/
+cp misc/pymodule/kahip.cp* deploy/
+fi
+
 
