@@ -16,7 +16,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 
 ## NEW in v3.10:
-**Support for Python**: KaHIP can now also be used in Python. See below to see how to do that.
+**Support for Python**: KaHIP can now also be used in Python. See below how to do that.
 
 *Node Ordering Algorithms*: Many applications rely on time-intensive matrix operations, such as factorization, which can be sped up significantly for large sparse matrices by interpreting the matrix as a sparse graph and computing a node ordering that minimizes the so-called fill-in. Here, we added new algorithms to compute fill-in reduced orderings in graphs.
 
