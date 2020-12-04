@@ -294,7 +294,7 @@ KaHIP can also be used in Python. If you want to use it in Python run
 ```
 to build the Python model. This will build the Python module and also put an example callkahipfrompython.py into the deploy folder. An example can also be found below:
 
-```
+```python
 import kahip;
 
 #build adjacency array representation of the graph
