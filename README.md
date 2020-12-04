@@ -292,7 +292,7 @@ KaHIP can also be used in Python. If you want to use it in Python run
 ```console
 ./compile_withcmake.sh BUILDPYTHONMODULE
 ```
-to build the Python model. This will build the Python module and also put an example callkahipfrompython.py into the deploy folder. An example can also be found below:
+to build the Python model. This will build the Python module and also put an example callkahipfrompython.py into the deploy folder. Note that we only provide preliminary support, i.e. you may need to change some paths to Python inside the compile_withcmake file. An example can also be found below:
 
 ```python
 import kahip;
