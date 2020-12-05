@@ -114,8 +114,10 @@ void contraction::contract_clustering(const PartitionConfig & partition_config,
         G.set_partition_count(no_of_coarse_vertices);
 
         complete_boundary bnd(&G);
-        bnd.build();
-        bnd.getUnderlyingQuotientGraph(coarser);
+        //bnd.build();
+        bnd.fastComputeQuotientGraph(coarser, no_of_coarse_vertices);
+        //bnd.getUnderlyingQuotientGraph(coarser);
+        //
 
         G.set_partition_count(k);
         forall_nodes(G, node) {

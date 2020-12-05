@@ -64,6 +64,7 @@ class complete_boundary {
                 inline void get_max_norm();
                 inline void getUnderlyingQuotientGraph( graph_access & qgraph );
                 inline void getNeighbors(PartitionID & block, std::vector<PartitionID> & neighbors);
+                inline void fastComputeQuotientGraph( graph_access & Q_bar, const NodeID & no_of_blocks);
 
         private:
                 //updates lazy values that the access functions need
@@ -507,7 +508,58 @@ void complete_boundary::setup_start_nodes_all(graph_access & G, boundary_startin
         }
 }
 
+inline void complete_boundary::fastComputeQuotientGraph( graph_access & Q_bar, const NodeID & no_of_blocks) {
 
+         basicGraph * graphref = new basicGraph; 
+
+         if(Q_bar.graphref != NULL) {
+                delete Q_bar.graphref;
+         }
+         Q_bar.graphref = graphref;
+
+         std::vector<std::vector<NodeID>> block_list_nodes(no_of_blocks);
+         std::vector<NodeWeight> block_weight(no_of_blocks,0);
+         std::vector<EdgeWeight> target_edgeweight(no_of_blocks,0);
+         std::vector<PartitionID> list_targets;
+
+	 // Fill out list of nodes per block
+         forall_nodes((*m_graph_ref), node) {
+		PartitionID source_partition = m_graph_ref->getPartitionIndex(node);
+		block_list_nodes[source_partition].push_back(node);
+                block_weight[source_partition] += m_graph_ref->getNodeWeight(node);
+         } endfor
+
+         Q_bar.start_construction(no_of_blocks, m_graph_ref->number_of_edges());
+
+         for( unsigned p = 0; p < no_of_blocks; p++) {
+                 NodeID source_partition = Q_bar.new_node();
+                 Q_bar.setNodeWeight(source_partition,  block_weight[p]);
+
+		 // Fill out list of neighboring blocks
+		 for( auto& node : block_list_nodes[source_partition] ) {
+			forall_out_edges((*m_graph_ref), e, node) {
+				NodeID targetID              = m_graph_ref->getEdgeTarget(e);
+				PartitionID target_partition = m_graph_ref->getPartitionIndex(targetID);
+				bool is_cut_edge             = (source_partition != target_partition);
+				if(is_cut_edge) {
+					if (target_edgeweight[target_partition] == 0) {
+						list_targets.push_back(target_partition);
+					}
+					target_edgeweight[target_partition] += m_graph_ref->getEdgeWeight(e);    
+				}
+			} endfor
+		 }
+
+		 for( auto& target_partition : list_targets ) {
+                         EdgeID e = Q_bar.new_edge(source_partition, target_partition);
+                         Q_bar.setEdgeWeight(e, target_edgeweight[target_partition]);
+			 target_edgeweight[target_partition] = 0;
+		 }
+		 list_targets.clear();
+         }
+
+         Q_bar.finish_construction();
+}
 #ifndef NDEBUG
 inline bool complete_boundary::assert_bnodes_in_boundaries() {
         PartitionID k = m_graph_ref->get_partition_count();
@@ -594,6 +646,9 @@ inline bool complete_boundary::assert_boundaries_are_bnodes() {
         
         return true;
 }
+
+
+
 #endif // #ifndef NDEBUG
 
 #endif /* end of include guard: COMPLETE_BOUNDARY_URZZFDEI */
