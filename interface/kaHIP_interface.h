@@ -49,6 +49,14 @@ void process_mapping(int* n, int* vwgt, int* xadj,
                    bool suppress_output, int seed,
                    int* edgecut, int* qap, int* part);
 
+// same as process_mapping, but enforce balanced partitions
+void process_mapping_enforcebalance(int* n, int* vwgt, int* xadj, 
+                   int* adjcwgt, int* adjncy,  
+                   int* hierarchy_parameter,  int* distance_parameter, int hierarchy_depth, 
+                   int mode_partitioning, int mode_mapping,
+                   double* imbalance,  
+                   bool suppress_output, int seed,
+                   int* edgecut, int* qap, int* part);
 
 void node_separator(int* n, int* vwgt, int* xadj, 
                     int* adjcwgt, int* adjncy, int* nparts, 

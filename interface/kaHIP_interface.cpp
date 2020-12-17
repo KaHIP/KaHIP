@@ -605,7 +605,6 @@ void process_mapping(int* n, int* vwgt, int* xadj,
 
         configuration cfg;
         PartitionConfig partition_config;
-        partition_config.kaffpa_perfectly_balance = 1;
 
         switch( mode_partitioning ) {
                 case FAST: 
@@ -645,4 +644,53 @@ void process_mapping(int* n, int* vwgt, int* xadj,
 
 };
 
+void process_mapping_enforcebalance(int* n, int* vwgt, int* xadj, 
+                   int* adjcwgt, int* adjncy, 
+                   int* hierarchy_parameter,  int* distance_parameter, int hierarchy_depth, 
+                   int mode_partitioning, int mode_mapping,
+                   double* imbalance,  
+                   bool suppress_output, int seed,
+                   int* edgecut, int* qap, int* part) {
+
+        configuration cfg;
+        PartitionConfig partition_config;
+        partition_config.kaffpa_perfectly_balance = 1;
+
+        switch( mode_partitioning ) {
+                case FAST: 
+                        cfg.fast(partition_config);
+                        break;
+                case ECO: 
+                        cfg.eco(partition_config);
+                        break;
+                case STRONG: 
+                        cfg.strong(partition_config);
+                        break;
+                case FASTSOCIAL: 
+                        cfg.fastsocial(partition_config);
+                        break;
+                case ECOSOCIAL: 
+                        cfg.ecosocial(partition_config);
+                        break;
+                case STRONGSOCIAL: 
+                        cfg.strongsocial(partition_config);
+                        break;
+                default: 
+                        cfg.eco(partition_config);
+                        break;
+        }
+
+        partition_config.group_sizes.clear();
+        partition_config.distances.clear();
+        partition_config.k = 1;
+        for( int i = 0; i < hierarchy_depth; i++) {
+                partition_config.group_sizes.push_back(hierarchy_parameter[i]);
+                partition_config.distances.push_back(distance_parameter[i]);
+                partition_config.k *= hierarchy_parameter[i];
+        }
+
+        partition_config.seed = seed;
+        internal_processmapping_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy,  mode_mapping, imbalance, edgecut, qap, part);
+
+};
 
