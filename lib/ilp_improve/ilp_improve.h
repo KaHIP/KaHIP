@@ -12,6 +12,7 @@
 #include <queue>
 #include <vector>
 #include <algorithm>
+#include <stdlib.h>
 
 #include "gurobi_c++.h"
 
@@ -330,7 +331,7 @@ public:
                   << qm.max_communication_volume(G) << std::endl;
     }
 
-    GRBModel computeIlp(graph_access &coarser, PartitionConfig pc,
+    void computeIlp(graph_access &coarser, PartitionConfig pc,
                     PartitionID numBlocks, double timelimit, std::vector<PartitionID> & pid,
                     std::vector<bool> & coarse_presets, bool finalrun = false) {
 
@@ -447,12 +448,9 @@ public:
 
         delete[] nodes;
         delete[] edges;
-        return model;
         } catch(GRBException e) {
-            GRBEnv* env = new GRBEnv();
-            GRBModel model = GRBModel(*env);
-            std::cout << e.getErrorCode() << " Message: " << e.getMessage() << std::endl;
-            return model;
+            std::cout << "Gurobi exception occurred:" << " ERROR " << e.getErrorCode() << ": " << e.getMessage() << std::endl;
+	    exit (EXIT_FAILURE);
         }
     }
 

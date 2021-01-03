@@ -450,6 +450,8 @@ Ilya Safro
 
 Peter Sanders
 
+Hayk Sargsyan
+
 Sebastian Schlag
 
 Christian Schulz (maintainer)
