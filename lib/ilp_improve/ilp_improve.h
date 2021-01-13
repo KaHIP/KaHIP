@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <unordered_set>
-#include <unordered_map>
 #include <queue>
 #include <vector>
 #include <algorithm>
@@ -21,10 +19,11 @@
 #include "partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
 #include "partition/coarsening/clustering/size_constraint_label_propagation.h"
 #include "partition/graph_partitioner.h"
+#include "definitions.h"
 
 class ilp_improve {
 public:
-    size_t computeBFS(graph_access &G, std::unordered_set<NodeID> &nodesAvailable,
+    size_t computeBFS(graph_access &G, extlib::unordered_set<NodeID> &nodesAvailable,
                     PartitionConfig partition_config, size_t limit_nonzeroes) {
         // BFS to get available nodes
         std::queue<std::vector<NodeID> > queue;
@@ -100,7 +99,7 @@ public:
                 for (NodeID el : equalGain) {
                     std::queue<std::vector<size_t> > bfs_queue;
                     bfs_queue.push(std::vector<size_t>(1,el));
-                    std::unordered_set<NodeID> inMyTree;
+                    extlib::unordered_set<NodeID> inMyTree;
                     nodesAvailable.emplace(el);
 
                     n++;
@@ -277,9 +276,9 @@ public:
     }
 
     PartitionID computeBlocks(graph_access &G,
-                              std::unordered_set<NodeID> &nodesAvailable, size_t k) {
+                              extlib::unordered_set<NodeID> &nodesAvailable, size_t k) {
         // create blocks
-        std::unordered_map<PartitionID, std::unordered_set<NodeID> > blocks;
+        extlib::unordered_map<PartitionID, extlib::unordered_set<NodeID> > blocks;
 
         std::vector<size_t> not_found(k, 0);
         forall_nodes(G, node) {
@@ -306,7 +305,7 @@ public:
     }
 
     void setPartitionIDs(graph_access &G,
-                         std::unordered_set<NodeID> &nodesAvailable,
+                         extlib::unordered_set<NodeID> &nodesAvailable,
                          PartitionID numBlocks) {
         PartitionID count = numBlocks;
         for (NodeID n: nodesAvailable) {
@@ -346,7 +345,7 @@ public:
         NodeID numEdges = coarser.number_of_edges() / 2;
 
         // create index for start edges of nodes
-        std::unordered_map<EdgeID, NodeID> edge_source;
+        extlib::unordered_map<EdgeID, NodeID> edge_source;
         forall_nodes(coarser, node) {
                     forall_out_edges(coarser, e, node) {
                                 edge_source[e] = node;

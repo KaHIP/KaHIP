@@ -74,7 +74,7 @@ int main(int argn, char **argv) {
 
         auto limit_nonzeroes = (size_t) partition_config.ilp_limit_nonzeroes;
         // compute BFS
-        std::unordered_set<NodeID> reachable;
+        extlib::unordered_set<NodeID> reachable;
         ilp.computeBFS(G, reachable, partition_config, limit_nonzeroes);
         PartitionID num_blocks = ilp.computeBlocks(G, reachable, partition_config.k);
         PartitionID no_of_coarse_vertices = reachable.size() + num_blocks;

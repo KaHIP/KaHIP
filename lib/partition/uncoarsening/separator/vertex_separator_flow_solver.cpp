@@ -8,11 +8,11 @@
 #include <algorithm>
 #include <map>
 #include <math.h>
-#include <unordered_map>
 
 #include "algorithms/push_relabel.h"
 #include "data_structure/flow_graph.h"
 #include "vertex_separator_flow_solver.h"
+#include "definitions.h"
 
 vertex_separator_flow_solver::vertex_separator_flow_solver() {
 
@@ -94,7 +94,7 @@ bool vertex_separator_flow_solver::build_flow_pb( const PartitionConfig & config
         //build mappings from old to new node ids and reverse
         NodeID idx = 0;
         new_to_old_ids.resize(lhs_nodes.size() + rhs_nodes.size());
-        std::unordered_map<NodeID, NodeID> old_to_new;
+        extlib::unordered_map<NodeID, NodeID> old_to_new;
         for( unsigned i = 0; i < lhs_nodes.size(); i++) {
                 new_to_old_ids[idx] = lhs_nodes[i];
                 old_to_new[lhs_nodes[i]] = idx++ ;

@@ -13,6 +13,7 @@
 #include "kway_stop_rule.h"
 #include "quality_metrics.h"
 #include "random_functions.h"
+#include "definitions.h"
 
 kway_graph_refinement_core::kway_graph_refinement_core() : commons (NULL){
 }
@@ -26,7 +27,7 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round(PartitionCon
                                                                     boundary_starting_nodes & start_nodes, 
                                                                     int step_limit, 
                                                                     vertex_moved_hashtable & moved_idx) {
-        std::unordered_map<PartitionID, PartitionID> touched_blocks;
+        extlib::unordered_map<PartitionID, PartitionID> touched_blocks;
         return single_kway_refinement_round_internal(config, G, boundary, start_nodes, 
                                                      step_limit, moved_idx, false, touched_blocks);
 }
@@ -37,7 +38,7 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round(PartitionCon
                                                                     boundary_starting_nodes & start_nodes, 
                                                                     int step_limit, 
                                                                     vertex_moved_hashtable & moved_idx,
-                                                                    std::unordered_map<PartitionID, PartitionID> & touched_blocks) {
+                                                                    extlib::unordered_map<PartitionID, PartitionID> & touched_blocks) {
 
         return single_kway_refinement_round_internal(config, G, boundary, start_nodes, 
                                                      step_limit, moved_idx, true, touched_blocks);
@@ -45,13 +46,13 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round(PartitionCon
 
 
 EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(PartitionConfig & config, 
-                                                                    graph_access & G, 
+                                                                    graph_access & G,
                                                                     complete_boundary & boundary, 
                                                                     boundary_starting_nodes & start_nodes, 
                                                                     int step_limit,
                                                                     vertex_moved_hashtable & moved_idx,
                                                                     bool compute_touched_partitions,
-                                                                    std::unordered_map<PartitionID, PartitionID> &  touched_blocks) {
+                                                                    extlib::unordered_map<PartitionID, PartitionID> &  touched_blocks) {
 
         if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
 

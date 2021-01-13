@@ -8,23 +8,20 @@
 #ifndef PARTIAL_BOUNDARY_963CRO9F_
 #define PARTIAL_BOUNDARY_963CRO9F_
 
-#include <unordered_map>
 #include "definitions.h"
 
 struct compare_nodes_contains {
-        bool operator()(const NodeID lhs, const NodeID rhs) const {
-                return (lhs == rhs);
+        bool operator()(const NodeID& lhs, const NodeID& rhs) const {
+                return lhs == rhs;
         }
 };
 
-
 struct is_boundary {
-       bool contains;
-       is_boundary() {
-                contains = false;
-       }
+        bool contains;
+        is_boundary()
+        : contains(false) {
+        }
 };
-
 
 struct hash_boundary_nodes {
        size_t operator()(const NodeID idx) const {
@@ -32,7 +29,7 @@ struct hash_boundary_nodes {
        }
 };
 
-typedef std::unordered_map<const NodeID, is_boundary, hash_boundary_nodes, compare_nodes_contains> is_boundary_node_hashtable;
+typedef extlib::unordered_map_with_custom_hash_and_comparator<NodeID, is_boundary, hash_boundary_nodes, compare_nodes_contains> is_boundary_node_hashtable;
 
 class PartialBoundary {
         public:

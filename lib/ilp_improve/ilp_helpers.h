@@ -8,17 +8,16 @@
 #pragma once
 
 #include <algorithm>
-#include <unordered_set>
 
 #include "definitions.h"
 #include "data_structure/graph_access.h"
 
 class ilp_helpers {
 private:
-    std::unordered_set<NodeID> nodes_gain;
+    extlib::unordered_set<NodeID> nodes_gain;
     std::queue<std::vector<NodeID> > q_gain;
     std::vector<size_t> dist_gain;
-    std::unordered_set<NodeID> nodes_cut;
+    extlib::unordered_set<NodeID> nodes_cut;
     std::queue<std::vector<NodeID> > q_cut;
     std::vector<size_t> dist_cut;
     std::vector<PartitionID> pid1;
@@ -121,7 +120,7 @@ public:
     }
 
     std::vector<std::pair<NodeID, Gain>> bestStartNodes(graph_access &G,
-                                                        std::unordered_set<NodeID> & nodesAvailable,
+                                                        extlib::unordered_set<NodeID> & nodesAvailable,
                                                         std::queue<std::vector<NodeID>> & queue) {
 
 
@@ -150,7 +149,7 @@ public:
     }
 
     void cutBFSStartNodes(graph_access &G,
-                          std::unordered_set<NodeID> & nodesAvailable,
+                          extlib::unordered_set<NodeID> & nodesAvailable,
                           std::queue<std::vector<NodeID>> & queue) {
         forall_nodes(G, n) {
             PartitionID partitionIDSource = G.getPartitionIndex(n);
@@ -176,7 +175,7 @@ public:
     }
 
     void gainBFSStartNodes(graph_access &G,
-                           std::unordered_set<NodeID> & nodesAvailable,
+                           extlib::unordered_set<NodeID> & nodesAvailable,
                            std::queue<std::vector<NodeID>> & queue,
                            int min_gain) {
         forall_nodes(G, n) {
@@ -197,7 +196,7 @@ public:
         return (6*m + 2*(EdgeID) n) * (EdgeID) k;
     }
 
-    size_t numEdgesBetweenNonStarters(graph_access & G, std::unordered_set<NodeID> & nodesAvailable) {
+    size_t numEdgesBetweenNonStarters(graph_access & G, extlib::unordered_set<NodeID> & nodesAvailable) {
 
         size_t m =0;
         std::vector<std::vector<bool>> edges_exist;
@@ -225,7 +224,7 @@ public:
         return m;
     }
 
-    size_t edgesInCoarse(graph_access & G, std::unordered_set<NodeID> & nodesAvailable,
+    size_t edgesInCoarse(graph_access & G, extlib::unordered_set<NodeID> & nodesAvailable,
                          NodeID q, std::vector<size_t> & degrees) {
         size_t m = 0;
         std::vector<bool> neighbors(G.get_partition_count(), false);

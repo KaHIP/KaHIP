@@ -11,6 +11,7 @@
 #include "uncoarsening/refinement/quotient_graph_refinement/quotient_graph_scheduling/simple_quotient_graph_scheduler.h"
 #include "vertex_separator_algorithm.h"
 #include "vertex_separator_flow_solver.h"
+#include "definitions.h"
 
 vertex_separator_algorithm::vertex_separator_algorithm() {
 
@@ -33,7 +34,7 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
 
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
 
-        std::unordered_map<NodeID, bool> allready_separator;
+        extlib::unordered_map<NodeID, bool> already_separator;
         do {
                 boundary_pair & bp = scheduler->getNext();
                 PartitionID lhs = bp.lhs;
@@ -46,13 +47,13 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
                 PartialBoundary & rhs_b = boundary.getDirectedBoundary(rhs, lhs, rhs);
 
                 forall_boundary_nodes(lhs_b, cur_bnd_node) {
-                        if(allready_separator.find(cur_bnd_node) == allready_separator.end()) {
+                        if(already_separator.find(cur_bnd_node) == already_separator.end()) {
                                 start_nodes_lhs.push_back(cur_bnd_node);
                         }
                 } endfor
 
                 forall_boundary_nodes(rhs_b, cur_bnd_node) {
-                        if(allready_separator.find(cur_bnd_node) == allready_separator.end()) {
+                        if(already_separator.find(cur_bnd_node) == already_separator.end()) {
                                 start_nodes_rhs.push_back(cur_bnd_node);
                         }
                 } endfor
@@ -61,18 +62,17 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
                 std::vector<NodeID> separator;
                 vsfs.find_separator(config, G, lhs, rhs, start_nodes_lhs, start_nodes_rhs, separator);
                 for( unsigned i = 0; i < separator.size(); i++) {
-                        allready_separator[separator[i]] = true;
+                        already_separator[separator[i]] = true;
                 }
                 //*************************** end **************************************** 
         } while(!scheduler->hasFinished());
 
 
         // now print the computed vertex separator to disk
-        std::unordered_map<NodeID, bool>::iterator it;
-        for( it = allready_separator.begin(); it != allready_separator.end(); ++it) {
+        for(auto it = already_separator.begin(); it != already_separator.end(); ++it) {
                 overall_separator.push_back(it->first);
         }
-        is_vertex_separator(G, allready_separator);         
+        is_vertex_separator(G, already_separator);
 }
 
 void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig & config, 
@@ -101,7 +101,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
 
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
 
-        std::unordered_map<NodeID, bool> allready_separator;
+        extlib::unordered_map<NodeID, bool> already_separator;
         do {
                 boundary_pair & bp = scheduler->getNext();
                 PartitionID lhs = bp.lhs;
@@ -115,16 +115,16 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
 
                 if(lhs_b.size() < rhs_b.size()) {
                         forall_boundary_nodes(lhs_b, cur_bnd_node) {
-                                if(allready_separator.find(cur_bnd_node) == allready_separator.end()) {
+                                if(already_separator.find(cur_bnd_node) == already_separator.end()) {
                                         //overall_separator.push_back(cur_bnd_node);
-                                        allready_separator[cur_bnd_node] = true;
+                                        already_separator[cur_bnd_node] = true;
                                 }
                         } endfor
                 } else {
                         forall_boundary_nodes(rhs_b, cur_bnd_node) {
-                                if(allready_separator.find(cur_bnd_node) == allready_separator.end()) {
+                                if(already_separator.find(cur_bnd_node) == already_separator.end()) {
                                         //overall_separator.push_back(cur_bnd_node);
-                                        allready_separator[cur_bnd_node] = true;
+                                        already_separator[cur_bnd_node] = true;
                                 }
                         } endfor
                 }
@@ -134,14 +134,13 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
 
 
         // now print the computed vertex separator to disk
-        std::unordered_map<NodeID, bool>::iterator it;
-        for( it = allready_separator.begin(); it != allready_separator.end(); ++it) {
+        for(auto it = already_separator.begin(); it != already_separator.end(); ++it) {
                 overall_separator.push_back(it->first);
         }
-        is_vertex_separator(G, allready_separator);         
+        is_vertex_separator(G, already_separator);
 }
 
-bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::unordered_map<NodeID, bool> & separator) {
+bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, extlib::unordered_map<NodeID, bool> & separator) {
          forall_nodes(G, node) {
                 forall_out_edges(G, e, node) {
                         NodeID target = G.getEdgeTarget(e);

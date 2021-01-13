@@ -7,7 +7,6 @@
 #include <functional>
 #include <memory>
 #include <queue>
-#include <unordered_set>
 #include <utility>
 
 #include "data_structure/priority_queues/bucket_pq.h"
@@ -15,8 +14,9 @@
 #include "node_ordering/reductions.h"
 #include "tools/macros_assertions.h"
 #include "tools/timer.h"
-
 #include "io/graph_io.h"
+#include "definitions.h"
+
 
 /******************************/
 /* NODE CONTRACTION FUNCTIONS */
@@ -31,7 +31,7 @@
 //  - 'mapping':                mapping from nodes in 'graph_after' to nodes in 'graph_before'
 void contract_nodes(graph_access &graph_before, graph_access &graph_after,
                     const std::vector<std::vector<NodeID>> &node_groups,
-                    std::unordered_map<NodeID, std::vector<NodeID>> &mapping) {
+                    extlib::unordered_map<NodeID, std::vector<NodeID>> &mapping) {
         graph_after.start_construction(node_groups.size(), graph_before.number_of_edges());
 
         std::vector<NodeID> reverse_map(graph_before.number_of_nodes(), 0);

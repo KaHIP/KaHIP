@@ -5,6 +5,7 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
+#include "definitions.h"
 #include "parallel_projection.h"
 
 parallel_projection::parallel_projection() {
@@ -25,7 +26,7 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
 
         m_messages.resize(size);
 
-        std::unordered_map< NodeID, std::vector< NodeID > > cnode_to_nodes;
+        extlib::unordered_map< NodeID, std::vector< NodeID > > cnode_to_nodes;
         forall_local_nodes(finer, node) {
                 NodeID cnode = finer.getCNode(node);
                 //std::cout <<  "cnode " <<  cnode  << std::endl;

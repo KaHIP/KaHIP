@@ -17,6 +17,7 @@
 #include "data_structure/hashed_graph.h"
 #include "data_structure/parallel_graph_access.h"
 #include "io/parallel_graph_io.h"
+#include "definitions.h"
 
 using namespace std;
 
@@ -48,7 +49,7 @@ int main(int argn, char **argv)
         std::getline(in, line); // skip first line
         std::cout <<  line  << std::endl;
 
-        std::unordered_map< NodeID, std::unordered_map< NodeID, int> > source_targets;
+        extlib::unordered_map< NodeID, extlib::unordered_map< NodeID, int> > source_targets;
                         
         std::cout <<  "starting io"  << std::endl;
         EdgeID edge_counter = 0;
@@ -84,8 +85,7 @@ int main(int argn, char **argv)
         std::cout <<  "io done"  << std::endl;
 
         NodeID distinct_nodes = source_targets.size();
-        std::unordered_map< NodeID, NodeID > map_orignal_id_to_consequtive;
-        //std::unordered_map< NodeID, std::unordered_map< NodeID, bool > >::iterator it;
+        extlib::unordered_map< NodeID, NodeID > map_orignal_id_to_consequtive;
         NodeID counter = 0;
         for( auto it = source_targets.begin(); it != source_targets.end(); it++) {
                 if( map_orignal_id_to_consequtive.find(it->first) ==  map_orignal_id_to_consequtive.end()) {

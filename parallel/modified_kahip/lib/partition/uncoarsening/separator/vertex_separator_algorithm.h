@@ -34,7 +34,7 @@ class vertex_separator_algorithm {
                                               complete_boundary & boundary);
 
                 //ASSERTIONS
-                bool is_vertex_separator(graph_access & G, std::unordered_map<NodeID, bool> & separator);
+                bool is_vertex_separator(graph_access& G, tsl::robin_map< NodeID, bool >& separator);
 
 };
 

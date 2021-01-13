@@ -6,13 +6,14 @@
  *****************************************************************************/
 
 #include <algorithm>
-#include <unordered_map>
+// #include <unordered_map>
 
 #include "kway_graph_refinement.h"
 #include "kway_graph_refinement_core.h"
 #include "kway_stop_rule.h"
 #include "quality_metrics.h"
 #include "random_functions.h"
+#include "definitions.h"
 
 kway_graph_refinement::kway_graph_refinement() {
 }
@@ -61,7 +62,7 @@ void kway_graph_refinement::setup_start_nodes(PartitionConfig & config, graph_ac
         QuotientGraphEdges quotient_graph_edges;
         boundary.getQuotientGraphEdges(quotient_graph_edges);
 
-        std::unordered_map<NodeID, bool> allready_contained;
+        extlib::unordered_map<NodeID, bool> allready_contained;
 
         for( unsigned i = 0; i < quotient_graph_edges.size(); i++) {
                 boundary_pair & ret_value = quotient_graph_edges[i];
@@ -71,7 +72,7 @@ void kway_graph_refinement::setup_start_nodes(PartitionConfig & config, graph_ac
                 PartialBoundary & partial_boundary_lhs = boundary.getDirectedBoundary(lhs, lhs, rhs);
                 forall_boundary_nodes(partial_boundary_lhs, cur_bnd_node) {
                         ASSERT_EQ(G.getPartitionIndex(cur_bnd_node), lhs);
-                        if(allready_contained.find(cur_bnd_node) == allready_contained.end() ) { 
+                        if(allready_contained.find(cur_bnd_node) == allready_contained.end() ) {
                                 start_nodes.push_back(cur_bnd_node);
                                 allready_contained[cur_bnd_node] = true;
                         }
@@ -80,7 +81,7 @@ void kway_graph_refinement::setup_start_nodes(PartitionConfig & config, graph_ac
                 PartialBoundary & partial_boundary_rhs = boundary.getDirectedBoundary(rhs, lhs, rhs);
                 forall_boundary_nodes(partial_boundary_rhs, cur_bnd_node) {
                         ASSERT_EQ(G.getPartitionIndex(cur_bnd_node), rhs);
-                        if(allready_contained.find(cur_bnd_node) == allready_contained.end()) { 
+                        if(allready_contained.find(cur_bnd_node) == allready_contained.end()) {
                                 start_nodes.push_back(cur_bnd_node);
                                 allready_contained[cur_bnd_node] = true;
                         }

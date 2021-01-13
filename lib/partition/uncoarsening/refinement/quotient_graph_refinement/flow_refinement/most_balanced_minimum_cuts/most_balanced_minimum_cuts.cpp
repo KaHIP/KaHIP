@@ -170,7 +170,7 @@ void most_balanced_minimum_cuts::build_internal_scc_graph( graph_access & residu
         scc_graph.start_construction(comp_count, edge_count);
         for( unsigned i = 0; i < (unsigned) comp_count; i++) {
                 NodeID node = scc_graph.new_node();
-                std::unordered_map<NodeID, bool> allready_contained;
+                extlib::unordered_map<NodeID, bool> allready_contained;
                 for(unsigned j = 0; j < edges[i].size(); j++) {
                         if(allready_contained.find(edges[i][j]) == allready_contained.end()) {
                                 scc_graph.new_edge(node, edges[i][j]);

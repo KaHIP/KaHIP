@@ -106,6 +106,7 @@ option(USE_ILP "build local ILP improver - introduces dependency on Gurobi" OFF)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/app)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/extern/argtable3-3.0.3)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/extern/robin-map/include/tsl)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/io)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/partition)
@@ -208,6 +209,8 @@ set(NODE_ORDERING_SOURCE_FILES
   lib/node_ordering/ordering_tools.cpp
   lib/node_ordering/reductions.cpp)
 add_library(libnodeordering OBJECT ${NODE_ORDERING_SOURCE_FILES})
+
+#add_subdirectory(extern/robin-map)
 
 # generate targets for each binary
 add_executable(kaffpa app/kaffpa.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)

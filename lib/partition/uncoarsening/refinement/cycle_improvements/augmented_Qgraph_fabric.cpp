@@ -16,6 +16,7 @@
 #include "uncoarsening/refinement/kway_graph_refinement/kway_graph_refinement_core.h"
 #include "uncoarsening/refinement/kway_graph_refinement/kway_stop_rule.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/2way_fm_refinement/vertex_moved_hashtable.h"
+#include "definitions.h"
 
 augmented_Qgraph_fabric::augmented_Qgraph_fabric() {
 }
@@ -183,7 +184,7 @@ bool augmented_Qgraph_fabric::build_augmented_quotient_graph( PartitionConfig & 
                         } // else
 
                         start_block = cur_block;
-                        std::unordered_map< PartitionID, bool > allready_performed_local_search;
+                        extlib::unordered_map< PartitionID, bool > allready_performed_local_search;
 
                         while( boundary.getBlockWeight( cur_block ) <= config.upper_bound_partition ) {
                                 boundary_pair bp;

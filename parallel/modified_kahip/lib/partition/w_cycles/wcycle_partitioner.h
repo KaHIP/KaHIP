@@ -13,6 +13,7 @@
 #include "data_structure/graph_access.h"
 #include "partition_config.h"
 #include "uncoarsening/refinement/refinement.h"
+#include "definitions.h"
 
 class wcycle_partitioner {
         public:
@@ -30,7 +31,7 @@ class wcycle_partitioner {
                 unsigned   m_deepest_level;
                 stop_rule* m_coarsening_stop_rule;
 
-                std::unordered_map<unsigned, bool> m_have_been_level_down;
+                extlib::unordered_map<unsigned, bool> m_have_been_level_down;
 };
 
 #endif /* end of include guard: WCYCLE_PARTITIONER_EPNDQMK */

@@ -35,7 +35,7 @@ class parallel_label_compress {
                                 random_functions::permutate_vector_fast( permutation, true);
                         }
 
-                        //std::unordered_map<NodeID, NodeWeight> hash_map;
+                        //extlib::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
                         for( ULONG i = 0; i < config.label_iterations; i++) {

@@ -8,8 +8,6 @@
 #ifndef VMOVEDHT_4563r97820954
 #define VMOVEDHT_4563r97820954
 
-#include <unordered_map>
-
 #include "definitions.h"
 #include "limits.h"
 
@@ -36,6 +34,6 @@ struct hash_nodes {
        }
 };
 
-typedef std::unordered_map<const NodeID, moved_index, hash_nodes, compare_nodes> vertex_moved_hashtable;
+typedef extlib::unordered_map_with_custom_hash_and_comparator<NodeID, moved_index, hash_nodes, compare_nodes> vertex_moved_hashtable;
 
 #endif

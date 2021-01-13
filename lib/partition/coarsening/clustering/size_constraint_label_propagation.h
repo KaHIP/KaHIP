@@ -18,31 +18,22 @@ struct ensemble_pair {
 };
 
 struct compare_ensemble_pair {
-        bool operator()(const ensemble_pair pair_a, const ensemble_pair pair_b) const {
-                bool eq = (pair_a.lhs == pair_b.lhs && pair_a.rhs == pair_b.rhs);
-                return eq;
+        bool operator()(const ensemble_pair& pair_a, const ensemble_pair& pair_b) const {
+                return pair_a.lhs == pair_b.lhs && pair_a.rhs == pair_b.rhs;
         }
 };
 
-struct hash_ensemble_pair{
-       size_t operator()(const ensemble_pair pair) const {
+struct hash_ensemble_pair {
+       size_t operator()(const ensemble_pair& pair) const {
                 return pair.lhs*pair.n + pair.rhs;
        }
 };
 
 struct data_ensemble_pair {
         NodeID mapping;
-
-        data_ensemble_pair() {
-                mapping = 0;
+        data_ensemble_pair() : mapping(0) {
         }
 };
-
-typedef std::unordered_map<const ensemble_pair, 
-                                data_ensemble_pair, 
-                                hash_ensemble_pair, 
-                                compare_ensemble_pair> hash_ensemble;
-
 
 class size_constraint_label_propagation : public matching {
         public:

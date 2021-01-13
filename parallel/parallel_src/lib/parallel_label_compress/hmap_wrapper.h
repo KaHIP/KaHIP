@@ -8,6 +8,7 @@
 #ifndef HMAP_WRAPPER_RQFK3ARC
 #define HMAP_WRAPPER_RQFK3ARC
 
+#include "definitions.h"
 #include "data_structure/linear_probing_hashmap.h"
 
 template <typename T>
@@ -49,7 +50,7 @@ class hmap_wrapper < linear_probing_hashmap > {
 };
 
 template <>
-class hmap_wrapper <std::unordered_map<NodeID, NodeWeight> > {
+class hmap_wrapper <extlib::unordered_map<NodeID, NodeWeight> > {
         public:
 
                 hmap_wrapper(PPartitionConfig & config) {
@@ -63,7 +64,7 @@ class hmap_wrapper <std::unordered_map<NodeID, NodeWeight> > {
                 NodeWeight & operator[](NodeID node) {return mapping_type[node];};
 
         private:
-                std::unordered_map<NodeID, NodeWeight> mapping_type;
+                extlib::unordered_map<NodeID, NodeWeight> mapping_type;
                 PPartitionConfig m_config;
 };
 

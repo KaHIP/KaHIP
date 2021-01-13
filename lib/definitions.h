@@ -15,7 +15,8 @@
 #include "limits.h"
 #include "macros_assertions.h"
 #include "stdio.h"
-
+#include "robin_map.h"
+#include "robin_set.h"
 
 // allows us to disable most of the output during partitioning
 #ifdef KAFFPAOUTPUT
@@ -44,6 +45,19 @@ typedef int 		Color;
 typedef unsigned int 	Count;
 typedef std::vector<NodeID> boundary_starting_nodes;
 typedef long FlowType;
+
+namespace extlib {
+
+template <typename Key, typename T>
+using unordered_map = tsl::robin_map<Key, T>;
+
+template <class Key, class T, class Hash, class KeyEqual>
+using unordered_map_with_custom_hash_and_comparator = tsl::robin_map<Key, T, Hash, KeyEqual>;
+
+template <typename Key>
+using unordered_set = tsl::robin_set<Key>;
+
+}
 
 const EdgeID UNDEFINED_EDGE            = std::numeric_limits<EdgeID>::max();
 const NodeID UNDEFINED_NODE            = std::numeric_limits<NodeID>::max();
@@ -227,7 +241,6 @@ typedef enum {
     CENTER,
     HEAVIEST
 } OverlapPresets;
-
 
 #endif
 

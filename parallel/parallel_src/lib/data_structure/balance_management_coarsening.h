@@ -8,6 +8,7 @@
 #ifndef BALANCE_MANAGEMENT_COARSENING_TS6EZN5A
 #define BALANCE_MANAGEMENT_COARSENING_TS6EZN5A
 
+#include "definitions.h"
 #include "balance_management.h"
 
 class parallel_graph_access;
@@ -25,7 +26,7 @@ public:
         virtual void update();
 
 private:
-        std::unordered_map< PartitionID, long > m_fuzzy_block_weights;
+        extlib::unordered_map< PartitionID, long > m_fuzzy_block_weights;
 };
 
 

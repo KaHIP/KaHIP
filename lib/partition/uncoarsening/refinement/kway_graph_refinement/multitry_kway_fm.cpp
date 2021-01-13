@@ -6,7 +6,6 @@
  *****************************************************************************/
 
 #include <algorithm>
-#include <unordered_map>
 
 #include "kway_graph_refinement_core.h"
 #include "kway_stop_rule.h"
@@ -14,6 +13,7 @@
 #include "quality_metrics.h"
 #include "random_functions.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/2way_fm_refinement/vertex_moved_hashtable.h"
+#include "definitions.h"
 
 multitry_kway_fm::multitry_kway_fm() {
         commons = NULL;
@@ -49,7 +49,7 @@ int multitry_kway_fm::perform_refinement(PartitionConfig & config, graph_access 
                         todolist.push_back(start_nodes[i]);
                 }
 
-                std::unordered_map<PartitionID, PartitionID> touched_blocks;
+                extlib::unordered_map<PartitionID, PartitionID> touched_blocks;
                 EdgeWeight improvement = start_more_locallized_search(config, G,  boundary, 
                                                                       init_neighbors, false, touched_blocks, 
                                                                       todolist);
@@ -71,7 +71,7 @@ int multitry_kway_fm::perform_refinement_around_parts(PartitionConfig & config, 
                                                       complete_boundary & boundary, bool init_neighbors, 
                                                       unsigned alpha, 
                                                       PartitionID & lhs, PartitionID & rhs, 
-                                                      std::unordered_map<PartitionID, PartitionID> & touched_blocks) {
+                                                      extlib::unordered_map<PartitionID, PartitionID> & touched_blocks) {
         if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
 
         unsigned tmp_alpha                = config.kway_adaptive_limits_alpha;
@@ -109,7 +109,7 @@ int multitry_kway_fm::perform_refinement_around_parts(PartitionConfig & config, 
 int multitry_kway_fm::start_more_locallized_search(PartitionConfig & config, graph_access & G, 
                                                    complete_boundary & boundary, bool init_neighbors, 
                                                    bool compute_touched_blocks, 
-                                                   std::unordered_map<PartitionID, PartitionID> & touched_blocks, 
+                                                   extlib::unordered_map<PartitionID, PartitionID> & touched_blocks,
                                                    std::vector<NodeID> & todolist) {
 
         random_functions::permutate_vector_good(todolist, false);

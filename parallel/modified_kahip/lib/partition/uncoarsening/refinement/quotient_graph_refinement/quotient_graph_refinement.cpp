@@ -5,8 +5,6 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
-#include <unordered_map>
-
 #include "2way_fm_refinement/two_way_fm.h"
 #include "complete_boundary.h"
 #include "flow_refinement/two_way_flow_refinement.h"
@@ -16,6 +14,7 @@
 #include "quotient_graph_scheduling/simple_quotient_graph_scheduler.h"
 #include "uncoarsening/refinement/kway_graph_refinement/kway_graph_refinement.h"
 #include "uncoarsening/refinement/kway_graph_refinement/multitry_kway_fm.h"
+#include "definitions.h"
 
 quotient_graph_refinement::quotient_graph_refinement() {
 
@@ -107,7 +106,7 @@ EdgeWeight quotient_graph_refinement::perform_refinement(PartitionConfig & confi
                 EdgeWeight multitry_improvement = 0;
                 if(config.refinement_scheduling_algorithm == REFINEMENT_SCHEDULING_ACTIVE_BLOCKS_REF_KWAY ) {
                         multitry_kway_fm kway_ref;
-                        std::unordered_map<PartitionID, PartitionID> touched_blocks;
+                        extlib::unordered_map<PartitionID, PartitionID> touched_blocks;
 
                         multitry_improvement = kway_ref.perform_refinement_around_parts(cfg, G, 
                                                                                 boundary, true, 

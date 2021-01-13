@@ -17,7 +17,7 @@ class clique {
 
 public:
         // create a clique from a list of nodes
-        inline clique(std::unordered_set<NodeID> n = {}) : nodes(n) {};
+        inline clique(extlib::unordered_set<NodeID> n = {}) : nodes(n) {};
 
         // check if a node is part of this clique
         inline bool contains(NodeID node) const { 
@@ -40,7 +40,7 @@ public:
         }
 
         // remove node from this clique
-        inline std::unordered_set<NodeID>::const_iterator remove(NodeID node) {
+        inline extlib::unordered_set<NodeID>::const_iterator remove(NodeID node) {
                 auto it = nodes.find(node);
                 if (it != nodes.end()) {
                         return nodes.erase(it);
@@ -58,7 +58,7 @@ public:
         }
 
         // return the number of nodes in the clique
-        inline std::unordered_set<NodeID>::size_type size() const {
+        inline extlib::unordered_set<NodeID>::size_type size() const {
                 return nodes.size();
         }
 
@@ -67,16 +67,16 @@ public:
         }
 
         // iterators over the nodes in the clique
-        inline const std::unordered_set<NodeID>::const_iterator begin() const {
+        inline const extlib::unordered_set<NodeID>::const_iterator begin() const {
                 return nodes.cbegin();
         }
 
-        inline const std::unordered_set<NodeID>::const_iterator end() const {
+        inline const extlib::unordered_set<NodeID>::const_iterator end() const {
                 return nodes.cend();
         }
 
 private:
-        std::unordered_set<NodeID> nodes;
+        extlib::unordered_set<NodeID> nodes;
 
 };
 
@@ -108,7 +108,7 @@ private:
 
         // Nodes that haven't been eliminated
         // This is mainly used to eliminate nodes that are only members of one clique
-        std::unordered_set<NodeID> current_nodes;
+        extlib::unordered_set<NodeID> current_nodes;
 
         // This "clique" tracks all neighbors of eliminated nodes that are still in the graph
         // It's not actually a clique, but the clique-class is useful here

@@ -10,15 +10,13 @@
 #include <map>
 #include <math.h>
 #include <sstream>
-#include <unordered_map>
 
 #include "algorithms/push_relabel.h"
 #include "cut_flow_problem_solver.h"
 #include "most_balanced_minimum_cuts/most_balanced_minimum_cuts.h"
 #include "data_structure/flow_graph.h"
 #include "io/graph_io.h"
-
-
+#include "definitions.h"
 
 cut_flow_problem_solver::cut_flow_problem_solver() {
 }
@@ -75,7 +73,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
         //building up the graph as in parse.h of hi_pr code
         NodeID idx = 0;
         new_to_old_ids.resize(lhs_boundary_stripe.size() + rhs_boundary_stripe.size());
-        std::unordered_map<NodeID, NodeID> old_to_new;
+        extlib::unordered_map<NodeID, NodeID> old_to_new;
         for( unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
                 G.setPartitionIndex(lhs_boundary_stripe[i], BOUNDARY_STRIPE_NODE);
                 new_to_old_ids[idx]                = lhs_boundary_stripe[i];

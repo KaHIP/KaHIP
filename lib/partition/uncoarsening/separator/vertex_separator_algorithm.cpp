@@ -19,6 +19,7 @@
 #include "uncoarsening/refinement/quotient_graph_refinement/quotient_graph_scheduling/simple_quotient_graph_scheduler.h"
 #include "vertex_separator_algorithm.h"
 #include "vertex_separator_flow_solver.h"
+#include "definitions.h"
 
 vertex_separator_algorithm::vertex_separator_algorithm() {
 
@@ -107,7 +108,7 @@ void vertex_separator_algorithm::build_flow_problem(const PartitionConfig & conf
         NodeID n = 2*(lhs_nodes.size() + rhs_nodes.size() + separator_nodes.size()) + 2; // source and sink
 
         // find forward and backward mapping
-        std::unordered_map< NodeID, NodeID > backward_mapping;
+        extlib::unordered_map< NodeID, NodeID > backward_mapping;
         forward_mapping.clear();
         forward_mapping.resize(n-2);
 
@@ -488,7 +489,7 @@ NodeWeight vertex_separator_algorithm::improve_vertex_separator_internal(const P
         } endfor
 
 
-        std::unordered_map<NodeID, bool> allready_separator;
+        extlib::unordered_map<NodeID, bool> allready_separator;
         for( unsigned int i = 0; i < output_separator.size(); i++) {
                 allready_separator[output_separator[i]] = true;
         }
@@ -507,7 +508,7 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
         PartitionConfig cfg     = config;
         cfg.bank_account_factor = 1;
 
-        std::unordered_map<NodeID, bool> allready_separator;
+        extlib::unordered_map<NodeID, bool> allready_separator;
 
         QuotientGraphEdges qgraph_edges;
         boundary.getQuotientGraphEdges(qgraph_edges);
@@ -553,7 +554,7 @@ void vertex_separator_algorithm::compute_vertex_separator(const PartitionConfig 
 
 
         // now print the computed vertex separator to disk
-        std::unordered_map<NodeID, bool>::iterator it;
+        extlib::unordered_map<NodeID, bool>::iterator it;
         for( it = allready_separator.begin(); it != allready_separator.end(); ++it) {
                 overall_separator.push_back(it->first);
                 G.setPartitionIndex(it->first, G.getSeparatorBlock());
@@ -595,7 +596,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simpler(const Partitio
 
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
 
-        std::unordered_map<NodeID, bool> allready_separator;
+        extlib::unordered_map<NodeID, bool> allready_separator;
         do {
                 boundary_pair & bp = scheduler->getNext();
                 PartitionID lhs = bp.lhs;
@@ -622,7 +623,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simpler(const Partitio
         } while(!scheduler->hasFinished());
 
         // now print the computed vertex separator to disk
-        std::unordered_map<NodeID, bool>::iterator it;
+        extlib::unordered_map<NodeID, bool>::iterator it;
         for( it = allready_separator.begin(); it != allready_separator.end(); ++it) {
                 overall_separator.push_back(it->first);
                 G.setPartitionIndex(it->first, G.getSeparatorBlock());
@@ -649,7 +650,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
 
         quotient_graph_scheduling* scheduler = new simple_quotient_graph_scheduler(cfg, qgraph_edges,qgraph_edges.size()); 
 
-        std::unordered_map<NodeID, bool> allready_separator;
+        extlib::unordered_map<NodeID, bool> allready_separator;
         do {
                 boundary_pair & bp = scheduler->getNext();
                 PartitionID lhs = bp.lhs;
@@ -679,7 +680,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
         } while(!scheduler->hasFinished());
 
         // now print the computed vertex separator to disk
-        std::unordered_map<NodeID, bool>::iterator it;
+        extlib::unordered_map<NodeID, bool>::iterator it;
         for( it = allready_separator.begin(); it != allready_separator.end(); ++it) {
                 overall_separator.push_back(it->first);
                 G.setPartitionIndex(it->first, G.getSeparatorBlock());
@@ -690,7 +691,7 @@ void vertex_separator_algorithm::compute_vertex_separator_simple(const Partition
 
 
 
-bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, std::unordered_map<NodeID, bool> & separator) {
+bool vertex_separator_algorithm::is_vertex_separator(graph_access & G, extlib::unordered_map<NodeID, bool> & separator) {
          forall_nodes(G, node) {
                 forall_out_edges(G, e, node) {
                         NodeID target = G.getEdgeTarget(e);

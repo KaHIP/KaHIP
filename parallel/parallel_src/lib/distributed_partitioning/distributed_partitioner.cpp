@@ -155,7 +155,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         config.upper_bound_cluster = config.upper_bound_partition/(1.0*config.cluster_coarsening_factor);
         G.init_balance_management( config );
 
-        //parallel_label_compress< std::unordered_map< NodeID, NodeWeight> > plc;
+        //parallel_label_compress< extlib::unordered_map< NodeID, NodeWeight> > plc;
         parallel_label_compress< linear_probing_hashmap  > plc;
         plc.perform_parallel_label_compression ( config, G, true);
 

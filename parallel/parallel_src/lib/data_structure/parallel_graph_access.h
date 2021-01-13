@@ -8,9 +8,7 @@
 #ifndef PARALLEL_GRAPH_ACCESS_X6O9MRS8
 #define PARALLEL_GRAPH_ACCESS_X6O9MRS8
 
-
 #include <mpi.h>
-#include <unordered_map>
 #include <iostream>
 #include <ostream>
 #include <fstream>
@@ -20,6 +18,7 @@
 #include "definitions.h"
 #include "partition_config.h"
 #include "tools/timer.h"
+#include "definitions.h"
 
 struct Node {
     EdgeID firstEdge;
@@ -523,7 +522,7 @@ private:
         std::vector<NodeID>                     m_range_array;
         std::vector<EdgeID>                     m_edge_range_array;
 
-        std::unordered_map<NodeID, NodeID> m_global_to_local_id;
+        extlib::unordered_map<NodeID, NodeID> m_global_to_local_id;
 
         NodeID m_ghost_adddata_array_offset; // node id of ghost node - offset to get the position in add data  
         NodeID m_divisor; // needed to compute the target id of a ghost node

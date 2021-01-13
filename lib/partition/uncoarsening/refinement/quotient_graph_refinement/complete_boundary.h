@@ -9,13 +9,13 @@
 #define COMPLETE_BOUNDARY_URZZFDEI
 
 #include <execinfo.h>
-#include <unordered_map>
 #include <utility>
 
 #include "boundary_lookup.h"
 #include "data_structure/graph_access.h"
 #include "partial_boundary.h"
 #include "partition_config.h"
+#include "definitions.h"
 
 struct block_informations {
         NodeWeight block_weight;
@@ -135,12 +135,11 @@ inline void complete_boundary::build() {
                 } endfor
         } endfor
 
-        block_pairs::iterator iter; 
-        for(iter = m_pairs.begin(); iter != m_pairs.end(); iter++ ) { 
-                data_boundary_pair& value = iter->second;
-                value.edge_cut /= 2;
+        for (auto it = m_pairs.begin(); it != m_pairs.end(); ++it)
+        {
+            auto& tmp = it.value();
+            tmp.edge_cut /= 2;
         }
-
 }
 
 inline void complete_boundary::build_from_coarser(complete_boundary * coarser_boundary, 
@@ -206,10 +205,10 @@ inline void complete_boundary::build_from_coarser(complete_boundary * coarser_bo
                 setBlockWeight(p, coarser_boundary->getBlockWeight(p));
         }
 
-        block_pairs::iterator iter; 
-        for(iter = m_pairs.begin(); iter != m_pairs.end(); iter++ ) { 
-                data_boundary_pair& value = iter->second;
-                value.edge_cut /= 2;
+        for (auto it = m_pairs.begin(); it != m_pairs.end(); ++it)
+        {
+            auto& tmp = it.value();
+            tmp.edge_cut /= 2;
         }
 }
 
@@ -425,20 +424,20 @@ inline void complete_boundary::getNeighbors(PartitionID & block, std::vector<Par
 void complete_boundary::setup_start_nodes_around_blocks(graph_access & G, 
                                                         PartitionID & lhs, PartitionID & rhs, 
                                                         boundary_starting_nodes & start_nodes) {
-
         std::vector<PartitionID> lhs_neighbors;
         getNeighbors(lhs, lhs_neighbors);
 
         std::vector<PartitionID> rhs_neighbors;
         getNeighbors(rhs, rhs_neighbors);
 
-        std::unordered_map<NodeID, bool> allready_contained;
+        extlib::unordered_map<NodeID, bool> allready_contained;
+
         for( unsigned i = 0; i < lhs_neighbors.size(); i++) {
                 PartitionID neighbor = lhs_neighbors[i];
                 PartialBoundary & partial_boundary_lhs = getDirectedBoundary(lhs, lhs, neighbor);
                 forall_boundary_nodes(partial_boundary_lhs, cur_bnd_node) {
                         ASSERT_EQ(G.getPartitionIndex(cur_bnd_node), lhs);
-                        if(allready_contained.find(cur_bnd_node) == allready_contained.end() ) { 
+                        if(allready_contained.find(cur_bnd_node) == allready_contained.end() ) {
                                 start_nodes.push_back(cur_bnd_node);
                                 allready_contained[cur_bnd_node] = true;
                         }
@@ -447,7 +446,7 @@ void complete_boundary::setup_start_nodes_around_blocks(graph_access & G,
                 PartialBoundary & partial_boundary_neighbor = getDirectedBoundary(neighbor, lhs, neighbor);
                 forall_boundary_nodes(partial_boundary_neighbor, cur_bnd_node) {
                         ASSERT_EQ(G.getPartitionIndex(cur_bnd_node), neighbor);
-                        if(allready_contained.find(cur_bnd_node) == allready_contained.end()) { 
+                        if(allready_contained.find(cur_bnd_node) == allready_contained.end()) {
                                 start_nodes.push_back(cur_bnd_node);
                                 allready_contained[cur_bnd_node] = true;
                         }
@@ -459,7 +458,7 @@ void complete_boundary::setup_start_nodes_around_blocks(graph_access & G,
                 PartialBoundary & partial_boundary_rhs = getDirectedBoundary(rhs, rhs, neighbor);
                 forall_boundary_nodes(partial_boundary_rhs, cur_bnd_node) {
                         ASSERT_EQ(G.getPartitionIndex(cur_bnd_node), rhs);
-                        if(allready_contained.find(cur_bnd_node) == allready_contained.end() ) { 
+                        if(allready_contained.find(cur_bnd_node) == allready_contained.end() ) {
                                 start_nodes.push_back(cur_bnd_node);
                                 allready_contained[cur_bnd_node] = true;
                         }
@@ -468,7 +467,7 @@ void complete_boundary::setup_start_nodes_around_blocks(graph_access & G,
                 PartialBoundary & partial_boundary_neighbor = getDirectedBoundary(neighbor, rhs, neighbor);
                 forall_boundary_nodes(partial_boundary_neighbor, cur_bnd_node) {
                         ASSERT_EQ(G.getPartitionIndex(cur_bnd_node), neighbor);
-                        if(allready_contained.find(cur_bnd_node) == allready_contained.end()) { 
+                        if(allready_contained.find(cur_bnd_node) == allready_contained.end()) {
                                 start_nodes.push_back(cur_bnd_node);
                                 allready_contained[cur_bnd_node] = true;
                         }
@@ -477,12 +476,13 @@ void complete_boundary::setup_start_nodes_around_blocks(graph_access & G,
 }
 
 
-void complete_boundary::setup_start_nodes_all(graph_access & G, boundary_starting_nodes & start_nodes) {
+void complete_boundary::setup_start_nodes_all(graph_access & G,
+                                              boundary_starting_nodes & start_nodes) {
         QuotientGraphEdges quotient_graph_edges;
         getQuotientGraphEdges(quotient_graph_edges);
 
-        std::unordered_map<NodeID, bool> allready_contained;
-        
+        extlib::unordered_map<NodeID, bool> allready_contained;
+
         for( unsigned i = 0; i < quotient_graph_edges.size(); i++) {
                 boundary_pair & ret_value = quotient_graph_edges[i];
                 PartitionID lhs = ret_value.lhs; 
@@ -491,7 +491,7 @@ void complete_boundary::setup_start_nodes_all(graph_access & G, boundary_startin
                 PartialBoundary & partial_boundary_lhs = getDirectedBoundary(lhs, lhs, rhs);
                 forall_boundary_nodes(partial_boundary_lhs, cur_bnd_node) {
                         ASSERT_EQ(G.getPartitionIndex(cur_bnd_node), lhs);
-                        if(allready_contained.find(cur_bnd_node) == allready_contained.end() ) { 
+                        if(allready_contained.find(cur_bnd_node) == allready_contained.end() ) {
                                 start_nodes.push_back(cur_bnd_node);
                                 allready_contained[cur_bnd_node] = true;
                         }
@@ -500,7 +500,7 @@ void complete_boundary::setup_start_nodes_all(graph_access & G, boundary_startin
                 PartialBoundary & partial_boundary_rhs = getDirectedBoundary(rhs, lhs, rhs);
                 forall_boundary_nodes(partial_boundary_rhs, cur_bnd_node) {
                         ASSERT_EQ(G.getPartitionIndex(cur_bnd_node), rhs);
-                        if(allready_contained.find(cur_bnd_node) == allready_contained.end()) { 
+                        if(allready_contained.find(cur_bnd_node) == allready_contained.end()) {
                                 start_nodes.push_back(cur_bnd_node);
                                 allready_contained[cur_bnd_node] = true;
                         }

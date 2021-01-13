@@ -5,9 +5,6 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
-
-#include <unordered_map>
-
 #include <sstream>
 #include "../edge_rating/edge_ratings.h"
 #include "../matching/gpa/gpa_matching.h"
@@ -20,6 +17,7 @@
 #include "io/graph_io.h"
 
 #include "size_constraint_label_propagation.h"
+#include "definitions.h"
 
 size_constraint_label_propagation::size_constraint_label_propagation() {
                 
@@ -66,8 +64,7 @@ void size_constraint_label_propagation::ensemble_two_clusterings( graph_access &
                                                                   std::vector< NodeID > & output,
                                                                   NodeID & no_of_coarse_vertices) {
 
-
-        hash_ensemble new_mapping; 
+        extlib::unordered_map_with_custom_hash_and_comparator<ensemble_pair, data_ensemble_pair, hash_ensemble_pair, compare_ensemble_pair> new_mapping;
         no_of_coarse_vertices = 0;
         for( NodeID node = 0; node < lhs.size(); node++) {
                 ensemble_pair cur_pair;
@@ -213,7 +210,7 @@ void size_constraint_label_propagation::remap_cluster_ids(const PartitionConfig 
                                                           NodeID & no_of_coarse_vertices, bool apply_to_graph) {
 
         PartitionID cur_no_clusters = 0;
-        std::unordered_map<PartitionID, PartitionID> remap;
+        extlib::unordered_map<PartitionID, PartitionID> remap;
         forall_nodes(G, node) {
                 PartitionID cur_cluster = cluster_id[node];
                 //check wether we already had that

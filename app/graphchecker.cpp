@@ -12,7 +12,8 @@
 #include <sstream>
 #include <limits>
 #include <vector>
-#include <unordered_set>
+
+#include "definitions.h"
 
 using namespace std;
 
@@ -201,7 +202,7 @@ int main(int argn, char **argv)
 
         // check if there are parallel edges
         for( long node = 0; node < nmbNodes; node++) {
-                std::unordered_set< long > seen_adjacent_nodes;
+                extlib::unordered_set< long > seen_adjacent_nodes;
                 for( long e = node_starts[node]; e < node_starts[node + 1]; e++) {
                         long target = adjacent_nodes[e];
                         if( !seen_adjacent_nodes.insert(target).second ) {

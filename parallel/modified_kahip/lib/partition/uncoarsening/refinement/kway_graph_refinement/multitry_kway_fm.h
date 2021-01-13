@@ -27,7 +27,7 @@ class multitry_kway_fm {
                                                     complete_boundary & boundary, bool init_neighbors, 
                                                     unsigned alpha, 
                                                     PartitionID & lhs, PartitionID & rhs,
-                                                    std::unordered_map<PartitionID, PartitionID> & touched_blocks);
+                                                    extlib::unordered_map<PartitionID, PartitionID> & touched_blocks);
 
 
         private:
@@ -35,7 +35,7 @@ class multitry_kway_fm {
                                                  complete_boundary & boundary, 
                                                  bool init_neighbors, 
                                                  bool compute_touched_blocks, 
-                                                 std::unordered_map<PartitionID, PartitionID> & touched_blocks, 
+                                                 extlib::unordered_map<PartitionID, PartitionID> & touched_blocks,
                                                  std::vector<NodeID> & todolist);
 
                 kway_graph_refinement_commons* commons;

@@ -9,7 +9,6 @@
 #define BALANCE_MANAGEMENT_NJRUTX5K
 
 #include <vector>
-#include <unordered_map>
 #include "definitions.h"
 
 /* This class gives you the amount of weight that is currently in a block.

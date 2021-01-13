@@ -9,12 +9,11 @@
 #ifndef VERTEX_SEPARTATOR_ALGORITHM_XUDNZZM8
 #define VERTEX_SEPARTATOR_ALGORITHM_XUDNZZM8
 
-#include <unordered_map>
-
 #include "data_structure/graph_access.h"
 #include "data_structure/flow_graph.h"
 #include "partition_config.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/complete_boundary.h"
+#include "definitions.h"
 
 class vertex_separator_algorithm {
         public:
@@ -83,7 +82,7 @@ class vertex_separator_algorithm {
                                     std::vector< NodeID > & rhs_nodes,
                                     std::vector< NodeID > & separator);
                 //ASSERTIONS
-                bool is_vertex_separator(graph_access & G, std::unordered_map<NodeID, bool> & separator);
+                bool is_vertex_separator(graph_access & G, extlib::unordered_map<NodeID, bool> & separator);
 
 };
 

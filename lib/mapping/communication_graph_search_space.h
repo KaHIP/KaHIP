@@ -13,6 +13,7 @@
 #include "data_structure/graph_access.h"
 #include "tools/random_functions.h"
 #include "partition_config.h"
+#include "definitions.h"
 
 extern int global_num_nodes;
 
@@ -114,7 +115,7 @@ class communication_graph_search_space {
 
         private:
                 std::vector< std::pair< NodeID, NodeID > > m_list_of_pairs;                 
-                std::unordered_map< std::pair< NodeID, NodeID>, bool > m_pair_active;                 
+                extlib::unordered_map< std::pair< NodeID, NodeID>, bool > m_pair_active;
                 std::vector< int > m_deepth;
                 int m_limit;
                 int m_pointer;

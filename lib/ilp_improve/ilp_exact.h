@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <unordered_set>
-#include <unordered_map>
 #include <queue>
 #include <vector>
 #include <algorithm>
@@ -21,6 +19,7 @@
 #include "partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
 #include "partition/coarsening/clustering/size_constraint_label_propagation.h"
 #include "partition/graph_partitioner.h"
+#include "definitions.h"
 
 class ilp_exact {
 public:
@@ -37,7 +36,7 @@ public:
         //NodeID numEdges = coarser.number_of_edges() / 2;
 
         //// create index for start edges of nodes
-        //std::unordered_map<EdgeID, NodeID> edge_source;
+        //extlib::unordered_map<EdgeID, NodeID> edge_source;
         //forall_nodes(G, node) {
                     //forall_out_edges(G, e, node) {
                                 //edge_source[e] = node;

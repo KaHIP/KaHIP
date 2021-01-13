@@ -9,7 +9,6 @@
 #include <iostream>
 #include <iomanip>
 #include <memory>
-#include <unordered_map>
 #include <vector>
 
 #include "data_structure/graph_access.h"
@@ -198,7 +197,7 @@ public:
 
 protected:
         // Mapping from the reduced graph to groups of nodes in the original graph
-        std::unordered_map<NodeID, std::vector<NodeID>> mapping;
+        extlib::unordered_map<NodeID, std::vector<NodeID>> mapping;
 
 };
 
@@ -259,7 +258,7 @@ public:
 
 protected:
         // We reverse paths and parts of paths in the map function, so we make the mapping mutable for this reduction
-        mutable std::unordered_map<NodeID, std::vector<NodeID>> mapping;
+        mutable extlib::unordered_map<NodeID, std::vector<NodeID>> mapping;
 
 };
 

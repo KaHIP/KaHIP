@@ -5,6 +5,7 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
+#include "definitions.h"
 #include "parallel_block_down_propagation.h"
 
 parallel_block_down_propagation::parallel_block_down_propagation() {
@@ -20,7 +21,7 @@ void parallel_block_down_propagation::propagate_block_down( MPI_Comm communicato
                                                             parallel_graph_access & Q) {
 
 
-        std::unordered_map< NodeID, NodeID > coarse_block_ids; 
+        extlib::unordered_map< NodeID, NodeID > coarse_block_ids;
 
         forall_local_nodes(G, node) {
                 NodeID cur_cnode = G.getCNode( node );

@@ -6,13 +6,12 @@
  *****************************************************************************/
 
 #include <algorithm>
+#include <numeric>
 #include <cmath>
 
 #include "quality_metrics.h"
 #include "data_structure/union_find.h"
-
-#include <unordered_map>
-#include <numeric>
+#include "definitions.h"
 
 quality_metrics::quality_metrics() {
 }
@@ -94,7 +93,7 @@ EdgeWeight quality_metrics::edge_cut_connected(graph_access & G, int * partition
                 } endfor
         } endfor
 
-        std::unordered_map<NodeID, NodeID> size_right;
+        extlib::unordered_map<NodeID, NodeID> size_right;
         forall_nodes(G, node) {
                 size_right[uf.Find(node)] = 1;
         } endfor

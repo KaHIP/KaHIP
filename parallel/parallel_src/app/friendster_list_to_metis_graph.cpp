@@ -45,7 +45,7 @@ int main(int argn, char **argv)
 
         std::string line;
 
-        std::unordered_map< NodeID, std::unordered_map< NodeID, int> > source_targets;
+        extlib::unordered_map< NodeID, extlib::unordered_map< NodeID, int> > source_targets;
                         
         std::cout <<  "starting io"  << std::endl;
         EdgeID edge_counter = 0;
@@ -95,7 +95,7 @@ int main(int argn, char **argv)
         std::cout <<  "io done"  << std::endl;
 
         NodeID distinct_nodes = source_targets.size();
-        std::unordered_map< NodeID, NodeID > map_orignal_id_to_consequtive;
+        extlib::unordered_map< NodeID, NodeID > map_orignal_id_to_consequtive;
         NodeID counter = 0;
         for( auto it = source_targets.begin(); it != source_targets.end(); it++) {
                 if( map_orignal_id_to_consequtive.find(it->first) ==  map_orignal_id_to_consequtive.end()) {

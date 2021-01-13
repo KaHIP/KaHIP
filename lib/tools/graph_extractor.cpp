@@ -5,9 +5,8 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
-#include <unordered_map>
 #include "graph_extractor.h"
-
+#include "definitions.h"
 
 graph_extractor::graph_extractor() {
 
@@ -134,7 +133,7 @@ void graph_extractor::extract_two_blocks_connected(graph_access & G,
                                                    graph_access & pair,
                                                    std::vector<NodeID> & mapping) {
         //// build reverse mapping
-        std::unordered_map<NodeID,NodeID> reverse_mapping;
+        extlib::unordered_map<NodeID,NodeID> reverse_mapping;
         NodeID nodes = 0;
         EdgeID edges = 0; // upper bound for number of edges
 
