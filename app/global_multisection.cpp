@@ -3,21 +3,6 @@
  *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  *
- ******************************************************************************
- * Copyright (C) 2013-2015 Christian Schulz <christian.schulz@kit.edu>
- *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 2 of the License, or (at your option)
- * any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
 #include <argtable3.h>
@@ -102,6 +87,18 @@ int main(int argn, char **argv) {
 
         std::cout <<  "performing partitioning! overall k=" <<  partition_config.k  << std::endl;
         partitioner.perform_partitioning_krec_hierarchy(partition_config, G);
+
+        if( partition_config.kaffpa_perfectly_balance ) {
+                double epsilon                         = partition_config.imbalance/100.0;
+                partition_config.upper_bound_partition = (1+epsilon)*ceil(partition_config.largest_graph_weight/(double)partition_config.k);
+
+                complete_boundary boundary(&G);
+                boundary.build();
+
+                cycle_refinement cr;
+                cr.perform_refinement(partition_config, G, boundary);
+        }
+
         std::cout << "multisectioning took " << t.elapsed()  << std::endl;
 
         t.restart();

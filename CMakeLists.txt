@@ -24,6 +24,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
+# --march=nativeflag
+option(NONATIVEOPTIMIZATIONS "Disable --march=native optimizations" OFF)
+
 # tweak compiler flags
 CHECK_CXX_COMPILER_FLAG(-funroll-loops COMPILER_SUPPORTS_FUNROLL_LOOPS)
 if(COMPILER_SUPPORTS_FUNROLL_LOOPS)
@@ -39,7 +42,9 @@ if(COMPILER_SUPPORTS_WALL)
 endif()
 CHECK_CXX_COMPILER_FLAG(-march=native COMPILER_SUPPORTS_MARCH_NATIVE)
 if(COMPILER_SUPPORTS_MARCH_NATIVE)
-  add_definitions(-march=native)
+  if( NOT NONATIVEOPTIMIZATIONS ) 
+          add_definitions(-march=native)
+  endif()
 endif()
 CHECK_CXX_COMPILER_FLAG(-fpermissive COMPILER_SUPPORTS_FPERMISSIVE)
 if(COMPILER_SUPPORTS_FPERMISSIVE)
@@ -96,6 +101,7 @@ option(USE_TCMALLOC "if available, link against tcmalloc" OFF)
 
 # ILP improver 
 option(USE_ILP "build local ILP improver - introduces dependency on Gurobi" OFF)
+
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/app)
@@ -341,3 +347,5 @@ if(USE_ILP)
   target_link_libraries(ilp_exact ${OpenMP_CXX_LIBRARIES} ${GUROBI_LIBRARIES})
 
 endif()
+
+
