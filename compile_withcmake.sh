@@ -56,6 +56,7 @@ cp ./build/parallel/parallel_src/toolbox* ./deploy/
 cp ./build/parallel/parallel_src/libparhip_inter*.a deploy/libparhip.a
 cp ./interface/kaHIP_interface.h deploy/
 cp ./parallel/parallel_src/interface/parhip_interface.h deploy/
+cp build/libinter* deploy/
 
 mkdir deploy/parallel
 cp ./build/parallel/modified_kahip/lib*.a deploy/parallel/libkahip.a
@@ -63,7 +64,8 @@ cp ./build/parallel/modified_kahip/lib*.a deploy/parallel/libkahip.a
 # maybe adapt paths here and python version here
 if [ "$1" == "BUILDPYTHONMODULE" ]; then
 cd misc/pymodule/
-g++ -O3 -Wall -shared -std=c++11 -fPIC `python3.5 -m pybind11 --includes` kahip.cpp -L../../deploy/ -lkahip -o kahip`python3.5-config --extension-suffix` -Ipybind11/include -I/usr/include/python3.5m/
+PYTHONINCLUDEPATH=`python3 -c "from sysconfig import get_paths as gp; print(gp()['include'])"`
+g++ -O3 -Wall -shared -std=c++11 -fPIC `python3 -m pybind11 --includes` kahip.cpp -L../../deploy/ -lkahip -o kahip`python3-config --extension-suffix` -Ipybind11/include -I$PYTHONINCLUDEPATH
 cd ..; cd ..;
 cp misc/pymodule/call* deploy/
 cp misc/pymodule/kahip.cp* deploy/
