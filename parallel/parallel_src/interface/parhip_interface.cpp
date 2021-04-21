@@ -8,6 +8,7 @@
 #include "random_functions.h"
 
 
+// 3% imbalance should be specified as imbalance = 0.03 
 void ParHIPPartitionKWay(idxtype *vtxdist, idxtype *xadj, idxtype *adjncy, idxtype *vwgt, idxtype *adjwgt,
                          int *nparts, double* imbalance, bool suppress_output, int seed, int mode, int *edgecut, idxtype *part, 
                          MPI_Comm *comm) {
@@ -133,6 +134,7 @@ void ParHIPPartitionKWay(idxtype *vtxdist, idxtype *xadj, idxtype *adjncy, idxty
         distributed_partitioner::generate_random_choices( partition_config );
 
         timer t; 
+        partition_config.inbalance = 100*(*imbalance);
         double epsilon = (partition_config.inbalance)/100.0;
         partition_config.number_of_overall_nodes = G.number_of_global_nodes();
         partition_config.upper_bound_partition   = (1+epsilon)*ceil(global_node_weight/(double)partition_config.k);

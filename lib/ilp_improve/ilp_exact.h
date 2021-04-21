@@ -12,6 +12,7 @@
 #include <queue>
 #include <vector>
 #include <algorithm>
+#include <stdlib.h>
 
 #include "gurobi_c++.h"
 
@@ -23,7 +24,7 @@
 
 class ilp_exact {
 public:
-    GRBModel computeIlp(graph_access &G, PartitionConfig & config) {
+    void computeIlp(graph_access &G, PartitionConfig & config) {
 
         double imbalance = config.imbalance / 100 + 1;
 
@@ -124,12 +125,9 @@ public:
 
         delete[] nodes;
         delete[] edges;
-        return model;
         } catch(GRBException e) {
-            GRBEnv* env = new GRBEnv();
-            GRBModel model = GRBModel(*env);
-            std::cout << e.getErrorCode() << " Message: " << e.getMessage() << std::endl;
-            return model;
+            std::cout << "Gurobi exception occurred:" << " ERROR " << e.getErrorCode() << ": " << e.getMessage() << std::endl;
+	    exit (EXIT_FAILURE);
         }
     }
 

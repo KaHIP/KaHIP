@@ -288,7 +288,13 @@ int main(int argn, char **argv) {
 ```
 Using KaHIP in Python
 =====
-KaHIP can also be used in Python. If you want to use it in Python run 
+KaHIP can also be used in Python. If you want to use it in Python first run 
+
+```
+python3 -m pip install pybind11
+```
+
+Then run
 ```console
 ./compile_withcmake.sh BUILDPYTHONMODULE
 ```
@@ -449,6 +455,8 @@ Wolfgang Ost
 Ilya Safro
 
 Peter Sanders
+
+Hayk Sargsyan
 
 Sebastian Schlag
 
