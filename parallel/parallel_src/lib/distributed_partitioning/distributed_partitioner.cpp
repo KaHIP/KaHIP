@@ -152,7 +152,11 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         config.label_iterations = config.label_iterations_coarsening;
         config.total_num_labels = G.number_of_global_nodes();
         //
-        config.upper_bound_cluster = config.upper_bound_partition/(1.0*config.cluster_coarsening_factor);
+        if( config.cluster_coarsening_factor > 100 ) {
+                config.upper_bound_cluster = std::max(100, (int)(config.upper_bound_partition/(1.0*config.cluster_coarsening_factor)));
+        } else {
+                config.upper_bound_cluster = (int)(config.upper_bound_partition/(1.0*config.cluster_coarsening_factor));
+        }
         G.init_balance_management( config );
 
         //parallel_label_compress< std::unordered_map< NodeID, NodeWeight> > plc;
