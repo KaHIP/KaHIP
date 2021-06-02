@@ -16,6 +16,48 @@
 #include "tools/random_functions.h"
 
 class node_ordering {
+private:
+        void order_nodes_degree_with_counting(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) {
+                if (ordered_nodes.empty()) return;
+
+                EdgeID offset = std::numeric_limits< EdgeID >::max();
+                size_t count = ordered_nodes.size();
+
+                for (NodeID node : ordered_nodes) {
+                        EdgeID degree = G.getNodeDegree(node);
+                        if (degree < offset) {
+                                offset = degree;
+                        }
+                }
+                
+                std::vector< size_t > counting_sort_count;
+                std::vector< NodeID > node_buffer;
+
+                // last bucket is for nodes with large degree, and will be sorted at the end with std::sort
+                counting_sort_count.assign(count + 1, 0);
+                for (NodeID node : ordered_nodes) {
+                        EdgeID degree = G.getNodeDegree(node);
+                        size_t scaled_degree = std::min<size_t>(degree - offset, count);
+                        ++counting_sort_count[scaled_degree];
+                }
+                for (int i = 1; i <= count; i++) {
+                        counting_sort_count[i] += counting_sort_count[i - 1];
+                }
+
+                node_buffer.resize(ordered_nodes.size());
+                for (NodeID node : ordered_nodes) {
+                        EdgeID degree = G.getNodeDegree(node);
+                        size_t scaled_degree = std::min<size_t>(degree - offset, count);
+                        size_t pos = --counting_sort_count[scaled_degree];
+                        node_buffer[pos] = node;
+                }
+                ordered_nodes.assign(node_buffer.begin(), node_buffer.end());
+                     
+                std::sort( ordered_nodes.begin() + counting_sort_count.back(), ordered_nodes.end(), 
+                           [&]( const NodeID & lhs, const NodeID & rhs) -> bool {
+                                return (G.getNodeDegree(lhs) < G.getNodeDegree(rhs));
+                           });
+        }
 public:
         node_ordering();
         virtual ~node_ordering();
@@ -46,10 +88,7 @@ public:
         }
 
         void order_nodes_degree(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) { 
-                std::sort( ordered_nodes.begin(), ordered_nodes.end(), 
-                           [&]( const NodeID & lhs, const NodeID & rhs) -> bool {
-                                return (G.getNodeDegree(lhs) < G.getNodeDegree(rhs));
-                           });
+                order_nodes_degree_with_counting(config, G, ordered_nodes);
         }
 
         void order_leastghostnodes_nodes_degree(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) { 
