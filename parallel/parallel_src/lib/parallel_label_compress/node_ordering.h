@@ -92,17 +92,11 @@ public:
         }
 
         void order_leastghostnodes_nodes_degree(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) { 
-                std::sort( ordered_nodes.begin(), ordered_nodes.end(), 
-                           [&]( const NodeID & lhs, const NodeID & rhs) -> bool {
-                                return (G.getNodeDegree(lhs) < G.getNodeDegree(rhs));
-                           });
+                order_nodes_degree(config, G, ordered_nodes);
         }
 
 	void order_nodes_degree_leastghostnodes(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) { 
-                std::sort( ordered_nodes.begin(), ordered_nodes.end(), 
-                           [&]( const NodeID & lhs, const NodeID & rhs) -> bool {
-				return (G.getNodeDegree(lhs) < G.getNodeDegree(rhs));
-                           });
+                order_nodes_degree(config, G, ordered_nodes);
         }
 };
 
