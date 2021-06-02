@@ -9,6 +9,7 @@
 #define BALANCE_MANAGEMENT_COARSENING_TS6EZN5A
 
 #include "balance_management.h"
+#include "parallel_label_compress/hmap_wrapper.h"
 
 class parallel_graph_access;
 
@@ -25,7 +26,7 @@ public:
         virtual void update();
 
 private:
-        std::unordered_map< PartitionID, long > m_fuzzy_block_weights;
+        hmap_wrapper< std::unordered_map< PartitionID, NodeWeight> > m_fuzzy_block_weights;
 };
 
 
@@ -46,16 +47,8 @@ void balance_management_coarsening::setBlockSize( PartitionID block, NodeWeight 
 
 inline
 void balance_management_coarsening::update_non_contained_block_balance( PartitionID from, PartitionID to, NodeWeight node_weight) {
-        if( m_fuzzy_block_weights[from] == (long)node_weight) {
-                m_fuzzy_block_weights.erase(from);
-        } else {
-                m_fuzzy_block_weights[from] -= node_weight;
-        }
-        if( m_fuzzy_block_weights.find( to ) == m_fuzzy_block_weights.end() ) {
-                m_fuzzy_block_weights[to] = node_weight;
-        } else {
-                m_fuzzy_block_weights[to] += node_weight;
-        }
+        m_fuzzy_block_weights[from] -= node_weight;
+        m_fuzzy_block_weights[to] += node_weight;
 }
 
 #endif /* end of include guard: BALANCE_MANAGEMENT_COARSENING_TS6EZN5A */
