@@ -10,6 +10,7 @@
 
 
 #include <mpi.h>
+#include <algorithm>
 #include <unordered_map>
 #include <iostream>
 #include <ostream>
@@ -266,11 +267,9 @@ public:
         };
 
         PEID get_PEID_from_range_array(NodeID node) {
-                // TODO optimize with binary search
-                for( PEID peID = 1; peID < (PEID)m_range_array.size(); peID++) {
-                        if( node < m_range_array[peID] ) {
-                                return (peID-1);
-                        }
+                auto it = std::upper_bound(m_range_array.begin() + 1, m_range_array.end(), node);
+                if (it != m_range_array.end()) {
+                        return it - m_range_array.begin() - 1;
                 }
                 return -1;
         };
