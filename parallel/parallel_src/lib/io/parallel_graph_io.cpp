@@ -573,9 +573,45 @@ int parallel_graph_io::readGraphBinary(PPartitionConfig & config, parallel_graph
                         std::ifstream file;
                         file.open(filename.c_str(), std::ios::binary | std::ios::in);
 
-                        ULONG from = peID * ceil(n / (double)size);
-                        ULONG to   = (peID +1) * ceil(n / (double)size) - 1;
-                        to = std::min(to, n-1);
+                        auto upper_bound_in_offsets = [&file, &n](ULONG value) -> ULONG {
+                                ULONG l = 0;
+                                ULONG r = n;
+                                ULONG ans = n;
+                                while (l <= r) {
+                                        ULONG mid = l + (r - l) / 2;
+
+                                        ULONG start_pos = (header_count + mid)*(sizeof(ULONG));
+                                        NodeID vertex_offset;
+                                        file.seekg(start_pos);
+                                        file.read((char*)(&vertex_offset), sizeof(ULONG));
+
+                                        if (vertex_offset > value) {
+                                                ans = mid;
+                                                r = mid - 1;
+                                                if (mid == 0) break;
+                                        } else {
+                                                l = mid + 1;
+                                        }
+                                }
+                                return ans;
+                        };
+
+                        auto get_from_by_peid = [n, m, size, &upper_bound_in_offsets](PEID peID) -> ULONG {
+                                if (peID == 0) return 0;
+                                return upper_bound_in_offsets(
+                                        (header_count + n + 1) * sizeof(ULONG)
+                                        + (ULONG)(peID) * ceil(m / (double)size) * sizeof(ULONG));
+                        };
+
+                        auto get_to_by_peid = [n, m, size, &upper_bound_in_offsets](PEID peID) -> ULONG {
+                                if (peID == size - 1) return n - 1;
+                                return upper_bound_in_offsets(
+                                        (header_count + n + 1) * sizeof(ULONG)
+                                        + (ULONG)(peID + 1) * ceil(m / (double)size) * sizeof(ULONG)) - 1;
+                        };
+
+                        ULONG from = get_from_by_peid(peID);
+                        ULONG to = get_to_by_peid(peID);
 
                         ULONG local_no_nodes = to - from + 1;
                         std::cout <<  "peID " <<  peID <<  " from " <<  from <<  " to " <<  to  <<  " amount " <<  local_no_nodes << std::endl;
@@ -598,7 +634,7 @@ int parallel_graph_io::readGraphBinary(PPartitionConfig & config, parallel_graph
 
                         std::vector< NodeID > vertex_dist( size+1, 0 );
                         for( PEID peID = 0; peID <= size; peID++) {
-                                vertex_dist[peID] = peID * ceil(n / (double)size); // from positions
+                                vertex_dist[peID] = get_from_by_peid(peID); // from positions
                         }
                         G.set_range_array(vertex_dist);
 
