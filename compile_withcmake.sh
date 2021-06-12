@@ -48,7 +48,12 @@ fi
 
 
 cp ./build/libinterface_static.a deploy/libkahip.a
-cp ./build/libinterface.so deploy/libkahip.so
+if [[ "$unamestr" == "Linux" ]]; then
+  cp ./build/libinterface.so deploy/libkahip.so
+fi
+if [[ "$unamestr" == "Darwin" ]]; then
+  cp ./build/libinterface.dylib deploy/libkahip.dylib
+fi
 cp ./build/parallel/parallel_src/dsp* ./deploy/distributed_edge_partitioning
 cp ./build/parallel/parallel_src/g* ./deploy
 cp ./build/parallel/parallel_src/parhip* ./deploy/parhip
