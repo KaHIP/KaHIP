@@ -44,8 +44,9 @@ int main(int argn, char **argv) {
     PPartitionConfig partition_config;
     DspacConfig dspac_config;
     std::string graph_filename;
+    std::string partition_filename;
 
-    int ret_code = parse_dspac_parameters(argn, argv, partition_config, dspac_config, graph_filename);
+    int ret_code = parse_dspac_parameters(argn, argv, partition_config, dspac_config, graph_filename, partition_filename);
 
     if (ret_code) {
         MPI_Finalize();
@@ -114,13 +115,13 @@ int main(int argn, char **argv) {
 
     if( partition_config.save_partition ) {
             parallel_vector_io pvio;
-            std::string filename("tmpedgepartition.txtp");
+            std::string filename = partition_filename.empty() ? "tmpedgepartition.txtp" : partition_filename;
             pvio.writePartitionSimpleParallel(split_graph, filename);
     }
 
     if( partition_config.save_partition_binary ) {
             parallel_vector_io pvio;
-            std::string filename("tmpedgepartition.binp");
+            std::string filename = partition_filename.empty() ? "tmpedgepartition.binp" : partition_filename;
             pvio.writePartitionBinaryParallelPosix(partition_config, split_graph, filename);
     }
 
