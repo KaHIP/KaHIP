@@ -97,11 +97,11 @@ class maxNodeHeap : public priority_queue_interface {
 
 inline Gain maxNodeHeap::maxValue() {
         return m_heap[0].first;
-};
+}
 
 inline NodeID maxNodeHeap::maxElement() {
         return m_elements[m_heap[0].second].get_data().node;
-};
+}
 
 inline void maxNodeHeap::siftDown( int pos ) {
 
@@ -214,7 +214,7 @@ inline void maxNodeHeap::deleteNode(NodeID node) {
                 siftDown(heap_index);
                 siftUp(heap_index);
         }
-};
+}
 
 inline NodeID maxNodeHeap::deleteMax() {
         if( m_heap.size() > 0) {
@@ -255,7 +255,7 @@ inline void maxNodeHeap::changeKey(NodeID node, Gain gain) {
         } else if ( old_gain < gain ) {
                 increaseKey(node, gain);
         }
-};
+}
 
 inline void maxNodeHeap::decreaseKey(NodeID node, Gain gain) {
         ASSERT_TRUE(m_element_index.find(node) != m_element_index.end());
@@ -277,8 +277,7 @@ inline void maxNodeHeap::increaseKey(NodeID node, Gain gain) {
 
 inline Gain maxNodeHeap::getKey(NodeID node) {
         return m_heap[m_elements[m_element_index[node]].get_index()].first;
-};
-
+}
 
 inline bool maxNodeHeap::contains(NodeID node) {
        return m_element_index.find(node) != m_element_index.end();

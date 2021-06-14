@@ -1,5 +1,5 @@
 /******************************************************************************
- * flow_graph.h 
+ * flow_graph.h
  * *
  * Source of KaHIP -- Karlsruhe High Quality Partitioning.
  * Christian Schulz <christian.schulz.phone@gmail.com>
@@ -44,7 +44,7 @@ public:
                 m_num_nodes = nodes;
                 m_num_edges = edges;
         }
- 
+
         void finish_construction() {};
 
         NodeID number_of_nodes() {return m_num_nodes;};
@@ -57,7 +57,7 @@ public:
         void setEdgeFlow(NodeID source, EdgeID e, FlowType flow);
 
         EdgeID getReverseEdge(NodeID source, EdgeID e);
-        
+
         void new_edge(NodeID source, NodeID target, FlowType capacity) {
                m_adjacency_lists[source].push_back(rEdge(source, target, capacity, 0, m_adjacency_lists[target].size()));
                // for each edge we add a reverse edge
@@ -78,45 +78,45 @@ private:
 inline
 NodeID flow_graph::getEdgeCapacity(NodeID source, EdgeID e) {
 #ifdef NDEBUG
-        return m_adjacency_lists[source][e].capacity;        
+        return m_adjacency_lists[source][e].capacity;
 #else
-        return m_adjacency_lists.at(source).at(e).capacity;        
+        return m_adjacency_lists.at(source).at(e).capacity;
 #endif
-};
+}
 
 inline
 void flow_graph::setEdgeFlow(NodeID source, EdgeID e, FlowType flow) {
 #ifdef NDEBUG
-        m_adjacency_lists[source][e].flow = flow;        
+        m_adjacency_lists[source][e].flow = flow;
 #else
-        m_adjacency_lists.at(source).at(e).flow = flow;        
+        m_adjacency_lists.at(source).at(e).flow = flow;
 #endif
-};
+}
 
 inline
 FlowType flow_graph::getEdgeFlow(NodeID source, EdgeID e) {
 #ifdef NDEBUG
-        return m_adjacency_lists[source][e].flow;        
+        return m_adjacency_lists[source][e].flow;
 #else
-        return m_adjacency_lists.at(source).at(e).flow;        
+        return m_adjacency_lists.at(source).at(e).flow;
 #endif
-};
+}
 
 inline
 NodeID flow_graph::getEdgeTarget(NodeID source, EdgeID e) {
 #ifdef NDEBUG
-        return m_adjacency_lists[source][e].target;        
+        return m_adjacency_lists[source][e].target;
 #else
-        return m_adjacency_lists.at(source).at(e).target;        
+        return m_adjacency_lists.at(source).at(e).target;
 #endif
-};
+}
 
 inline
 EdgeID flow_graph::getReverseEdge(NodeID source, EdgeID e) {
 #ifdef NDEBUG
         return m_adjacency_lists[source][e].reverse_edge_index;
 #else
-        return m_adjacency_lists.at(source).at(e).reverse_edge_index;        
+        return m_adjacency_lists.at(source).at(e).reverse_edge_index;
 #endif
 
 }
