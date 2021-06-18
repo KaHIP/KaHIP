@@ -15,7 +15,7 @@ rm -rf build
 mkdir build
 cd build
 if [ "$1" == "BUILDPYTHONMODULE" ]; then
-cmake ../ -DCMAKE_BUILD_TYPE=Release 
+cmake ../ -DCMAKE_BUILD_TYPE=Release -DBUILDPYTHONMODULE=On
 else 
 cmake ../ -DCMAKE_BUILD_TYPE=Release $1
 fi
@@ -68,12 +68,8 @@ cp ./build/parallel/modified_kahip/lib*.a deploy/parallel/libkahip.a
 
 # maybe adapt paths here and python version here
 if [ "$1" == "BUILDPYTHONMODULE" ]; then
-cd misc/pymodule/
-PYTHONINCLUDEPATH=`python3 -c "from sysconfig import get_paths as gp; print(gp()['include'])"`
-g++ -O3 -Wall -shared -std=c++11 -fPIC `python3 -m pybind11 --includes` kahip.cpp -L../../deploy/ -lkahip -o kahip`python3-config --extension-suffix` -Ipybind11/include -I$PYTHONINCLUDEPATH
-cd ..; cd ..;
 cp misc/pymodule/call* deploy/
-cp misc/pymodule/kahip.cp* deploy/
+cp ./build/kahip.cp* deploy/
 fi
 
 
