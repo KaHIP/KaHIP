@@ -1,5 +1,5 @@
 #include <pybind11/pybind11.h>
-#include "../../interface/kaHIP_interface.h"
+#include "interface/kaHIP_interface.h"
 
 pybind11::object wrap_kaffpa(
                 const pybind11::object &vwgt,

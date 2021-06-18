@@ -15,7 +15,7 @@ project(KaHIP C CXX)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON) 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -42,7 +42,7 @@ if(COMPILER_SUPPORTS_WALL)
 endif()
 CHECK_CXX_COMPILER_FLAG(-march=native COMPILER_SUPPORTS_MARCH_NATIVE)
 if(COMPILER_SUPPORTS_MARCH_NATIVE)
-  if( NOT NONATIVEOPTIMIZATIONS ) 
+  if( NOT NONATIVEOPTIMIZATIONS )
           add_definitions(-march=native)
   endif()
 endif()
@@ -202,7 +202,7 @@ add_library(libmapping OBJECT ${LIBMAPPING_SOURCE_FILES})
 set(LIBSPAC_SOURCE_FILES lib/spac/spac.cpp)
 add_library(libspac OBJECT ${LIBSPAC_SOURCE_FILES})
 
-set(NODE_ORDERING_SOURCE_FILES 
+set(NODE_ORDERING_SOURCE_FILES
   lib/node_ordering/min_degree_ordering.cpp
   lib/node_ordering/nested_dissection.cpp
   lib/node_ordering/ordering_tools.cpp
@@ -321,7 +321,7 @@ if(LIB_METIS)
         target_link_libraries(interface_static PUBLIC ${LIB_METIS})
 endif()
 
-install(TARGETS interface_static 
+install(TARGETS interface_static
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include
@@ -348,4 +348,10 @@ if(USE_ILP)
 
 endif()
 
-
+# pybind11 module
+option(BUILDPYTHONMODULE "Build Python binding." OFF)
+if (BUILDPYTHONMODULE)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/misc/pymodule/pybind11)
+  pybind11_add_module(kahip_python_binding ${CMAKE_CURRENT_SOURCE_DIR}/misc/pymodule/kahip.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
+  set_target_properties(kahip_python_binding PROPERTIES OUTPUT_NAME "kahip")
+endif ()
