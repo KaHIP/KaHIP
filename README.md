@@ -310,7 +310,7 @@ import kahip;
 #build adjacency array representation of the graph
 xadj           = [0,2,5,7,9,12];
 adjncy         = [1,4,0,2,4,1,3,2,4,0,1,3];
-vwgt           = [1,1,1,1,1,1]
+vwgt           = [1,1,1,1,1]
 adjcwgt        = [1,1,1,1,1,1,1,1,1,1,1,1]
 supress_output = 0
 imbalance      = 0.03
