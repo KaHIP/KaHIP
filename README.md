@@ -57,7 +57,7 @@ Before you can start you need to install the following software packages:
 
 Once you installed the packages, just type 
 ```console
-./compile_withcmake.sh. 
+./compile_withcmake.sh 
 ```
 In this case, all binaries, libraries and headers are in the folder ./deploy/ 
 
