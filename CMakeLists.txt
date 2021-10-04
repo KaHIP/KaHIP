@@ -297,31 +297,31 @@ endif()
 
 
 # Shared interface library
-add_library(interface SHARED interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
+add_library(kahip SHARED interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
                                                            $<TARGET_OBJECTS:libmapping>
                                                            $<TARGET_OBJECTS:libnodeordering>)
-target_include_directories(interface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
-target_compile_definitions(interface PRIVATE "-DMODE_KAFFPA")
-target_link_libraries(interface PUBLIC ${OpenMP_CXX_LIBRARIES})
+target_include_directories(kahip PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
+target_compile_definitions(kahip PRIVATE "-DMODE_KAFFPA")
+target_link_libraries(kahip PUBLIC ${OpenMP_CXX_LIBRARIES})
 if(LIB_METIS)
-        target_link_libraries(interface PUBLIC ${LIB_METIS})
+        target_link_libraries(kahip PUBLIC ${LIB_METIS})
 endif()
-install(TARGETS interface DESTINATION lib)
+install(TARGETS kahip DESTINATION lib)
 
 # Static interface library
-add_library(interface_static interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
+add_library(kahip_static interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
                                                            $<TARGET_OBJECTS:libmapping>
                                                            $<TARGET_OBJECTS:libnodeordering>)
-target_include_directories(interface_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
-target_compile_definitions(interface_static PRIVATE "-DMODE_KAFFPA")
-target_link_libraries(interface_static PUBLIC ${OpenMP_CXX_LIBRARIES})
-set_target_properties(interface_static PROPERTIES PUBLIC_HEADER interface/kaHIP_interface.h)
+target_include_directories(kahip_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
+target_compile_definitions(kahip_static PRIVATE "-DMODE_KAFFPA")
+target_link_libraries(kahip_static PUBLIC ${OpenMP_CXX_LIBRARIES})
+set_target_properties(kahip_static PROPERTIES PUBLIC_HEADER interface/kaHIP_interface.h)
 
 if(LIB_METIS)
-        target_link_libraries(interface_static PUBLIC ${LIB_METIS})
+        target_link_libraries(kahip_static PUBLIC ${LIB_METIS})
 endif()
 
-install(TARGETS interface_static
+install(TARGETS kahip_static
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include
@@ -353,6 +353,6 @@ option(BUILDPYTHONMODULE "Build Python binding." OFF)
 if (BUILDPYTHONMODULE)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/misc/pymodule/pybind11)
   pybind11_add_module(kahip_python_binding ${CMAKE_CURRENT_SOURCE_DIR}/misc/pymodule/kahip.cpp)
-  target_link_libraries(kahip_python_binding PUBLIC interface_static)
+  target_link_libraries(kahip_python_binding PUBLIC kahip_static)
   set_target_properties(kahip_python_binding PROPERTIES OUTPUT_NAME "kahip")
 endif ()
