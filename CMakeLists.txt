@@ -60,9 +60,7 @@ if(COMPILER_SUPPORTS_NOSIGNCOMP)
 endif()
 
 
-
-# check dependencies
-find_package(MPI REQUIRED)
+# Check dependencies
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
   message(STATUS "OpenMP support detected")
@@ -95,17 +93,35 @@ if(OPTIMIZED_OUTPUT)
   add_definitions("-DKAFFPAOUTPUT")
 endif()
 
+
 # ParHIP
 option(PARHIP "build ParHIP" ON)
 
 option(DETERMINISTIC_PARHIP "enforce deterministic computations in ParHIP" OFF)
+
+if(PARHIP)
+  message(STATUS "ParHIP build requested")
+  find_package(MPI REQUIRED)
+else()
+  message(STATUS "ParHIP build disabled")
+endif()
+
+# Report which MPI we actually found,
+# may need use MPI_HOME hint to get the proper one (eg, on openSUSE)
+#
+if(${MPI_C_FOUND})
+message("MPI detected (can use MPI_HOME hint to direct the detection...)")
+message(STATUS "MPI include: ${MPI_C_INCLUDE_DIRS}")
+message(STATUS "MPI library: ${MPI_C_LIBRARIES}")
+endif()
+
 
 # tcmalloc
 option(USE_TCMALLOC "if available, link against tcmalloc" OFF)
 
 
 
-# ILP improver 
+# ILP improver
 option(USE_ILP "build local ILP improver - introduces dependency on Gurobi" OFF)
 
 
