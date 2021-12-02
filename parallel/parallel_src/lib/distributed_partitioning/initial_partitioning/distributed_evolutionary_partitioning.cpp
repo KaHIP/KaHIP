@@ -113,6 +113,24 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
         std::cout.rdbuf(ofs.rdbuf()); 
 #endif
 
+#ifdef DETERMINISTIC_PARHIP
+        kaffpaE(&n, 
+                vwgt, 
+                xadj, 
+                adjwgt, 
+                adjncy, 
+                &nparts, 
+                &inbalance, 
+                false,  // supress output
+                graph_partitioned,
+                0, // time limit set to zero, so only the initial population is created
+                config.seed, 
+                mode,
+                communicator, 
+                &edgecut, 
+                &balance, 
+                partition_map);
+#else
         kaffpaE(&n, 
                 vwgt, 
                 xadj, 
@@ -129,6 +147,7 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
                 &edgecut, 
                 &balance, 
                 partition_map);
+#endif
 
         
 

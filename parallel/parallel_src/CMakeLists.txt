@@ -2,6 +2,10 @@ if(NOT OPTIMIZED_OUTPUT)
   add_definitions("-DNOOUTPUT")
 endif()
 
+if(DETERMINISTIC_PARHIP)
+  add_definitions("-DDETERMINISTIC_PARHIP")
+endif()
+
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/app)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib/tools)

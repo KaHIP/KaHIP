@@ -30,6 +30,8 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 *Global Multisection Mapping*: we added global multisection n-to-1 process mapping algorithms. This compute better process mapping for parallel applications if information about the system hierarchy/architecture is known.
 
+*Determinism in ParHIP*: we added an option to run ParHIP deterministically, i.e. two runs of ParHIP using the same seed will always return the same result.
+
 ## NEW in v2.10: 
 *ParHIP (Parallel High Quality Partitioning):* Our distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks.
 
@@ -80,7 +82,13 @@ If you use the option -DUSE_ILP=On and you have Gurobi installed, the build scri
 ```console 
 ./compile_withcmake -DUSE_ILP=On
 ```
-Lastly, we also provide an option to support 64 bit edges. In order to use this, compile KaHIP with the option -D64BITMODE=On.
+We also provide an option to support 64 bit edges. In order to use this, compile KaHIP with the option -D64BITMODE=On.
+
+
+Lastly, we provide an option for determinism in ParHIP, e.g. two runs with the same seed will give you the same result. Note however that this option can reduce the quality of partitions, as initial partitioning algorithms do not use sophisticated memetic algorithms, but only multilevel algorithms to compute initial partitionings. ONLY use this option if you use ParHIP as a tool. Do not use this option if you want to make quality comparisons against ParHIP. To make use of this option, run 
+```console 
+./compile_withcmake -DDETERMINISTIC_PARHIP=On
+```
 
 Running Programs
 =====

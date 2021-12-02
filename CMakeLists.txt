@@ -95,8 +95,11 @@ endif()
 # ParHIP
 option(PARHIP "build ParHIP" ON)
 
+option(DETERMINISTIC_PARHIP "enforce deterministic computations in ParHIP" OFF)
+
 # tcmalloc
 option(USE_TCMALLOC "if available, link against tcmalloc" OFF)
+
 
 
 # ILP improver 
