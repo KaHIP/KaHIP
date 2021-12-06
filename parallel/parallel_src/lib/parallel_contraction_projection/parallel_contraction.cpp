@@ -422,6 +422,7 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
 
         hashed_graph local_graph;
         for( PEID peID = 0; peID < size; peID++) {
+                if(local_msg_byPE[peID].size() > 0) {
                 for( ULONG i = 0; i < local_msg_byPE[peID].size()-2; i+=3) {
                         hashed_edge he;
                         he.k = number_of_cnodes;
@@ -429,7 +430,7 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
                         he.target = local_msg_byPE[peID][i+1];
 
                         local_graph[he].weight += local_msg_byPE[peID][i+2];
-                }
+                }}
         }
 
 
