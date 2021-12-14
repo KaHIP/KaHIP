@@ -1,4 +1,4 @@
-KaHIP v3.13  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
+KaHIP v3.14  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
 [![Build Status](https://travis-ci.org/KaHIP/KaHIP.svg?branch=master)](https://travis-ci.org//KaHIP) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fschulzchristian%2FKaHIP.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fschulzchristian%2FKaHIP?ref=badge_shield)
@@ -15,7 +15,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 </p>
 
 
-## NEW in v3.10:
+## NEW in v3.14:
 **Support for Python**: KaHIP can now also be used in Python. See below how to do that.
 
 *Node Ordering Algorithms*: Many applications rely on time-intensive matrix operations, such as factorization, which can be sped up significantly for large sparse matrices by interpreting the matrix as a sparse graph and computing a node ordering that minimizes the so-called fill-in. Here, we added new algorithms to compute fill-in reduced orderings in graphs.
@@ -31,6 +31,8 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 *Global Multisection Mapping*: we added global multisection n-to-1 process mapping algorithms. This compute better process mapping for parallel applications if information about the system hierarchy/architecture is known.
 
 *Determinism in ParHIP*: we added an option to run ParHIP deterministically, i.e. two runs of ParHIP using the same seed will always return the same result.
+
+*Version Flag*: we added an option to output the version that you are currently using, use the --version option of the programs.
 
 ## NEW in v2.10: 
 *ParHIP (Parallel High Quality Partitioning):* Our distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks.
