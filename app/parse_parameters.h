@@ -13,6 +13,7 @@
 #include <string>
 #include <sstream>
 #include "configuration.h"
+#include "version.h"
 
 int parse_parameters(int argn, char **argv, 
                      PartitionConfig & partition_config, 
@@ -46,6 +47,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_str *filename                             = arg_strn(NULL, NULL, "FILE", 1, 1, "Path to graph file to partition.");
         struct arg_str *filename_output                      = arg_str0(NULL, "output_filename", NULL, "Specify the name of the output file (that contains the partition).");
         struct arg_int *user_seed                            = arg_int0(NULL, "seed", NULL, "Seed to use for the PRNG.");
+        struct arg_lit *version                              = arg_lit0(NULL, "version", "Print version number of KaHIP.");
 #ifndef MODE_GLOBALMS
         struct arg_int *k                                    = arg_int1(NULL, "k", NULL, "Number of blocks to partition the graph.");
 #else
@@ -208,7 +210,7 @@ int parse_parameters(int argn, char **argv,
 
         // Define argtable.
         void* argtable[] = {
-                help, filename, user_seed,
+                help, filename, user_seed, version, 
 #ifdef MODE_DEVEL
                 k, graph_weighted, imbalance, edge_rating_tiebreaking, 
                 matching_type, edge_rating, rate_first_level_inner_outer, first_level_random_matching, 
@@ -342,6 +344,11 @@ int parse_parameters(int argn, char **argv,
         // Parse arguments.
         int nerrors = arg_parse(argn, argv, argtable);
 
+        if (version->count > 0) {
+                std::cout <<  KAHIPVERSION  << std::endl;
+                return 1;
+        }
+
         // Catch case that help was requested.
         if (help->count > 0) {
                 printf("Usage: %s", progname);
@@ -350,7 +357,6 @@ int parse_parameters(int argn, char **argv,
                 arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
                 return 1;
         }
-
 
         if (nerrors > 0) {
                 arg_print_errors(stderr, end, progname);
