@@ -77,6 +77,9 @@ find_library(LIB_METIS metis)
 if(LIB_METIS)
   message(STATUS "Metis support detected")
   add_definitions("-DUSEMETIS")
+  if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    include_directories(/usr/local/include)
+  endif()
 endif()
 
 # 64 Bit option
@@ -273,7 +276,7 @@ install(TARGETS interface_test DESTINATION bin)
 add_executable(kaffpaE app/kaffpaE.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping> $<TARGET_OBJECTS:libkaffpa_parallel>)
 target_compile_definitions(kaffpaE PRIVATE "-DMODE_KAFFPAE")
 target_include_directories(kaffpaE PUBLIC ${MPI_CXX_INCLUDE_PATH})
-target_link_libraries(kaffpaE ${MPI_CXX_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
+target_link_libraries(kaffpaE ${MPI_CXX_LIBRARIES} ${OpenMP_CXX_LIBRARIES} OpenMP::OpenMP_CXX )
 install(TARGETS kaffpaE DESTINATION bin)
 
 add_executable(graphchecker app/graphchecker.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
