@@ -8,8 +8,9 @@
 
 #ifndef PARSE_PARAMETERS_GPJMGSM8
 #define PARSE_PARAMETERS_GPJMGSM8
-
+#ifdef USE_OPENMP
 #include <omp.h>
+#endif
 #include <string>
 #include <sstream>
 #include "configuration.h"

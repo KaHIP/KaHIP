@@ -26,6 +26,7 @@
 #include "quality_metrics.h"
 #include "random_functions.h"
 #include "timer.h"
+#include <omp.h>
 
 int main(int argn, char **argv) {
 
