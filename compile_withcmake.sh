@@ -1,15 +1,17 @@
 #!/bin/bash
 cd "${0%/*}" || exit  # Run from current directory (source directory) or exit
 
-case "$(uname)" in
-Darwin)
-    NCORES=$(sysctl -n hw.ncpu)
-    ;;
-*)
-    NCORES=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
-    ;;
-esac
-[ -n "$NCORES" ] || NCORES=4
+if [[ -z "$NCORES" ]]; then 
+    case "$(uname)" in
+        Darwin)
+            NCORES=$(sysctl -n hw.ncpu)
+            ;;
+        *)
+            NCORES=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
+            ;;
+    esac
+    [ -n "$NCORES" ] || NCORES=4
+fi
 
 rm -rf deploy
 rm -rf build
