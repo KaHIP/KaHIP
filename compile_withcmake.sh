@@ -16,11 +16,14 @@ rm -rf build
 mkdir build
 
 if [ "$1" == "BUILDPYTHONMODULE" ]; then
-    cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DBUILDPYTHONMODULE=On
-else
-    cmake -B build -S . -DCMAKE_BUILD_TYPE=Release $1
+    ADDITIONAL_ARGS="-DBUILDPYTHONMODULE=On"
+else 
+    ADDITIONAL_ARGS="$1"
 fi
-(cd build && make -j $NCORES)
+
+(cd build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release $ADDITIONAL_ARGS && \
+    make -j $NCORES)
 
 echo
 echo "Copying files into 'deploy'"
