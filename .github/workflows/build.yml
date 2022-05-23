@@ -1,0 +1,38 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        compiler:
+          - { name: Clang, cc: clang, cxx: clang++ }
+          - { name: GNU, cc: gcc, cxx: g++ }
+        argument: ["", "BUILDPYTHONMODULE", "-DDETERMINISTIC_PARHIP=On"]
+    timeout-minutes: 60
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install -y libopenmpi-dev 
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+    - name: Export compiler
+      run: |
+        echo CXX=${{ matrix.compiler.cxx }} >> $GITHUB_ENV
+        echo CC=${{ matrix.compiler.cc }} >> $GITHUB_ENV
+    - name: Build 
+      run: ./compile_withcmake.sh ${{ matrix.argument }}
+    - name: Test Python interface 
+      if: matrix.argument == 'BUILDPYTHONMODULE'
+      run: python3 ./deploy/callkahipfrompython.py
+
