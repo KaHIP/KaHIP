@@ -23,6 +23,10 @@ jobs:
     steps:
     - name: Install dependencies
       run: sudo apt-get install -y libopenmpi-dev 
+    - name: Checkout
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
     - name: Export compiler
       run: |
         echo CXX=${{ matrix.compiler.cxx }} >> $GITHUB_ENV
