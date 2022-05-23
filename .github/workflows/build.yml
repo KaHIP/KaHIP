@@ -22,13 +22,14 @@ jobs:
     timeout-minutes: 60
     steps:
     - name: Install dependencies
-      run: sudo apt-get install -y libopenmpi3 libopenmpi-dev 
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
-    - name: export-compiler
+      run: sudo apt-get install -y libopenmpi-dev 
+    - name: Export compiler
       run: |
         echo CXX=${{ matrix.compiler.cxx }} >> $GITHUB_ENV
         echo CC=${{ matrix.compiler.cc }} >> $GITHUB_ENV
-    - name: build 
+    - name: Build 
       run: ./compile_withcmake.sh ${{ matrix.argument }}
+    - name: Test Python interface 
+      if: matrix.argument == 'BUILDPYTHONMODULE'
+      run: python4 ./deploy/callkahipfrompython.py
+
