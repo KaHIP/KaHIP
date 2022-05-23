@@ -18,7 +18,7 @@ jobs:
         compiler:
           - { name: Clang, cc: clang, cxx: clang++ }
           - { name: GNU, cc: gcc, cxx: g++ }
-        argument: ["", "BUILDPYTHONMODULE", "-DUSE_ILP=On", "-DDETERMINISTIC_PARHIP=On"]
+        argument: ["", "BUILDPYTHONMODULE", "-DDETERMINISTIC_PARHIP=On"]
     timeout-minutes: 60
     steps:
     - name: Install dependencies
