@@ -24,7 +24,7 @@ else
 fi
 
 (cd build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release "$ADDITIONAL_ARGS" && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release $ADDITIONAL_ARGS && \
     make -j $NCORES)
 
 echo
