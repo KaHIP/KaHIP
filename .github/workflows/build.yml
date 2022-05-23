@@ -34,5 +34,5 @@ jobs:
       run: ./compile_withcmake.sh ${{ matrix.argument }}
     - name: Test Python interface 
       if: matrix.argument == 'BUILDPYTHONMODULE'
-      run: python4 ./deploy/callkahipfrompython.py
+      run: python3 ./deploy/callkahipfrompython.py
 
