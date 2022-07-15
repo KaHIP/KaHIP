@@ -1,26 +1,31 @@
 #!/bin/bash
 cd "${0%/*}" || exit  # Run from current directory (source directory) or exit
 
-case "$(uname)" in
-Darwin)
-    NCORES=$(sysctl -n hw.ncpu)
-    ;;
-*)
-    NCORES=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
-    ;;
-esac
-[ -n "$NCORES" ] || NCORES=4
+if [[ -z "$NCORES" ]]; then 
+    case "$(uname)" in
+        Darwin)
+            NCORES=$(sysctl -n hw.ncpu)
+            ;;
+        *)
+            NCORES=$(getconf _NPROCESSORS_ONLN 2>/dev/null)
+            ;;
+    esac
+    [ -n "$NCORES" ] || NCORES=4
+fi
 
 rm -rf deploy
 rm -rf build
 mkdir build
 
 if [ "$1" == "BUILDPYTHONMODULE" ]; then
-    cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DBUILDPYTHONMODULE=On
-else
-    cmake -B build -S . -DCMAKE_BUILD_TYPE=Release $1
+    ADDITIONAL_ARGS="-DBUILDPYTHONMODULE=On"
+else 
+    ADDITIONAL_ARGS="$1"
 fi
-(cd build && make -j $NCORES)
+
+(cd build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release $ADDITIONAL_ARGS && \
+    make -j $NCORES)
 
 echo
 echo "Copying files into 'deploy'"

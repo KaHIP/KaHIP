@@ -65,6 +65,8 @@ Once you installed the packages, just type
 ```
 In this case, all binaries, libraries and headers are in the folder ./deploy/ 
 
+Note that this script detects the amount of available cores on your machine and uses all of them for the compilation process. If you don't want that, set the variable NCORES to the number of cores that you would like to use for compilation. 
+
 Alternatively use the standard cmake build process:
 ```console 
 mkdir build
