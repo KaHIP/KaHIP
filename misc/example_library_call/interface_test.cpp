@@ -32,10 +32,10 @@ int main(int argn, char **argv) {
 
         //void kaffpa(int* n, int* vwgt, int* xadj, 
                    //int* adjcwgt, int* adjncy, int* nparts, 
-                   //double* imbalance,  bool suppress_output, bool perfectly_balance, int seed, int mode, 
+                   //double* imbalance,  bool suppress_output, int seed, int mode, 
                    //int* edgecut, int* part);
 
-        kaffpa(&n, vwgt, xadj, adjcwgt, adjncy, &nparts, &imbalance, false, false, 0, ECO, & edge_cut, part);
+        kaffpa(&n, vwgt, xadj, adjcwgt, adjncy, &nparts, &imbalance, false, 0, ECO, & edge_cut, part);
 
         std::cout <<  "edge cut " <<  edge_cut  << std::endl;
 
