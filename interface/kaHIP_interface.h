@@ -29,7 +29,15 @@ const int MAPMODE_BISECTION = 1;
 // part has to be an array of n ints
 void kaffpa(int* n, int* vwgt, int* xadj, 
                    int* adjcwgt, int* adjncy, int* nparts, 
-                   double* imbalance,  bool suppress_output, int seed, int mode, 
+                   double* imbalance, bool suppress_output, int seed, int mode, 
+                   int* edgecut, int* part);
+
+// same as kaffpa, provides an additional parameter for perfect balance
+void kaffpa_balance(int* n, int* vwgt, int* xadj, 
+                   int* adjcwgt, int* adjncy, int* nparts, 
+                   double* imbalance, 
+                   bool perfectly_balance, 
+                   bool suppress_output, int seed, int mode, 
                    int* edgecut, int* part);
 
 // balance constraint on nodes and edges

@@ -25,6 +25,7 @@
 #include "../lib/partition/partition_config.h"
 #include "../lib/partition/graph_partitioner.h"
 #include "../lib/partition/uncoarsening/separator/vertex_separator_algorithm.h"
+#include "../lib/partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
 #include "../app/configuration.h"
 #include "../app/balance_configuration.h"
 #include "../lib/data_structure/matrix/normal_matrix.h"
@@ -33,6 +34,34 @@
 
 
 using namespace std;
+
+void internal_kaffpa_set_configuration( configuration & cfg,
+                                 PartitionConfig & partition_config,
+                                 int mode) {
+        switch( mode ) {
+                case FAST: 
+                        cfg.fast(partition_config);
+                        break;
+                case ECO: 
+                        cfg.eco(partition_config);
+                        break;
+                case STRONG: 
+                        cfg.strong(partition_config);
+                        break;
+                case FASTSOCIAL: 
+                        cfg.fastsocial(partition_config);
+                        break;
+                case ECOSOCIAL: 
+                        cfg.ecosocial(partition_config);
+                        break;
+                case STRONGSOCIAL: 
+                        cfg.strongsocial(partition_config);
+                        break;
+                default: 
+                        cfg.eco(partition_config);
+                        break;
+        }
+}
 
 void internal_build_graph( PartitionConfig & partition_config, 
                            int* n, 
@@ -72,6 +101,7 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
                           int* adjncy, 
                           int* nparts, 
                           double* imbalance, 
+                          bool perfectly_balance,
                           int* edgecut, 
                           int* part) {
 
@@ -83,11 +113,24 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
         //}
 
         partition_config.imbalance = 100*(*imbalance);
+        partition_config.kaffpa_perfectly_balance = perfectly_balance;
         graph_access G;     
         internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
 
         graph_partitioner partitioner;
         partitioner.perform_partitioning(partition_config, G);
+
+        if( partition_config.kaffpa_perfectly_balance ) {
+                double epsilon                         = partition_config.imbalance/100.0;
+                partition_config.upper_bound_partition = (1+epsilon)*ceil(partition_config.largest_graph_weight/(double)partition_config.k);
+
+                complete_boundary boundary(&G);
+                boundary.build();
+
+                cycle_refinement cr;
+                cr.perform_refinement(partition_config, G, boundary);
+        }
+
 
         forall_nodes(G, node) {
                 part[node] = G.getPartitionIndex(node);
@@ -116,32 +159,33 @@ void kaffpa(int* n,
         PartitionConfig partition_config;
         partition_config.k = *nparts;
 
-        switch( mode ) {
-                case FAST: 
-                        cfg.fast(partition_config);
-                        break;
-                case ECO: 
-                        cfg.eco(partition_config);
-                        break;
-                case STRONG: 
-                        cfg.strong(partition_config);
-                        break;
-                case FASTSOCIAL: 
-                        cfg.fastsocial(partition_config);
-                        break;
-                case ECOSOCIAL: 
-                        cfg.ecosocial(partition_config);
-                        break;
-                case STRONGSOCIAL: 
-                        cfg.strongsocial(partition_config);
-                        break;
-                default: 
-                        cfg.eco(partition_config);
-                        break;
-        }
+        internal_kaffpa_set_configuration(cfg, partition_config, mode);
 
         partition_config.seed = seed;
-        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
+        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, false, edgecut, part);
+}
+
+void kaffpa_balance(int* n, 
+                   int* vwgt, 
+                   int* xadj, 
+                   int* adjcwgt, 
+                   int* adjncy, 
+                   int* nparts, 
+                   double* imbalance, 
+                   bool perfectly_balance, 
+                   bool suppress_output, 
+                   int seed, 
+                   int mode, 
+                   int* edgecut, 
+                   int* part) {
+        configuration cfg;
+        PartitionConfig partition_config;
+        partition_config.k = *nparts;
+
+        internal_kaffpa_set_configuration(cfg, partition_config, mode);
+
+        partition_config.seed = seed;
+        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, perfectly_balance, edgecut, part);
 }
 
 void kaffpa_balance_NE(int* n, 
@@ -160,33 +204,11 @@ void kaffpa_balance_NE(int* n,
         PartitionConfig partition_config;
         partition_config.k = *nparts;
 
-        switch( mode ) {
-                case FAST: 
-                        cfg.fast(partition_config);
-                        break;
-                case ECO: 
-                        cfg.eco(partition_config);
-                        break;
-                case STRONG: 
-                        cfg.strong(partition_config);
-                        break;
-                case FASTSOCIAL: 
-                        cfg.fastsocial(partition_config);
-                        break;
-                case ECOSOCIAL: 
-                        cfg.ecosocial(partition_config);
-                        break;
-                case STRONGSOCIAL: 
-                        cfg.strongsocial(partition_config);
-                        break;
-                default: 
-                        cfg.eco(partition_config);
-                        break;
-        }
+        internal_kaffpa_set_configuration(cfg, partition_config, mode);
 
         partition_config.seed = seed;
         partition_config.balance_edges = true;
-        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
+        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, false, edgecut, part);
 }
 
 void internal_nodeseparator_call(PartitionConfig & partition_config, 
