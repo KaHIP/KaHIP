@@ -111,7 +111,7 @@ option(USE_ILP "build local ILP improver - introduces dependency on Gurobi" OFF)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/app)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/extern/argtable3-3.0.3)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/extern/argtable3-3.2.1)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/io)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/partition)
@@ -180,7 +180,7 @@ set(LIBKAFFPA_SOURCE_FILES
   lib/algorithms/cycle_search.cpp
   lib/partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.cpp
   lib/partition/uncoarsening/refinement/tabu_search/tabu_search.cpp
-  extern/argtable3-3.0.3/argtable3.c)
+  extern/argtable3-3.2.1/argtable3.c)
 add_library(libkaffpa OBJECT ${LIBKAFFPA_SOURCE_FILES})
 
 set(LIBKAFFPA_PARALLEL_SOURCE_FILES
