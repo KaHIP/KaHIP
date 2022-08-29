@@ -11,7 +11,7 @@
 #include "data_structure/graph_access.h"
 #include "definitions.h"
 
-class compare_rating : public std::binary_function<EdgeRatingType, EdgeRatingType, bool> {
+class compare_rating {
         public:
                 compare_rating(graph_access * pG) : G(pG) {};
                 virtual ~compare_rating() {};
