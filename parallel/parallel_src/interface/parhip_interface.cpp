@@ -142,6 +142,7 @@ void ParHIPPartitionKWay(idxtype *vtxdist, idxtype *xadj, idxtype *adjncy, idxty
         distributed_partitioner dpart;
         dpart.perform_partitioning( *comm, partition_config, G);
         MPI_Barrier(*comm);
+        double running_time = t.elapsed();
 
         ofs.close();
         std::cout.rdbuf(backup);
@@ -149,9 +150,19 @@ void ParHIPPartitionKWay(idxtype *vtxdist, idxtype *xadj, idxtype *adjncy, idxty
         distributed_quality_metrics qm;
         *edgecut = qm.edge_cut( G, *comm );
 
+        if (!suppress_output) {
+                double balance  = qm.balance( partition_config, G, *comm );
+                if (rank == 0) {
+                        std::cout << "log>" << "=====================================" << std::endl;
+                        std::cout << "log>" << "============AND WE R DONE============" << std::endl;
+                        std::cout << "log>" << "=====================================" << std::endl;
+                        std::cout <<  "log>total partitioning time elapsed " << running_time << std::endl;
+                        std::cout <<  "log>final edge cut " <<  *edgecut  << std::endl;
+                        std::cout <<  "log>final balance "  <<  balance   << std::endl;
+                }
+        }
+
         for (NodeID i = 0; i < local_number_of_nodes; ++i) {
                 part[i] = G.getNodeLabel(i);
         }
-
-
 }
