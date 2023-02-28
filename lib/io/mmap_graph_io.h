@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cctype>
+#include <cstdint>
 #include <cstring>
 #include <fcntl.h>
 #include <fstream>
