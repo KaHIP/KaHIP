@@ -27,7 +27,7 @@ jobs:
         echo CXX=${{ matrix.compiler.cxx }} >> $GITHUB_ENV
         echo CC=${{ matrix.compiler.cc }} >> $GITHUB_ENV
     - name: Build 
-      run: ./compile_withcmake.sh 
+      run: ./compile_withcmake.sh -DNOMPI=On
     - name: Test Python interface 
       if: matrix.argument == 'BUILDPYTHONMODULE'
       run: python3 ./deploy/callkahipfrompython.py

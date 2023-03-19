@@ -94,30 +94,33 @@ if(OPTIMIZED_OUTPUT)
 endif()
 
 
+# Optionally disable all MPI-dependent targets
+option(NOMPI "disable all targets that depend on MPI (kaffpaE, ParHIP)" OFF)
+
 # ParHIP
 option(PARHIP "build ParHIP" ON)
-
 option(DETERMINISTIC_PARHIP "enforce deterministic computations in ParHIP" OFF)
 
 # Look for MPI (needed for ParHIP and kaffpaE)
 # Report which MPI we actually found,
 # may need use MPI_HOME hint to get the proper one (eg, on openSUSE)
-find_package(MPI)
+if(NOT NOMPI)
+  # Always look for MPI since kaffpaE also requires it
+  find_package(MPI REQUIRED)
 
-if(${MPI_C_FOUND})
-  message("MPI detected (can use MPI_HOME hint to direct the detection...)")
-  message(STATUS "MPI include: ${MPI_C_INCLUDE_DIRS}")
-  message(STATUS "MPI library: ${MPI_C_LIBRARIES}")
-  if(PARHIP)
-    message(STATUS "ParHIP build requested and MPI is available: will build ParHIP")
+  if(${MPI_C_FOUND})
+    message("MPI detected (can use MPI_HOME hint to direct the detection...)")
+    message(STATUS "MPI include: ${MPI_C_INCLUDE_DIRS}")
+    message(STATUS "MPI library: ${MPI_C_LIBRARIES}")
   endif()
-elseif(PARHIP)
-  message(STATUS "ParHIP build requested but MPI is not available: will not build ParHIP")
-  set(PARHIP OFF)
-endif()
 
-if (NOT PARHIP)
-  message(STATUS "ParHIP build disabled")
+  if(PARHIP)
+    message(STATUS "ParHIP build requested")
+  else()
+    message(STATUS "ParHIP build disabled")
+  endif()
+else()
+  message(STATUS "Build without MPI dependency: kaffpaE and ParHIP disabled")
 endif()
 
 
@@ -203,7 +206,7 @@ set(LIBKAFFPA_SOURCE_FILES
   extern/argtable3-3.2.1/argtable3.c)
 add_library(libkaffpa OBJECT ${LIBKAFFPA_SOURCE_FILES})
 
-if(${MPI_C_FOUND})
+if(NOT NOMPI)
   set(LIBKAFFPA_PARALLEL_SOURCE_FILES
     lib/parallel_mh/parallel_mh_async.cpp
     lib/parallel_mh/population.cpp
@@ -295,14 +298,12 @@ if(LIB_METIS)
 endif()
 install(TARGETS interface_test DESTINATION bin)
 
-if(${MPI_C_FOUND})
+if(NOT NOMPI)
   add_executable(kaffpaE app/kaffpaE.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping> $<TARGET_OBJECTS:libkaffpa_parallel>)
   target_compile_definitions(kaffpaE PRIVATE "-DMODE_KAFFPAE")
   target_include_directories(kaffpaE PUBLIC ${MPI_CXX_INCLUDE_PATH})
   target_link_libraries(kaffpaE ${MPI_CXX_LIBRARIES} ${OpenMP_CXX_LIBRARIES} OpenMP::OpenMP_CXX )
   install(TARGETS kaffpaE DESTINATION bin)
-else()
-  message(STATUS "MPI unavailable: will not build the evolutionary partitioner kaffpaE")
 endif()
 
 add_executable(graphchecker app/graphchecker.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
@@ -360,7 +361,7 @@ install(TARGETS kahip_static
         )
 
 # ParHIP
-if(PARHIP)
+if(NOT NOMPI AND PARHIP)
   add_subdirectory(parallel/modified_kahip)
   add_subdirectory(parallel/parallel_src)
 endif()
