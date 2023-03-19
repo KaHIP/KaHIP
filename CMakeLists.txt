@@ -94,31 +94,38 @@ if(OPTIMIZED_OUTPUT)
 endif()
 
 
+# Optionally disable all MPI-dependent targets
+option(NOMPI "disable all targets that depend on MPI (kaffpaE, ParHIP)" OFF)
+
 # ParHIP
 option(PARHIP "build ParHIP" ON)
-
 option(DETERMINISTIC_PARHIP "enforce deterministic computations in ParHIP" OFF)
 
-if(PARHIP)
-  message(STATUS "ParHIP build requested")
-  find_package(MPI REQUIRED)
-else()
-  message(STATUS "ParHIP build disabled")
-endif()
-
+# Look for MPI (needed for ParHIP and kaffpaE)
 # Report which MPI we actually found,
 # may need use MPI_HOME hint to get the proper one (eg, on openSUSE)
-#
-if(${MPI_C_FOUND})
-message("MPI detected (can use MPI_HOME hint to direct the detection...)")
-message(STATUS "MPI include: ${MPI_C_INCLUDE_DIRS}")
-message(STATUS "MPI library: ${MPI_C_LIBRARIES}")
+if(NOT NOMPI)
+  # Always look for MPI since kaffpaE also requires it
+  find_package(MPI REQUIRED)
+
+  if(${MPI_C_FOUND})
+    message("MPI detected (can use MPI_HOME hint to direct the detection...)")
+    message(STATUS "MPI include: ${MPI_C_INCLUDE_DIRS}")
+    message(STATUS "MPI library: ${MPI_C_LIBRARIES}")
+  endif()
+
+  if(PARHIP)
+    message(STATUS "ParHIP build requested")
+  else()
+    message(STATUS "ParHIP build disabled")
+  endif()
+else()
+  message(STATUS "Build without MPI dependency: kaffpaE and ParHIP disabled")
 endif()
 
 
 # tcmalloc
 option(USE_TCMALLOC "if available, link against tcmalloc" OFF)
-
 
 
 # ILP improver
@@ -199,16 +206,18 @@ set(LIBKAFFPA_SOURCE_FILES
   extern/argtable3-3.2.1/argtable3.c)
 add_library(libkaffpa OBJECT ${LIBKAFFPA_SOURCE_FILES})
 
-set(LIBKAFFPA_PARALLEL_SOURCE_FILES
-  lib/parallel_mh/parallel_mh_async.cpp
-  lib/parallel_mh/population.cpp
-  lib/parallel_mh/galinier_combine/gal_combine.cpp
-  lib/parallel_mh/galinier_combine/construct_partition.cpp
-  lib/parallel_mh/exchange/exchanger.cpp
-  lib/tools/graph_communication.cpp
-  lib/tools/mpi_tools.cpp)
-add_library(libkaffpa_parallel OBJECT ${LIBKAFFPA_PARALLEL_SOURCE_FILES})
-target_include_directories(libkaffpa_parallel PUBLIC ${MPI_CXX_INCLUDE_PATH})
+if(NOT NOMPI)
+  set(LIBKAFFPA_PARALLEL_SOURCE_FILES
+    lib/parallel_mh/parallel_mh_async.cpp
+    lib/parallel_mh/population.cpp
+    lib/parallel_mh/galinier_combine/gal_combine.cpp
+    lib/parallel_mh/galinier_combine/construct_partition.cpp
+    lib/parallel_mh/exchange/exchanger.cpp
+    lib/tools/graph_communication.cpp
+    lib/tools/mpi_tools.cpp)
+  add_library(libkaffpa_parallel OBJECT ${LIBKAFFPA_PARALLEL_SOURCE_FILES})
+  target_include_directories(libkaffpa_parallel PUBLIC ${MPI_CXX_INCLUDE_PATH})
+endif()
 
 set(LIBMAPPING_SOURCE_FILES
   lib/mapping/local_search_mapping.cpp
@@ -289,11 +298,13 @@ if(LIB_METIS)
 endif()
 install(TARGETS interface_test DESTINATION bin)
 
-add_executable(kaffpaE app/kaffpaE.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping> $<TARGET_OBJECTS:libkaffpa_parallel>)
-target_compile_definitions(kaffpaE PRIVATE "-DMODE_KAFFPAE")
-target_include_directories(kaffpaE PUBLIC ${MPI_CXX_INCLUDE_PATH})
-target_link_libraries(kaffpaE ${MPI_CXX_LIBRARIES} ${OpenMP_CXX_LIBRARIES} OpenMP::OpenMP_CXX )
-install(TARGETS kaffpaE DESTINATION bin)
+if(NOT NOMPI)
+  add_executable(kaffpaE app/kaffpaE.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping> $<TARGET_OBJECTS:libkaffpa_parallel>)
+  target_compile_definitions(kaffpaE PRIVATE "-DMODE_KAFFPAE")
+  target_include_directories(kaffpaE PUBLIC ${MPI_CXX_INCLUDE_PATH})
+  target_link_libraries(kaffpaE ${MPI_CXX_LIBRARIES} ${OpenMP_CXX_LIBRARIES} OpenMP::OpenMP_CXX )
+  install(TARGETS kaffpaE DESTINATION bin)
+endif()
 
 add_executable(graphchecker app/graphchecker.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
 target_compile_definitions(graphchecker PRIVATE "-DMODE_GRAPHCHECKER")
@@ -350,7 +361,7 @@ install(TARGETS kahip_static
         )
 
 # ParHIP
-if(PARHIP)
+if(NOT NOMPI AND PARHIP)
   add_subdirectory(parallel/modified_kahip)
   add_subdirectory(parallel/parallel_src)
 endif()

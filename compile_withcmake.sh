@@ -40,7 +40,6 @@ for name in \
     global_multisection \
     graphchecker \
     kaffpa \
-    kaffpaE \
     label_propagation \
     node_ordering \
     node_separator \
@@ -49,6 +48,9 @@ for name in \
 do
     cp ./build/"$name" deploy/
 done
+if [[ -f ./build/kaffpaE ]]; then 
+    cp ./build/kaffpaE deploy/
+fi
 
 # These may or may not exist
 for name in \
