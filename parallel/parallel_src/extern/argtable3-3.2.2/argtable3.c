@@ -3591,7 +3591,9 @@ typedef struct {
     int len;
 } TRexMatch;
 
-#ifdef __GNUC__
+#if defined(__clang__)
+TREX_API TRex* trex_compile(const TRexChar* pattern, const TRexChar** error, int flags) __attribute__((optnone));
+#elif defined(__GNUC__)
 TREX_API TRex* trex_compile(const TRexChar* pattern, const TRexChar** error, int flags) __attribute__((optimize(0)));
 #else
 TREX_API TRex* trex_compile(const TRexChar* pattern, const TRexChar** error, int flags);
@@ -5432,11 +5434,11 @@ static void arg_cat(char** pdest, const char* src, size_t* pndest) {
     char* end = dest + *pndest;
 
     /*locate null terminator of dest string */
-    while (dest < end && *dest != 0)
+    while (dest < end-1 && *dest != 0)
         dest++;
 
     /* concat src string to dest string */
-    while (dest < end && *src != 0)
+    while (dest < end-1 && *src != 0)
         *dest++ = *src++;
 
     /* null terminate dest string */
@@ -5591,9 +5593,9 @@ void arg_print_option(FILE* fp, const char* shortopts, const char* longopts, con
  */
 static void arg_print_gnuswitch_ds(arg_dstr_t ds, struct arg_hdr** table) {
     int tabindex;
-    char* format1 = " -%c";
-    char* format2 = " [-%c";
-    char* suffix = "";
+    const char* format1 = " -%c";
+    const char* format2 = " [-%c";
+    const char* suffix = "";
 
     /* print all mandatory switches that are without argument values */
     for (tabindex = 0; table[tabindex] && !(table[tabindex]->flag & ARG_TERMINATOR); tabindex++) {
@@ -5834,8 +5836,8 @@ static void arg_print_formatted_ds(arg_dstr_t ds, const unsigned lmargin, const 
     while (line_end > line_start) {
         /* Eat leading white spaces. This is essential because while
            wrapping lines, there will often be a whitespace at beginning
-           of line */
-        while (isspace((int)(*(text + line_start)))) {
+           of line. Preserve newlines */
+        while (isspace((int)(*(text + line_start))) && *(text + line_start) != '\n') {
             line_start++;
         }
 
@@ -5847,18 +5849,31 @@ static void arg_print_formatted_ds(arg_dstr_t ds, const unsigned lmargin, const 
                 line_end--;
             }
 
-            /* Consume trailing spaces */
-            while ((line_end > line_start) && isspace((int)(*(text + line_end)))) {
-                line_end--;
-            }
+            /* If no whitespace could be found, eg. the text is one long word, break the word */
+            if (line_end == line_start) {
+                /* Set line_end to previous value */
+                line_end = line_start + colwidth;
+            } else {
+                /* Consume trailing spaces, except newlines */
+                while ((line_end > line_start) && isspace((int)(*(text + line_end))) && *(text + line_start) != '\n') {
+                    line_end--;
+                }
 
-            /* Restore the last non-space character */
-            line_end++;
+                /* Restore the last non-space character */
+                line_end++;
+            }
         }
 
         /* Output line of text */
         while (line_start < line_end) {
             char c = *(text + line_start);
+
+            /* If character is newline stop printing, skip this character, as a newline will be printed below. */
+            if (c == '\n') {
+                line_start++;
+                break;
+            }
+
             arg_dstr_catc(ds, c);
             line_start++;
         }
