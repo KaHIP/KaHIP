@@ -11,7 +11,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 <p align="center">
 <img src="./img/MGPall_en_new.png"
   alt="framework overview"
-  width="701" height="558">
+  width="601" height="558">
 </p>
 
 
