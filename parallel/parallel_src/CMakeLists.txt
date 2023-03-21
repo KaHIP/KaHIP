@@ -34,7 +34,7 @@ set(LIBPARALLEL_SOURCE_FILES
   lib/io/parallel_vector_io.cpp
   lib/tools/random_functions.cpp
   lib/tools/distributed_quality_metrics.cpp
-  extern/argtable3-3.2.1/argtable3.c)
+  extern/argtable3-3.2.2/argtable3.c)
 add_library(libparallel OBJECT ${LIBPARALLEL_SOURCE_FILES})
 target_include_directories(libparallel PUBLIC $<TARGET_PROPERTY:libmodified_kahip_interface,INTERFACE_INCLUDE_DIRECTORIES>)
 
@@ -52,7 +52,7 @@ set(LIBEDGELIST_SOURCE_FILES
   lib/data_structure/balance_management.cpp
   lib/data_structure/balance_management_refinement.cpp
   lib/data_structure/balance_management_coarsening.cpp
-  extern/argtable3-3.2.1/argtable3.c)
+  extern/argtable3-3.2.2/argtable3.c)
 add_library(libedgelist OBJECT ${LIBEDGELIST_SOURCE_FILES})
 
 set(LIBDSPAC_SOURCE_FILES
