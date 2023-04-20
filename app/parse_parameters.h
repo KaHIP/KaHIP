@@ -8,11 +8,13 @@
 
 #ifndef PARSE_PARAMETERS_GPJMGSM8
 #define PARSE_PARAMETERS_GPJMGSM8
-
+#ifdef USE_OPENMP
 #include <omp.h>
+#endif
 #include <string>
 #include <sstream>
 #include "configuration.h"
+#include "version.h"
 
 int parse_parameters(int argn, char **argv, 
                      PartitionConfig & partition_config, 
@@ -46,7 +48,12 @@ int parse_parameters(int argn, char **argv,
         struct arg_str *filename                             = arg_strn(NULL, NULL, "FILE", 1, 1, "Path to graph file to partition.");
         struct arg_str *filename_output                      = arg_str0(NULL, "output_filename", NULL, "Specify the name of the output file (that contains the partition).");
         struct arg_int *user_seed                            = arg_int0(NULL, "seed", NULL, "Seed to use for the PRNG.");
+        struct arg_lit *version                              = arg_lit0(NULL, "version", "Print version number of KaHIP.");
+#ifndef MODE_GLOBALMS
         struct arg_int *k                                    = arg_int1(NULL, "k", NULL, "Number of blocks to partition the graph.");
+#else
+        struct arg_int *k                                    = arg_int0(NULL, "k", NULL, "Number of blocks to partition the graph.");
+#endif
         struct arg_rex *edge_rating                          = arg_rex0(NULL, "edge_rating", "^(weight|realweight|expansionstar|expansionstar2|expansionstar2deg|punch|expansionstar2algdist|expansionstar2algdist2|algdist|algdist2|sepmultx|sepaddx|sepmax|seplog|r1|r2|r3|r4|r5|r6|r7|r8)$", "RATING", REG_EXTENDED, "Edge rating to use. One of {weight, expansionstar, expansionstar2, punch, sepmultx, sepaddx, sepmax, seplog, " " expansionstar2deg}. Default: weight"  );
         struct arg_rex *refinement_type                      = arg_rex0(NULL, "refinement_type", "^(fm|fm_flow|flow)$", "TYPE", REG_EXTENDED, "Refinementvariant to use. One of {fm, fm_flow, flow}. Default: fm"  );
         struct arg_rex *matching_type                        = arg_rex0(NULL, "matching", "^(random|hem|shem|regions|gpa|randomgpa|localmax)$", "TYPE", REG_EXTENDED, "Type of matchings to use during coarsening. One of {random, hem," " shem, regions, gpa, randomgpa, localmax}."  );
@@ -101,7 +108,11 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *level_split                          = arg_int0(NULL, "level_split", NULL, "Number of trial tree levels (1 means on each level a two trials are performed). Default: 2.");
         struct arg_int *toposort_iterations                  = arg_int0(NULL, "toposort_iterations", NULL, "Number of topo sort iterations). Default: 4.");
         struct arg_lit *most_balanced_flows                  = arg_lit0(NULL, "most_balanced_flows", "(Default: disabled)");
+#ifdef MODE_ILPIMPROVE
+        struct arg_str *input_partition                      = arg_str1(NULL, "input_partition", NULL, "Input partition to use.");
+#else
         struct arg_str *input_partition                      = arg_str0(NULL, "input_partition", NULL, "Input partition to use.");
+#endif
         struct arg_lit *recursive_bipartitioning             = arg_lit0(NULL, "recursive_bipartitioning", "Use recursive bipartitioning instead of kway methods.");
         struct arg_lit *suppress_output                      = arg_lit0(NULL, "suppress_output", "(Default: output enabled)");
         struct arg_lit *disable_max_vertex_weight_constraint = arg_lit0(NULL, "disable_max_vertex_weight_constraint", "Disables the max vertex weight constraint during the contraction.");
@@ -114,7 +125,7 @@ int parse_parameters(int argn, char **argv,
 #ifdef MODE_KAFFPA
         struct arg_rex *preconfiguration                     = arg_rex1(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fsocial|esocial|ssocial]." );
 #elif MODE_NODEORDERING
-        struct arg_rex *preconfiguration                     = arg_rex1(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fsocial|esocial|ssocial]." );
+        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fsocial|esocial|ssocial]." );
 #else
         struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [strong|eco|fast|fsocial|esocial|ssocial]." );
 #endif
@@ -168,8 +179,15 @@ int parse_parameters(int argn, char **argv,
         //
         //
         struct arg_lit *enable_mapping                       = arg_lit0(NULL, "enable_mapping", "Enable mapping algorithms to map quotient graph onto processor graph defined by hierarchy and distance options. (Default: disabled)");
+
+#ifndef MODE_GLOBALMS
         struct arg_str *hierarchy_parameter_string           = arg_str0(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth.");
         struct arg_str *distance_parameter_string            = arg_str0(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
+#else
+        struct arg_str *hierarchy_parameter_string           = arg_str1(NULL, "hierarchy_parameter_string", NULL, "Specify as 4:8:8 for 4 cores per PE, 8 PEs per rack, ... and so forth.");
+        struct arg_str *distance_parameter_string            = arg_str1(NULL, "distance_parameter_string", NULL, "Specify as 1:10:100 if cores on the same chip have distance 1, PEs in the same rack have distance 10, ... and so forth.");
+
+#endif
         struct arg_lit *online_distances                     = arg_lit0(NULL, "online_distances", "Do not store processor distances in a matrix, but do recomputation. (Default: disabled)");
 
         // Node Ordering
@@ -193,7 +211,7 @@ int parse_parameters(int argn, char **argv,
 
         // Define argtable.
         void* argtable[] = {
-                help, filename, user_seed,
+                help, filename, user_seed, version, 
 #ifdef MODE_DEVEL
                 k, graph_weighted, imbalance, edge_rating_tiebreaking, 
                 matching_type, edge_rating, rate_first_level_inner_outer, first_level_random_matching, 
@@ -223,12 +241,17 @@ int parse_parameters(int argn, char **argv,
                 maxT, maxIter, minipreps, mh_penalty_for_unconnected, mh_enable_kabapE,
 #elif defined MODE_KAFFPA
                 use_mmap_io, 
-                k, imbalance,  
+                #ifndef MODE_GLOBALMS
+                k, 
+                #endif
+                imbalance,  
                 preconfiguration, 
                 time_limit, 
                 enforce_balance, 
+                #ifndef MODE_GLOBALMS
 		balance_edges,
                 enable_mapping,
+                #endif
                 hierarchy_parameter_string, 
                 distance_parameter_string,
                 online_distances,
@@ -239,11 +262,13 @@ int parse_parameters(int argn, char **argv,
                 input_partition,
 #elif defined MODE_NODESEP
                 //k,
+                filename_output, 
                 #ifndef FASTORDERING
+                #ifndef MODE_NODEORDERING
                 imbalance,  
                 preconfiguration, 
                 #endif
-                filename_output, 
+                #endif
                 //time_limit, 
                 //edge_rating,
                 //max_flow_improv_steps,
@@ -268,16 +293,17 @@ int parse_parameters(int argn, char **argv,
                 //sep_faster_ns,
                 //label_iterations_refinement,    //
 
-#elif defined MODE_NODEORDERING
+        #if defined MODE_NODEORDERING
                 //dissection_rec_limit,
                 //disable_reductions,
-                filename_output, 
+                //filename_output, 
                 #ifndef FASTORDERING
-                imbalance,  
+                //imbalance,  
                 preconfiguration, 
                 #endif
-                filename_output, 
+                //filename_output, 
                 reduction_order,
+        #endif
                 //convergence_factor,
                 //max_simplicial_degree,
 #elif defined MODE_PARTITIONTOVERTEXSEPARATOR
@@ -304,10 +330,13 @@ int parse_parameters(int argn, char **argv,
                 label_propagation_iterations,
                 filename_output, 
 #elif defined MODE_ILPIMPROVE
-                k, input_partition, filename_output,
+                k,  filename_output, imbalance,
+                #ifndef MODE_ILPEXACT
+                input_partition,
                 ilp_mode, ilp_min_gain, ilp_bfs_depth,
                 ilp_overlap_presets,
                 ilp_limit_nonzeroes, ilp_overlap_runs,
+                #endif
                 ilp_timeout,
 #endif
 
@@ -315,6 +344,11 @@ int parse_parameters(int argn, char **argv,
         };
         // Parse arguments.
         int nerrors = arg_parse(argn, argv, argtable);
+
+        if (version->count > 0) {
+                std::cout <<  KAHIPVERSION  << std::endl;
+                return 1;
+        }
 
         // Catch case that help was requested.
         if (help->count > 0) {
@@ -324,7 +358,6 @@ int parse_parameters(int argn, char **argv,
                 arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
                 return 1;
         }
-
 
         if (nerrors > 0) {
                 arg_print_errors(stderr, end, progname);
@@ -421,16 +454,21 @@ int parse_parameters(int argn, char **argv,
                         partition_config.group_sizes.push_back(stoi(s));
                 }       
 
+#ifndef MODE_GLOBALMS
                 PartitionID old_k = partition_config.k;
+#endif
                 partition_config.k = 1; // recompute k 
                 for( unsigned int i = 0; i < partition_config.group_sizes.size(); i++) {
                         partition_config.k *= partition_config.group_sizes[i];
                 }
+
+#ifndef MODE_GLOBALMS
                 if( old_k != partition_config.k ) {
                         std::cout <<  "number of processors defined through specified hierarchy does not match k!"  << std::endl;
                         std::cout <<  "please specify k as " << partition_config.k  << std::endl;
                         exit(0);
                 }
+#endif
         }
 
         if(distance_parameter_string->count) {

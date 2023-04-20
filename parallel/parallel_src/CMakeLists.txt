@@ -2,6 +2,10 @@ if(NOT OPTIMIZED_OUTPUT)
   add_definitions("-DNOOUTPUT")
 endif()
 
+if(DETERMINISTIC_PARHIP)
+  add_definitions("-DDETERMINISTIC_PARHIP")
+endif()
+
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/app)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/lib/tools)
@@ -30,7 +34,7 @@ set(LIBPARALLEL_SOURCE_FILES
   lib/io/parallel_vector_io.cpp
   lib/tools/random_functions.cpp
   lib/tools/distributed_quality_metrics.cpp
-  extern/argtable3-3.0.3/argtable3.c)
+  extern/argtable3-3.2.2/argtable3.c)
 add_library(libparallel OBJECT ${LIBPARALLEL_SOURCE_FILES})
 target_include_directories(libparallel PUBLIC $<TARGET_PROPERTY:libmodified_kahip_interface,INTERFACE_INCLUDE_DIRECTORIES>)
 
@@ -48,7 +52,7 @@ set(LIBEDGELIST_SOURCE_FILES
   lib/data_structure/balance_management.cpp
   lib/data_structure/balance_management_refinement.cpp
   lib/data_structure/balance_management_coarsening.cpp
-  extern/argtable3-3.0.3/argtable3.c)
+  extern/argtable3-3.2.2/argtable3.c)
 add_library(libedgelist OBJECT ${LIBEDGELIST_SOURCE_FILES})
 
 set(LIBDSPAC_SOURCE_FILES

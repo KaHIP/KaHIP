@@ -12,6 +12,7 @@
 #include <regex.h>
 #include <string.h>
 #include "configuration.h"
+#include "version.h"
 
 int parse_parameters(int argn, char **argv, 
                      PPartitionConfig & partition_config, 
@@ -31,6 +32,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_dbl *cluster_coarsening_factor      = arg_dbl0(NULL, "cluster_coarsening_factor", NULL, "The coarsening factor basically involes a bound on the block weights.");
         struct arg_int *stop_factor                    = arg_int0(NULL, "stop_factor", NULL, "Stop factor l to stop coarsening if total num vert <= lk.");
         struct arg_int *evolutionary_time_limit        = arg_int0(NULL, "evolutionary_time_limit", NULL, "Time limit for the evolutionary algorithm.");
+        struct arg_lit *version                              = arg_lit0(NULL, "version", "Print version number of KaHIP.");
 #ifndef TOOLBOX
 #endif
         struct arg_int *label_iterations_coarsening    = arg_int0(NULL, "label_iterations_coarsening", NULL, "Number of label propagation iterations during coarsening.");
@@ -53,7 +55,7 @@ int parse_parameters(int argn, char **argv,
         // Define argtable.
         void* argtable[] = {
 #ifdef PARALLEL_LABEL_COMPRESSION
-                help, filename, user_seed, k, inbalance, preconfiguration, vertex_degree_weights,
+                help, filename, user_seed, version, k, inbalance, preconfiguration, vertex_degree_weights,
 		save_partition, save_partition_binary,
 #elif defined TOOLBOX 
                 help, filename, k_opt, input_partition_filename, save_partition, save_partition_binary, converter_evaluate,
@@ -63,6 +65,16 @@ int parse_parameters(int argn, char **argv,
 
         // Parse arguments.
         int nerrors = arg_parse(argn, argv, argtable);
+
+        if (version->count > 0) {
+                int rank;
+                MPI_Comm_rank( MPI_COMM_WORLD, &rank);
+
+                if( rank == ROOT ) {
+                        std::cout <<  KAHIPVERSION  << std::endl;
+                }
+                return 1;
+        }
 
         // Catch case that help was requested.
         if(help->count > 0) {

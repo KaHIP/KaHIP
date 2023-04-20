@@ -21,12 +21,23 @@ const int FASTSOCIAL     = 3;
 const int ECOSOCIAL      = 4;
 const int STRONGSOCIAL   = 5;
 
+const int MAPMODE_MULTISECTION = 0;
+const int MAPMODE_BISECTION = 1;
+
 // same data structures as in metis 
 // edgecut and part are output parameters
 // part has to be an array of n ints
 void kaffpa(int* n, int* vwgt, int* xadj, 
                    int* adjcwgt, int* adjncy, int* nparts, 
-                   double* imbalance,  bool suppress_output, int seed, int mode, 
+                   double* imbalance, bool suppress_output, int seed, int mode, 
+                   int* edgecut, int* part);
+
+// same as kaffpa, provides an additional parameter for perfect balance
+void kaffpa_balance(int* n, int* vwgt, int* xadj, 
+                   int* adjcwgt, int* adjncy, int* nparts, 
+                   double* imbalance, 
+                   bool perfectly_balance, 
+                   bool suppress_output, int seed, int mode, 
                    int* edgecut, int* part);
 
 // balance constraint on nodes and edges
@@ -34,6 +45,18 @@ void kaffpa_balance_NE(int* n, int* vwgt, int* xadj,
                 int* adjcwgt, int* adjncy, int* nparts, 
                 double* imbalance,  bool suppress_output, int seed, int mode,
                 int* edgecut, int* part);
+
+// same data structures as in metis 
+// edgecut and part and qap are output parameters
+// part has to be an array of n ints
+void process_mapping(int* n, int* vwgt, int* xadj, 
+                   int* adjcwgt, int* adjncy,  
+                   int* hierarchy_parameter,  int* distance_parameter, int hierarchy_depth, 
+                   int mode_partitioning, int mode_mapping,
+                   double* imbalance,  
+                   bool suppress_output, int seed,
+                   int* edgecut, int* qap, int* part);
+
 
 void node_separator(int* n, int* vwgt, int* xadj, 
                     int* adjcwgt, int* adjncy, int* nparts, 

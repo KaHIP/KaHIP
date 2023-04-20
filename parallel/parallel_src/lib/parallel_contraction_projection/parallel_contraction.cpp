@@ -96,10 +96,13 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
                                     peID, peID+4*size, communicator, &rq);
                 }
         }
-        std::vector< NodeID > local_labels;
+        std::vector< std::vector< NodeID > > local_labels_byPE;
+        local_labels_byPE.resize(size);
+
         for( ULONG i = 0; i < m_messages[rank].size(); i++) {
-                local_labels.push_back(m_messages[rank][i]);
+                local_labels_byPE[rank].push_back(m_messages[rank][i]);
         }
+
 
         std::vector< std::vector< NodeID > >  inc_messages;
         inc_messages.resize(size);
@@ -127,9 +130,17 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
                 if( incmessage[0] == std::numeric_limits< NodeID >::max()) continue; // nothing to do
 
                 for( int i = 0; i < message_length; i++) {
-                        local_labels.push_back(incmessage[i]);
+                        local_labels_byPE[peID].push_back(incmessage[i]);
                 }
         }
+
+        std::vector< NodeID > local_labels;
+        for( PEID peID = 0; peID < size; peID++) {
+                for( ULONG i = 0; i < local_labels_byPE[peID].size(); i++) {
+                        local_labels.push_back(local_labels_byPE[peID][i]);
+                }
+        }
+
 
         // filter duplicates locally
         helper.filter_duplicates( local_labels, 
@@ -378,19 +389,15 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         }
 
         // build the local part of the graph
-        hashed_graph local_graph;
+        //
+        std::vector< std::vector< NodeID > > local_msg_byPE;
+        local_msg_byPE.resize(size);
+
+
         if( m_messages[ rank ].size() != 0 ) {
-                for( ULONG i = 0; i < m_messages[rank].size()-2; i+=3) {
-                        hashed_edge he;
-                        he.k = number_of_cnodes;
-                        he.source = m_messages[rank][i];
-                        he.target = m_messages[rank][i+1];
-
-                        local_graph[he].weight += m_messages[rank][i+2];
-                        //std::cout <<  local_graph[he].weight  << std::endl;
-                }
+                local_msg_byPE[rank] = m_messages[rank];
         }
-
+       
         PEID counter = 0;
         while( counter < size - 1) {
                 // wait for incomming message of an adjacent processor
@@ -408,15 +415,24 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
                 // now integrate the changes
                 if( incmessage[0] == std::numeric_limits< NodeID >::max()) continue; // nothing to do
 
-                for( ULONG i = 0; i < incmessage.size()-2; i+=3) {
+
+                PEID peID = rst.MPI_SOURCE;
+                local_msg_byPE[peID] = incmessage;
+        }
+
+        hashed_graph local_graph;
+        for( PEID peID = 0; peID < size; peID++) {
+                if(local_msg_byPE[peID].size() > 0) {
+                for( ULONG i = 0; i < local_msg_byPE[peID].size()-2; i+=3) {
                         hashed_edge he;
                         he.k = number_of_cnodes;
-                        he.source = incmessage[i];
-                        he.target = incmessage[i+1];
+                        he.source = local_msg_byPE[peID][i];
+                        he.target = local_msg_byPE[peID][i+1];
 
-                        local_graph[he].weight += incmessage[i+2];
-                }
+                        local_graph[he].weight += local_msg_byPE[peID][i+2];
+                }}
         }
+
 
         ULONG from = rank     * ceil(number_of_cnodes / (double)size);
         ULONG to   = (rank+1) * ceil(number_of_cnodes / (double)size) - 1;

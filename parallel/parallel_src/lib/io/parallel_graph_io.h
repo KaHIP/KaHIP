@@ -26,17 +26,17 @@ class parallel_graph_io {
                                 PEID peID, 
                                 PEID comm_size, MPI_Comm communicator = MPI_COMM_WORLD);
 
-                static int readGraphWeightedMETIS(parallel_graph_access & G, 
-                                std::string filename, 
-                                PEID peID, 
-                                PEID comm_size, MPI_Comm communicator = MPI_COMM_WORLD);
+                //static int readGraphWeightedMETIS(parallel_graph_access & G, 
+                                //std::string filename, 
+                                //PEID peID, 
+                                //PEID comm_size, MPI_Comm communicator = MPI_COMM_WORLD);
 
                 static int readGraphWeightedFlexible(parallel_graph_access & G, std::string filename, PEID peID, PEID comm_size, MPI_Comm communicator = MPI_COMM_WORLD); 
 
-                static int readGraphWeightedMETISFast(parallel_graph_access & G, 
-                                std::string filename, 
-                                PEID peID, 
-                                PEID comm_size, MPI_Comm communicator = MPI_COMM_WORLD);
+                //static int readGraphWeightedMETISFast(parallel_graph_access & G, 
+                                //std::string filename, 
+                                //PEID peID, 
+                                //PEID comm_size, MPI_Comm communicator = MPI_COMM_WORLD);
 
                 static int readGraphBinary(PPartitionConfig & config, parallel_graph_access & G, 
                                 std::string filename, 
@@ -61,6 +61,9 @@ class parallel_graph_io {
                 static int writeGraphSequentiallyBinary(complete_graph_access & G, std::string filename);
 
                 static int writeGraphExternallyBinary(std::string intput_filename, std::string output_filename);
+
+                static int readGraphWeightedMETIS_fixed(parallel_graph_access & G, std::string filename, PEID peID, PEID comm_size, MPI_Comm communicator = MPI_COMM_WORLD); 
+
 
 };
 

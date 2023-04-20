@@ -8,6 +8,7 @@
 #ifndef DEFINITIONS_H_CHR
 #define DEFINITIONS_H_CHR
 
+#include <cstdint>
 #include <limits>
 #include <queue>
 #include <vector>

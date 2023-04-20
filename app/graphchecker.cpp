@@ -151,6 +151,14 @@ int main(int argn, char **argv)
 
                                 }
                                 ss >> edge_weight;
+                                if ( edge_weight == 0 ) {
+                                        std::cout <<  "Edge weights 0 are not supported. Please remove those edges from the graph."  << std::endl;
+                                        std::cout <<  "The edge starting from node " <<  (node_counter+1) << " and ending in node " << target  <<  " has weight 0. " << std::endl;
+                                        std::cout <<  "*******************************************************************************"  << std::endl;
+                                        exit(0);
+
+                                }
+
                                 total_edgeweight += edge_weight;
 
                                 if(total_edgeweight > (long)std::numeric_limits<unsigned int>::max()) {

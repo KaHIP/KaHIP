@@ -25,10 +25,43 @@
 #include "../lib/partition/partition_config.h"
 #include "../lib/partition/graph_partitioner.h"
 #include "../lib/partition/uncoarsening/separator/vertex_separator_algorithm.h"
+#include "../lib/partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
 #include "../app/configuration.h"
 #include "../app/balance_configuration.h"
+#include "../lib/data_structure/matrix/normal_matrix.h"
+#include "../lib/data_structure/matrix/online_distance_matrix.h"
+#include "../lib/mapping/mapping_algorithms.h"
+
 
 using namespace std;
+
+void internal_kaffpa_set_configuration( configuration & cfg,
+                                 PartitionConfig & partition_config,
+                                 int mode) {
+        switch( mode ) {
+                case FAST: 
+                        cfg.fast(partition_config);
+                        break;
+                case ECO: 
+                        cfg.eco(partition_config);
+                        break;
+                case STRONG: 
+                        cfg.strong(partition_config);
+                        break;
+                case FASTSOCIAL: 
+                        cfg.fastsocial(partition_config);
+                        break;
+                case ECOSOCIAL: 
+                        cfg.ecosocial(partition_config);
+                        break;
+                case STRONGSOCIAL: 
+                        cfg.strongsocial(partition_config);
+                        break;
+                default: 
+                        cfg.eco(partition_config);
+                        break;
+        }
+}
 
 void internal_build_graph( PartitionConfig & partition_config, 
                            int* n, 
@@ -68,6 +101,7 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
                           int* adjncy, 
                           int* nparts, 
                           double* imbalance, 
+                          bool perfectly_balance,
                           int* edgecut, 
                           int* part) {
 
@@ -79,11 +113,24 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
         //}
 
         partition_config.imbalance = 100*(*imbalance);
+        partition_config.kaffpa_perfectly_balance = perfectly_balance;
         graph_access G;     
         internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
 
         graph_partitioner partitioner;
         partitioner.perform_partitioning(partition_config, G);
+
+        if( partition_config.kaffpa_perfectly_balance ) {
+                double epsilon                         = partition_config.imbalance/100.0;
+                partition_config.upper_bound_partition = (1+epsilon)*ceil(partition_config.largest_graph_weight/(double)partition_config.k);
+
+                complete_boundary boundary(&G);
+                boundary.build();
+
+                cycle_refinement cr;
+                cr.perform_refinement(partition_config, G, boundary);
+        }
+
 
         forall_nodes(G, node) {
                 part[node] = G.getPartitionIndex(node);
@@ -112,32 +159,33 @@ void kaffpa(int* n,
         PartitionConfig partition_config;
         partition_config.k = *nparts;
 
-        switch( mode ) {
-                case FAST: 
-                        cfg.fast(partition_config);
-                        break;
-                case ECO: 
-                        cfg.eco(partition_config);
-                        break;
-                case STRONG: 
-                        cfg.strong(partition_config);
-                        break;
-                case FASTSOCIAL: 
-                        cfg.fastsocial(partition_config);
-                        break;
-                case ECOSOCIAL: 
-                        cfg.ecosocial(partition_config);
-                        break;
-                case STRONGSOCIAL: 
-                        cfg.strongsocial(partition_config);
-                        break;
-                default: 
-                        cfg.eco(partition_config);
-                        break;
-        }
+        internal_kaffpa_set_configuration(cfg, partition_config, mode);
 
         partition_config.seed = seed;
-        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
+        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, false, edgecut, part);
+}
+
+void kaffpa_balance(int* n, 
+                   int* vwgt, 
+                   int* xadj, 
+                   int* adjcwgt, 
+                   int* adjncy, 
+                   int* nparts, 
+                   double* imbalance, 
+                   bool perfectly_balance, 
+                   bool suppress_output, 
+                   int seed, 
+                   int mode, 
+                   int* edgecut, 
+                   int* part) {
+        configuration cfg;
+        PartitionConfig partition_config;
+        partition_config.k = *nparts;
+
+        internal_kaffpa_set_configuration(cfg, partition_config, mode);
+
+        partition_config.seed = seed;
+        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, perfectly_balance, edgecut, part);
 }
 
 void kaffpa_balance_NE(int* n, 
@@ -156,33 +204,11 @@ void kaffpa_balance_NE(int* n,
         PartitionConfig partition_config;
         partition_config.k = *nparts;
 
-        switch( mode ) {
-                case FAST: 
-                        cfg.fast(partition_config);
-                        break;
-                case ECO: 
-                        cfg.eco(partition_config);
-                        break;
-                case STRONG: 
-                        cfg.strong(partition_config);
-                        break;
-                case FASTSOCIAL: 
-                        cfg.fastsocial(partition_config);
-                        break;
-                case ECOSOCIAL: 
-                        cfg.ecosocial(partition_config);
-                        break;
-                case STRONGSOCIAL: 
-                        cfg.strongsocial(partition_config);
-                        break;
-                default: 
-                        cfg.eco(partition_config);
-                        break;
-        }
+        internal_kaffpa_set_configuration(cfg, partition_config, mode);
 
         partition_config.seed = seed;
         partition_config.balance_edges = true;
-        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, edgecut, part);
+        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, false, edgecut, part);
 }
 
 void internal_nodeseparator_call(PartitionConfig & partition_config, 
@@ -331,24 +357,6 @@ void node_separator(int* n,
         internal_nodeseparator_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, mode, num_separator_vertices, separator);
 }
 
-//bool internal_parse_reduction_order(const std::string &&order, PartitionConfig &partition_config) {
-        //std::istringstream stream(order);
-        //while (!stream.eof()) {
-                //int value;
-                //stream >> value;
-                //if (value >= 0 && value < nested_dissection_reduction_type::num_types) {
-                        //partition_config.reduction_order.push_back((nested_dissection_reduction_type)value);
-                //} else {
-                        //std::cout << "Unknown reduction type " << value << std::endl;
-                        //return false;
-                //}
-        //}
-        //if (partition_config.reduction_order.empty()) {
-                //partition_config.disable_reductions = true;
-        //}
-        //return true;
-//}
-
 void reduced_nd(int* n,
                 int* xadj,
                 int* adjncy,
@@ -368,12 +376,7 @@ void reduced_nd(int* n,
         partition_config.max_simplicial_degree = 12;
         partition_config.disable_reductions = false;
         partition_config.convergence_factor = 1;
-        partition_config.reduction_order = {simplicial_nodes,
-                //indistinguishable_nodes,
-                //twins,
-                //path_compression,
-                degree_2_nodes};
-                //triangle_contraction};
+        partition_config.reduction_order = {simplicial_nodes, degree_2_nodes};
 
 
         partition_config.seed = seed;
@@ -382,33 +385,29 @@ void reduced_nd(int* n,
 
         switch( mode ) {
                 case FAST: 
-                        cfg.fast(partition_config);
+                        cfg.fast_separator(partition_config);
                         break;
                 case ECO: 
-                        cfg.eco(partition_config);
+                        cfg.eco_separator(partition_config);
                         break;
                 case STRONG: 
-                        cfg.strong(partition_config);
+                        cfg.strong_separator(partition_config);
                         break;
                 case FASTSOCIAL: 
-                        cfg.fastsocial(partition_config);
+                        cfg.fastsocial_separator(partition_config);
                         break;
                 case ECOSOCIAL: 
-                        cfg.ecosocial(partition_config);
+                        cfg.ecosocial_separator(partition_config);
                         break;
                 case STRONGSOCIAL: 
-                        cfg.strongsocial(partition_config);
+                        cfg.strongsocial_separator(partition_config);
                         break;
                 default: 
-                        cfg.eco(partition_config);
+                        cfg.eco_separator(partition_config);
                         break;
         }
 
         partition_config.seed = seed;
-        //auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
-        //if (!parse_success) {
-                //return;
-        //}
 
         graph_access G;     
         internal_build_graph( partition_config, n, nullptr, xadj, nullptr, adjncy, G);
@@ -447,22 +446,13 @@ void reduced_nd_fast(int* n,
         partition_config.max_simplicial_degree = 12;
         partition_config.disable_reductions = false;
         partition_config.convergence_factor = 1;
-        partition_config.reduction_order = {simplicial_nodes,
-                //indistinguishable_nodes,
-                //twins,
-                //path_compression,
-                degree_2_nodes};
-                //triangle_contraction};
+        partition_config.reduction_order = {simplicial_nodes, degree_2_nodes};
         
         partition_config.seed = seed;
         srand(partition_config.seed);
         random_functions::setSeed(partition_config.seed);
         partition_config.seed = seed;
-        //auto parse_success = internal_parse_reduction_order(std::string(reduction_order), partition_config);
-        //if (!parse_success) {
-                //return;
-        //}
-
+       
         graph_access input_graph;
         internal_build_graph( partition_config, n, nullptr, xadj, nullptr, adjncy, input_graph);
         
@@ -530,3 +520,136 @@ void reduced_nd_fast(int* n,
 
 }
 #endif
+
+void internal_processmapping_call(PartitionConfig & partition_config, 
+                          bool suppress_output, 
+                          int* n, 
+                          int* vwgt, 
+                          int* xadj, 
+                          int* adjcwgt, 
+                          int* adjncy, 
+                          int mode_mapping,
+                          double* imbalance, 
+                          int* edgecut, 
+                          int* qap,
+                          int* part) {
+
+        //streambuf* backup = cout.rdbuf();
+        //ofstream ofs;
+        //ofs.open("/dev/null");
+        //if(suppress_output) {
+               //cout.rdbuf(ofs.rdbuf()); 
+        //}
+
+        partition_config.imbalance = 100*(*imbalance);
+        graph_access G;     
+        internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
+
+        graph_partitioner partitioner;
+        if( mode_mapping == MAPMODE_BISECTION ) {
+                partitioner.perform_partitioning(partition_config, G);
+        } else {
+                partitioner.perform_partitioning_krec_hierarchy(partition_config, G);
+        }
+
+        forall_nodes(G, node) {
+                part[node] = G.getPartitionIndex(node);
+        } endfor
+
+        quality_metrics qm;
+        *edgecut = qm.edge_cut(G);
+
+        int internal_qap = 0;
+        //check if k is a power of 2 
+        bool power_of_two = (partition_config.k & (partition_config.k-1)) == 0;
+        std::vector< NodeID > perm_rank(partition_config.k);
+        graph_access C;
+        complete_boundary boundary(&G);
+        boundary.build();
+        boundary.getUnderlyingQuotientGraph(C);
+
+        forall_nodes(C, node) {
+                C.setNodeWeight(node, 1);
+        } endfor
+
+        if(!power_of_two ) {
+                mapping_algorithms ma;
+                if( partition_config.distance_construction_algorithm != DIST_CONST_HIERARCHY_ONLINE) {
+                        normal_matrix D(partition_config.k, partition_config.k);
+                        ma.construct_a_mapping(partition_config, C, D, perm_rank);
+                        internal_qap = qm.total_qap(C, D, perm_rank );
+                } else {
+                        online_distance_matrix D(partition_config.k, partition_config.k);
+                        D.setPartitionConfig(partition_config);
+                        ma.construct_a_mapping(partition_config, C, D, perm_rank);
+                        internal_qap = qm.total_qap(C, D, perm_rank );
+                }
+        } else {
+                for( unsigned i = 0; i < perm_rank.size(); i++) {
+                        perm_rank[i] = i;
+                }
+
+                online_distance_matrix D(partition_config.k, partition_config.k);
+                D.setPartitionConfig(partition_config);
+                internal_qap = qm.total_qap(C, D, perm_rank );
+        }
+
+        forall_nodes(G, node) {
+                G.setPartitionIndex(node, perm_rank[G.getPartitionIndex(node)]);
+        } endfor
+
+        *qap = (int)internal_qap;
+
+        //ofs.close();
+        //cout.rdbuf(backup);
+}
+
+void process_mapping(int* n, int* vwgt, int* xadj, 
+                   int* adjcwgt, int* adjncy, 
+                   int* hierarchy_parameter,  int* distance_parameter, int hierarchy_depth, 
+                   int mode_partitioning, int mode_mapping,
+                   double* imbalance,  
+                   bool suppress_output, int seed,
+                   int* edgecut, int* qap, int* part) {
+
+        configuration cfg;
+        PartitionConfig partition_config;
+        partition_config.k = 1;
+
+        switch( mode_partitioning ) {
+                case FAST: 
+                        cfg.fast(partition_config);
+                        break;
+                case ECO: 
+                        cfg.eco(partition_config);
+                        break;
+                case STRONG: 
+                        cfg.strong(partition_config);
+                        break;
+                case FASTSOCIAL: 
+                        cfg.fastsocial(partition_config);
+                        break;
+                case ECOSOCIAL: 
+                        cfg.ecosocial(partition_config);
+                        break;
+                case STRONGSOCIAL: 
+                        cfg.strongsocial(partition_config);
+                        break;
+                default: 
+                        cfg.eco(partition_config);
+                        break;
+        }
+
+        partition_config.group_sizes.clear();
+        partition_config.distances.clear();
+        for( int i = 0; i < hierarchy_depth; i++) {
+                partition_config.group_sizes.push_back(hierarchy_parameter[i]);
+                partition_config.distances.push_back(distance_parameter[i]);
+        }
+
+        partition_config.seed = seed;
+        internal_processmapping_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy,  mode_mapping, imbalance, edgecut, qap, part);
+
+};
+
+
