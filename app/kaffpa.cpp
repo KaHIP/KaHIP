@@ -87,13 +87,13 @@ int main(int argn, char **argv) {
                 PartitionID* map = new PartitionID[G.number_of_nodes()];
                 EdgeWeight best_cut = std::numeric_limits<EdgeWeight>::max();
                 while(t.elapsed() < partition_config.time_limit) {
-         partition_config.graph_allready_partitioned = false;
-         partitioner.perform_partitioning(partition_config, G);
-         EdgeWeight cut = qm.edge_cut(G);
-         if(cut < best_cut) {
-                 best_cut = cut;
-                 forall_nodes(G, node) {
-                         map[node] = G.getPartitionIndex(node);
+                        partition_config.graph_allready_partitioned = false;
+                        partitioner.perform_partitioning(partition_config, G);
+                        EdgeWeight cut = qm.edge_cut(G);
+                        if(cut < best_cut) {
+                                best_cut = cut;
+                                forall_nodes(G, node) {
+                                        map[node] = G.getPartitionIndex(node);
                                 } endfor
                         }
                 }
