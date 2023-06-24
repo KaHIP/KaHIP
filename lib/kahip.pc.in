@@ -1,0 +1,15 @@
+#   KaHIP - Karlsruhe HIGH Quality Partitioning
+#   Copyright (c) 2019 <christian.schulz.phone@gmail.com>
+#   MIT license (https://opensource.org/license/mit)
+
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+includedir=${exec_prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+
+Name: kahip
+Description: The graph partitioning framework KaHIP
+URL: https://kahip.github.io/
+Version: @KAHIP_VERSION@
+Libs: -L${libdir} -lkahip
+Cflags: -I${includedir}
