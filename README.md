@@ -1,10 +1,10 @@
-KaHIP v3.14  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
+KaHIP v3.15  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 =====
 
 The graph partitioning framework KaHIP -- Karlsruhe High Quality Partitioning.
 
-The graph partitioning problem asks for a division of a graph's node set into k equally sized blocks such that the number of edges that run between the blocks is minimized. KaHIP is a family of graph partitioning programs. It includes KaFFPa (Karlsruhe Fast Flow Partitioner), which is a multilevel graph partitioning algorithm, in its variants Strong, Eco and Fast, KaFFPaE (KaFFPaEvolutionary) which is a parallel evolutionary algorithm that uses KaFFPa to provide combine and mutation operations, as well as KaBaPE which extends the evolutionary algorithm. Moreover, specialized techniques are included to partition road networks (Buffoon), to output a vertex separator from a given partition as well as techniques geared towards the efficient partitioning of social networks. Here is an overview of our framework:
+The graph partitioning problem asks for a division of a graph's node set into k equally sized blocks such that the number of edges that run between the blocks is minimized. KaHIP is a family of graph partitioning programs. It includes KaFFPa (Karlsruhe Fast Flow Partitioner), which is a multilevel graph partitioning algorithm, in its variants Strong, Eco and Fast, KaFFPaE (KaFFPaEvolutionary), which is a parallel evolutionary algorithm that uses KaFFPa to provide combine and mutation operations, as well as KaBaPE which extends the evolutionary algorithm. Moreover, specialized techniques are included to partition road networks (Buffoon), to output a vertex separator from a given partition as well as techniques geared towards the efficient partitioning of social networks. Here is an overview of our framework:
 
 <p align="center">
 <img src="./img/MGPall_en_new.png"
@@ -26,14 +26,14 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 *Added Support for Vertex and Edge Weights in ParHIP*: we extended the IO functionality of ParHIP to read weighted graphs in the METIS format.
 
-*Global Multisection Mapping*: we added global multisection n-to-1 process mapping algorithms. This compute better process mapping for parallel applications if information about the system hierarchy/architecture is known.
+*Global Multisection Mapping*: we added global multisection n-to-1 process mapping algorithms. This computes better process mapping for parallel applications if information about the system hierarchy/architecture is known.
 
 *Determinism in ParHIP*: we added an option to run ParHIP deterministically, i.e. two runs of ParHIP using the same seed will always return the same result.
 
 *Version Flag*: we added an option to output the version that you are currently using, use the --version option of the programs.
 
 ## NEW in v2.10: 
-*ParHIP (Parallel High Quality Partitioning):* Our distributed memory parallel partitioning techniques designed to partition hierarchically structured networks such as web graphs or social networks.
+*ParHIP (Parallel High Quality Partitioning):* Our distributed memory parallel partitioning techniques are designed to partition hierarchically structured networks such as web graphs or social networks.
 
 *Mapping Algorithms:* Our new algorithms to map the blocks onto processors to minimize overall communication time based on hierarchical partitionings of the task graph and fast local search algorithms.
 
@@ -53,9 +53,9 @@ git clone https://github.com/KaHIP/KaHIP
 ```
 
 ## Compiling KaHIP: 
-Before you can start you need to install the following software packages:
+Before you can start, you need to install the following software packages:
 
-- if you want to use parallel algorithms contained withing the framework (e.g. ParHIP) you need OpenMPI (https://www.open-mpi.org/). If you don't want to run ParHIP, you can easily get rid of this dependency.
+- if you want to use parallel algorithms contained within the framework (e.g. ParHIP), you need OpenMPI (https://www.open-mpi.org/). If you don't want to run ParHIP, you can easily get rid of this dependency.
 
 Once you installed the packages, just type 
 ```console
@@ -77,7 +77,7 @@ In this case, the binaries, libraries and headers are in the folder ./build as w
 
 We also provide the option to link against TCMalloc. If you have it installed, run cmake with the additional option -DUSE_TCMALLOC=On. 
 
-By default node ordering programs are also compiled. If you have Metis installed, the build script also compiles a faster node ordering program that uses reductions bevor calling Metis ND.
+By default node ordering programs are also compiled. If you have Metis installed, the build script also compiles a faster node ordering program that uses reductions before calling Metis ND.
 
 If you use the option -DUSE_ILP=On and you have Gurobi installed, the build script compiles the ILP programs to improve a given partition *ilp_improve* and an exact solver *ilp_exact*. Alternatively, you can also pass these options to ./compile_withmake.sh for example:
 
@@ -95,12 +95,12 @@ Lastly, we provide an option for determinism in ParHIP, e.g. two runs with the s
 Running Programs
 =====
 
-For a description of the graph format (and an extensive description of all other programs) please have a look into the manual. We give a short examples here.
+For a description of the graph format (and an extensive description of all other programs) please have a look into the manual. We give short examples here.
 
 ## Overview of Programs and Usecase
 
 ### Default Partitioning Problem  
-These programs and configurations take a graph and partition it more or less sequentially. We list here kaffpa and kaffpaE (the evolutionary framework) and their configurations. In general, the configurations are such that you can invest a lot of time into solution quality using the memetic algorithm. The memetic algorithm can also be run in parallel using MPI. In general, the more time and ressources you invest, the better will be the quality of your partition. We have a lot of trade-offs, contact us if you are unsure what works best for your application. For a description of the algorithm have a look at the references that we list in the manual.
+These programs and configurations take a graph and partition it more or less sequentially. We list here kaffpa and kaffpaE (the evolutionary framework) and their configurations. In general, the configurations are such that you can invest a lot of time into solution quality using the memetic algorithm. The memetic algorithm can also be run in parallel using MPI. In general, the more time and resources you invest, the better will be the quality of your partition. We have a lot of trade-offs, contact us if you are unsure what works best for your application. For a description of the algorithm have a look at the references that we list in the manual.
 
 | Use Case | Input |  Programs |
 | ------------ | -------- | -------- |
@@ -130,7 +130,7 @@ mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit
 
 
 ### Distributed Memory Parallel Partitioning 
-A large part of the project are distributed memory parallel algorithms designed for networks having a hierarchical
+A large part of the project is distributed memory parallel algorithms designed for networks having a hierarchical
 cluster structure such as web graphs or social networks. Unfortunately, previous parallel graph partitioners originally developed for more regular mesh-like networks do not work well for complex networks. Here we address this
 problem by parallelizing and adapting the label propagation technique originally developed for graph clustering.
 By introducing size constraints, label propagation becomes applicable for both the coarsening and the refinement
@@ -138,7 +138,7 @@ phase of multilevel graph partitioning. This way we exploit the hierarchical clu
 graph. The resulting system is both more scalable and achieves higher quality than state-of-the-art systems like
 ParMetis or PT-Scotch.
 
-Our distributed memory parallel algorithm can read binary files as well as standard Metis graph format files. Binary files are in general much more scalable than reading text files in parallel applications. The way to go here is to convert the Metis file into a binary file first (ending .bgf) and then load this one.
+Our distributed memory parallel algorithm can read binary files as well as standard Metis graph format files. Binary files are, in general, much more scalable than reading text files in parallel applications. The way to go here is to convert the Metis file into a binary file first (ending .bgf) and then load this one.
 
 | Use Case | Programs |
 | ------------ | -------- |
@@ -164,9 +164,9 @@ mpirun -n 24 ./deploy/parhip ./examples/rgg_n_2_15_s0.bgf --k 4 --preconfigurati
 ### Node Separators 
 
 The node separator problem asks to partition the node set of a graph into three sets A, B and S such that the
-removal of S disconnects A and B. We use flow-based and localized local search algorithms withing a multilevel
+removal of S disconnects A and B. We use flow-based and localized local search algorithms within a multilevel
 framework to compute node separators.
-KaHIP can also compute node separators. In can do so with a standard node separator (2-way), but it can also compute k-way node separators.
+KaHIP can also compute node separators. It can do so with a standard node separator (2-way), but it can also compute k-way node separators.
 
 | Use Case | Programs |
 | ------------ | -------- |
@@ -199,7 +199,7 @@ By applying both new and existing data reduction rules exhaustively before neste
 ### Edge Partitioning 
 Edge-centric distributed computations have appeared as a recent technique to improve the shortcomings of think-
 like-a-vertex algorithms on large scale-free networks. In order to increase parallelism on this model, edge partitioning -- partitioning edges into roughly equally sized blocks -- has emerged as an alternative to traditional (node-based) graph partitioning. We include a fast parallel and sequential split-and-connect graph construction algorithm
-that yield high-quality edge partitions in a scalable way. Our technique scales to networks with billions of edges,
+that yields high-quality edge partitions in a scalable way. Our technique scales to networks with billions of edges,
 and runs efficiently on thousands of PEs.
 
 | Use Case | Programs |
@@ -217,8 +217,7 @@ mpirun -n 4 ./deploy/distributed_edge_partitioning ./examples/rgg_n_2_15_s0.bgf 
 
 ### Process Mapping 
 Communication and topology aware process mapping is a powerful approach to reduce communication time in parallel applications with known communication patterns on large, distributed memory systems. We address the problem as a quadratic assignment problem (QAP), and include algorithms to construct initial mappings of processes
-to processors as well as fast local search algorithms to further improve the mappings. By exploiting assumptions
-6that typically hold for applications and modern supercomputer systems such as sparse communication patterns and
+to processors as well as fast local search algorithms to further improve the mappings. By exploiting assumptions that typically hold for applications and modern supercomputer systems such as sparse communication patterns and
 hierarchically organized communication systems, we arrive at significantly more powerful algorithms for these
 special QAPs. Our multilevel construction algorithms employ perfectly balanced graph partitioning techniques and
 excessively exploit the given communication system hierarchy. Since v3.0 we included global multisection algorithms that directly partition the input network along the specified hierarchy to obtain an n-to-1 mapping and afterwards call 1-to-1 mapping algorithms to even further improve the mapping.
@@ -241,7 +240,7 @@ excessively exploit the given communication system hierarchy. Since v3.0 we incl
 We provide an ILP as well as an ILP to improve a given partition. We extend the neighborhood of the combination problem for multiple local searches by employing integer linear programming.
 This enables us to find even more complex combinations and hence to further improve solutions.
 However, out of the box those the ILPs for the problem typically do not scale to large inputs, in particular because the graph partitioning problem has a very large amount of symmetry -- given a partition of the graph, each permutation of the block IDs gives a solution having the same objective and balance. 
-We define a much smaller graph, called model, and solve the graph partitioning problem on the model to optimality by the integer linear program. Besides other things, this model enables us to use symmetry breaking, which allows us to scale to much larger inputs. In order to compile these program you need to run cmake in the build process above as cmake ../ -DCMAKE_BUILD_TYPE=Release -DUSE_ILP=On or run ./compile_withcmake -DUSE_ILP=On.
+We define a much smaller graph, called model, and solve the graph partitioning problem on the model to optimality by the integer linear program. Besides other things, this model enables us to use symmetry breaking, which allows us to scale to much larger inputs. In order to compile these programs you need to run cmake in the build process above as cmake ../ -DCMAKE_BUILD_TYPE=Release -DUSE_ILP=On or run ./compile_withcmake -DUSE_ILP=On.
 
 
 | Use Case | Programs |
@@ -263,7 +262,7 @@ We define a much smaller graph, called model, and solve the graph partitioning p
 
 Linking the KaHIP Library 
 =====
-KaHIP also offers libaries and interfaces to link the algorithms directly to your code. We explain the details of the interface in the manual. Below we list an example program that links the kahip library. This example can also  be found in misc/example_library_call/.
+KaHIP also offers libraries and interfaces to link the algorithms directly to your code. We explain the details of the interface in the manual. Below we list an example program that links the kahip library. This example can also  be found in misc/example_library_call/.
 
 ```cpp
 #include <iostream>
@@ -308,7 +307,7 @@ Then run
 ```console
 ./compile_withcmake.sh BUILDPYTHONMODULE
 ```
-to build the Python model. This will build the Python module and also put an example callkahipfrompython.py into the deploy folder. You can run this by typing the follwing in the deploy folder:
+to build the Python model. This will build the Python module and also put an example callkahipfrompython.py into the deploy folder. You can run this by typing the following in the deploy folder:
 ```console
 python3 callkahipfrompython.py 
 ```
@@ -425,7 +424,7 @@ If you use node ordering algorithms please also cite the following paper:
 ```
 
 
-If you use ILP algorithms to improve an partition please also cite the following paper:
+If you use ILP algorithms to improve a partition please also cite the following paper:
 
 ```
 @inproceedings{DBLP:conf/wea/HenzingerN018,
@@ -479,4 +478,3 @@ Daniel Seemaier
 Darren Strash
 
 Jesper Larsson Träff
-

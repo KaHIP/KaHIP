@@ -474,6 +474,9 @@ inline void graph_access::set_partition_count(PartitionID count) {
 }
 
 inline int graph_access::build_from_metis(int n, int* xadj, int* adjncy) {
+        if(graphref != NULL) {
+                delete graphref;
+        }
         graphref = new basicGraph();
         start_construction(n, xadj[n]);
 
@@ -494,6 +497,9 @@ inline int graph_access::build_from_metis(int n, int* xadj, int* adjncy) {
 }
 
 inline int graph_access::build_from_metis_weighted(int n, int* xadj, int* adjncy, int * vwgt, int* adjwgt) {
+        if(graphref != NULL) {
+                delete graphref;
+        }
         graphref = new basicGraph();
         start_construction(n, xadj[n]);
 

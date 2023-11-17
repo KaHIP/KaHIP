@@ -61,12 +61,17 @@ void initial_partitioning::perform_initial_partitioning(const PartitionConfig & 
         } else {
                 best_cut = std::numeric_limits<EdgeWeight>::max();
         }
-        
+
         timer t;
         t.restart();
         int* partition_map  = new int[G.number_of_nodes()];
-        unsigned reps_to_do = (unsigned) std::max((int)ceil(config.initial_partitioning_repetitions/(double)log2(config.k)),2);
-         
+
+        unsigned reps_to_do = 2;
+        if(config.k>1)
+        {
+            reps_to_do = (unsigned) std::max((int)ceil(config.initial_partitioning_repetitions/(double)log2(config.k)),2);
+        }
+
         if(config.initial_partitioning_repetitions == 0) {
                 reps_to_do = 1;
         }
