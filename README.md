@@ -77,7 +77,7 @@ In this case, the binaries, libraries and headers are in the folder ./build as w
 
 We also provide the option to link against TCMalloc. If you have it installed, run cmake with the additional option -DUSE_TCMALLOC=On. 
 
-By default node ordering programs are also compiled. If you have Metis installed, the build script also compiles a faster node ordering program that uses reductions before calling Metis ND.
+By default node ordering programs are also compiled. If you have Metis installed, the build script also compiles a faster node ordering program that uses reductions before calling Metis ND. Note that Metis requires GKlib (https://github.com/KarypisLab/GKlib).
 
 If you use the option -DUSE_ILP=On and you have Gurobi installed, the build script compiles the ILP programs to improve a given partition *ilp_improve* and an exact solver *ilp_exact*. Alternatively, you can also pass these options to ./compile_withmake.sh for example:
 
