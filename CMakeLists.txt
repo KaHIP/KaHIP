@@ -357,7 +357,7 @@ target_link_libraries(kahip_static PUBLIC ${OpenMP_CXX_LIBRARIES})
 set_target_properties(kahip_static PROPERTIES PUBLIC_HEADER interface/kaHIP_interface.h)
 
 if(LIB_METIS)
-        target_link_libraries(kahip_static PUBLIC ${LIB_METIS})
+	target_link_libraries(kahip_static PUBLIC ${LIB_METIS} ${LIB_GK})
 endif()
 
 install(TARGETS kahip_static
