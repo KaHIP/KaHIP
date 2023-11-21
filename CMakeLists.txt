@@ -384,7 +384,7 @@ endif()
 # pybind11 module
 option(BUILDPYTHONMODULE "Build Python binding." OFF)
 if (BUILDPYTHONMODULE)
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/misc/pymodule/pybind11)
+  find_package(pybind11 REQUIRED)
   pybind11_add_module(kahip_python_binding ${CMAKE_CURRENT_SOURCE_DIR}/misc/pymodule/kahip.cpp)
   target_link_libraries(kahip_python_binding PUBLIC kahip_static)
   set_target_properties(kahip_python_binding PROPERTIES OUTPUT_NAME "kahip")

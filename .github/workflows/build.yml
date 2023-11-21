@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 60
     steps:
     - name: Install dependencies
-      run: sudo apt-get install -y libopenmpi-dev 
+      run: sudo apt-get install -y libopenmpi-dev pybind11-dev
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
