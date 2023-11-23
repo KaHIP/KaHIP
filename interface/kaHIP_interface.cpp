@@ -596,6 +596,8 @@ void internal_processmapping_call(PartitionConfig & partition_config,
 
         forall_nodes(G, node) {
                 G.setPartitionIndex(node, perm_rank[G.getPartitionIndex(node)]);
+                // update part IDs after mapping algorithm
+                part[node] = G.getPartitionIndex(node);
         } endfor
 
         *qap = (int)internal_qap;
@@ -645,6 +647,11 @@ void process_mapping(int* n, int* vwgt, int* xadj,
         for( int i = 0; i < hierarchy_depth; i++) {
                 partition_config.group_sizes.push_back(hierarchy_parameter[i]);
                 partition_config.distances.push_back(distance_parameter[i]);
+        }
+
+        // compute k 
+        for( unsigned int i = 0; i < partition_config.group_sizes.size(); i++) {
+                partition_config.k *= partition_config.group_sizes[i];
         }
 
         partition_config.seed = seed;

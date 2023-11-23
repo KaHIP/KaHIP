@@ -447,6 +447,8 @@ Project Contributors (sorted by last name)
 =====
 Yaroslav Akhremtsev
 
+Adil Chhabra
+
 Marcelo Fonseca Faraj
 
 Roland Glantz
