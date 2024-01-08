@@ -1,4 +1,4 @@
-KaHIP v3.15  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
+KaHIP v3.16  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 =====
 
@@ -15,6 +15,8 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 ## NEW in v3.14:
 **Support for Python**: KaHIP can now also be used in Python. See below how to do that.
+
+*Hierarchical Partitionings*: KaHIP can compute hierarchial partitionings. All you have to do is specify the hierarchy and KaHIP is ready to go and does the multisection as you specified. 
 
 *Node Ordering Algorithms*: Many applications rely on time-intensive matrix operations, such as factorization, which can be sped up significantly for large sparse matrices by interpreting the matrix as a sparse graph and computing a node ordering that minimizes the so-called fill-in. Here, we added new algorithms to compute fill-in reduced orderings in graphs.
 
@@ -446,6 +448,8 @@ If you use ILP algorithms to improve a partition please also cite the following 
 Project Contributors (sorted by last name)
 =====
 Yaroslav Akhremtsev
+
+Adil Chhabra
 
 Marcelo Fonseca Faraj
 
