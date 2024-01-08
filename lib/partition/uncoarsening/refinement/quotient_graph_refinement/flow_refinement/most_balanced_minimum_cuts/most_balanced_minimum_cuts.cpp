@@ -118,7 +118,7 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
                         }
 
                         if(valid_to_add[cur_component]) {
-                                int tmpdiff = optimal_rhs_stripe_weight - cur_rhs_weight - comp_weights[cur_component];
+                                int tmpdiff = (int)optimal_rhs_stripe_weight - (int)cur_rhs_weight - (int)comp_weights[cur_component];
                                 bool would_break = tmpdiff <= 0 && t_contained;
                                 if(!would_break) {
                                         tmp_comp_for_rhs.push_back(cur_component);
