@@ -24,6 +24,7 @@
 #include "../lib/partition/uncoarsening/separator/area_bfs.h"
 #include "../lib/partition/partition_config.h"
 #include "../lib/partition/graph_partitioner.h"
+#include "../lib/partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
 #include "../lib/partition/uncoarsening/separator/vertex_separator_algorithm.h"
 #include "../lib/partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
 #include "../app/configuration.h"
@@ -541,6 +542,7 @@ void internal_processmapping_call(PartitionConfig & partition_config,
                //cout.rdbuf(ofs.rdbuf()); 
         //}
 
+        
         partition_config.imbalance = 100*(*imbalance);
         graph_access G;     
         internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
@@ -550,6 +552,17 @@ void internal_processmapping_call(PartitionConfig & partition_config,
                 partitioner.perform_partitioning(partition_config, G);
         } else {
                 partitioner.perform_partitioning_krec_hierarchy(partition_config, G);
+        }
+
+        if( partition_config.kaffpa_perfectly_balance ) {
+                double epsilon                         = partition_config.imbalance/100.0;
+                partition_config.upper_bound_partition = (1+epsilon)*ceil(partition_config.largest_graph_weight/(double)partition_config.k);
+
+                complete_boundary boundary(&G);
+                boundary.build();
+
+                cycle_refinement cr;
+                cr.perform_refinement(partition_config, G, boundary);
         }
 
         forall_nodes(G, node) {
@@ -616,7 +629,6 @@ void process_mapping(int* n, int* vwgt, int* xadj,
 
         configuration cfg;
         PartitionConfig partition_config;
-        partition_config.k = 1;
 
         switch( mode_partitioning ) {
                 case FAST: 
@@ -644,9 +656,11 @@ void process_mapping(int* n, int* vwgt, int* xadj,
 
         partition_config.group_sizes.clear();
         partition_config.distances.clear();
+        partition_config.k = 1;
         for( int i = 0; i < hierarchy_depth; i++) {
                 partition_config.group_sizes.push_back(hierarchy_parameter[i]);
                 partition_config.distances.push_back(distance_parameter[i]);
+                partition_config.k *= hierarchy_parameter[i];
         }
 
         // compute k 
@@ -659,4 +673,53 @@ void process_mapping(int* n, int* vwgt, int* xadj,
 
 };
 
+void process_mapping_enforcebalance(int* n, int* vwgt, int* xadj, 
+                   int* adjcwgt, int* adjncy, 
+                   int* hierarchy_parameter,  int* distance_parameter, int hierarchy_depth, 
+                   int mode_partitioning, int mode_mapping,
+                   double* imbalance,  
+                   bool suppress_output, int seed,
+                   int* edgecut, int* qap, int* part) {
+
+        configuration cfg;
+        PartitionConfig partition_config;
+        partition_config.kaffpa_perfectly_balance = 1;
+
+        switch( mode_partitioning ) {
+                case FAST: 
+                        cfg.fast(partition_config);
+                        break;
+                case ECO: 
+                        cfg.eco(partition_config);
+                        break;
+                case STRONG: 
+                        cfg.strong(partition_config);
+                        break;
+                case FASTSOCIAL: 
+                        cfg.fastsocial(partition_config);
+                        break;
+                case ECOSOCIAL: 
+                        cfg.ecosocial(partition_config);
+                        break;
+                case STRONGSOCIAL: 
+                        cfg.strongsocial(partition_config);
+                        break;
+                default: 
+                        cfg.eco(partition_config);
+                        break;
+        }
+
+        partition_config.group_sizes.clear();
+        partition_config.distances.clear();
+        partition_config.k = 1;
+        for( int i = 0; i < hierarchy_depth; i++) {
+                partition_config.group_sizes.push_back(hierarchy_parameter[i]);
+                partition_config.distances.push_back(distance_parameter[i]);
+                partition_config.k *= hierarchy_parameter[i];
+        }
+
+        partition_config.seed = seed;
+        internal_processmapping_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy,  mode_mapping, imbalance, edgecut, qap, part);
+
+};
 

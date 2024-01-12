@@ -75,9 +75,9 @@ void fast_construct_mapping::construct_initial_mapping_topdown_internal( Partiti
                 std::vector< NodeID > & map_to_original, 
                 std::vector< NodeID > & perm_rank) {
 
+        if( group_sizes.size() == 0 ) return;
         PartitionID num_parts = group_sizes[group_sizes.size()-1];
         if( num_parts == 1 ) {
-                if( group_sizes.size() == 1 ) return;
                 group_sizes.pop_back();
                 return construct_initial_mapping_topdown_internal( config, C, group_sizes, 0, map_to_original, perm_rank);
         } 
