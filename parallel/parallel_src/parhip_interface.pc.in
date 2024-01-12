@@ -1,0 +1,15 @@
+#   ParHIP - Parallel High Quality Partitioning
+#   Copyright (c) 2019 <christian.schulz.phone@gmail.com>
+#   MIT license (https://opensource.org/license/mit)
+
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+includedir=${exec_prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+
+Name: parhip_interface
+Description: distributed memory parallel partitioning techniques
+URL: https://kahip.github.io/
+Version: @KAHIP_VERSION@
+Libs: -L${libdir} -lparhip_interface
+Cflags: -I${includedir}
