@@ -351,7 +351,8 @@ install(TARGETS kahip DESTINATION lib)
 # Static interface library
 add_library(kahip_static interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
                                                            $<TARGET_OBJECTS:libmapping>
-                                                           $<TARGET_OBJECTS:libnodeordering>)
+                                                           $<TARGET_OBJECTS:libnodeordering>
+                                                           $<TARGET_OBJECTS:libspac>)
 target_include_directories(kahip_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(kahip_static PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(kahip_static PUBLIC ${OpenMP_CXX_LIBRARIES})
