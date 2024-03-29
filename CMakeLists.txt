@@ -295,7 +295,7 @@ target_compile_definitions(partition_to_vertex_separator PRIVATE "-DMODE_PARTITI
 target_link_libraries(partition_to_vertex_separator ${OpenMP_CXX_LIBRARIES})
 install(TARGETS partition_to_vertex_separator DESTINATION bin)
 
-add_executable(interface_test misc/example_library_call/interface_test.cpp interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping> $<TARGET_OBJECTS:libnodeordering>)
+add_executable(interface_test misc/example_library_call/interface_test.cpp interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping> $<TARGET_OBJECTS:libnodeordering> $<TARGET_OBJECTS:libspac>)
 target_include_directories(interface_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(interface_test PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(interface_test ${OpenMP_CXX_LIBRARIES})
@@ -338,7 +338,8 @@ endif()
 # Shared interface library
 add_library(kahip SHARED interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
                                                            $<TARGET_OBJECTS:libmapping>
-                                                           $<TARGET_OBJECTS:libnodeordering>)
+                                                           $<TARGET_OBJECTS:libnodeordering>
+                                                           $<TARGET_OBJECTS:libspac>)
 target_include_directories(kahip PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(kahip PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(kahip PUBLIC ${OpenMP_CXX_LIBRARIES})
