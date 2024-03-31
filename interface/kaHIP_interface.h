@@ -72,7 +72,8 @@ void reduced_nd(int* n, int* xadj, int* adjncy,
 void edge_partitioning(int* n, int* vwgt, int* xadj, 
                    int* adjcwgt, int* adjncy, int* nparts, 
                    double* imbalance, bool suppress_output, int seed, int mode, 
-                   int* vertexcut, int* part);
+                   int* vertexcut, int* part, int infinity_edge_weight = 1000);
+
 #ifdef USEMETIS
 // reduced nested dissection with metis
 void reduced_nd_fast(int* n, int* xadj, int* adjncy,

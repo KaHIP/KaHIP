@@ -662,7 +662,7 @@ void process_mapping(int* n, int* vwgt, int* xadj,
 void edge_partitioning(int* n, int* vwgt, int* xadj, 
                    int* adjcwgt, int* adjncy, int* nparts, 
                    double* imbalance, bool suppress_output, int seed, int mode, 
-                   int* vertexcut, int* part) {
+                   int* vertexcut, int* part, int infinity_edge_weight) {
         configuration cfg;
         PartitionConfig partition_config;
         partition_config.k = *nparts;
@@ -675,7 +675,7 @@ void edge_partitioning(int* n, int* vwgt, int* xadj,
         graph_access G;     
         internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
 
-        spac splitter(G, 1000);
+        spac splitter(G, infinity_edge_weight);
         graph_access &split_G = splitter.construct_split_graph();
 
         balance_configuration bc;
