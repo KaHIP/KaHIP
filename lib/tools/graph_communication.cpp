@@ -22,20 +22,21 @@ void graph_communication::broadcast_graph( graph_access & G, unsigned root) {
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
         //first B-Cast number of nodes and number of edges 
-        unsigned number_of_nodes = 0;
-        unsigned number_of_edges = 0;
- 
-        std::vector< int > buffer(2,0);
+        NodeID number_of_nodes = 0;
+        EdgeID number_of_edges = 0;
+
+        MPI_Datatype MNodeID = (sizeof(NodeID) == 4) ? MPI_INT : MPI_LONG_LONG;
+        MPI_Datatype MEdgeID = (sizeof(EdgeID) == 4) ? MPI_INT : MPI_LONG_LONG;
+
         if(rank == (int)root) {
-               buffer[0] = G.number_of_nodes();
-               buffer[1] = G.number_of_edges();
+               number_of_nodes = G.number_of_nodes();
+               number_of_edges = G.number_of_edges();
         }
-        MPI_Bcast(&buffer[0], 2, MPI_INT, root, MPI_COMM_WORLD);
 
-        number_of_nodes = buffer[0];
-        number_of_edges = buffer[1];
+        MPI_Bcast(&number_of_nodes, 1, MNodeID, root, MPI_COMM_WORLD);
+        MPI_Bcast(&number_of_edges, 1, MEdgeID, root, MPI_COMM_WORLD);
 
-        int* xadj;        
+        EdgeID* xadj;
         int* adjncy;
         int* vwgt;        
         int* adjwgt;
@@ -47,13 +48,14 @@ void graph_communication::broadcast_graph( graph_access & G, unsigned root) {
                 vwgt           = G.UNSAFE_metis_style_vwgt_array();
                 adjwgt         = G.UNSAFE_metis_style_adjwgt_array();
         } else {
-                xadj   = new int[number_of_nodes+1];
+                xadj   = new EdgeID[number_of_nodes+1];
                 adjncy = new int[number_of_edges];
 
                 vwgt   = new int[number_of_nodes];
                 adjwgt = new int[number_of_edges];
         }
 
+        // FIXME: When 64-bit need to use Bcast_c
         MPI_Bcast(xadj,   number_of_nodes+1, MPI_INT, root, MPI_COMM_WORLD);
         MPI_Bcast(adjncy, number_of_edges  , MPI_INT, root, MPI_COMM_WORLD);
         MPI_Bcast(vwgt,   number_of_nodes  , MPI_INT, root, MPI_COMM_WORLD);

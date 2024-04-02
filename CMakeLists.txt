@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 include(CheckCXXCompilerFlag)
 
+# Library version
+set(KAHIP_VERSION_MAJOR 3)
+set(KAHIP_VERSION_MINOR 10)
+set(KAHIP_VERSION_PATCH 0)
+set(KAHIP_VERSION "${KAHIP_VERSION_MAJOR}.${KAHIP_VERSION_MINOR}.${KAHIP_VERSION_PATCH}")
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_program(CCACHE_PROGRAM ccache)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -91,7 +97,14 @@ option(64BITMODE "64 bit mode" OFF)
 if(64BITMODE)
   add_definitions("-DMODE64BITEDGES")
   add_definitions("-DPOINTER64=1")
+  set(KAHIP_EDGE_SIZE 8)
+else()
+  set(KAHIP_EDGE_SIZE 4)
 endif()
+
+# Config file
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/interface/kaHIP_config.h.cmake
+               ${CMAKE_CURRENT_SOURCE_DIR}/interface/kaHIP_config.h)
 
 # optimized output
 option(OPTIMIZED_OUTPUT "optimized output" OFF)

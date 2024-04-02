@@ -12,12 +12,13 @@ pybind11::object wrap_kaffpa(
                 int seed,
                 int mode) {
         int n = pybind11::len(xadj) - 1;
-        std::vector<int> xadjv, adjncyv, vwgtv, adjwgtv;
+        std::vector<kaHIP_edge_t> xadjv;
+        std::vector<int> adjncyv, vwgtv, adjwgtv;
         for (auto it : xadj) 
-                xadjv.push_back(pybind11::cast<int>(*it)); 
+                xadjv.push_back(pybind11::cast<kaHIP_edge_t>(*it));
 
         for (auto it : adjncy) 
-                adjncyv.push_back(pybind11::cast<int>(*it)); 
+                adjncyv.push_back(pybind11::cast<kaHIP_edge_t>(*it));
 
         for (auto it : vwgt) 
                 vwgtv.push_back(pybind11::cast<int>(*it)); 
