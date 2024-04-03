@@ -8,13 +8,14 @@
 #ifndef KAFFPA_INTERFACE_RYEEZ6WJ
 #define KAFFPA_INTERFACE_RYEEZ6WJ
 
-#include <stdint.h>
 #include "kaHIP_config.h"
 
 #ifdef __cplusplus
-
+#include <cstdint>
 extern "C"
 {
+#else
+#include <stdint.h>
 #endif
 
 #if KAHIP_EDGE_SIZE == 8

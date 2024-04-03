@@ -25,8 +25,8 @@ void graph_communication::broadcast_graph( graph_access & G, unsigned root) {
         NodeID number_of_nodes = 0;
         EdgeID number_of_edges = 0;
 
-        MPI_Datatype MNodeID = (sizeof(NodeID) == 4) ? MPI_INT : MPI_LONG_LONG;
-        MPI_Datatype MEdgeID = (sizeof(EdgeID) == 4) ? MPI_INT : MPI_LONG_LONG;
+        MPI_Datatype MNodeID = MPI_INT;
+        MPI_Datatype MEdgeID = (sizeof(EdgeID) == 4) ? MPI_UNSIGNED : MPI_UINT64_T;
 
         if(rank == (int)root) {
                number_of_nodes = G.number_of_nodes();
