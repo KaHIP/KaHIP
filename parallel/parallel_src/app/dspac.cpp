@@ -75,9 +75,11 @@ int main(int argn, char **argv) {
     }
 
     // load input graph
+    std::vector<EdgeID> edge_permutation;
+
     t.restart();
     parallel_graph_access input_graph(communicator);
-    edge_balanced_graph_io::read_binary_graph_edge_balanced(input_graph, graph_filename, partition_config, rank, size);
+    edge_balanced_graph_io::read_binary_graph_edge_balanced(input_graph, graph_filename, partition_config, edge_permutation, rank, size);
     if (rank == ROOT) {
         std::cout << "input IO took " << t.elapsed() << "\n"
                   << "n(input): " << input_graph.number_of_global_nodes() << "\n"
@@ -106,11 +108,17 @@ int main(int argn, char **argv) {
     // evaluate edge partition
     t.restart();
     splitter.fix_cut_dominant_edges(split_graph);
-    std::vector<PartitionID> edge_partition = splitter.project_partition(split_graph);
+    std::vector<PartitionID> edge_partition = splitter.project_partition(split_graph, edge_permutation);
     EdgeWeight vertex_cut = splitter.calculate_vertex_cut(partition_config.k, edge_partition);
     if (rank == ROOT) {
         std::cout << "evaluation took " << t.elapsed() << "\n"
                   << "vertex cut: " << vertex_cut << std::endl;
+    }
+
+    if (partition_config.save_partition || partition_config.save_partition_binary) {
+        for (NodeID node = 0; node < split_graph.number_of_local_nodes(); ++node) {
+            split_graph.setNodeLabel(node, edge_partition[node]);
+        }
     }
 
     if( partition_config.save_partition ) {

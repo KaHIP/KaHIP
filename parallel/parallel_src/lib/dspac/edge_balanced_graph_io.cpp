@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <array>
+#include <numeric>
 
 #include "edge_balanced_graph_io.h"
 
@@ -27,16 +28,16 @@ static ULONG readFirstInvalidEdge(std::ifstream &in, ULONG numberOfNodes, ULONG 
 static ULONG adjacencyListOffsetToEdgeID(ULONG numberOfNodes, ULONG offset);
 
 void edge_balanced_graph_io::read_binary_graph_edge_balanced(parallel_graph_access &G, const std::string &filename,
-                                                             const PPartitionConfig &config) {
+                                                             const PPartitionConfig &config, std::vector<EdgeID> &permutation) {
     int rank;
     int size;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    read_binary_graph_edge_balanced(G, filename, config, rank, size);
+    read_binary_graph_edge_balanced(G, filename, config, permutation, rank, size);
 }
 
 void edge_balanced_graph_io::read_binary_graph_edge_balanced(parallel_graph_access &G, const std::string &filename,
-                                                             const PPartitionConfig &config, int rank, int size) {
+                                                             const PPartitionConfig &config, std::vector<EdgeID> &permutation, int rank, int size) {
     // header[0] = version number
     // header[1] = number of nodes
     // header[2] = number of edges
@@ -86,6 +87,9 @@ void edge_balanced_graph_io::read_binary_graph_edge_balanced(parallel_graph_acce
               << numberOfLocalNodes << ", numberOfLocalEdges=" << numberOfLocalEdges << std::endl;
 
     in.close();
+
+    permutation.resize(numberOfLocalEdges);
+    std::iota(permutation.begin(), permutation.end(), 0);
 
     // to construct the vertex range array, send 'from' to all other PEs
     std::vector<NodeID> nodeRanges(static_cast<std::size_t>(size + 1));
@@ -149,7 +153,12 @@ void edge_balanced_graph_io::read_binary_graph_edge_balanced(parallel_graph_acce
                 G.setSecondPartitionIndex(node, 0);
 
                 NodeID degree = (vertexOffsets[i + 1] - vertexOffsets[i]) / sizeof(ULONG);
+
+                std::sort(permutation.begin() + pos, permutation.begin() + pos + degree, [&](EdgeID a, EdgeID b) {
+                    return edges[a] < edges[b];
+                });
                 std::sort(edges + pos, edges + pos + degree);
+
                 for (ULONG j = 0; j < degree; ++j, ++pos) {
                     NodeID target = edges[pos];
                     EdgeID edge = G.new_edge(node, target);

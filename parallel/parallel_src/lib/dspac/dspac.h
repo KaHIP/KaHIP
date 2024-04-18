@@ -17,7 +17,7 @@ class dspac {
 public:
     dspac(parallel_graph_access &graph, MPI_Comm comm, EdgeWeight infinity);
     void construct(parallel_graph_access &split_graph);
-    std::vector<PartitionID> project_partition(parallel_graph_access &split_graph);
+    std::vector<PartitionID> project_partition(parallel_graph_access &split_graph, const std::vector<EdgeID> &permutation);
     EdgeWeight calculate_vertex_cut(PartitionID k, const std::vector<PartitionID> &edge_partition);
     void fix_cut_dominant_edges(parallel_graph_access &split_graph);
 

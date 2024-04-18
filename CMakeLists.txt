@@ -280,6 +280,11 @@ target_compile_definitions(evaluator PRIVATE "-DMODE_EVALUATOR")
 target_link_libraries(evaluator ${OpenMP_CXX_LIBRARIES})
 install(TARGETS evaluator DESTINATION bin)
 
+add_executable(edge_evaluator app/edge_evaluator.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
+target_compile_definitions(edge_evaluator PRIVATE "-DMODE_EVALUATOR")
+target_link_libraries(edge_evaluator ${OpenMP_CXX_LIBRARIES})
+install(TARGETS edge_evaluator DESTINATION bin)
+
 add_executable(node_separator app/node_separator_ml.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
 target_compile_definitions(node_separator PRIVATE "-DMODE_NODESEP")
 target_link_libraries(node_separator ${OpenMP_CXX_LIBRARIES})
