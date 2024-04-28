@@ -16,7 +16,7 @@ int main(int argn, char **argv) {
         std::cout <<  "partitioning graph from the manual"  << std::endl;
 
         int n            = 5;
-        int* xadj        = new int[6];
+        kaHIP_edge_t* xadj        = new kaHIP_edge_t[6];
         xadj[0] = 0; xadj[1] = 2; xadj[2] = 5; xadj[3] = 7; xadj[4] = 9; xadj[5] = 12;
 
         int* adjncy      = new int[12];

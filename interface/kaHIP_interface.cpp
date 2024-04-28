@@ -35,6 +35,21 @@
 
 using namespace std;
 
+void kaHIP_version(int *major, int *minor, int *patch, int *node_sz, int *edge_sz)
+{
+        if (major)
+                *major = KAHIP_VERSION_MAJOR;
+        if (minor)
+                *minor = KAHIP_VERSION_MINOR;
+        if (patch)
+                *patch = KAHIP_VERSION_PATCH;
+        if (node_sz)
+                *node_sz = 4;
+        if (edge_sz)
+                *edge_sz = KAHIP_EDGE_SIZE;
+}
+
+
 void internal_kaffpa_set_configuration( configuration & cfg,
                                  PartitionConfig & partition_config,
                                  int mode) {
@@ -66,7 +81,7 @@ void internal_kaffpa_set_configuration( configuration & cfg,
 void internal_build_graph( PartitionConfig & partition_config, 
                            int* n, 
                            int* vwgt, 
-                           int* xadj, 
+                           EdgeID* xadj,
                            int* adjcwgt, 
                            int* adjncy,
                            graph_access & G) {
@@ -96,9 +111,9 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
                           bool suppress_output, 
                           int* n, 
                           int* vwgt, 
-                          int* xadj, 
+                          EdgeID* xadj,
                           int* adjcwgt, 
-                          int* adjncy, 
+                          int* adjncy,
                           int* nparts, 
                           double* imbalance, 
                           bool perfectly_balance,
@@ -145,9 +160,9 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
 
 void kaffpa(int* n, 
                    int* vwgt, 
-                   int* xadj, 
+                   EdgeID* xadj,
                    int* adjcwgt, 
-                   int* adjncy, 
+                   int* adjncy,
                    int* nparts, 
                    double* imbalance, 
                    bool suppress_output, 
@@ -167,9 +182,9 @@ void kaffpa(int* n,
 
 void kaffpa_balance(int* n, 
                    int* vwgt, 
-                   int* xadj, 
+                   EdgeID* xadj,
                    int* adjcwgt, 
-                   int* adjncy, 
+                   int* adjncy,
                    int* nparts, 
                    double* imbalance, 
                    bool perfectly_balance, 
@@ -190,9 +205,9 @@ void kaffpa_balance(int* n,
 
 void kaffpa_balance_NE(int* n, 
                    int* vwgt, 
-                   int* xadj, 
+                   EdgeID* xadj,
                    int* adjcwgt, 
-                   int* adjncy, 
+                   int* adjncy,
                    int* nparts, 
                    double* imbalance, 
                    bool suppress_output, 
@@ -215,9 +230,9 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
                           bool suppress_output, 
                           int* n, 
                           int* vwgt, 
-                          int* xadj, 
+                          EdgeID* xadj,
                           int* adjcwgt, 
-                          int* adjncy, 
+                          int* adjncy,
                           int* nparts, 
                           double* imbalance, 
                           int mode,
@@ -315,9 +330,9 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
 
 void node_separator(int* n, 
                     int* vwgt, 
-                    int* xadj, 
+                    EdgeID* xadj,
                     int* adjcwgt, 
-                    int* adjncy, 
+                    int* adjncy,
                     int* nparts, 
                     double* imbalance, 
                     bool suppress_output, 
@@ -358,7 +373,7 @@ void node_separator(int* n,
 }
 
 void reduced_nd(int* n,
-                int* xadj,
+                EdgeID* xadj,
                 int* adjncy,
                 bool suppress_output,
                 int seed,
@@ -429,7 +444,7 @@ void reduced_nd(int* n,
 
 #ifdef USEMETIS
 void reduced_nd_fast(int* n,
-                      int* xadj,
+                      EdgeID* xadj,
                       int* adjncy,
                       bool suppress_output,
                       int seed,
@@ -525,9 +540,9 @@ void internal_processmapping_call(PartitionConfig & partition_config,
                           bool suppress_output, 
                           int* n, 
                           int* vwgt, 
-                          int* xadj, 
+                          EdgeID* xadj,
                           int* adjcwgt, 
-                          int* adjncy, 
+                          int* adjncy,
                           int mode_mapping,
                           double* imbalance, 
                           int* edgecut, 
@@ -606,8 +621,8 @@ void internal_processmapping_call(PartitionConfig & partition_config,
         //cout.rdbuf(backup);
 }
 
-void process_mapping(int* n, int* vwgt, int* xadj, 
-                   int* adjcwgt, int* adjncy, 
+void process_mapping(int* n, int* vwgt, EdgeID* xadj,
+                   int* adjcwgt, int* adjncy,
                    int* hierarchy_parameter,  int* distance_parameter, int hierarchy_depth, 
                    int mode_partitioning, int mode_mapping,
                    double* imbalance,  
@@ -659,8 +674,8 @@ void process_mapping(int* n, int* vwgt, int* xadj,
 
 };
 
-void edge_partitioning(int* n, int* vwgt, int* xadj, 
-                   int* adjcwgt, int* adjncy, int* nparts, 
+void edge_partitioning(int* n, int* vwgt, EdgeID* xadj,
+                   int* adjcwgt, int* adjncy, int* nparts,
                    double* imbalance, bool suppress_output, int seed, int mode, 
                    int* vertexcut, int* part, int infinity_edge_weight) {
         configuration cfg;
