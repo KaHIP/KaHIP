@@ -107,6 +107,11 @@ install(TARGETS parhip_interface
         PUBLIC_HEADER DESTINATION include
         )
 
+# pkg-config
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/parhip_interface.pc.in" "${CMAKE_CURRENT_BINARY_DIR}/parhip_interface.pc" @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/parhip_interface.pc" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+
+
 add_library(parhip_interface_static interface/parhip_interface.cpp $<TARGET_OBJECTS:libparallel>)
 target_compile_definitions(parhip_interface_static PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY -DPARALLEL_LABEL_COMPRESSION")
 target_include_directories(parhip_interface_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
