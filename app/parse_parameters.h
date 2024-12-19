@@ -209,6 +209,11 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *ilp_overlap_runs                     = arg_int0(NULL, "ilp_overlap_runs", NULL, "In overlap mode: Build overlap using ilp_overlap_runs many subproblem.");
         struct arg_int *ilp_timeout                          = arg_int0(NULL, "ilp_timeout", NULL, "ILP timeout in seconds (Default: 7200)");
 
+        void* argtable_fordeletion[] = {
+                help, use_mmap_io, edge_rating_tiebreaking, match_islands, only_first_level, graph_weighted, enable_corner_refinement, disable_qgraph_refinement, use_fullmultigrid, use_vcycle, compute_vertex_separator, first_level_random_matching, rate_first_level_inner_outer, use_bucket_queues, use_wcycles, disable_refined_bubbling, enable_convergence, enable_omp, wcycle_no_new_initial_partitioning, filename, filename_output, user_seed, version, k, edge_rating, refinement_type, matching_type, mh_pool_size, mh_plain_repetitions, mh_penalty_for_unconnected, mh_disable_nc_combine, mh_disable_cross_combine, mh_disable_combine, mh_enable_quickstart, mh_disable_diversify_islands, mh_disable_diversify, mh_diversify_best, mh_enable_tournament_selection, mh_cross_combine_original_k, mh_optimize_communication_volume, disable_balance_singletons, gpa_grow_internal, initial_partitioning_repetitions, minipreps, aggressive_random_levels, imbalance, initial_partition, initial_partition_optimize, bipartition_algorithm, permutation_quality, permutation_during_refinement, fm_search_limit, bipartition_post_fm_limit, bipartition_post_ml_limit, bipartition_tries, refinement_scheduling_algorithm, bank_account_factor, flow_region_factor, kway_adaptive_limits_alpha, stop_rule, num_vert_stop_factor, kway_search_stop_rule, bubbling_iterations, kway_rounds, kway_fm_limits, global_cycle_iterations, level_split, toposort_iterations, most_balanced_flows, input_partition, recursive_bipartitioning, suppress_output, disable_max_vertex_weight_constraint, local_multitry_fm_alpha, local_multitry_rounds, initial_partition_optimize_fm_limits, initial_partition_optimize_multitry_fm_alpha, initial_partition_optimize_multitry_rounds, preconfiguration, time_limit, unsuccessful_reps, local_partitioning_repetitions, amg_iterations, mh_flip_coin, mh_initial_population_fraction, mh_print_log, mh_sequential_mode, kaba_neg_cycle_algorithm, kabaE_internal_bal, kaba_internal_no_aug_steps_aug, kaba_packing_iterations, kaba_unsucc_iterations, kaba_flip_packings, kaba_lsearch_p, kaffpa_perfectly_balanced_refinement, kaba_disable_zero_weight_cycles, enforce_balance, mh_enable_tabu_search, mh_enable_kabapE, maxT, maxIter, balance_edges, cluster_upperbound, label_propagation_iterations, max_initial_ns_tries, max_flow_improv_steps, most_balanced_flows_node_sep, region_factor_node_separators, sep_flows_disabled, sep_fm_disabled, sep_loc_fm_disabled, sep_greedy_disabled, sep_full_boundary_ip, sep_faster_ns, sep_fm_unsucc_steps, sep_num_fm_reps, sep_loc_fm_unsucc_steps, sep_num_loc_fm_reps, sep_loc_fm_no_snodes, sep_num_vert_stop, sep_edge_rating_during_ip, enable_mapping, hierarchy_parameter_string, distance_parameter_string, online_distances, dissection_rec_limit, disable_reductions, reduction_order, convergence_factor, max_simplicial_degree, ilp_mode, ilp_min_gain, ilp_bfs_depth, ilp_overlap_presets, ilp_limit_nonzeroes, ilp_overlap_runs, ilp_timeout,
+                end
+        };
+
         // Define argtable.
         void* argtable[] = {
                 help, filename, user_seed, version, 
@@ -347,6 +352,7 @@ int parse_parameters(int argn, char **argv,
 
         if (version->count > 0) {
                 std::cout <<  KAHIPVERSION  << std::endl;
+                arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                 return 1;
         }
 
@@ -355,14 +361,14 @@ int parse_parameters(int argn, char **argv,
                 printf("Usage: %s", progname);
                 arg_print_syntax(stdout, argtable, "\n");
                 arg_print_glossary(stdout, argtable,"  %-40s %s\n");
-                arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+                arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                 return 1;
         }
 
         if (nerrors > 0) {
                 arg_print_errors(stderr, end, progname);
                 printf("Try '%s --help' for more information.\n",progname);
-                arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+                arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                 return 1; 
         }
 
@@ -404,9 +410,9 @@ int parse_parameters(int argn, char **argv,
                         cfg.ecosocial_separator(partition_config);
                 } else if (strcmp("ssocial", preconfiguration->sval[0]) == 0) {
                         cfg.strongsocial_separator(partition_config);
-                        exit(0);
                 } else {
                         fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
 #else
@@ -424,6 +430,7 @@ int parse_parameters(int argn, char **argv,
                         cfg.strongsocial(partition_config);
                 } else {
                         fprintf(stderr, "Invalid preconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
 #endif
@@ -437,11 +444,13 @@ int parse_parameters(int argn, char **argv,
                 partition_config.enable_mapping = true;
                 if(!hierarchy_parameter_string->count) {
                         std::cout <<  "Please specify the hierarchy using the --hierarchy_parameter_string option."  << std::endl;
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
 
                 if(!distance_parameter_string->count) {
                         std::cout <<  "Please specify the distances using the --distance_parameter_string option."  << std::endl;
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -466,6 +475,8 @@ int parse_parameters(int argn, char **argv,
                 if( old_k != partition_config.k ) {
                         std::cout <<  "number of processors defined through specified hierarchy does not match k!"  << std::endl;
                         std::cout <<  "please specify k as " << partition_config.k  << std::endl;
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
 #endif
@@ -626,6 +637,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.kaba_lsearch_p = NOCOIN_RNDTIE;
                 } else {
                         fprintf(stderr, "Invalid combine variant: \"%s\"\n", kaba_lsearch_p->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -921,6 +934,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.cycle_refinement_algorithm = CYCLE_REFINEMENT_ALGORITHM_ULTRA_MODEL_PLUS;
                 } else {
                         fprintf(stderr, "Invalid balanced refinement operator: \"%s\"\n", kaba_neg_cycle_algorithm->sval[0]);
+                                
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -960,6 +975,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.sep_edge_rating_during_ip = SEPARATOR_R8;
                 } else {
                         fprintf(stderr, "Invalid edge rating variant: \"%s\"\n", sep_edge_rating_during_ip->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -1003,6 +1020,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.edge_rating = SEPARATOR_R8;
                 } else {
                         fprintf(stderr, "Invalid edge rating variant: \"%s\"\n", edge_rating->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -1014,6 +1033,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.bipartition_algorithm = BIPARTITION_FM;
                 } else {
                         fprintf(stderr, "Invalid bipartition algorthim: \"%s\"\n", bipartition_algorithm->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -1027,6 +1048,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.refinement_scheduling_algorithm = REFINEMENT_SCHEDULING_ACTIVE_BLOCKS_REF_KWAY;
                 } else {
                         fprintf(stderr, "Invalid refinement scheduling variant: \"%s\"\n", refinement_scheduling_algorithm->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -1040,6 +1063,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.stop_rule = STOP_RULE_STRONG;
                 } else {
                         fprintf(stderr, "Invalid stop rule: \"%s\"\n", stop_rule->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -1051,6 +1076,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.kway_stop_rule = KWAY_ADAPTIVE_STOP_RULE;
                 } else {
                         fprintf(stderr, "Invalid kway stop rule: \"%s\"\n", kway_search_stop_rule->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -1064,6 +1091,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.permutation_quality = PERMUTATION_QUALITY_GOOD;
                 } else {
                         fprintf(stderr, "Invalid permutation quality variant: \"%s\"\n", permutation_quality->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
 
@@ -1078,6 +1107,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.permutation_during_refinement = PERMUTATION_QUALITY_GOOD;
                 } else {
                         fprintf(stderr, "Invalid permutation quality during refinement variant: \"%s\"\n", permutation_during_refinement->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -1091,6 +1122,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.matching_type = MATCHING_RANDOM_GPA;
                 } else {
                         fprintf(stderr, "Invalid matching variant: \"%s\"\n", matching_type->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -1104,6 +1137,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.refinement_type = REFINEMENT_TYPE_FLOW;
                 } else {
                         fprintf(stderr, "Invalid refinement type variant: \"%s\"\n", refinement_type->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -1113,6 +1148,8 @@ int parse_parameters(int argn, char **argv,
                         partition_config.initial_partitioning_type = INITIAL_PARTITIONING_RECPARTITION;
                 } else {
                         fprintf(stderr, "Invalid initial partition variant: \"%s\"\n", initial_partition->sval[0]);
+
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -1148,6 +1185,7 @@ int parse_parameters(int argn, char **argv,
                                 partition_config.reduction_order.push_back((nested_dissection_reduction_type)value);
                         } else {
                                 std::cout << "Unknown reduction type " << value << std::endl;
+                                arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                                 return 1;
                         }
                 }
@@ -1240,6 +1278,8 @@ int parse_parameters(int argn, char **argv,
                 partition_config.ilp_timeout = 7200;
         }
 
+
+        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
         return 0;
 }
 
