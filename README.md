@@ -316,11 +316,11 @@ python3 callkahipfrompython.py
 Note that we only provide preliminary support, i.e. you may need to change some paths to Python inside the compile_withcmake file. An example can also be found below:
 
 ```python
-import kahip;
+import kahip
 
 #build adjacency array representation of the graph
-xadj           = [0,2,5,7,9,12];
-adjncy         = [1,4,0,2,4,1,3,2,4,0,1,3];
+xadj           = [0,2,5,7,9,12]
+adjncy         = [1,4,0,2,4,1,3,2,4,0,1,3]
 vwgt           = [1,1,1,1,1]
 adjcwgt        = [1,1,1,1,1,1,1,1,1,1,1,1]
 supress_output = 0
