@@ -25,7 +25,7 @@ fi
 
 export pybind11_DIR=$(pip show pybind11 | grep Location | cut -d ' ' -f 2)/pybind11/share/cmake/pybind11
 
-cmake -B build -DCMAKE_BUILD_TYPE=Release $ADDITIONAL_ARGS -DPYTHON_EXECUTABLE=$(which python3.11)
+cmake -B build -DCMAKE_BUILD_TYPE=Release $ADDITIONAL_ARGS
 make -j $NCORES
 
 cd build
