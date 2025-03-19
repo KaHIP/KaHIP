@@ -23,9 +23,14 @@ else
     ADDITIONAL_ARGS="$1"
 fi
 
-(cd build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release $ADDITIONAL_ARGS && \
-    make -j $NCORES)
+export pybind11_DIR=$(pip show pybind11 | grep Location | cut -d ' ' -f 2)/pybind11/share/cmake/pybind11
+
+cmake -B build -DCMAKE_BUILD_TYPE=Release "$ADDITIONAL_ARGS"
+make -j "$NCORES"
+
+cd build
+cmake --build .
+cd ..
 
 echo
 echo "Copying files into 'deploy'"
