@@ -29,7 +29,7 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release "$ADDITIONAL_ARGS"
 make -j "$NCORES"
 
 cd build
-cmake --build .
+cmake --build . -j "$NCORES"
 cd ..
 
 echo
