@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
+set(KAHIP_VERSION 3.15)
+
 include(CheckCXXCompilerFlag)
+include(GNUInstallDirs)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_program(CCACHE_PROGRAM ccache)
@@ -352,6 +355,11 @@ if(LIB_METIS)
 	target_link_libraries(kahip PUBLIC ${LIB_METIS} ${LIB_GK})
 endif()
 install(TARGETS kahip DESTINATION lib)
+
+# pkg-config
+configure_file("lib/kahip.pc.in" "${CMAKE_CURRENT_BINARY_DIR}/kahip.pc" @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kahip.pc" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+
 
 # Static interface library
 add_library(kahip_static interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
