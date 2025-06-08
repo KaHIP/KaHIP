@@ -399,7 +399,22 @@ option(BUILDPYTHONMODULE "Build Python binding." OFF)
 if (BUILDPYTHONMODULE)
   find_package(pybind11 REQUIRED)
   pybind11_add_module(kahip_python_binding ${CMAKE_CURRENT_SOURCE_DIR}/misc/pymodule/kahip.cpp)
-  install(TARGETS kahip_python_binding DESTINATION "${CMAKE_INSTALL_PYTHONDIR}/kahip")
+  find_package(Python3 COMPONENTS Interpreter)
+  if (NOT DEFINED CMAKE_INSTALL_PYTHONDIR OR CMAKE_INSTALL_PYTHONDIR STREQUAL "")
+    if (Python3_FOUND)
+      execute_process(
+          COMMAND "${Python3_EXECUTABLE}" -c "import sysconfig; print(sysconfig.get_path('purelib'))"
+          OUTPUT_VARIABLE CMAKE_INSTALL_PYTHONDIR_DEFAULT
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      set(CMAKE_INSTALL_PYTHONDIR "${CMAKE_INSTALL_PYTHONDIR_DEFAULT}"
+        CACHE PATH "Install directory for python modules"
+      )
+    else()
+      message(FATAL_ERROR "Python3 interpreter not found! Please specify CMAKE_INSTALL_PYTHONDIR manually.")
+    endif()
+  endif()
+  install(TARGETS kahip_python_binding DESTINATION ${CMAKE_INSTALL_PYTHONDIR})
   target_link_libraries(kahip_python_binding PUBLIC kahip_static)
   set_target_properties(kahip_python_binding PROPERTIES OUTPUT_NAME "kahip")
 endif ()

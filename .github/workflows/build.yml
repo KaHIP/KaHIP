@@ -32,7 +32,9 @@ jobs:
         echo CC=${{ matrix.compiler.cc }} >> $GITHUB_ENV
     - name: Build 
       run: ./compile_withcmake.sh ${{ matrix.argument }}
+    - name: Install 
+      run:  sudo make -C ./build install 
     - name: Test Python interface 
       if: matrix.argument == 'BUILDPYTHONMODULE'
-      run: python3 ./deploy/callkahipfrompython.py
+      run: python3 ./misc/pymodule/callkahipfrompython.py
 
