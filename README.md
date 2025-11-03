@@ -1,4 +1,4 @@
-KaHIP v3.20  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
+KaHIP v3.21  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 =====
 
@@ -13,8 +13,13 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 </p>
 
 
-## NEW in v3.20:
-*KaFFPa* can now be used with pip. Simply use pip install kahip.
+## NEW in v3.21:
+*KaFFPa* can now be used with pip. Simply run
+
+```console 
+pip install kahip
+```
+and use the example Python code below.
 
 ## NEW in v3.14:
 **Support for Python**: KaHIP can now also be used in Python. See below how to do that.
