@@ -399,7 +399,16 @@ option(BUILDPYTHONMODULE "Build Python binding." OFF)
 if (BUILDPYTHONMODULE)
   find_package(pybind11 REQUIRED)
   pybind11_add_module(kahip_python_binding ${CMAKE_CURRENT_SOURCE_DIR}/misc/pymodule/kahip.cpp)
-  install(TARGETS kahip_python_binding DESTINATION "${CMAKE_INSTALL_PYTHONDIR}/kahip")
+
+  # Install to the kahip Python package directory
+  if(SKBUILD)
+    # When building with scikit-build-core, install directly to kahip/
+    install(TARGETS kahip_python_binding DESTINATION kahip)
+  else()
+    # Standard installation path
+    install(TARGETS kahip_python_binding DESTINATION "${CMAKE_INSTALL_PYTHONDIR}/kahip")
+  endif()
+
   target_link_libraries(kahip_python_binding PUBLIC kahip_static)
   set_target_properties(kahip_python_binding PROPERTIES OUTPUT_NAME "kahip")
 endif ()
