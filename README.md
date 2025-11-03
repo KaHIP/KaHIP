@@ -13,6 +13,9 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 </p>
 
 
+## NEW in v3.20:
+*KaFFPa* can now be used with pip. Simply use pip install kahip.
+
 ## NEW in v3.14:
 **Support for Python**: KaHIP can now also be used in Python. See below how to do that.
 
