@@ -1,0 +1,34 @@
+[build-system]
+requires = ["scikit-build-core>=0.5", "pybind11>=2.10"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "kahip"
+version = "3.19.0"
+description = "Karlsruhe High Quality Graph Partitioning Framework"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Christian Schulz"},
+]
+keywords = ["graph", "partitioning", "graph-partitioning", "multilevel"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+]
+
+[tool.scikit-build]
+cmake.build-type = "Release"
+cmake.args = ["-DBUILDPYTHONMODULE=ON", "-DNOMPI=ON"]
+wheel.packages = ["python/kahip"]
+minimum-version = "0.5"
