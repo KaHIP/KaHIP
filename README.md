@@ -104,19 +104,19 @@ For a description of the graph format (and an extensive description of all other
 ### Default Partitioning Problem  
 These programs and configurations take a graph and partition it more or less sequentially. We list here kaffpa and kaffpaE (the evolutionary framework) and their configurations. In general, the configurations are such that you can invest a lot of time into solution quality using the memetic algorithm. The memetic algorithm can also be run in parallel using MPI. In general, the more time and resources you invest, the better will be the quality of your partition. We have a lot of trade-offs, contact us if you are unsure what works best for your application. For a description of the algorithm have a look at the references that we list in the manual.
 
-| Use Case | Input |  Programs |
-| ------------ | -------- | -------- |
-| Graph Format || graph_checker  |
-| Evaluate Partitions || evaluator |
-| Fast Partitioning | Meshes | kaffpa preconfiguration set to fast  |
-| Good Partitioning | Meshes | kaffpa preconfiguration set to eco  |
-| Very Good Partitioning | Meshes | kaffpa preconfiguration set to strong |
-| Highest Quality | Meshes | kaffpaE, use mpirun, large time limit  |
-| Fast Partitioning | Social | kaffpa preconfiguration set to fsocial  |
-| Good Partitioning | Social  | kaffpa preconfiguration set to esocial  |
-| Very Good Partitioning | Social | kaffpa preconfiguration set to ssocial |
-| Highest Quality | Social | kaffpaE, use mpirun, large time limit, preconfiguration ssocial  |
-| Even Higher Quality || kaffpaE, use mpirun, large time limit, use the options --mh_enable_tabu_search, --mh_enable_kabapE  |
+| Use Case               | Input  | Programs                                                                                           |
+| ---------------------- | ------ | -------------------------------------------------------------------------------------------------- |
+| Graph Format           |        | graph_checker                                                                                      |
+| Evaluate Partitions    |        | evaluator                                                                                          |
+| Fast Partitioning      | Meshes | kaffpa preconfiguration set to fast                                                                |
+| Good Partitioning      | Meshes | kaffpa preconfiguration set to eco                                                                 |
+| Very Good Partitioning | Meshes | kaffpa preconfiguration set to strong                                                              |
+| Highest Quality        | Meshes | kaffpaE, use mpirun, large time limit                                                              |
+| Fast Partitioning      | Social | kaffpa preconfiguration set to fsocial                                                             |
+| Good Partitioning      | Social | kaffpa preconfiguration set to esocial                                                             |
+| Very Good Partitioning | Social | kaffpa preconfiguration set to ssocial                                                             |
+| Highest Quality        | Social | kaffpaE, use mpirun, large time limit, preconfiguration ssocial                                    |
+| Even Higher Quality    |        | kaffpaE, use mpirun, large time limit, use the options --mh_enable_tabu_search, --mh_enable_kabapE |
 #### Example Runs
 ```console
 ./deploy/graph_checker ./examples/rgg_n_2_15_s0.graph 
@@ -142,13 +142,13 @@ ParMetis or PT-Scotch.
 
 Our distributed memory parallel algorithm can read binary files as well as standard Metis graph format files. Binary files are, in general, much more scalable than reading text files in parallel applications. The way to go here is to convert the Metis file into a binary file first (ending .bgf) and then load this one.
 
-| Use Case | Programs |
-| ------------ | -------- |
-| Parallel Partitioning | parhip, graph2binary, graph2binary_external, toolbox |
-| Distributed Memory Parallel, Mesh | parhip with preconfigs ecomesh, fastmesh, ultrafastmesh |
+| Use Case                            | Programs                                                      |
+| ----------------------------------- | ------------------------------------------------------------- |
+| Parallel Partitioning               | parhip, graph2binary, graph2binary_external, toolbox          |
+| Distributed Memory Parallel, Mesh   | parhip with preconfigs ecomesh, fastmesh, ultrafastmesh       |
 | Distributed Memory Parallel, Social | parhip with preconfigs ecosocial, fastsocial, ultrafastsocial |
-| Convert Metis to Binary | graph2binary, graph2binary_external |
-| Evaluate and Convert Partitions | toolbox |
+| Convert Metis to Binary             | graph2binary, graph2binary_external                           |
+| Evaluate and Convert Partitions     | toolbox                                                       |
 
 #### Example Runs
 ```console
@@ -170,10 +170,10 @@ removal of S disconnects A and B. We use flow-based and localized local search a
 framework to compute node separators.
 KaHIP can also compute node separators. It can do so with a standard node separator (2-way), but it can also compute k-way node separators.
 
-| Use Case | Programs |
-| ------------ | -------- |
-| 2-Way Separators | node_separator |
-| KWay Separators | use kaffpa to create k-partition, then partition_to_vertex_separator to create a separator |
+| Use Case         | Programs                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------ |
+| 2-Way Separators | node_separator                                                                             |
+| KWay Separators  | use kaffpa to create k-partition, then partition_to_vertex_separator to create a separator |
 
 #### Example Runs
 ```console
@@ -184,10 +184,10 @@ KaHIP can also compute node separators. It can do so with a standard node separa
 Applications such as factorization can be sped up significantly for large sparse matrices by interpreting the matrix as a sparse graph and computing a node ordering that minimizes the so-called fill-in.
 By applying both new and existing data reduction rules exhaustively before nested dissection, we obtain improved quality and at the same time large improvements in running time on a variety of instances. If METIS is installed, the build script also compiles the fast_node_ordering program, which runs reductions before running Metis to compute an ordering. The programs are also available through the library.
 
-| Use Case | Programs |
-| ------------ | -------- |
-| Node Ordering | node_ordering (with different preconfigurations) |
-| Fast Node Ordering  | fast_node_ordering |
+| Use Case           | Programs                                         |
+| ------------------ | ------------------------------------------------ |
+| Node Ordering      | node_ordering (with different preconfigurations) |
+| Fast Node Ordering | fast_node_ordering                               |
 
 #### Example Runs
 ```console
@@ -204,8 +204,8 @@ like-a-vertex algorithms on large scale-free networks. In order to increase para
 that yields high-quality edge partitions in a scalable way. Our technique scales to networks with billions of edges,
 and runs efficiently on thousands of PEs.
 
-| Use Case | Programs |
-| ------------ | -------- |
+| Use Case          | Programs                                         |
+| ----------------- | ------------------------------------------------ |
 | Edge Partitioning | edge_partitioning, distributed_edge_partitioning |
 
 #### Example Runs
@@ -224,10 +224,10 @@ hierarchically organized communication systems, we arrive at significantly more 
 special QAPs. Our multilevel construction algorithms employ perfectly balanced graph partitioning techniques and
 excessively exploit the given communication system hierarchy. Since v3.0 we included global multisection algorithms that directly partition the input network along the specified hierarchy to obtain an n-to-1 mapping and afterwards call 1-to-1 mapping algorithms to even further improve the mapping.
 
-| Use Case | Programs |
-| ------------ | -------- |
+| Use Case                      | Programs                                                           |
+| ----------------------------- | ------------------------------------------------------------------ |
 | Mapping to Processor Networks | kaffpa, and use enable_mapping option with resp. perconfigurations |
-| Global Multisection | global_multisection with resp. perconfigurations |
+| Global Multisection           | global_multisection with resp. perconfigurations                   |
 
 #### Example Runs
 ```console
@@ -245,9 +245,9 @@ However, out of the box those the ILPs for the problem typically do not scale to
 We define a much smaller graph, called model, and solve the graph partitioning problem on the model to optimality by the integer linear program. Besides other things, this model enables us to use symmetry breaking, which allows us to scale to much larger inputs. In order to compile these programs you need to run cmake in the build process above as cmake ../ -DCMAKE_BUILD_TYPE=Release -DUSE_ILP=On or run ./compile_withcmake -DUSE_ILP=On.
 
 
-| Use Case | Programs |
-| ------------ | -------- |
-| Exact Solver | ilp_exact |
+| Use Case            | Programs    |
+| ------------------- | ----------- |
+| Exact Solver        | ilp_exact   |
 | Improvement via ILP | ilp_improve |
 
 #### Example Runs
@@ -480,5 +480,7 @@ Christian Schulz (maintainer)
 Daniel Seemaier
 
 Darren Strash
+
+Alexander Svozil
 
 Jesper Larsson Träff

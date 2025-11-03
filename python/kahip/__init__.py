@@ -4,7 +4,11 @@ KaHIP - Karlsruhe High Quality Graph Partitioning Framework
 Python bindings for the KaHIP graph partitioning library.
 """
 
-__version__ = "3.19.0"
+try:
+    from ._version import __version__
+except ImportError:
+    # Fallback version for development installs without setuptools-scm
+    __version__ = "0.0.0+unknown"
 
 try:
     from .kahip import kaffpa
