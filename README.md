@@ -307,7 +307,13 @@ int main(int argn, char **argv) {
 ```
 Using KaHIP in Python
 =====
-KaHIP can also be used in Python. If you want to use it in Python first run 
+KaHIP can also be used in Python. The easiest way is to install it using pip:
+
+```
+pip install kahip
+```
+
+Alterantively, if you want to use latest commit in Python first run 
 
 ```
 python3 -m pip install pybind11
