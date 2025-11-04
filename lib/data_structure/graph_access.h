@@ -218,14 +218,14 @@ class graph_access {
                 NodeWeight get_contraction_offset(NodeID node) const;
                 void set_contraction_offset(NodeID node, NodeWeight offset);
 
-                int* UNSAFE_metis_style_xadj_array();
+                EdgeID* UNSAFE_metis_style_xadj_array();
                 int* UNSAFE_metis_style_adjncy_array();
 
                 int* UNSAFE_metis_style_vwgt_array();
                 int* UNSAFE_metis_style_adjwgt_array();
 
-                int build_from_metis(int n, int* xadj, int* adjncy);
-                int build_from_metis_weighted(int n, int* xadj, int* adjncy, int * vwgt, int* adjwgt);
+                int build_from_metis(int n, EdgeID* xadj, int* adjncy);
+                int build_from_metis_weighted(int n, EdgeID* xadj, int* adjncy, int * vwgt, int* adjwgt);
 
                 //void set_node_queue_index(NodeID node, Count queue_index); 
                 //Count get_node_queue_index(NodeID node);
@@ -425,8 +425,8 @@ inline EdgeWeight graph_access::getMaxDegree() {
         return m_max_degree;
 }
 
-inline int* graph_access::UNSAFE_metis_style_xadj_array() {
-        int* xadj      = new int[graphref->number_of_nodes()+1];
+inline EdgeID* graph_access::UNSAFE_metis_style_xadj_array() {
+        EdgeID* xadj      = new EdgeID[graphref->number_of_nodes()+1];
         basicGraph& ref = *graphref;
 
         forall_nodes(ref, n) {
@@ -473,7 +473,7 @@ inline void graph_access::set_partition_count(PartitionID count) {
         m_partition_count = count;
 }
 
-inline int graph_access::build_from_metis(int n, int* xadj, int* adjncy) {
+inline int graph_access::build_from_metis(int n, EdgeID* xadj, int* adjncy) {
         if(graphref != NULL) {
                 delete graphref;
         }
@@ -485,7 +485,7 @@ inline int graph_access::build_from_metis(int n, int* xadj, int* adjncy) {
                 setNodeWeight(node, 1);
                 setPartitionIndex(node, 0);
 
-                for( unsigned e = xadj[i]; e < (unsigned)xadj[i+1]; e++) {
+                for( EdgeID e = xadj[i]; e < xadj[i+1]; e++) {
                         EdgeID e_bar = new_edge(node, adjncy[e]);
                         setEdgeWeight(e_bar, 1);
                 }
@@ -496,7 +496,7 @@ inline int graph_access::build_from_metis(int n, int* xadj, int* adjncy) {
         return 0;
 }
 
-inline int graph_access::build_from_metis_weighted(int n, int* xadj, int* adjncy, int * vwgt, int* adjwgt) {
+inline int graph_access::build_from_metis_weighted(int n, EdgeID* xadj, int* adjncy, int * vwgt, int* adjwgt) {
         if(graphref != NULL) {
                 delete graphref;
         }
@@ -508,7 +508,7 @@ inline int graph_access::build_from_metis_weighted(int n, int* xadj, int* adjncy
                 setNodeWeight(node, vwgt[i]);
                 setPartitionIndex(node, 0);
 
-                for( unsigned e = xadj[i]; e < (unsigned)xadj[i+1]; e++) {
+                for( EdgeID e = xadj[i]; e < xadj[i+1]; e++) {
                         EdgeID e_bar = new_edge(node, adjncy[e]);
                         setEdgeWeight(e_bar, adjwgt[e]);
                 }
