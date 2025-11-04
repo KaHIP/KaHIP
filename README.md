@@ -353,6 +353,28 @@ print(edgecut)
 print(blocks)
 ```
 
+Alternatively, you can use the `kahip_graph` class to construct graphs programmatically:
+
+```python
+import kahip
+
+# Create graph using kahip_graph class
+g = kahip.kahip_graph()
+g.set_num_nodes(5)
+g.add_undirected_edge(0, 1, 2)
+g.add_undirected_edge(1, 2, 1)
+g.add_undirected_edge(2, 3, 3)
+g.add_undirected_edge(3, 4, 1)
+g.set_weight(0, 2)  # Set node weight
+
+# Convert to CSR format and partition
+vwgt, xadj, adjcwgt, adjncy = g.get_csr_arrays()
+edgecut, blocks = kahip.kaffpa(vwgt, xadj, adjcwgt, adjncy, 2, 0.03, 0, 0, 0)
+
+print(f"Edgecut: {edgecut}")
+print(f"Blocks: {blocks}")
+```
+
 Licence
 =====
 The program is licenced under MIT licence.
