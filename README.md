@@ -114,7 +114,7 @@ These programs and configurations take a graph and partition it more or less seq
 
 | Use Case               | Input  | Programs                                                                                           |
 | ---------------------- | ------ | -------------------------------------------------------------------------------------------------- |
-| Graph Format           |        | graph_checker                                                                                      |
+| Graph Format           |        | graphchecker                                                                                      |
 | Evaluate Partitions    |        | evaluator                                                                                          |
 | Fast Partitioning      | Meshes | kaffpa preconfiguration set to fast                                                                |
 | Good Partitioning      | Meshes | kaffpa preconfiguration set to eco                                                                 |
@@ -127,7 +127,7 @@ These programs and configurations take a graph and partition it more or less seq
 | Even Higher Quality    |        | kaffpaE, use mpirun, large time limit, use the options --mh_enable_tabu_search, --mh_enable_kabapE |
 #### Example Runs
 ```console
-./deploy/graph_checker ./examples/rgg_n_2_15_s0.graph 
+./deploy/graphchecker ./examples/rgg_n_2_15_s0.graph 
 ```
 
 ```console
