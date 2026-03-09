@@ -56,6 +56,21 @@ https://kahip.github.io
 
 Installation Notes
 =====
+
+## Install via Homebrew
+
+```console
+brew install KaHIP/kahip/kahip
+```
+
+If open-mpi fails to build from source (non-standard Homebrew prefix), set the compiler first:
+
+```console
+export HOMEBREW_CC=gcc-15
+export HOMEBREW_CXX=g++-15
+brew install KaHIP/kahip/kahip
+```
+
 ## Downloading KaHIP: 
 You can download KaHIP with the following command line:
 
