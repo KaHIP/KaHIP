@@ -6,6 +6,8 @@ KaHIP v3.23  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08b
 [![Homebrew](https://img.shields.io/badge/homebrew-available-orange)](https://github.com/KaHIP/homebrew-kahip)
 [![Agent-Ready](https://img.shields.io/badge/agent--ready-yes-brightgreen)](https://github.com/KaHIP/KaHIP)
 [![GitHub Stars](https://img.shields.io/github/stars/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/stargazers)
+[![macOS](https://img.shields.io/badge/platform-macOS-blue)](https://github.com/KaHIP/KaHIP)
+[![Linux](https://img.shields.io/badge/platform-Linux-blue)](https://github.com/KaHIP/KaHIP)
 =====
 
 The graph partitioning framework KaHIP -- Karlsruhe High Quality Partitioning.
