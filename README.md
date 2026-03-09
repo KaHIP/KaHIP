@@ -20,7 +20,11 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 
 ## NEW in v3.23:
-*Homebrew Support*: KaHIP can now be installed via Homebrew on macOS and Linux using `brew install KaHIP/kahip/kahip`.
+*Homebrew Support*: KaHIP can now be installed via Homebrew on macOS and Linux using 
+
+```console
+brew install KaHIP/kahip/kahip`
+```
 
 ## NEW in v3.21:
 *KaFFPa* can now be used with pip. Simply run
