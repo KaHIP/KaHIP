@@ -21,6 +21,21 @@ jobs:
           fetch-depth: 0  # Fetch all history for setuptools-scm
           fetch-tags: true  # Explicitly fetch tags
 
+      - name: Pre-download virtualenv for cibuildwheel
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            CACHE_DIR="$HOME/Library/Caches/cibuildwheel"
+          else
+            CACHE_DIR="$HOME/.cache/cibuildwheel"
+          fi
+          mkdir -p "$CACHE_DIR"
+          curl -L --retry 5 --retry-delay 10 \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -o "$CACHE_DIR/virtualenv-20.27.1.pyz" \
+            "https://github.com/pypa/get-virtualenv/raw/20.27.1/public/virtualenv.pyz"
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
         with:
