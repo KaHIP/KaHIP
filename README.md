@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/KaHIP/.github/main/profile/kahip-logo.png" alt="KaHIP Logo" width="600"/>
-</p>
-
 KaHIP v3.23
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![C++](https://img.shields.io/badge/C++-11/14-blue.svg)](https://isocpp.org/)
@@ -25,6 +21,9 @@ KaHIP v3.23
 [![Agent-Ready](https://img.shields.io/badge/Agent--Ready-yes-blue)](https://github.com/KaHIP/KaHIP)
 [![Heidelberg University](https://img.shields.io/badge/Heidelberg-University-c1002a)](https://www.uni-heidelberg.de)
 =====
+<p align="center">
+  <img src="https://raw.githubusercontent.com/KaHIP/.github/main/profile/kahip-logo.png" alt="KaHIP Logo" width="600"/>
+</p>
 
 The graph partitioning framework KaHIP -- Karlsruhe High Quality Partitioning.
 
