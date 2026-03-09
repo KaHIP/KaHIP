@@ -1,18 +1,30 @@
-KaHIP v3.23  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
-[![Build](https://github.com/KaHIP/KaHIP/actions/workflows/build.yml/badge.svg)](https://github.com/KaHIP/KaHIP/actions/workflows/build.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Release](https://img.shields.io/github/v/release/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/releases/latest)
-[![PyPI version](https://img.shields.io/pypi/v/kahip)](https://pypi.org/project/kahip/)
-[![Homebrew](https://img.shields.io/badge/homebrew-available-orange)](https://github.com/KaHIP/homebrew-kahip)
-[![Agent-Ready](https://img.shields.io/badge/agent--ready-yes-brightgreen)](https://github.com/KaHIP/KaHIP)
-[![GitHub Stars](https://img.shields.io/github/stars/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/stargazers)
-[![macOS](https://img.shields.io/badge/platform-macOS-blue)](https://github.com/KaHIP/KaHIP)
-[![Linux](https://img.shields.io/badge/platform-Linux-blue)](https://github.com/KaHIP/KaHIP)
-=====
-
 <p align="center">
   <img src="https://raw.githubusercontent.com/KaHIP/.github/main/profile/kahip-logo.png" alt="KaHIP Logo" width="600"/>
 </p>
+
+KaHIP v3.23
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![C++](https://img.shields.io/badge/C++-11/14-blue.svg)](https://isocpp.org/)
+[![CMake](https://img.shields.io/badge/CMake-3.10+-064F8C.svg)](https://cmake.org/)
+[![Build](https://github.com/KaHIP/KaHIP/actions/workflows/build.yml/badge.svg)](https://github.com/KaHIP/KaHIP/actions/workflows/build.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
+[![GitHub Release](https://img.shields.io/github/v/release/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/releases/latest)
+[![PyPI version](https://img.shields.io/pypi/v/kahip)](https://pypi.org/project/kahip/)
+[![Homebrew](https://img.shields.io/badge/Homebrew-available-orange)](https://github.com/KaHIP/homebrew-kahip)
+[![Linux](https://img.shields.io/badge/Linux-supported-success.svg)](https://github.com/KaHIP/KaHIP)
+[![macOS](https://img.shields.io/badge/macOS-supported-success.svg)](https://github.com/KaHIP/KaHIP)
+[![GitHub Stars](https://img.shields.io/github/stars/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/commits)
+[![arXiv](https://img.shields.io/badge/arXiv-1302.4310-b31b1b.svg)](https://arxiv.org/abs/1302.4310)
+[![arXiv](https://img.shields.io/badge/arXiv-1404.4797-b31b1b.svg)](https://arxiv.org/abs/1404.4797)
+[![arXiv](https://img.shields.io/badge/arXiv-1702.04164-b31b1b.svg)](https://arxiv.org/abs/1702.04164)
+[![arXiv](https://img.shields.io/badge/arXiv-1808.06411-b31b1b.svg)](https://arxiv.org/abs/1808.06411)
+[![arXiv](https://img.shields.io/badge/arXiv-1802.07144-b31b1b.svg)](https://arxiv.org/abs/1802.07144)
+[![arXiv](https://img.shields.io/badge/arXiv-2004.11315-b31b1b.svg)](https://arxiv.org/abs/2004.11315)
+[![Agent-Ready](https://img.shields.io/badge/Agent--Ready-yes-blue)](https://github.com/KaHIP/KaHIP)
+[![Heidelberg University](https://img.shields.io/badge/Heidelberg-University-c1002a)](https://www.uni-heidelberg.de)
+=====
 
 The graph partitioning framework KaHIP -- Karlsruhe High Quality Partitioning.
 
