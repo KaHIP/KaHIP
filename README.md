@@ -12,11 +12,13 @@ KaHIP v3.23
 [![GitHub Stars](https://img.shields.io/github/stars/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/issues)
 [![Last Commit](https://img.shields.io/github/last-commit/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/commits)
-[![arXiv](https://img.shields.io/badge/arXiv-1302.4310-b31b1b.svg)](https://arxiv.org/abs/1302.4310)
+[![arXiv](https://img.shields.io/badge/arXiv-1210.0477-b31b1b.svg)](https://arxiv.org/abs/1210.0477)
 [![arXiv](https://img.shields.io/badge/arXiv-1404.4797-b31b1b.svg)](https://arxiv.org/abs/1404.4797)
 [![arXiv](https://img.shields.io/badge/arXiv-1702.04164-b31b1b.svg)](https://arxiv.org/abs/1702.04164)
-[![arXiv](https://img.shields.io/badge/arXiv-1808.06411-b31b1b.svg)](https://arxiv.org/abs/1808.06411)
+[![arXiv](https://img.shields.io/badge/arXiv-1710.08231-b31b1b.svg)](https://arxiv.org/abs/1710.08231)
 [![arXiv](https://img.shields.io/badge/arXiv-1802.07144-b31b1b.svg)](https://arxiv.org/abs/1802.07144)
+[![arXiv](https://img.shields.io/badge/arXiv-1808.06411-b31b1b.svg)](https://arxiv.org/abs/1808.06411)
+[![arXiv](https://img.shields.io/badge/arXiv-2001.07134-b31b1b.svg)](https://arxiv.org/abs/2001.07134)
 [![arXiv](https://img.shields.io/badge/arXiv-2004.11315-b31b1b.svg)](https://arxiv.org/abs/2004.11315)
 [![Agent-Ready](https://img.shields.io/badge/Agent--Ready-yes-blue)](https://github.com/KaHIP/KaHIP)
 [![Heidelberg University](https://img.shields.io/badge/Heidelberg-University-c1002a)](https://www.uni-heidelberg.de)
@@ -468,15 +470,44 @@ If you use our parallel partitioner ParHIP please also cite the following paper:
 If you use mapping algorithm please also cite the following paper:
 
 ```
-@inproceedings{schulztraeff2017,
-             AUTHOR = {Schulz, Christian and Träff, Jesper Larsson},
+@article{vonkirchbachschulztraeff2020,
+             AUTHOR = {von Kirchbach, Konrad and Schulz, Christian and Tr{\"{a}}ff, Jesper Larsson},
              TITLE = {{Better Process Mapping and Sparse Quadratic Assignment}},
-             BOOKTITLE = {Proceedings of the 16th International Symposium on Experimental Algorithms (SEA'17)},
-             PUBLISHER = {Schloss Dagstuhl - Leibniz-Zentrum fuer Informatik},
-             VOLUME = {75},
+             JOURNAL = {ACM Journal of Experimental Algorithmics},
+             VOLUME = {25},
+             PAGES = {1--37},
+             YEAR = {2020},
+             DOI = {10.1145/3409667}
+}
+```
+
+If you use global multisection mapping please also cite the following paper:
+
+```
+@inproceedings{fonsecafaraj2020mapping,
+             AUTHOR = {Fonseca Faraj, Marcelo and van der Grinten, Alexander and Meyerhenke, Henning and Tr{\"{a}}ff, Jesper Larsson and Schulz, Christian},
+             TITLE = {{High-Quality Hierarchical Process Mapping}},
+             BOOKTITLE = {Proceedings of the 18th International Symposium on Experimental Algorithms (SEA'20)},
              SERIES = {LIPIcs},
+             VOLUME = {160},
              PAGES = {4:1--4:15},
-             YEAR = {2017}
+             YEAR = {2020},
+             DOI = {10.4230/LIPIcs.SEA.2020.4}
+}
+```
+
+If you use shared-memory parallel partitioning (mt-KaHIP) please also cite the following paper:
+
+```
+@article{akhremtsevsandersschulz2020,
+             AUTHOR = {Akhremtsev, Yaroslav and Sanders, Peter and Schulz, Christian},
+             TITLE = {{High-Quality Shared-Memory Graph Partitioning}},
+             JOURNAL = {IEEE Transactions on Parallel and Distributed Systems},
+             VOLUME = {31},
+             NUMBER = {11},
+             PAGES = {2710--2722},
+             YEAR = {2020},
+             DOI = {10.1109/TPDS.2020.3001645}
 }
 ```
 
@@ -496,20 +527,14 @@ If you use edge partitioning algorithms please also cite the following paper:
 If you use node ordering algorithms please also cite the following paper:
 
 ```
-@article{DBLP:journals/corr/abs-2004-11315,
-  author    = {Wolfgang Ost and
-               Christian Schulz and
-               Darren Strash},
+@inproceedings{ostschulzstrash2021,
+  author    = {Wolfgang Ost and Christian Schulz and Darren Strash},
   title     = {Engineering Data Reduction for Nested Dissection},
-  journal   = {CoRR},
-  volume    = {abs/2004.11315},
-  year      = {2020},
-  url       = {https://arxiv.org/abs/2004.11315},
-  archivePrefix = {arXiv},
-  eprint    = {2004.11315},
-  timestamp = {Tue, 28 Apr 2020 16:10:02 +0200},
-  biburl    = {https://dblp.org/rec/journals/corr/abs-2004-11315.bib},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
+  booktitle = {Proceedings of the 19th Workshop on Algorithm Engineering and Experimentation (ALENEX'21)},
+  pages     = {113--126},
+  publisher = {SIAM},
+  year      = {2021},
+  doi       = {10.1137/1.9781611976472.9}
 }
 ```
 
@@ -517,19 +542,14 @@ If you use node ordering algorithms please also cite the following paper:
 If you use ILP algorithms to improve a partition please also cite the following paper:
 
 ```
-@inproceedings{DBLP:conf/wea/HenzingerN018,
-  author    = {Alexandra Henzinger and
-               Alexander Noe and
-               Christian Schulz},
+@article{henzingernoeschulz2020,
+  author    = {Alexandra Henzinger and Alexander Noe and Christian Schulz},
   title     = {ILP-based Local Search for Graph Partitioning},
-  booktitle = {17th International Symposium on Experimental Algorithms, {SEA} 2018},
-  pages     = {4:1--4:15},
-  year      = {2018},
-  url       = {https://doi.org/10.4230/LIPIcs.SEA.2018.4},
-  doi       = {10.4230/LIPIcs.SEA.2018.4},
-  series    = {LIPIcs},
-  volume    = {103},
-  publisher = {Schloss Dagstuhl - Leibniz-Zentrum f{\"{u}}r Informatik}
+  journal   = {ACM Journal of Experimental Algorithmics},
+  volume    = {25},
+  pages     = {1--26},
+  year      = {2020},
+  doi       = {10.1145/3398634}
 }
 ```
 
