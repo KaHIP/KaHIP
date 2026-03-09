@@ -1,6 +1,11 @@
 KaHIP v3.23  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
+[![Build](https://github.com/KaHIP/KaHIP/actions/workflows/build.yml/badge.svg)](https://github.com/KaHIP/KaHIP/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Release](https://img.shields.io/github/v/release/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/releases/latest)
 [![PyPI version](https://img.shields.io/pypi/v/kahip)](https://pypi.org/project/kahip/)
+[![Homebrew](https://img.shields.io/badge/homebrew-available-orange)](https://github.com/KaHIP/homebrew-kahip)
+[![Agent-Ready](https://img.shields.io/badge/agent--ready-yes-brightgreen)](https://github.com/KaHIP/KaHIP)
+[![GitHub Stars](https://img.shields.io/github/stars/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/stargazers)
 =====
 
 The graph partitioning framework KaHIP -- Karlsruhe High Quality Partitioning.
