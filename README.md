@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/KaHIP/.github/main/profile/kahip-logo.png" alt="KaHIP Logo" width="600"/>
-</p>
-
 KaHIP v3.23  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
 [![Build](https://github.com/KaHIP/KaHIP/actions/workflows/build.yml/badge.svg)](https://github.com/KaHIP/KaHIP/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -13,6 +9,10 @@ KaHIP v3.23  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08b
 [![macOS](https://img.shields.io/badge/platform-macOS-blue)](https://github.com/KaHIP/KaHIP)
 [![Linux](https://img.shields.io/badge/platform-Linux-blue)](https://github.com/KaHIP/KaHIP)
 =====
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/KaHIP/.github/main/profile/kahip-logo.png" alt="KaHIP Logo" width="600"/>
+</p>
 
 The graph partitioning framework KaHIP -- Karlsruhe High Quality Partitioning.
 
