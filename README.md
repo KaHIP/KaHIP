@@ -23,7 +23,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 *Homebrew Support*: KaHIP can now be installed via Homebrew on macOS and Linux using 
 
 ```console
-brew install KaHIP/kahip/kahip`
+brew install KaHIP/kahip/kahip
 ```
 
 ## NEW in v3.21:
