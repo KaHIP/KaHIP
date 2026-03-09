@@ -1,4 +1,4 @@
-KaHIP v3.21  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
+KaHIP v3.23  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://img.shields.io/pypi/v/kahip)](https://pypi.org/project/kahip/)
 =====
@@ -13,6 +13,9 @@ The graph partitioning problem asks for a division of a graph's node set into k 
   width="601" height="558">
 </p>
 
+
+## NEW in v3.23:
+*Homebrew Support*: KaHIP can now be installed via Homebrew on macOS and Linux using `brew install KaHIP/kahip/kahip`.
 
 ## NEW in v3.21:
 *KaFFPa* can now be used with pip. Simply run
