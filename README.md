@@ -63,7 +63,14 @@ Installation Notes
 brew install KaHIP/kahip/kahip
 ```
 
-If open-mpi fails to build from source (non-standard Homebrew prefix), set the compiler first:
+If open-mpi fails to build from source (non-standard Homebrew prefix), either install it separately first:
+
+```console
+brew install open-mpi
+brew install KaHIP/kahip/kahip
+```
+
+or set the compiler explicitly:
 
 ```console
 export HOMEBREW_CC=gcc-15
