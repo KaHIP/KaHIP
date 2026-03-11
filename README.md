@@ -82,8 +82,8 @@ and use the example Python code below.
 *Edge Partitioning Algorithms:* Our new algorithms to compute edge partitionings of graphs. 
 
 
-## Main project site:
-https://kahip.github.io
+## Main org site:
+https://github.com/kahip/
 
 Installation Notes
 =====
