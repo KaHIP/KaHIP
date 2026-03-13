@@ -3,12 +3,14 @@ KaHIP v3.24
 [![C++](https://img.shields.io/badge/C++-11/14-blue.svg)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.10+-064F8C.svg)](https://cmake.org/)
 [![Build](https://github.com/KaHIP/KaHIP/actions/workflows/build.yml/badge.svg)](https://github.com/KaHIP/KaHIP/actions/workflows/build.yml)
+[![Windows CI](https://github.com/KaHIP/KaHIP/actions/workflows/build_windows.yml/badge.svg)](https://github.com/KaHIP/KaHIP/actions/workflows/build_windows.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9d0d08ba6b2d42699ab74fe5f9697bb9)](https://www.codacy.com/gh/KaHIP/KaHIP/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=KaHIP/KaHIP&amp;utm_campaign=Badge_Grade)
 [![GitHub Release](https://img.shields.io/github/v/release/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/releases/latest)
 [![PyPI version](https://img.shields.io/pypi/v/kahip)](https://pypi.org/project/kahip/)
 [![Homebrew](https://img.shields.io/badge/Homebrew-available-orange)](https://github.com/KaHIP/homebrew-kahip)
 [![Linux](https://img.shields.io/badge/Linux-supported-success.svg)](https://github.com/KaHIP/KaHIP)
 [![macOS](https://img.shields.io/badge/macOS-supported-success.svg)](https://github.com/KaHIP/KaHIP)
+[![Windows](https://img.shields.io/badge/Windows-supported-success.svg)](https://github.com/KaHIP/KaHIP)
 [![GitHub Stars](https://img.shields.io/github/stars/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/issues)
 [![Last Commit](https://img.shields.io/github/last-commit/KaHIP/KaHIP)](https://github.com/KaHIP/KaHIP/commits)
@@ -27,7 +29,7 @@ KaHIP v3.24
   <img src="https://raw.githubusercontent.com/KaHIP/.github/main/profile/kahip-logo.png" alt="KaHIP Logo" width="600"/>
 </p>
 
-The graph partitioning framework KaHIP -- High Quality Partitioning. Part of the [KaHIP](https://github.com/KaHIP) organization. 
+The graph partitioning framework KaHIP -- High Quality Partitioning. Part of the [KaHIP](https://github.com/KaHIP) organization. KaHIP supports Linux, macOS and Windows.
 
 The graph partitioning problem asks for a division of a graph's node set into k equally sized blocks such that the number of edges that run between the blocks is minimized. KaHIP is a family of graph partitioning programs. It includes KaFFPa (Karlsruhe Fast Flow Partitioner), which is a multilevel graph partitioning algorithm, in its variants Strong, Eco and Fast, KaFFPaE (KaFFPaEvolutionary), which is a parallel evolutionary algorithm that uses KaFFPa to provide combine and mutation operations, as well as KaBaPE which extends the evolutionary algorithm. Moreover, specialized techniques are included to partition road networks (Buffoon), to output a vertex separator from a given partition as well as techniques geared towards the efficient partitioning of social networks. Here is an overview of our framework:
 
