@@ -65,7 +65,12 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 
 ## NEW in v3.24:
-*64-bit Edge Support*: The C interface now supports 64-bit edges via a compile-time `kahip_idx` typedef. Compile with `-D64BITMODE=On` to enable `int64_t` for all edge-related arrays and values (xadj, adjncy, adjcwgt, edgecut). Node-related parameters remain `int`.
+- *64-bit Edge Support*: The C interface now supports 64-bit edges via a compile-time `kahip_idx` typedef. Compile with `-D64BITMODE=On` to enable `int64_t` for all edge-related arrays and values (xadj, adjncy, adjcwgt, edgecut). Node-related parameters remain `int`.
+- *Windows Support*: KaHIP now builds on Windows with MSVC. Windows pip wheels are available on PyPI.
+- *Python 3.13/3.14*: Pip wheels now available for Python 3.10-3.14 on Linux, macOS and Windows.
+- *pkg-config Support*: KaHIP and ParHIP are now discoverable via `pkg-config`.
+- *ParHIP Example*: Added a ParHIP interface usage example (`misc/example_parhip_call/`).
+- *Runtime Index Query*: Added `kahip_sizeof_idx()` to query whether the library was compiled with 32-bit or 64-bit indices.
 
 ## NEW in v3.23:
 *Homebrew Support*: KaHIP can now be installed via Homebrew on macOS and Linux using 
