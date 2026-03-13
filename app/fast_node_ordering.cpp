@@ -6,7 +6,9 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#ifndef _WIN32
 #include <regex.h>
+#endif
 #include <memory>
 #include <vector>
 #include <string>

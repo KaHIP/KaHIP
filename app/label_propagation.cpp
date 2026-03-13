@@ -9,7 +9,9 @@
 #include <iostream>
 #include <sstream>
 #include <math.h>
+#ifndef _WIN32
 #include <regex.h>
+#endif
 #include <stdio.h>
 #include <string.h> 
 

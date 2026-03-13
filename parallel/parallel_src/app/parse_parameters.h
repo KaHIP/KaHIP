@@ -9,8 +9,15 @@
 #ifndef PARSE_PARAMETERS_GPJMGSM8A
 #define PARSE_PARAMETERS_GPJMGSM8A
 
+#ifndef _WIN32
 #include <regex.h>
+#endif
 #include <string.h>
+#ifdef _WIN32
+#ifndef REG_EXTENDED
+#define REG_EXTENDED 1
+#endif
+#endif
 #include "configuration.h"
 #include "version.h"
 

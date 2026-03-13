@@ -13,6 +13,11 @@
 #endif
 #include <string>
 #include <sstream>
+#ifdef _WIN32
+#ifndef REG_EXTENDED
+#define REG_EXTENDED 1
+#endif
+#endif
 #include "configuration.h"
 #include "version.h"
 

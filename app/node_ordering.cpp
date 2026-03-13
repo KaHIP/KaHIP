@@ -4,7 +4,9 @@
 
 #include <argtable3.h>
 #include <iostream>
+#ifndef _WIN32
 #include <regex.h>
+#endif
 #include <fstream>
 #include <stdio.h>
 #include <string.h>

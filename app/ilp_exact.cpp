@@ -7,7 +7,9 @@
 #include <argtable3.h>
 #include <iostream>
 #include <math.h>
+#ifndef _WIN32
 #include <regex.h>
+#endif
 #include <sstream>
 #include <stdio.h>
 #include <string.h> 

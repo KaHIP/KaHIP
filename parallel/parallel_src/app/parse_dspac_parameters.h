@@ -7,8 +7,15 @@
 #ifndef KAHIP_PARSE_DSPAC_PARAMETERS_H
 #define KAHIP_PARSE_DSPAC_PARAMETERS_H
 
+#ifndef _WIN32
 #include <regex.h>
+#endif
 #include <string.h>
+#ifdef _WIN32
+#ifndef REG_EXTENDED
+#define REG_EXTENDED 1
+#endif
+#endif
 #include "configuration.h"
 
 struct DspacConfig {

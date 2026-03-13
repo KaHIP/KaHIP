@@ -6,7 +6,9 @@
  *****************************************************************************/
 
 #include <argtable3.h>
+#ifndef _WIN32
 #include <regex.h>
+#endif
 #include <string.h> 
 
 #include "data_structure/graph_access.h"
