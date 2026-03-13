@@ -33,6 +33,9 @@
 #include "../lib/mapping/mapping_algorithms.h"
 #include "../lib/spac/spac.h"
 
+static_assert(sizeof(kahip_idx) == sizeof(EdgeID),
+              "kahip_idx and EdgeID size mismatch -- check KAHIP_64BIT vs MODE64BITEDGES");
+
 using namespace std;
 
 void internal_kaffpa_set_configuration( configuration & cfg,
@@ -63,12 +66,12 @@ void internal_kaffpa_set_configuration( configuration & cfg,
         }
 }
 
-void internal_build_graph( PartitionConfig & partition_config, 
-                           int* n, 
-                           int* vwgt, 
-                           int* xadj, 
-                           int* adjcwgt, 
-                           int* adjncy,
+void internal_build_graph( PartitionConfig & partition_config,
+                           int* n,
+                           int* vwgt,
+                           kahip_idx* xadj,
+                           kahip_idx* adjcwgt,
+                           kahip_idx* adjncy,
                            graph_access & G) {
         G.build_from_metis(*n, xadj, adjncy); 
         G.set_partition_count(partition_config.k); 
@@ -92,17 +95,17 @@ void internal_build_graph( PartitionConfig & partition_config,
         bc.configurate_balance( partition_config, G);
 }
 
-void internal_kaffpa_call(PartitionConfig & partition_config, 
-                          bool suppress_output, 
-                          int* n, 
-                          int* vwgt, 
-                          int* xadj, 
-                          int* adjcwgt, 
-                          int* adjncy, 
-                          int* nparts, 
-                          double* imbalance, 
+void internal_kaffpa_call(PartitionConfig & partition_config,
+                          bool suppress_output,
+                          int* n,
+                          int* vwgt,
+                          kahip_idx* xadj,
+                          kahip_idx* adjcwgt,
+                          kahip_idx* adjncy,
+                          int* nparts,
+                          double* imbalance,
                           bool perfectly_balance,
-                          int* edgecut, 
+                          kahip_idx* edgecut,
                           int* part) {
 
         //streambuf* backup = cout.rdbuf();
@@ -143,17 +146,17 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
         //cout.rdbuf(backup);
 }
 
-void kaffpa(int* n, 
-                   int* vwgt, 
-                   int* xadj, 
-                   int* adjcwgt, 
-                   int* adjncy, 
-                   int* nparts, 
-                   double* imbalance, 
-                   bool suppress_output, 
+void kaffpa(int* n,
+                   int* vwgt,
+                   kahip_idx* xadj,
+                   kahip_idx* adjcwgt,
+                   kahip_idx* adjncy,
+                   int* nparts,
+                   double* imbalance,
+                   bool suppress_output,
                    int seed,
                    int mode,
-                   int* edgecut, 
+                   kahip_idx* edgecut,
                    int* part) {
         configuration cfg;
         PartitionConfig partition_config;
@@ -165,18 +168,18 @@ void kaffpa(int* n,
         internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, false, edgecut, part);
 }
 
-void kaffpa_balance(int* n, 
-                   int* vwgt, 
-                   int* xadj, 
-                   int* adjcwgt, 
-                   int* adjncy, 
-                   int* nparts, 
-                   double* imbalance, 
-                   bool perfectly_balance, 
-                   bool suppress_output, 
-                   int seed, 
-                   int mode, 
-                   int* edgecut, 
+void kaffpa_balance(int* n,
+                   int* vwgt,
+                   kahip_idx* xadj,
+                   kahip_idx* adjcwgt,
+                   kahip_idx* adjncy,
+                   int* nparts,
+                   double* imbalance,
+                   bool perfectly_balance,
+                   bool suppress_output,
+                   int seed,
+                   int mode,
+                   kahip_idx* edgecut,
                    int* part) {
         configuration cfg;
         PartitionConfig partition_config;
@@ -188,17 +191,17 @@ void kaffpa_balance(int* n,
         internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, perfectly_balance, edgecut, part);
 }
 
-void kaffpa_balance_NE(int* n, 
-                   int* vwgt, 
-                   int* xadj, 
-                   int* adjcwgt, 
-                   int* adjncy, 
-                   int* nparts, 
-                   double* imbalance, 
-                   bool suppress_output, 
+void kaffpa_balance_NE(int* n,
+                   int* vwgt,
+                   kahip_idx* xadj,
+                   kahip_idx* adjcwgt,
+                   kahip_idx* adjncy,
+                   int* nparts,
+                   double* imbalance,
+                   bool suppress_output,
                    int seed,
                    int mode,
-                   int* edgecut, 
+                   kahip_idx* edgecut,
                    int* part) {
         configuration cfg;
         PartitionConfig partition_config;
@@ -211,17 +214,17 @@ void kaffpa_balance_NE(int* n,
         internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, false, edgecut, part);
 }
 
-void internal_nodeseparator_call(PartitionConfig & partition_config, 
-                          bool suppress_output, 
-                          int* n, 
-                          int* vwgt, 
-                          int* xadj, 
-                          int* adjcwgt, 
-                          int* adjncy, 
-                          int* nparts, 
-                          double* imbalance, 
+void internal_nodeseparator_call(PartitionConfig & partition_config,
+                          bool suppress_output,
+                          int* n,
+                          int* vwgt,
+                          kahip_idx* xadj,
+                          kahip_idx* adjcwgt,
+                          kahip_idx* adjncy,
+                          int* nparts,
+                          double* imbalance,
                           int mode,
-                          int* num_nodeseparator_vertices, 
+                          int* num_nodeseparator_vertices,
                           int** separator) {
 
         //first perform std partitioning using KaFFPa
@@ -313,17 +316,17 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
 }
 
 
-void node_separator(int* n, 
-                    int* vwgt, 
-                    int* xadj, 
-                    int* adjcwgt, 
-                    int* adjncy, 
-                    int* nparts, 
-                    double* imbalance, 
-                    bool suppress_output, 
+void node_separator(int* n,
+                    int* vwgt,
+                    kahip_idx* xadj,
+                    kahip_idx* adjcwgt,
+                    kahip_idx* adjncy,
+                    int* nparts,
+                    double* imbalance,
+                    bool suppress_output,
                     int seed,
                     int mode,
-                    int* num_separator_vertices, 
+                    int* num_separator_vertices,
                     int** separator) {
         configuration cfg;
         PartitionConfig partition_config;
@@ -358,8 +361,8 @@ void node_separator(int* n,
 }
 
 void reduced_nd(int* n,
-                int* xadj,
-                int* adjncy,
+                kahip_idx* xadj,
+                kahip_idx* adjncy,
                 bool suppress_output,
                 int seed,
                 int mode,
@@ -429,8 +432,8 @@ void reduced_nd(int* n,
 
 #ifdef USEMETIS
 void reduced_nd_fast(int* n,
-                      int* xadj,
-                      int* adjncy,
+                      kahip_idx* xadj,
+                      kahip_idx* adjncy,
                       bool suppress_output,
                       int seed,
                       int* ordering) {
@@ -521,16 +524,16 @@ void reduced_nd_fast(int* n,
 }
 #endif
 
-void internal_processmapping_call(PartitionConfig & partition_config, 
-                          bool suppress_output, 
-                          int* n, 
-                          int* vwgt, 
-                          int* xadj, 
-                          int* adjcwgt, 
-                          int* adjncy, 
+void internal_processmapping_call(PartitionConfig & partition_config,
+                          bool suppress_output,
+                          int* n,
+                          int* vwgt,
+                          kahip_idx* xadj,
+                          kahip_idx* adjcwgt,
+                          kahip_idx* adjncy,
                           int mode_mapping,
-                          double* imbalance, 
-                          int* edgecut, 
+                          double* imbalance,
+                          kahip_idx* edgecut,
                           int* qap,
                           int* part) {
 
@@ -606,13 +609,13 @@ void internal_processmapping_call(PartitionConfig & partition_config,
         //cout.rdbuf(backup);
 }
 
-void process_mapping(int* n, int* vwgt, int* xadj, 
-                   int* adjcwgt, int* adjncy, 
-                   int* hierarchy_parameter,  int* distance_parameter, int hierarchy_depth, 
+void process_mapping(int* n, int* vwgt, kahip_idx* xadj,
+                   kahip_idx* adjcwgt, kahip_idx* adjncy,
+                   int* hierarchy_parameter,  int* distance_parameter, int hierarchy_depth,
                    int mode_partitioning, int mode_mapping,
-                   double* imbalance,  
+                   double* imbalance,
                    bool suppress_output, int seed,
-                   int* edgecut, int* qap, int* part) {
+                   kahip_idx* edgecut, int* qap, int* part) {
 
         configuration cfg;
         PartitionConfig partition_config;
@@ -659,10 +662,10 @@ void process_mapping(int* n, int* vwgt, int* xadj,
 
 };
 
-void edge_partitioning(int* n, int* vwgt, int* xadj, 
-                   int* adjcwgt, int* adjncy, int* nparts, 
-                   double* imbalance, bool suppress_output, int seed, int mode, 
-                   int* vertexcut, int* part, int infinity_edge_weight) {
+void edge_partitioning(int* n, int* vwgt, kahip_idx* xadj,
+                   kahip_idx* adjcwgt, kahip_idx* adjncy, int* nparts,
+                   double* imbalance, bool suppress_output, int seed, int mode,
+                   int* vertexcut, int* part, kahip_idx infinity_edge_weight) {
         configuration cfg;
         PartitionConfig partition_config;
         partition_config.k = *nparts;

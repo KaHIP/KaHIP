@@ -90,6 +90,7 @@ endif()
 option(64BITMODE "64 bit mode" OFF)
 if(64BITMODE)
   add_definitions("-DMODE64BITEDGES")
+  add_definitions("-DKAHIP_64BIT")
   add_definitions("-DPOINTER64=1")
 endif()
 

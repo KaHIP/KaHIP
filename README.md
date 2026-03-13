@@ -148,7 +148,7 @@ If you use the option -DUSE_ILP=On and you have Gurobi installed, the build scri
 ```console 
 ./compile_withcmake -DUSE_ILP=On
 ```
-We also provide an option to support 64 bit edges. In order to use this, compile KaHIP with the option -D64BITMODE=On.
+We also provide an option to support 64-bit edges. In order to use this, compile KaHIP with the option -D64BITMODE=On. When enabled, the C interface uses `kahip_idx` (typedef for `int64_t`) instead of `int32_t` for all edge-related arrays and values (xadj, adjncy, adjcwgt, edgecut, infinity_edge_weight). Node-related parameters (n, vwgt, nparts, part) remain `int`. No additional flags are needed; `-D64BITMODE=On` enables both the internal 64-bit edge types and the public `kahip_idx` typedef.
 
 
 Lastly, we provide an option for determinism in ParHIP, e.g. two runs with the same seed will give you the same result. Note however that this option can reduce the quality of partitions, as initial partitioning algorithms do not use sophisticated memetic algorithms, but only multilevel algorithms to compute initial partitionings. ONLY use this option if you use ParHIP as a tool. Do not use this option if you want to make quality comparisons against ParHIP. To make use of this option, run 
@@ -339,22 +339,22 @@ int main(int argn, char **argv) {
 
         std::cout <<  "partitioning graph from the manual"  << std::endl;
 
-        int n            = 5;
-        int* xadj        = new int[6];
+        int n              = 5;
+        kahip_idx* xadj    = new kahip_idx[6];
         xadj[0] = 0; xadj[1] = 2; xadj[2] = 5; xadj[3] = 7; xadj[4] = 9; xadj[5] = 12;
 
-        int* adjncy      = new int[12];
-        adjncy[0]  = 1; adjncy[1]  = 4; adjncy[2]  = 0; adjncy[3]  = 2; adjncy[4]  = 4; adjncy[5]  = 1; 
-        adjncy[6]  = 3; adjncy[7]  = 2; adjncy[8]  = 4; adjncy[9]  = 0; adjncy[10] = 1; adjncy[11] = 3; 
-        
-        double imbalance = 0.03;
-        int* part        = new int[n];
-        int edge_cut     = 0;
-        int nparts       = 2;
-        int* vwgt        = NULL;
-        int* adjcwgt     = NULL;
+        kahip_idx* adjncy  = new kahip_idx[12];
+        adjncy[0]  = 1; adjncy[1]  = 4; adjncy[2]  = 0; adjncy[3]  = 2; adjncy[4]  = 4; adjncy[5]  = 1;
+        adjncy[6]  = 3; adjncy[7]  = 2; adjncy[8]  = 4; adjncy[9]  = 0; adjncy[10] = 1; adjncy[11] = 3;
 
-        kaffpa(&n, vwgt, xadj, adjcwgt, adjncy, &nparts, &imbalance, false, 0, ECO, & edge_cut, part);
+        double imbalance   = 0.03;
+        int* part          = new int[n];
+        kahip_idx edge_cut = 0;
+        int nparts         = 2;
+        int* vwgt          = NULL;
+        kahip_idx* adjcwgt = NULL;
+
+        kaffpa(&n, vwgt, xadj, adjcwgt, adjncy, &nparts, &imbalance, false, 0, ECO, &edge_cut, part);
 
         std::cout <<  "edge cut " <<  edge_cut  << std::endl;
 }

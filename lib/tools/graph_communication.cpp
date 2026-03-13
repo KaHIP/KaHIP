@@ -35,10 +35,10 @@ void graph_communication::broadcast_graph( graph_access & G, unsigned root) {
         number_of_nodes = buffer[0];
         number_of_edges = buffer[1];
 
-        int* xadj;        
-        int* adjncy;
-        int* vwgt;        
-        int* adjwgt;
+        kahip_idx* xadj;
+        kahip_idx* adjncy;
+        int* vwgt;
+        kahip_idx* adjwgt;
 
         if( rank == (int)root) {
                 xadj           = G.UNSAFE_metis_style_xadj_array();
@@ -47,19 +47,24 @@ void graph_communication::broadcast_graph( graph_access & G, unsigned root) {
                 vwgt           = G.UNSAFE_metis_style_vwgt_array();
                 adjwgt         = G.UNSAFE_metis_style_adjwgt_array();
         } else {
-                xadj   = new int[number_of_nodes+1];
-                adjncy = new int[number_of_edges];
+                xadj   = new kahip_idx[number_of_nodes+1];
+                adjncy = new kahip_idx[number_of_edges];
 
                 vwgt   = new int[number_of_nodes];
-                adjwgt = new int[number_of_edges];
+                adjwgt = new kahip_idx[number_of_edges];
         }
 
-        MPI_Bcast(xadj,   number_of_nodes+1, MPI_INT, root, MPI_COMM_WORLD);
-        MPI_Bcast(adjncy, number_of_edges  , MPI_INT, root, MPI_COMM_WORLD);
-        MPI_Bcast(vwgt,   number_of_nodes  , MPI_INT, root, MPI_COMM_WORLD);
-        MPI_Bcast(adjwgt, number_of_edges  , MPI_INT, root, MPI_COMM_WORLD);
+#ifdef KAHIP_64BIT
+        MPI_Datatype mpi_kahip_idx = MPI_INT64_T;
+#else
+        MPI_Datatype mpi_kahip_idx = MPI_INT;
+#endif
+        MPI_Bcast(xadj,   number_of_nodes+1, mpi_kahip_idx, root, MPI_COMM_WORLD);
+        MPI_Bcast(adjncy, number_of_edges  , mpi_kahip_idx, root, MPI_COMM_WORLD);
+        MPI_Bcast(vwgt,   number_of_nodes  , MPI_INT,       root, MPI_COMM_WORLD);
+        MPI_Bcast(adjwgt, number_of_edges  , mpi_kahip_idx, root, MPI_COMM_WORLD);
 
-        G.build_from_metis_weighted( number_of_nodes, xadj, adjncy, vwgt, adjwgt); 
+        G.build_from_metis_weighted( number_of_nodes, xadj, adjncy, vwgt, adjwgt);
 
         delete[] xadj;
         delete[] adjncy;

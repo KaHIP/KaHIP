@@ -218,14 +218,14 @@ class graph_access {
                 NodeWeight get_contraction_offset(NodeID node) const;
                 void set_contraction_offset(NodeID node, NodeWeight offset);
 
-                int* UNSAFE_metis_style_xadj_array();
-                int* UNSAFE_metis_style_adjncy_array();
+                kahip_idx* UNSAFE_metis_style_xadj_array();
+                kahip_idx* UNSAFE_metis_style_adjncy_array();
 
                 int* UNSAFE_metis_style_vwgt_array();
-                int* UNSAFE_metis_style_adjwgt_array();
+                kahip_idx* UNSAFE_metis_style_adjwgt_array();
 
-                int build_from_metis(int n, int* xadj, int* adjncy);
-                int build_from_metis_weighted(int n, int* xadj, int* adjncy, int * vwgt, int* adjwgt);
+                int build_from_metis(int n, kahip_idx* xadj, kahip_idx* adjncy);
+                int build_from_metis_weighted(int n, kahip_idx* xadj, kahip_idx* adjncy, int* vwgt, kahip_idx* adjwgt);
 
                 //void set_node_queue_index(NodeID node, Count queue_index); 
                 //Count get_node_queue_index(NodeID node);
@@ -400,7 +400,7 @@ inline EdgeWeight graph_access::getNodeDegree(NodeID node) {
 
 inline EdgeWeight graph_access::getWeightedNodeDegree(NodeID node) {
 	EdgeWeight degree = 0;
-	for( unsigned e = graphref->m_nodes[node].firstEdge; e < graphref->m_nodes[node+1].firstEdge; ++e) {
+	for( EdgeID e = graphref->m_nodes[node].firstEdge; e < graphref->m_nodes[node+1].firstEdge; ++e) {
 		degree += getEdgeWeight(e);
 	}
         return degree;
@@ -425,8 +425,8 @@ inline EdgeWeight graph_access::getMaxDegree() {
         return m_max_degree;
 }
 
-inline int* graph_access::UNSAFE_metis_style_xadj_array() {
-        int* xadj      = new int[graphref->number_of_nodes()+1];
+inline kahip_idx* graph_access::UNSAFE_metis_style_xadj_array() {
+        kahip_idx* xadj = new kahip_idx[graphref->number_of_nodes()+1];
         basicGraph& ref = *graphref;
 
         forall_nodes(ref, n) {
@@ -437,12 +437,12 @@ inline int* graph_access::UNSAFE_metis_style_xadj_array() {
 }
 
 
-inline int* graph_access::UNSAFE_metis_style_adjncy_array() {
-        int* adjncy    = new int[graphref->number_of_edges()];
+inline kahip_idx* graph_access::UNSAFE_metis_style_adjncy_array() {
+        kahip_idx* adjncy = new kahip_idx[graphref->number_of_edges()];
         basicGraph& ref = *graphref;
         forall_edges(ref, e) {
                 adjncy[e] = graphref->m_edges[e].target;
-        } endfor 
+        } endfor
 
         return adjncy;
 }
@@ -458,13 +458,13 @@ inline int* graph_access::UNSAFE_metis_style_vwgt_array() {
         return vwgt;
 }
 
-inline int* graph_access::UNSAFE_metis_style_adjwgt_array() {
-        int* adjwgt    = new int[graphref->number_of_edges()];
+inline kahip_idx* graph_access::UNSAFE_metis_style_adjwgt_array() {
+        kahip_idx* adjwgt = new kahip_idx[graphref->number_of_edges()];
         basicGraph& ref = *graphref;
 
         forall_edges(ref, e) {
-                adjwgt[e] = (int)graphref->m_edges[e].weight;
-        } endfor 
+                adjwgt[e] = graphref->m_edges[e].weight;
+        } endfor
 
         return adjwgt;
 }
@@ -473,47 +473,47 @@ inline void graph_access::set_partition_count(PartitionID count) {
         m_partition_count = count;
 }
 
-inline int graph_access::build_from_metis(int n, int* xadj, int* adjncy) {
+inline int graph_access::build_from_metis(int n, kahip_idx* xadj, kahip_idx* adjncy) {
         if(graphref != NULL) {
                 delete graphref;
         }
         graphref = new basicGraph();
         start_construction(n, xadj[n]);
 
-        for( unsigned i = 0; i < (unsigned)n; i++) {
+        for( NodeID i = 0; i < (NodeID)n; i++) {
                 NodeID node = new_node();
                 setNodeWeight(node, 1);
                 setPartitionIndex(node, 0);
 
-                for( unsigned e = xadj[i]; e < (unsigned)xadj[i+1]; e++) {
+                for( EdgeID e = xadj[i]; e < (EdgeID)xadj[i+1]; e++) {
                         EdgeID e_bar = new_edge(node, adjncy[e]);
                         setEdgeWeight(e_bar, 1);
                 }
 
         }
-        
+
         finish_construction();
         return 0;
 }
 
-inline int graph_access::build_from_metis_weighted(int n, int* xadj, int* adjncy, int * vwgt, int* adjwgt) {
+inline int graph_access::build_from_metis_weighted(int n, kahip_idx* xadj, kahip_idx* adjncy, int* vwgt, kahip_idx* adjwgt) {
         if(graphref != NULL) {
                 delete graphref;
         }
         graphref = new basicGraph();
         start_construction(n, xadj[n]);
 
-        for( unsigned i = 0; i < (unsigned)n; i++) {
+        for( NodeID i = 0; i < (NodeID)n; i++) {
                 NodeID node = new_node();
                 setNodeWeight(node, vwgt[i]);
                 setPartitionIndex(node, 0);
 
-                for( unsigned e = xadj[i]; e < (unsigned)xadj[i+1]; e++) {
+                for( EdgeID e = xadj[i]; e < (EdgeID)xadj[i+1]; e++) {
                         EdgeID e_bar = new_edge(node, adjncy[e]);
                         setEdgeWeight(e_bar, adjwgt[e]);
                 }
         }
-        
+
         finish_construction();
         return 0;
 }
