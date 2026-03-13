@@ -11,7 +11,9 @@
 #include <limits>
 #include <vector>
 #include <unordered_map>
+#ifndef _WIN32
 #include <execinfo.h>
+#endif
 
 #include "data_structure/priority_queues/priority_queue_interface.h"
 

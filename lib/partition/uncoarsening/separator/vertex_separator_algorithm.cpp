@@ -6,6 +6,7 @@
  *****************************************************************************/
 
 #include <sstream>
+#include <algorithm>
 
 #include "area_bfs.h"
 #include "algorithms/push_relabel.h"

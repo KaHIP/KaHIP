@@ -8,7 +8,9 @@
 #ifndef COMPLETE_BOUNDARY_URZZFDEI
 #define COMPLETE_BOUNDARY_URZZFDEI
 
+#ifndef _WIN32
 #include <execinfo.h>
+#endif
 #include <unordered_map>
 #include <utility>
 

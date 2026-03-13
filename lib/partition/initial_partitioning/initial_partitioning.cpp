@@ -6,6 +6,8 @@
  *****************************************************************************/
 
 #include <math.h>
+#include <limits>
+#include <algorithm>
 
 #include "bipartition.h"
 #include "graph_partition_assertions.h"

@@ -9,6 +9,7 @@
 #include <map>
 #include <math.h>
 #include <unordered_map>
+#include <limits>
 
 #include "algorithms/push_relabel.h"
 #include "data_structure/flow_graph.h"

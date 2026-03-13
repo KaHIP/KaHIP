@@ -9,6 +9,7 @@
 #define BOUNDARY_LOOKUP_2JMSKBSI
 
 #include <unordered_map>
+#include <limits>
 
 #include "definitions.h"
 #include "limits.h"

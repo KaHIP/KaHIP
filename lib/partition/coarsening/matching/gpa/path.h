@@ -83,11 +83,11 @@ inline void path::set_length(const EdgeID & len) {
 }
 
 inline bool path::is_endpoint(const NodeID & v) const {
-        return (v == tail) or (v == head);
+        return (v == tail) || (v == head);
 }
 
 inline bool path::is_cycle() const {
-        return (head == tail) and (length > 0);       
+        return (head == tail) && (length > 0);       
 }
 
 inline bool path::is_active() const {

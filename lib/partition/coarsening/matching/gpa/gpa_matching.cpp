@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <deque>
 
-#include "compare_rating.h"
+#include "definitions.h"
 #include "gpa_matching.h"
 #include "macros_assertions.h"
 #include "random_functions.h"
@@ -46,8 +46,11 @@ void gpa_matching::match(const PartitionConfig & partition_config,
                 random_functions::permutate_entries(gpa_perm_config, edge_permutation, false);
         }
 
-        compare_rating cmp(&G);
-        std::sort(edge_permutation.begin(), edge_permutation.end(), cmp);
+        std::sort(edge_permutation.begin(), edge_permutation.end(),
+            [&G](const EdgeRatingType& left, const EdgeRatingType& right)
+            {
+                return G.getEdgeRating(left) > G.getEdgeRating(right);
+            });
 
         path_set pathset(&G, &partition_config);
 
@@ -165,7 +168,7 @@ void gpa_matching::extract_paths_apply_matching(graph_access & G,
         forall_nodes(G, n) {
                 const path & p = pathset.get_path(n);
 
-                if(not p.is_active()) {
+                if(!p.is_active()) {
                         continue;
                 }
                 if(p.get_tail() != n) {

@@ -57,7 +57,7 @@ EdgeWeight two_way_flow_refinement::iterativ_flow_iteration(PartitionConfig & co
                                                             EdgeWeight & cut,
                                                             bool & something_changed) {
 
-        if(lhs_pq_start_nodes.size() == 0 or rhs_pq_start_nodes.size() == 0) return 0; // nothing to refine
+        if(lhs_pq_start_nodes.size() == 0 || rhs_pq_start_nodes.size() == 0) return 0; // nothing to refine
         ASSERT_TRUE(lhs_part_weight < config.upper_bound_partition && rhs_part_weight < config.upper_bound_partition);
 
         PartitionID lhs = refinement_pair->lhs;

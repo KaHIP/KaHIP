@@ -5,6 +5,7 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
+#include <limits>
 #include <algorithm>
 
 #include "algorithms/strongly_connected_components.h"

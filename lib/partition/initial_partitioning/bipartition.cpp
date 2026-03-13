@@ -5,6 +5,7 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
+#include <algorithm>
 #include "bipartition.h"
 #include "data_structure/priority_queues/maxNodeHeap.h"
 #include "quality_metrics.h"

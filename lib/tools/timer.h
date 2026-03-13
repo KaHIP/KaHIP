@@ -8,9 +8,15 @@
 #ifndef TIMER_9KPDEP
 #define TIMER_9KPDEP
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <stdint.h>
+#else
 #include <sys/time.h>
-#include <sys/resource.h> 
-#include <unistd.h> 
+#include <sys/resource.h>
+#include <unistd.h>
+#endif
 
 class timer {
         public:
@@ -27,6 +33,22 @@ class timer {
                 }
 
         private:
+
+#ifdef _WIN32
+                inline int gettimeofday(struct timeval* tp, struct timezone* /*tzp*/) {
+                        static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+                        SYSTEMTIME  system_time;
+                        FILETIME    file_time;
+                        uint64_t    time;
+                        GetSystemTime(&system_time);
+                        SystemTimeToFileTime(&system_time, &file_time);
+                        time = ((uint64_t)file_time.dwLowDateTime);
+                        time += ((uint64_t)file_time.dwHighDateTime) << 32;
+                        tp->tv_sec = (long)((time - EPOCH) / 10000000L);
+                        tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
+                        return 0;
+                }
+#endif
 
                 /** Returns a timestamp ('now') in seconds (incl. a fractional part). */
                 inline double timestamp() {

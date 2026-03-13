@@ -79,7 +79,7 @@ class path_set {
                 std::vector<EdgeID> m_prev_edge;
 
                 inline bool is_endpoint(const NodeID & v) const {
-                        return (m_next[v] == v or m_prev[v] == v);
+                        return (m_next[v] == v || m_prev[v] == v);
                 } 
 };
 
@@ -136,7 +136,7 @@ inline bool path_set::add_if_applicable(const NodeID & source, const EdgeID & e)
         path & source_path = m_paths[sourcePathID];
         path & target_path = m_paths[targetPathID];
 
-        if(not is_endpoint(source) or not is_endpoint(target)) {
+        if(!is_endpoint(source) || !is_endpoint(target)) {
                 // both vertices must be endpoints. otherwise, the edge is not applicable
                 return false;
         }
@@ -144,7 +144,7 @@ inline bool path_set::add_if_applicable(const NodeID & source, const EdgeID & e)
         ASSERT_TRUE(source_path.is_active());
         ASSERT_TRUE(target_path.is_active());
         
-         if(source_path.is_cycle() or target_path.is_cycle()) {
+         if(source_path.is_cycle() || target_path.is_cycle()) {
                 // if one of the paths is a cycle then it is not applicable 
                 return false;
         }

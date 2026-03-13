@@ -11,6 +11,7 @@
 #include <math.h>
 #include <sstream>
 #include <unordered_map>
+#include <limits>
 
 #include "algorithms/push_relabel.h"
 #include "cut_flow_problem_solver.h"

@@ -36,7 +36,7 @@ EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg,
                                           bool & something_changed) {
 
         PartitionConfig config = cfg;//copy it since we make changes on that 
-        if(lhs_start_nodes.size() == 0 or rhs_start_nodes.size() == 0) return 0; // nothing to refine
+        if(lhs_start_nodes.size() == 0 || rhs_start_nodes.size() == 0) return 0; // nothing to refine
 
         quality_metrics qm;
         ASSERT_NEQ(pair->lhs, pair->rhs);

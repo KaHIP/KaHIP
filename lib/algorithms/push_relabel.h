@@ -9,6 +9,7 @@
 #define MAX_FLOW_MIN_CUT_Q5EJKHNS
 
 #include <iostream>
+#include <limits>
 #include "definitions.h"
 #include "data_structure/graph_access.h"
 #include "data_structure/flow_graph.h"
