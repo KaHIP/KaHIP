@@ -11,6 +11,9 @@
 #include <math.h>
 #include <sstream>
 
+#include <queue>
+#include <limits>
+
 #include "boundary_bfs.h"
 #include "flow_solving_kernel/cut_flow_problem_solver.h"
 #include "quality_metrics.h"
@@ -127,13 +130,96 @@ EdgeWeight two_way_flow_refinement::iterativ_flow_iteration(PartitionConfig & co
                 NodeWeight new_rhs_stripe_weight = 0;
                 NodeID no_nodes_flow_graph = lhs_boundary_stripe.size() + rhs_boundary_stripe.size();
 
+                if(config.connected_blocks) {
+                        // Temporarily restore original partition indices
+                        for(unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
+                                G.setPartitionIndex(lhs_boundary_stripe[i], lhs);
+                        }
+                        for(unsigned i = 0; i < rhs_boundary_stripe.size(); i++) {
+                                G.setPartitionIndex(rhs_boundary_stripe[i], rhs);
+                        }
+
+                        // Simulate flow result: apply new assignments
+                        std::vector<bool> is_new_rhs(no_nodes_flow_graph, false);
+                        for(unsigned i = 0; i < new_rhs_nodes.size(); i++) {
+                                if(new_rhs_nodes[i] < no_nodes_flow_graph) {
+                                        is_new_rhs[new_rhs_nodes[i]] = true;
+                                }
+                        }
+                        for(unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
+                                if(is_new_rhs[i]) {
+                                        G.setPartitionIndex(lhs_boundary_stripe[i], rhs);
+                                }
+                        }
+                        for(unsigned i = 0; i < rhs_boundary_stripe.size(); i++) {
+                                NodeID flow_id = lhs_boundary_stripe.size() + i;
+                                if(!is_new_rhs[flow_id]) {
+                                        G.setPartitionIndex(rhs_boundary_stripe[i], lhs);
+                                }
+                        }
+
+                        // Check connectivity of both blocks
+                        bool disconnected = false;
+                        PartitionID blocks_to_check[2] = {lhs, rhs};
+                        for(int b = 0; b < 2 && !disconnected; b++) {
+                                PartitionID check_block = blocks_to_check[b];
+                                NodeID block_start = std::numeric_limits<NodeID>::max();
+                                NodeID block_count = 0;
+                                forall_nodes(G, n) {
+                                        if(G.getPartitionIndex(n) == check_block) {
+                                                if(block_start == std::numeric_limits<NodeID>::max()) block_start = n;
+                                                block_count++;
+                                        }
+                                } endfor
+                                if(block_count <= 1) continue;
+
+                                std::vector<bool> vis(G.number_of_nodes(), false);
+                                std::queue<NodeID> q;
+                                vis[block_start] = true;
+                                q.push(block_start);
+                                NodeID reached = 1;
+                                while(!q.empty()) {
+                                        NodeID v = q.front(); q.pop();
+                                        forall_out_edges(G, edge, v) {
+                                                NodeID u = G.getEdgeTarget(edge);
+                                                if(!vis[u] && G.getPartitionIndex(u) == check_block) {
+                                                        vis[u] = true; reached++;
+                                                        q.push(u);
+                                                }
+                                        } endfor
+                                }
+                                if(reached < block_count) { disconnected = true; }
+                        }
+
+                        if(disconnected) {
+                                // Restore original partition indices and skip
+                                for(unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
+                                        G.setPartitionIndex(lhs_boundary_stripe[i], lhs);
+                                }
+                                for(unsigned i = 0; i < rhs_boundary_stripe.size(); i++) {
+                                        G.setPartitionIndex(rhs_boundary_stripe[i], rhs);
+                                }
+                                region_factor = std::max(region_factor/2, 1.0);
+                                iteration++;
+                                continue;
+                        }
+
+                        // Restore BOUNDARY_STRIPE_NODE marks for the rest of the code
+                        for(unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
+                                G.setPartitionIndex(lhs_boundary_stripe[i], BOUNDARY_STRIPE_NODE);
+                        }
+                        for(unsigned i = 0; i < rhs_boundary_stripe.size(); i++) {
+                                G.setPartitionIndex(rhs_boundary_stripe[i], BOUNDARY_STRIPE_NODE);
+                        }
+                }
+
                 for(unsigned i = 0; i < new_rhs_nodes.size(); i++) {
                         NodeID new_rhs_node = new_rhs_nodes[i];
                         if(new_rhs_node < no_nodes_flow_graph) { // not target and source
                                 NodeID old_node_id = new_to_old_ids[new_rhs_node];
                                 new_rhs_stripe_weight += G.getNodeWeight(old_node_id);
                                 G.setPartitionIndex(old_node_id, BOUNDARY_STRIPE_NODE-1);
-                        }                
+                        }
                 }
 
                 for(unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {

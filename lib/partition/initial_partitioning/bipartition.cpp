@@ -6,6 +6,7 @@
  *****************************************************************************/
 
 #include <algorithm>
+#include <queue>
 #include "bipartition.h"
 #include "data_structure/priority_queues/maxNodeHeap.h"
 #include "quality_metrics.h"
@@ -13,6 +14,57 @@
 #include "timer.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/quotient_graph_refinement.h"
 #include "uncoarsening/refinement/refinement.h"
+
+// Ensure both blocks of a bipartition are connected by reassigning
+// smaller disconnected components of each block to the other block.
+static void repair_bipartition_connectivity(graph_access & G) {
+        for(PartitionID block = 0; block < 2; block++) {
+                // Find connected components within this block
+                std::vector<int> component(G.number_of_nodes(), -1);
+                int num_components = 0;
+                std::vector<NodeID> comp_sizes;
+
+                forall_nodes(G, node) {
+                        if(G.getPartitionIndex(node) == block && component[node] == -1) {
+                                NodeID comp_size = 0;
+                                std::queue<NodeID> q;
+                                q.push(node);
+                                component[node] = num_components;
+                                while(!q.empty()) {
+                                        NodeID v = q.front(); q.pop();
+                                        comp_size++;
+                                        forall_out_edges(G, e, v) {
+                                                NodeID u = G.getEdgeTarget(e);
+                                                if(G.getPartitionIndex(u) == block && component[u] == -1) {
+                                                        component[u] = num_components;
+                                                        q.push(u);
+                                                }
+                                        } endfor
+                                }
+                                comp_sizes.push_back(comp_size);
+                                num_components++;
+                        }
+                } endfor
+
+                if(num_components <= 1) continue;
+
+                // Find the largest component
+                int largest_comp = 0;
+                for(int c = 1; c < num_components; c++) {
+                        if(comp_sizes[c] > comp_sizes[largest_comp]) {
+                                largest_comp = c;
+                        }
+                }
+
+                // Reassign all non-largest components to the other block
+                PartitionID other_block = 1 - block;
+                forall_nodes(G, node) {
+                        if(G.getPartitionIndex(node) == block && component[node] != largest_comp) {
+                                G.setPartitionIndex(node, other_block);
+                        }
+                } endfor
+        }
+}
 
 bipartition::bipartition() {
 
@@ -38,7 +90,7 @@ void bipartition::initial_partition( const PartitionConfig & config,
                         grow_regions_bfs(config, G);
                 } else if( config.bipartition_algorithm == BIPARTITION_FM) {
                         grow_regions_fm(config, G);
-                } 
+                }
 
                 G.set_partition_count(2);
 
@@ -60,7 +112,6 @@ void bipartition::initial_partition( const PartitionConfig & config,
 
                 int lhs_overload = std::max(lhs_block_weight - config.target_weights[0],0);
                 int rhs_overload = std::max(rhs_block_weight - config.target_weights[1],0);
-
                 if(curcut < best_cut || (curcut == best_cut && lhs_overload + rhs_block_weight < best_load) ) {
                         //store it
                         best_cut  = curcut;
@@ -145,6 +196,79 @@ NodeID bipartition::find_start_node( const PartitionConfig & config, graph_acces
         return lastNode;
 }
 
+void bipartition::grow_regions_dual_bfs(const PartitionConfig & config, graph_access & G) {
+        if(G.number_of_nodes() == 0) return;
+
+        // Find start node s and farthest node t
+        NodeID s = random_functions::nextInt(0, G.number_of_nodes()-1);
+        while(G.getNodeDegree(s) == 0 && s < G.number_of_nodes()-1) s++;
+        if(config.buffoon) { s = find_start_node(config, G); }
+
+        // BFS from s to find farthest node t
+        std::vector<bool> visited(G.number_of_nodes(), false);
+        std::queue<NodeID> tmpq;
+        tmpq.push(s);
+        visited[s] = true;
+        NodeID t = s;
+        while(!tmpq.empty()) {
+                t = tmpq.front(); tmpq.pop();
+                forall_out_edges(G, e, t) {
+                        NodeID u = G.getEdgeTarget(e);
+                        if(!visited[u]) { visited[u] = true; tmpq.push(u); }
+                } endfor
+        }
+
+        // Initialize all nodes as unassigned (partition 2 as sentinel)
+        forall_nodes(G, node) {
+                G.setPartitionIndex(node, 2);
+        } endfor
+
+        // Dual BFS: grow block 0 from s, block 1 from t
+        std::queue<NodeID> q0, q1;
+        G.setPartitionIndex(s, 0); q0.push(s);
+        G.setPartitionIndex(t, 1); q1.push(t);
+        NodeWeight w0 = G.getNodeWeight(s);
+        NodeWeight w1 = G.getNodeWeight(t);
+
+        while(!q0.empty() || !q1.empty()) {
+                // Grow the lighter block (or whichever has nodes to expand)
+                std::queue<NodeID>* grow_q;
+                PartitionID grow_block;
+                NodeWeight* grow_weight;
+
+                if(q1.empty() || (!q0.empty() && w0 <= w1)) {
+                        grow_q = &q0; grow_block = 0; grow_weight = &w0;
+                } else {
+                        grow_q = &q1; grow_block = 1; grow_weight = &w1;
+                }
+
+                if(grow_q->empty()) break;
+
+                NodeID v = grow_q->front(); grow_q->pop();
+                forall_out_edges(G, e, v) {
+                        NodeID u = G.getEdgeTarget(e);
+                        if(G.getPartitionIndex(u) == 2) { // unassigned
+                                G.setPartitionIndex(u, grow_block);
+                                grow_q->push(u);
+                                *grow_weight += G.getNodeWeight(u);
+                        }
+                } endfor
+        }
+
+        // Handle remaining unassigned nodes (disconnected graph components)
+        forall_nodes(G, node) {
+                if(G.getPartitionIndex(node) == 2) {
+                        if(w0 <= w1) {
+                                G.setPartitionIndex(node, 0);
+                                w0 += G.getNodeWeight(node);
+                        } else {
+                                G.setPartitionIndex(node, 1);
+                                w1 += G.getNodeWeight(node);
+                        }
+                }
+        } endfor
+}
+
 void bipartition::grow_regions_bfs(const PartitionConfig & config, graph_access & G) {
         if(G.number_of_nodes() == 0) return;
 
@@ -167,6 +291,10 @@ void bipartition::grow_regions_bfs(const PartitionConfig & config, graph_access 
         for(;;) {
                 if( nodes_left == 1 ) {
                         //only one node left --> we have to break
+                        break;
+                }
+
+                if(bfsqueue->empty() && nodes_left > 0 && config.connected_blocks) {
                         break;
                 }
 
@@ -249,6 +377,10 @@ void bipartition::grow_regions_fm(const PartitionConfig & config, graph_access &
                         break;
                 }
 
+                if(queue->empty() && nodes_left > 0 && config.connected_blocks) {
+                        break;
+                }
+
                 if(queue->empty() && nodes_left > 0) {
                         //disconnected graph -> find a new start node among those that havent been touched
                         NodeID k = random_functions::nextInt(0, nodes_left-1);
@@ -260,10 +392,10 @@ void bipartition::grow_regions_fm(const PartitionConfig & config, graph_access &
                                                 break;
                                         } else {
                                                 k--;
-                                        }      
+                                        }
                                 }
                         } endfor
-                        
+
                         queue->insert(start_node, 0);
                         touched[start_node] = true;
                 } else if (queue->empty() && nodes_left == 0) {

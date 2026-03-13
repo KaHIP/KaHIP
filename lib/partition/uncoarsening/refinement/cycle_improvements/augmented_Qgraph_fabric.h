@@ -15,6 +15,7 @@
 #include "definitions.h"
 #include "uncoarsening/refinement/kway_graph_refinement/kway_graph_refinement_commons.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/2way_fm_refinement/two_way_fm.h"
+#include "uncoarsening/refinement/connectivity_check.h"
 #include "uncoarsening/refinement/refinement.h"
 
 class augmented_Qgraph_fabric {
@@ -261,6 +262,12 @@ void augmented_Qgraph_fabric::perform_simple_move( PartitionConfig & config,
         pair.lhs = from;
         pair.rhs = to;
 
+        if(config.connected_blocks) {
+                if(would_disconnect_block(G, node, from)) {
+                        return;
+                }
+        }
+
         // perform the move
         G.setPartitionIndex(node, to);
 
@@ -275,16 +282,22 @@ void augmented_Qgraph_fabric::perform_simple_move( PartitionConfig & config,
 }
 
 inline 
-void augmented_Qgraph_fabric::move_node(PartitionConfig & config, 
-                                        graph_access &  G, 
-                                        NodeID & node, 
-                                        refinement_pq * queue, 
-                                        refinement_pq * to_queue, 
-                                        complete_boundary & boundary, 
-                                        PartitionID & from, 
+void augmented_Qgraph_fabric::move_node(PartitionConfig & config,
+                                        graph_access &  G,
+                                        NodeID & node,
+                                        refinement_pq * queue,
+                                        refinement_pq * to_queue,
+                                        complete_boundary & boundary,
+                                        PartitionID & from,
                                         PartitionID & to) {
 
-        G.setPartitionIndex(node, to);        
+        if(config.connected_blocks) {
+                if(would_disconnect_block(G, node, from)) {
+                        return;
+                }
+        }
+
+        G.setPartitionIndex(node, to);
         m_eligible[node] = false;
 
         boundary_pair pair;
@@ -341,15 +354,21 @@ void augmented_Qgraph_fabric::move_node(PartitionConfig & config,
 }
 
 inline 
-void augmented_Qgraph_fabric::move_node(PartitionConfig & config, 
-                                        graph_access &  G, 
-                                        NodeID & node, 
-                                        refinement_pq * queue, 
-                                        complete_boundary & boundary, 
-                                        PartitionID & from, 
+void augmented_Qgraph_fabric::move_node(PartitionConfig & config,
+                                        graph_access &  G,
+                                        NodeID & node,
+                                        refinement_pq * queue,
+                                        complete_boundary & boundary,
+                                        PartitionID & from,
                                         PartitionID & to) {
 
-        G.setPartitionIndex(node, to);        
+        if(config.connected_blocks) {
+                if(would_disconnect_block(G, node, from)) {
+                        return;
+                }
+        }
+
+        G.setPartitionIndex(node, to);
         m_eligible[node] = false;
 
         boundary_pair pair;

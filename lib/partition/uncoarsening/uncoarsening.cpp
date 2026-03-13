@@ -5,9 +5,13 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
+#include <queue>
+#include <limits>
+
 #include "graph_partition_assertions.h"
 #include "misc.h"
 #include "quality_metrics.h"
+#include "refinement/connectivity_check.h"
 #include "refinement/mixed_refinement.h"
 #include "refinement/node_separators/greedy_ns_local_search.h"
 #include "refinement/node_separators/fm_ns_local_search.h"
@@ -25,6 +29,96 @@ uncoarsening::uncoarsening() {
 
 uncoarsening::~uncoarsening() {
 
+}
+
+// Eliminate disconnected components by moving them to the lightest adjacent block,
+// then greedy-rebalance by moving non-articulation boundary nodes from overweight blocks.
+void eliminate_and_rebalance(const PartitionConfig & config, graph_access & G) {
+        // Step 1: Eliminate disconnected components
+        for(PartitionID block = 0; block < config.k; block++) {
+                std::vector<int> comp_id(G.number_of_nodes(), -1);
+                int num_comps = 0;
+                std::vector<NodeWeight> comp_weight;
+                std::vector<std::vector<NodeID>> comp_nodes;
+
+                forall_nodes(G, node) {
+                        if(G.getPartitionIndex(node) == block && comp_id[node] == -1) {
+                                NodeWeight cw = 0;
+                                std::vector<NodeID> nodes;
+                                std::queue<NodeID> q;
+                                q.push(node); comp_id[node] = num_comps;
+                                while(!q.empty()) {
+                                        NodeID v = q.front(); q.pop();
+                                        cw += G.getNodeWeight(v);
+                                        nodes.push_back(v);
+                                        forall_out_edges(G, e, v) {
+                                                NodeID u = G.getEdgeTarget(e);
+                                                if(G.getPartitionIndex(u) == block && comp_id[u] == -1) {
+                                                        comp_id[u] = num_comps; q.push(u);
+                                                }
+                                        } endfor
+                                }
+                                comp_weight.push_back(cw);
+                                comp_nodes.push_back(nodes);
+                                num_comps++;
+                        }
+                } endfor
+
+                if(num_comps <= 1) continue;
+
+                int largest = 0;
+                for(int c = 1; c < num_comps; c++) {
+                        if(comp_weight[c] > comp_weight[largest]) largest = c;
+                }
+
+                for(int c = 0; c < num_comps; c++) {
+                        if(c == largest) continue;
+                        std::vector<NodeWeight> bw(config.k, 0);
+                        forall_nodes(G, n) { bw[G.getPartitionIndex(n)] += G.getNodeWeight(n); } endfor
+
+                        PartitionID target = block;
+                        NodeWeight min_w = std::numeric_limits<NodeWeight>::max();
+                        for(NodeID n : comp_nodes[c]) {
+                                forall_out_edges(G, e, n) {
+                                        PartitionID ab = G.getPartitionIndex(G.getEdgeTarget(e));
+                                        if(ab != block && bw[ab] < min_w) { min_w = bw[ab]; target = ab; }
+                                } endfor
+                        }
+                        if(target != block) {
+                                for(NodeID n : comp_nodes[c]) G.setPartitionIndex(n, target);
+                        }
+                }
+        }
+
+        // Step 2: Greedy rebalance
+        bool progress = true;
+        while(progress) {
+                progress = false;
+                std::vector<NodeWeight> bw(config.k, 0);
+                forall_nodes(G, n) { bw[G.getPartitionIndex(n)] += G.getNodeWeight(n); } endfor
+
+                forall_nodes(G, node) {
+                        PartitionID from = G.getPartitionIndex(node);
+                        if(bw[from] <= config.upper_bound_partition) continue;
+
+                        PartitionID target = from;
+                        NodeWeight min_w = std::numeric_limits<NodeWeight>::max();
+                        forall_out_edges(G, e, node) {
+                                PartitionID ab = G.getPartitionIndex(G.getEdgeTarget(e));
+                                if(ab != from && bw[ab] + G.getNodeWeight(node) <= config.upper_bound_partition && bw[ab] < min_w) {
+                                        min_w = bw[ab]; target = ab;
+                                }
+                        } endfor
+
+                        if(target == from) continue;
+                        if(would_disconnect_block(G, node, from)) continue;
+
+                        bw[from] -= G.getNodeWeight(node);
+                        bw[target] += G.getNodeWeight(node);
+                        G.setPartitionIndex(node, target);
+                        progress = true;
+                } endfor
+        }
 }
 
 int uncoarsening::perform_uncoarsening(const PartitionConfig & config, graph_hierarchy & hierarchy) {
@@ -63,7 +157,25 @@ int uncoarsening::perform_uncoarsening_cut(const PartitionConfig & config, graph
         }
         double factor = config.balance_factor;
         cfg.upper_bound_partition = ((!hierarchy.isEmpty()) * factor +1.0)*config.upper_bound_partition;
+
+        // Disable connectivity guard during regular refinement (METIS approach)
+        bool connected_blocks_saved = cfg.connected_blocks;
+        cfg.connected_blocks = false;
+
         improvement += (int)refine->perform_refinement(cfg, *coarsest, *coarser_boundary);
+
+        // Checkpoint 1: coarsest level - repair + guarded refinement
+        if(connected_blocks_saved) {
+                eliminate_and_rebalance(cfg, *coarsest);
+                if(!config.label_propagation_refinement) {
+                        delete coarser_boundary;
+                        coarser_boundary = new complete_boundary(coarsest);
+                        coarser_boundary->build();
+                }
+                cfg.connected_blocks = true;
+                improvement += (int)refine->perform_refinement(cfg, *coarsest, *coarser_boundary);
+                cfg.connected_blocks = false;
+        }
 
         NodeID coarser_no_nodes = coarsest->number_of_nodes();
         graph_access* finest    = NULL;
@@ -84,8 +196,24 @@ int uncoarsening::perform_uncoarsening_cut(const PartitionConfig & config, graph
                 double cur_factor = factor/(hierarchy_deepth-hierarchy.size());
                 cfg.upper_bound_partition = ((!hierarchy.isEmpty()) * cur_factor+1.0)*config.upper_bound_partition;
                 PRINT(std::cout <<  "cfg upperbound " <<  cfg.upper_bound_partition  << std::endl;)
+
+                cfg.connected_blocks = false; // unconstrained FM
                 improvement += (int)refine->perform_refinement(cfg, *G, *finer_boundary);
                 ASSERT_TRUE(graph_partition_assertions::assert_graph_has_kway_partition(config, *G));
+
+                // Checkpoint at midpoint and finest level
+                unsigned int current_level = hierarchy_deepth - hierarchy.size();
+                if(connected_blocks_saved && (current_level == hierarchy_deepth/2 || hierarchy.isEmpty())) {
+                        eliminate_and_rebalance(cfg, *G);
+                        if(!config.label_propagation_refinement) {
+                                delete finer_boundary;
+                                finer_boundary = new complete_boundary(G);
+                                finer_boundary->build();
+                        }
+                        cfg.connected_blocks = true; // guarded refinement after repair
+                        improvement += (int)refine->perform_refinement(cfg, *G, *finer_boundary);
+                        cfg.connected_blocks = false;
+                }
 
                 if(config.use_balance_singletons && !config.label_propagation_refinement) {
                         finer_boundary->balance_singletons( config, *G );

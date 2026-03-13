@@ -17,10 +17,16 @@
 #include "initial_partitioning/initial_partitioning.h"
 #include "misc.h"
 #include "random_functions.h"
+#include <queue>
+#include <limits>
+#include "uncoarsening/refinement/connectivity_check.h"
 #include "uncoarsening/refinement/mixed_refinement.h"
 #include "uncoarsening/refinement/label_propagation_refinement/label_propagation_refinement.h"
 #include "uncoarsening/refinement/refinement.h"
 #include "wcycle_partitioner.h"
+
+// Defined in uncoarsening.cpp
+void eliminate_and_rebalance(const PartitionConfig & config, graph_access & G);
 
 int wcycle_partitioner::perform_partitioning(const PartitionConfig & config, graph_access & G) {
         PartitionConfig  cfg = config; 
@@ -179,7 +185,21 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
         }
 
         //PRINT(std::cout <<  "upper bound " <<  cfg.upper_bound_partition  << std::endl;)
+        bool cb_saved = cfg.connected_blocks;
+        cfg.connected_blocks = false; // unconstrained FM
         improvement += refine->perform_refinement(cfg, *finer, *current_boundary);
+
+        if(cb_saved) {
+                eliminate_and_rebalance(cfg, *finer);
+                if(!partition_config.label_propagation_refinement && current_boundary != NULL) {
+                        delete current_boundary;
+                        current_boundary = new complete_boundary(finer);
+                        current_boundary->build();
+                }
+                cfg.connected_blocks = true; // guarded refinement after repair
+                improvement += refine->perform_refinement(cfg, *finer, *current_boundary);
+                cfg.connected_blocks = false;
+        }
 
         if(c_boundary != NULL) {
                 delete *c_boundary;

@@ -76,6 +76,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_lit *mh_cross_combine_original_k          = arg_lit0(NULL, "mh_cross_combine_original_k", "");
         struct arg_lit *mh_optimize_communication_volume     = arg_lit0(NULL, "mh_optimize_communication_volume", "Fitness function is modified to optimize communication volume instead of the number of cut edges.");
         struct arg_lit *disable_balance_singletons           = arg_lit0(NULL, "disable_balance_singletons", "");
+        struct arg_lit *connected_blocks                     = arg_lit0(NULL, "connected_blocks", "Enforce that each block of the partition is connected.");
         struct arg_lit *gpa_grow_internal                    = arg_lit0(NULL, "gpa_grow_internal", "If the graph is allready partitions the paths are grown only block internally.");
         struct arg_int *initial_partitioning_repetitions     = arg_int0(NULL, "initial_partitioning_repetitions", NULL, "Number of initial partitioning repetitons. Default: 5.");
         struct arg_int *minipreps                            = arg_int0(NULL, "minipreps", NULL, "Default: 10.");
@@ -215,7 +216,7 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *ilp_timeout                          = arg_int0(NULL, "ilp_timeout", NULL, "ILP timeout in seconds (Default: 7200)");
 
         void* argtable_fordeletion[] = {
-                help, use_mmap_io, edge_rating_tiebreaking, match_islands, only_first_level, graph_weighted, enable_corner_refinement, disable_qgraph_refinement, use_fullmultigrid, use_vcycle, compute_vertex_separator, first_level_random_matching, rate_first_level_inner_outer, use_bucket_queues, use_wcycles, disable_refined_bubbling, enable_convergence, enable_omp, wcycle_no_new_initial_partitioning, filename, filename_output, user_seed, version, k, edge_rating, refinement_type, matching_type, mh_pool_size, mh_plain_repetitions, mh_penalty_for_unconnected, mh_disable_nc_combine, mh_disable_cross_combine, mh_disable_combine, mh_enable_quickstart, mh_disable_diversify_islands, mh_disable_diversify, mh_diversify_best, mh_enable_tournament_selection, mh_cross_combine_original_k, mh_optimize_communication_volume, disable_balance_singletons, gpa_grow_internal, initial_partitioning_repetitions, minipreps, aggressive_random_levels, imbalance, initial_partition, initial_partition_optimize, bipartition_algorithm, permutation_quality, permutation_during_refinement, fm_search_limit, bipartition_post_fm_limit, bipartition_post_ml_limit, bipartition_tries, refinement_scheduling_algorithm, bank_account_factor, flow_region_factor, kway_adaptive_limits_alpha, stop_rule, num_vert_stop_factor, kway_search_stop_rule, bubbling_iterations, kway_rounds, kway_fm_limits, global_cycle_iterations, level_split, toposort_iterations, most_balanced_flows, input_partition, recursive_bipartitioning, suppress_output, disable_max_vertex_weight_constraint, local_multitry_fm_alpha, local_multitry_rounds, initial_partition_optimize_fm_limits, initial_partition_optimize_multitry_fm_alpha, initial_partition_optimize_multitry_rounds, preconfiguration, time_limit, unsuccessful_reps, local_partitioning_repetitions, amg_iterations, mh_flip_coin, mh_initial_population_fraction, mh_print_log, mh_sequential_mode, kaba_neg_cycle_algorithm, kabaE_internal_bal, kaba_internal_no_aug_steps_aug, kaba_packing_iterations, kaba_unsucc_iterations, kaba_flip_packings, kaba_lsearch_p, kaffpa_perfectly_balanced_refinement, kaba_disable_zero_weight_cycles, enforce_balance, mh_enable_tabu_search, mh_enable_kabapE, maxT, maxIter, balance_edges, cluster_upperbound, label_propagation_iterations, max_initial_ns_tries, max_flow_improv_steps, most_balanced_flows_node_sep, region_factor_node_separators, sep_flows_disabled, sep_fm_disabled, sep_loc_fm_disabled, sep_greedy_disabled, sep_full_boundary_ip, sep_faster_ns, sep_fm_unsucc_steps, sep_num_fm_reps, sep_loc_fm_unsucc_steps, sep_num_loc_fm_reps, sep_loc_fm_no_snodes, sep_num_vert_stop, sep_edge_rating_during_ip, enable_mapping, hierarchy_parameter_string, distance_parameter_string, online_distances, dissection_rec_limit, disable_reductions, reduction_order, convergence_factor, max_simplicial_degree, ilp_mode, ilp_min_gain, ilp_bfs_depth, ilp_overlap_presets, ilp_limit_nonzeroes, ilp_overlap_runs, ilp_timeout,
+                help, use_mmap_io, edge_rating_tiebreaking, match_islands, only_first_level, graph_weighted, enable_corner_refinement, disable_qgraph_refinement, use_fullmultigrid, use_vcycle, compute_vertex_separator, first_level_random_matching, rate_first_level_inner_outer, use_bucket_queues, use_wcycles, disable_refined_bubbling, enable_convergence, enable_omp, wcycle_no_new_initial_partitioning, filename, filename_output, user_seed, version, k, edge_rating, refinement_type, matching_type, mh_pool_size, mh_plain_repetitions, mh_penalty_for_unconnected, mh_disable_nc_combine, mh_disable_cross_combine, mh_disable_combine, mh_enable_quickstart, mh_disable_diversify_islands, mh_disable_diversify, mh_diversify_best, mh_enable_tournament_selection, mh_cross_combine_original_k, mh_optimize_communication_volume, disable_balance_singletons, connected_blocks, gpa_grow_internal, initial_partitioning_repetitions, minipreps, aggressive_random_levels, imbalance, initial_partition, initial_partition_optimize, bipartition_algorithm, permutation_quality, permutation_during_refinement, fm_search_limit, bipartition_post_fm_limit, bipartition_post_ml_limit, bipartition_tries, refinement_scheduling_algorithm, bank_account_factor, flow_region_factor, kway_adaptive_limits_alpha, stop_rule, num_vert_stop_factor, kway_search_stop_rule, bubbling_iterations, kway_rounds, kway_fm_limits, global_cycle_iterations, level_split, toposort_iterations, most_balanced_flows, input_partition, recursive_bipartitioning, suppress_output, disable_max_vertex_weight_constraint, local_multitry_fm_alpha, local_multitry_rounds, initial_partition_optimize_fm_limits, initial_partition_optimize_multitry_fm_alpha, initial_partition_optimize_multitry_rounds, preconfiguration, time_limit, unsuccessful_reps, local_partitioning_repetitions, amg_iterations, mh_flip_coin, mh_initial_population_fraction, mh_print_log, mh_sequential_mode, kaba_neg_cycle_algorithm, kabaE_internal_bal, kaba_internal_no_aug_steps_aug, kaba_packing_iterations, kaba_unsucc_iterations, kaba_flip_packings, kaba_lsearch_p, kaffpa_perfectly_balanced_refinement, kaba_disable_zero_weight_cycles, enforce_balance, mh_enable_tabu_search, mh_enable_kabapE, maxT, maxIter, balance_edges, cluster_upperbound, label_propagation_iterations, max_initial_ns_tries, max_flow_improv_steps, most_balanced_flows_node_sep, region_factor_node_separators, sep_flows_disabled, sep_fm_disabled, sep_loc_fm_disabled, sep_greedy_disabled, sep_full_boundary_ip, sep_faster_ns, sep_fm_unsucc_steps, sep_num_fm_reps, sep_loc_fm_unsucc_steps, sep_num_loc_fm_reps, sep_loc_fm_no_snodes, sep_num_vert_stop, sep_edge_rating_during_ip, enable_mapping, hierarchy_parameter_string, distance_parameter_string, online_distances, dissection_rec_limit, disable_reductions, reduction_order, convergence_factor, max_simplicial_degree, ilp_mode, ilp_min_gain, ilp_bfs_depth, ilp_overlap_presets, ilp_limit_nonzeroes, ilp_overlap_runs, ilp_timeout,
                 end
         };
 
@@ -241,7 +242,7 @@ int parse_parameters(int argn, char **argv,
                 mh_pool_size, mh_plain_repetitions, mh_disable_nc_combine, mh_disable_cross_combine, mh_enable_tournament_selection,       
                 mh_disable_combine, mh_enable_quickstart, mh_disable_diversify_islands, mh_flip_coin, mh_initial_population_fraction, 
 		mh_print_log,mh_sequential_mode, mh_optimize_communication_volume, mh_enable_tabu_search,
-                mh_disable_diversify, mh_diversify_best, mh_cross_combine_original_k, disable_balance_singletons, initial_partition_optimize_fm_limits,
+                mh_disable_diversify, mh_diversify_best, mh_cross_combine_original_k, disable_balance_singletons, connected_blocks, initial_partition_optimize_fm_limits,
                 initial_partition_optimize_multitry_fm_alpha, initial_partition_optimize_multitry_rounds,
                 enable_omp, 
                 amg_iterations,
@@ -262,10 +263,11 @@ int parse_parameters(int argn, char **argv,
 		balance_edges,
                 enable_mapping,
                 #endif
-                hierarchy_parameter_string, 
+                connected_blocks,
+                hierarchy_parameter_string,
                 distance_parameter_string,
                 online_distances,
-                filename_output, 
+                filename_output,
 #elif defined MODE_EVALUATOR
                 k,   
                 preconfiguration, 
@@ -333,8 +335,9 @@ int parse_parameters(int argn, char **argv,
                 mh_enable_kabapE,
                 kabaE_internal_bal,  
 		balance_edges,
+                connected_blocks,
                 input_partition,
-                filename_output, 
+                filename_output,
 #elif defined MODE_LABELPROPAGATION
                 cluster_upperbound,
                 label_propagation_iterations,
@@ -439,6 +442,16 @@ int parse_parameters(int argn, char **argv,
                         exit(0);
                 }
 #endif
+        }
+
+        if(connected_blocks->count > 0) {
+                partition_config.connected_blocks = true;
+                if(preconfiguration->count > 0 && strcmp("strong", preconfiguration->sval[0]) != 0) {
+                        std::cout << "ERROR: --connected_blocks is only supported with --preconfiguration strong." << std::endl;
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
+                        exit(1);
+                }
+                partition_config.bipartition_algorithm = BIPARTITION_BFS;
         }
 
         if (use_mmap_io->count > 0) {

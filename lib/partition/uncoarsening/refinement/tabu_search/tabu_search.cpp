@@ -11,6 +11,7 @@
 #include "tabu_moves_queue.h"
 #include "tabu_search.h"
 #include "uncoarsening/refinement/kway_graph_refinement/kway_graph_refinement.h"
+#include "uncoarsening/refinement/connectivity_check.h"
 #include "uncoarsening/refinement/kway_graph_refinement/kway_graph_refinement_commons.h"
 #include "uncoarsening/refinement/kway_graph_refinement/kway_stop_rule.h"
 
@@ -89,6 +90,11 @@ EdgeWeight tabu_search::perform_refinement(PartitionConfig & config, graph_acces
                         NodeID from                        = G.getPartitionIndex(node);
 			
                         if( boundary.getBlockWeight(block) + 1 < config.upper_bound_partition && from != block) {
+                                if(config.connected_blocks) {
+                                        if(would_disconnect_block(G, node, from)) {
+                                                continue;
+                                        }
+                                }
                                 boundary.setBlockWeight(from, boundary.getBlockWeight(from) - 1);
                                 boundary.setBlockWeight(block, boundary.getBlockWeight(block) + 1);
 

@@ -7,6 +7,7 @@
 
 #include "complete_boundary.h"
 #include "quality_metrics.h"
+#include "uncoarsening/refinement/connectivity_check.h"
 
 complete_boundary::complete_boundary(graph_access * G) {
         m_graph_ref   = G;
@@ -99,6 +100,11 @@ void complete_boundary::balance_singletons(const PartitionConfig & config, graph
 
                 NodeID node = m_singletons[i];
                 if( m_block_infos[p].block_weight + G.getNodeWeight(node) <= config.upper_bound_partition) {
+                        if(config.connected_blocks) {
+                                if(would_disconnect_block(G, node, G.getPartitionIndex(node))) {
+                                        continue;
+                                }
+                        }
                         m_block_infos[G.getPartitionIndex(node)].block_weight -= G.getNodeWeight(node);
                         m_block_infos[p].block_weight += G.getNodeWeight(node);
                         G.setPartitionIndex(node, p);

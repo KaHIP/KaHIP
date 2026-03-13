@@ -337,6 +337,12 @@ void advanced_models::perform_augmented_move( PartitionConfig & config, graph_ac
                         PartitionID from = pair.lhs == blocks_of_move[j] ? pair.rhs : pair.lhs;
                         PartitionID to   = blocks_of_move[j];
 
+                        if(config.connected_blocks) {
+                                if(would_disconnect_block(G, node, from)) {
+                                        continue;
+                                }
+                        }
+
                         G.setPartitionIndex(node, to);
 
                         boundary.postMovedBoundaryNodeUpdates(node, &pair, true, true);

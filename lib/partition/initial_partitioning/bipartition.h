@@ -31,6 +31,7 @@ class bipartition : public initial_partitioner {
 
         private:
                 void grow_regions_bfs(const PartitionConfig & config, graph_access & G);
+                void grow_regions_dual_bfs(const PartitionConfig & config, graph_access & G);
                 void grow_regions_fm(const PartitionConfig & config, graph_access & G);
                 NodeID find_start_node( const PartitionConfig & config, graph_access & G);
                 void post_fm(const PartitionConfig & config, graph_access & G);

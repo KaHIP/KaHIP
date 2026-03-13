@@ -14,6 +14,7 @@
 #include "search_stop_rule.h"
 #include "tools/quality_metrics.h"
 #include "two_way_fm.h"
+#include "uncoarsening/refinement/connectivity_check.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/partial_boundary.h"
 
 two_way_fm::two_way_fm() {
@@ -118,6 +119,14 @@ EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg,
                 if(!from_queue->empty()) {
                         Gain gain = from_queue->maxValue();
                         NodeID node = from_queue->deleteMax();
+
+                        if(config.connected_blocks) {
+                                if(would_disconnect_block(G, node, from)) {
+                                        moved_idx[node].index = MOVED;
+                                        number_of_swaps--;
+                                        continue;
+                                }
+                        }
 
                         ASSERT_TRUE(moved_idx[node].index == NOT_MOVED);
 

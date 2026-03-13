@@ -312,6 +312,8 @@ inline void configuration::standard( PartitionConfig & partition_config ) {
         partition_config.mh_flip_coin                           = 1;
         partition_config.mh_print_log                           = false;
         partition_config.mh_penalty_for_unconnected             = false;
+        partition_config.connected_blocks                       = false;
+        partition_config.connected_blocks_init_done             = false;
         partition_config.mh_no_mh                               = false;
         partition_config.mh_optimize_communication_volume       = false; 
         partition_config.use_bucket_queues                      = true; 

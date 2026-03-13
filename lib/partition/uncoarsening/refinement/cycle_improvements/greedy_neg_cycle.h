@@ -15,6 +15,7 @@
 #include "partition_config.h"
 #include "problem_factory.h"
 #include "uncoarsening/refinement/kway_graph_refinement/kway_graph_refinement_commons.h"
+#include "uncoarsening/refinement/connectivity_check.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/complete_boundary.h"
 
 class greedy_neg_cycle {
@@ -83,6 +84,12 @@ EdgeWeight greedy_neg_cycle::shortest_path_rebalance(PartitionConfig & partition
                 bp.lhs = lhs;
                 bp.rhs = rhs;
 
+                if(partition_config.connected_blocks) {
+                        if(would_disconnect_block(G, em[bp].to_move, lhs)) {
+                                break;
+                        }
+                }
+
                 G.setPartitionIndex(em[bp].to_move, rhs);
 
                 boundary.postMovedBoundaryNodeUpdates(em[bp].to_move, &bp, true, true);
@@ -95,7 +102,7 @@ EdgeWeight greedy_neg_cycle::shortest_path_rebalance(PartitionConfig & partition
                 ASSERT_TRUE(boundary.assert_bnodes_in_boundaries());
                 ASSERT_TRUE(boundary.assert_boundaries_are_bnodes());
                 overall_gain += em[bp].gain;
-        } 
+        }
 
         path.clear();
         return overall_gain;
@@ -146,6 +153,12 @@ EdgeWeight greedy_neg_cycle::negative_cycle_test(PartitionConfig & partition_con
                         bp.k   = partition_config.k;
                         bp.lhs = lhs;
                         bp.rhs = rhs;
+
+                        if(partition_config.connected_blocks) {
+                                if(would_disconnect_block(G, em[bp].to_move, lhs)) {
+                                        break;
+                                }
+                        }
 
                         G.setPartitionIndex(em[bp].to_move, rhs);
                         boundary.postMovedBoundaryNodeUpdates(em[bp].to_move, &bp, true, true);

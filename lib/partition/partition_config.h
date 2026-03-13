@@ -251,6 +251,8 @@ struct PartitionConfig
         bool kabapE;
         
         bool mh_penalty_for_unconnected;
+        bool connected_blocks;
+        bool connected_blocks_init_done;
         //=======================================
         //===============MISC====================
         //=======================================

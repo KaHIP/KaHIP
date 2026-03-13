@@ -9,6 +9,7 @@
 #include <iostream>
 #include <math.h>
 #include <mpi.h>
+#include <queue>
 #ifndef _WIN32
 #include <regex.h>
 #endif
@@ -58,6 +59,24 @@ int main(int argn, char **argv) {
         graph_io::readGraphWeighted(G, graph_filename);
 
         std::cout << "io time: " << t.elapsed()  << std::endl;
+
+        if(partition_config.connected_blocks) {
+                std::vector<bool> visited(G.number_of_nodes(), false);
+                std::queue<NodeID> bfs_queue;
+                visited[0] = true;
+                bfs_queue.push(0);
+                NodeID visited_count = 1;
+                while(!bfs_queue.empty()) {
+                        NodeID v = bfs_queue.front(); bfs_queue.pop();
+                        forall_out_edges(G, e, v) {
+                                NodeID u = G.getEdgeTarget(e);
+                                if(!visited[u]) { visited[u] = true; visited_count++; bfs_queue.push(u); }
+                        } endfor
+                }
+                if(visited_count < G.number_of_nodes()) {
+                        std::cout << "WARNING: input graph is disconnected, connected blocks cannot be guaranteed." << std::endl;
+                }
+        }
 
         omp_set_num_threads(1);
         G.set_partition_count(partition_config.k); 

@@ -9,6 +9,7 @@
 #include "label_propagation_refinement.h"
 #include "partition/coarsening/clustering/node_ordering.h"
 #include "tools/random_functions.h"
+#include "uncoarsening/refinement/connectivity_check.h"
 
 label_propagation_refinement::label_propagation_refinement() {
                 
@@ -74,9 +75,15 @@ EdgeWeight label_propagation_refinement::perform_refinement(PartitionConfig & pa
                                 hash_map[cur_block] = 0;
                         } endfor
 
+                        if(partition_config.connected_blocks && max_block != G.getPartitionIndex(node)) {
+                                if(would_disconnect_block(G, node, G.getPartitionIndex(node))) {
+                                        max_block = G.getPartitionIndex(node);
+                                }
+                        }
+
                         cluster_sizes[G.getPartitionIndex(node)]  -= G.getNodeWeight(node);
                         cluster_sizes[max_block]         += G.getNodeWeight(node);
-                        bool changed_label                = G.getPartitionIndex(node) != max_block; 
+                        bool changed_label                = G.getPartitionIndex(node) != max_block;
                         change_counter                   += changed_label;
                         G.setPartitionIndex(node, max_block);
                         //std::cout <<  "maxblock " <<  max_block  << std::endl;

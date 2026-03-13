@@ -16,6 +16,7 @@
 #include "kway_graph_refinement_commons.h"
 #include "tools/random_functions.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/2way_fm_refinement/vertex_moved_hashtable.h"
+#include "uncoarsening/refinement/connectivity_check.h"
 #include "uncoarsening/refinement/refinement.h"
 
 class kway_graph_refinement_core  {
@@ -99,6 +100,12 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
 
         if(boundary.getBlockNoNodes(from) - 1 == 0) // assure that no block gets accidentally empty
                 return false;
+
+        if(config.connected_blocks) {
+                if(would_disconnect_block(G, node, from)) {
+                        return false;
+                }
+        }
 
         G.setPartitionIndex(node, to);        
 
