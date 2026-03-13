@@ -53,8 +53,12 @@ void population::createIndividuum(const PartitionConfig & config,
 
         std::ofstream ofs;
         std::streambuf* backup = std::cout.rdbuf();
+#ifdef _WIN32
+        ofs.open("NUL");
+#else
         ofs.open("/dev/null");
-        std::cout.rdbuf(ofs.rdbuf()); 
+#endif
+        std::cout.rdbuf(ofs.rdbuf());
 
         timer t; t.restart();
 
@@ -275,8 +279,12 @@ void population::combine_cross(const PartitionConfig & partition_config,
 
 	std::ofstream ofs;
 	std::streambuf* backup = std::cout.rdbuf();
+#ifdef _WIN32
+        ofs.open("NUL");
+#else
         ofs.open("/dev/null");
-        std::cout.rdbuf(ofs.rdbuf()); 
+#endif
+        std::cout.rdbuf(ofs.rdbuf());
 
         graph_partitioner partitioner;
         partitioner.perform_partitioning(cross_config, G);

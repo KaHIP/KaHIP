@@ -22,7 +22,11 @@ NodeWeight initial_node_separator::single_run( const PartitionConfig & config, g
 
         std::streambuf* backup = std::cout.rdbuf();
         std::ofstream ofs;
+#ifdef _WIN32
+        ofs.open("NUL");
+#else
         ofs.open("/dev/null");
+#endif
         std::cout.rdbuf(ofs.rdbuf()); 
 
         graph_partitioner partitioner;

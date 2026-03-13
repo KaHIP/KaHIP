@@ -117,7 +117,11 @@ void fast_construct_mapping::construct_initial_mapping_topdown_internal( Partiti
 void fast_construct_mapping::partition_C_perfectly_balanced( PartitionConfig & config, graph_access & C, PartitionID blocks) {
         std::streambuf* backup = std::cout.rdbuf();
         std::ofstream ofs;
+#ifdef _WIN32
+        ofs.open("NUL");
+#else
         ofs.open("/dev/null");
+#endif
         std::cout.rdbuf(ofs.rdbuf()); 
 
         PartitionConfig partition_config = config;

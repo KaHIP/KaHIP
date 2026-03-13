@@ -50,7 +50,11 @@ int main(int argn, char **argv) {
 
         std::streambuf* backup = std::cout.rdbuf();
         std::ofstream ofs;
+#ifdef _WIN32
+        ofs.open("NUL");
+#else
         ofs.open("/dev/null");
+#endif
         if(suppress_output) {
                 std::cout.rdbuf(ofs.rdbuf()); 
         }
