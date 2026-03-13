@@ -23,7 +23,7 @@ jobs:
     steps:
     - name: Install dependencies
       run: sudo apt-get install -y libopenmpi-dev pybind11-dev
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
     - name: Export compiler

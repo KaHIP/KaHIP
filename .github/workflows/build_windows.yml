@@ -15,7 +15,7 @@ jobs:
     continue-on-error: true
     timeout-minutes: 60
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         submodules: 'recursive'
     - name: Configure
