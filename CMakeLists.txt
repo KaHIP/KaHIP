@@ -87,6 +87,11 @@ if(LIB_METIS)
   endif()
 endif()
 
+# Windows compatibility
+if(WIN32)
+  add_definitions(-DNOMINMAX)
+endif()
+
 # 64 Bit option
 option(64BITMODE "64 bit mode" OFF)
 if(64BITMODE)

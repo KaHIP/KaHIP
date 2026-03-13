@@ -10,8 +10,13 @@
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <Windows.h>
 #include <stdint.h>
+struct timeval {
+        long tv_sec;
+        long tv_usec;
+};
 #else
 #include <sys/time.h>
 #include <sys/resource.h>
