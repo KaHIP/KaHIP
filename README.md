@@ -65,7 +65,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 
 
 ## NEW in v3.25:
-- *Connected Blocks (Experimental)*: KaFFPa now supports `--connected_blocks` (strong preconfiguration only) to produce partitions where each block is a connected subgraph. The input graph must be connected. Connectivity is enforced via checkpoint-based component elimination during uncoarsening, combined with connectivity-aware refinement and greedy rebalancing. When this flag is not used, KaHIP behavior is unchanged.
+- *Connected Blocks (Experimental)*: KaFFPa and KaFFPaE now support `--connected_blocks` (strong preconfiguration only) to produce partitions where each block is a connected subgraph. The input graph must be connected. Connectivity is enforced via checkpoint-based component elimination during uncoarsening, combined with connectivity-aware refinement and greedy rebalancing. When this flag is not used, KaHIP behavior is unchanged.
 
 ## NEW in v3.24:
 - *64-bit Edge Support*: The C interface now supports 64-bit edges via a compile-time `kahip_idx` typedef. Compile with `-D64BITMODE=On` to enable `int64_t` for all edge-related arrays and values (xadj, adjncy, adjcwgt, edgecut). Node-related parameters remain `int`.
@@ -216,6 +216,7 @@ These programs and configurations take a graph and partition it more or less seq
 | Very Good Partitioning | Social | kaffpa preconfiguration set to ssocial                                                             |
 | Highest Quality        | Social | kaffpaE, use mpirun, large time limit, preconfiguration ssocial                                    |
 | Even Higher Quality    |        | kaffpaE, use mpirun, large time limit, use the options --mh_enable_tabu_search, --mh_enable_kabapE |
+| Connected Blocks (Exp) |        | kaffpa or kaffpaE, preconfiguration strong, --connected_blocks (input graph must be connected)      |
 #### Example Runs
 ```console
 ./deploy/graphchecker ./examples/rgg_n_2_15_s0.graph 
@@ -226,7 +227,12 @@ These programs and configurations take a graph and partition it more or less seq
 ```
 
 ```console
-mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit=3600 --mh_enable_tabu_search --mh_enable_kabapE 
+mpirun -n 24 ./deploy/kaffpaE ./examples/rgg_n_2_15_s0.graph --k 4  --time_limit=3600 --mh_enable_tabu_search --mh_enable_kabapE
+```
+
+Connected blocks (experimental): each block of the partition is guaranteed to be a connected subgraph. Only supported with the strong preconfiguration. The input graph must be connected.
+```console
+./deploy/kaffpa ./examples/rgg_n_2_15_s0.graph --k 4 --preconfiguration=strong --connected_blocks
 ```
 
 
