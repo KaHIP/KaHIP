@@ -36,6 +36,10 @@
 static_assert(sizeof(kahip_idx) == sizeof(EdgeID),
               "kahip_idx and EdgeID size mismatch -- check KAHIP_64BIT vs MODE64BITEDGES");
 
+int kahip_sizeof_idx() {
+        return sizeof(kahip_idx);
+}
+
 using namespace std;
 
 void internal_kaffpa_set_configuration( configuration & cfg,

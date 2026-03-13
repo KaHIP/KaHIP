@@ -22,6 +22,9 @@ extern "C"
 {
 #endif
 
+// returns the size of kahip_idx in bytes (4 for 32-bit, 8 for 64-bit)
+int kahip_sizeof_idx();
+
 const int FAST           = 0;
 const int ECO            = 1;
 const int STRONG         = 2;
