@@ -29,6 +29,30 @@ KaHIP v3.24
   <img src="https://raw.githubusercontent.com/KaHIP/.github/main/profile/kahip-logo.png" alt="KaHIP Logo" width="600"/>
 </p>
 
+## Table of Contents
+
+- [About](#about)
+- [What's New](#new-in-v324)
+- [Installation](#installation-notes)
+  - [Install via Homebrew](#install-via-homebrew)
+  - [Downloading KaHIP](#downloading-kahip)
+  - [Compiling KaHIP](#compiling-kahip)
+- [Running Programs](#running-programs)
+  - [Default Partitioning](#overview-of-programs-and-usecase)
+  - [Distributed Memory Parallel Partitioning](#distributed-memory-parallel-partitioning)
+  - [Node Separators](#node-separators)
+  - [Node Ordering](#node-ordering)
+  - [Edge Partitioning](#edge-partitioning)
+  - [Process Mapping](#process-mapping)
+  - [ILP Improvements](#ilp-exact-solver-and-ilp-improvements)
+- [Linking the KaHIP Library](#linking-the-kahip-library)
+- [Linking the ParHIP Library](#linking-the-parhip-library-parallel-partitioning)
+- [Using KaHIP in Python](#using-kahip-in-python)
+- [Licence](#licence)
+- [Contributors](#project-contributors-sorted-by-last-name)
+
+<a id="about"></a>
+
 The graph partitioning framework KaHIP -- High Quality Partitioning. Part of the [KaHIP](https://github.com/KaHIP) organization. KaHIP supports Linux, macOS and Windows.
 
 The graph partitioning problem asks for a division of a graph's node set into k equally sized blocks such that the number of edges that run between the blocks is minimized. KaHIP is a family of graph partitioning programs. It includes KaFFPa (Karlsruhe Fast Flow Partitioner), which is a multilevel graph partitioning algorithm, in its variants Strong, Eco and Fast, KaFFPaE (KaFFPaEvolutionary), which is a parallel evolutionary algorithm that uses KaFFPa to provide combine and mutation operations, as well as KaBaPE which extends the evolutionary algorithm. Moreover, specialized techniques are included to partition road networks (Buffoon), to output a vertex separator from a given partition as well as techniques geared towards the efficient partitioning of social networks. Here is an overview of our framework:
