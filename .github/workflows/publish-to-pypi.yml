@@ -25,7 +25,7 @@ jobs:
           fetch-tags: true  # Explicitly fetch tags
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.1.0
+        uses: pypa/cibuildwheel@v3.4.0
         with:
           output-dir: wheelhouse
         env:
