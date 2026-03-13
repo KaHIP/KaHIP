@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +21,8 @@ jobs:
           fetch-depth: 0  # Fetch all history for setuptools-scm
           fetch-tags: true  # Explicitly fetch tags
 
-      - name: Pre-download virtualenv for cibuildwheel
+      - name: Pre-download virtualenv for cibuildwheel (Unix)
+        if: runner.os != 'Windows'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -36,6 +37,17 @@ jobs:
             -o "$CACHE_DIR/virtualenv-20.27.1.pyz" \
             "https://github.com/pypa/get-virtualenv/raw/20.27.1/public/virtualenv.pyz"
 
+      - name: Pre-download virtualenv for cibuildwheel (Windows)
+        if: runner.os == 'Windows'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $CACHE_DIR = "$env:LOCALAPPDATA\cibuildwheel"
+          New-Item -ItemType Directory -Force -Path $CACHE_DIR | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/pypa/get-virtualenv/raw/20.27.1/public/virtualenv.pyz" `
+            -OutFile "$CACHE_DIR\virtualenv-20.27.1.pyz" -MaximumRetryCount 5
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
         with:
@@ -43,10 +55,12 @@ jobs:
         env:
           # Build for Python 3.8, 3.9, 3.10, 3.11, 3.12
           CIBW_BUILD: cp38-* cp39-* cp310-* cp311-* cp312-*
-          # Skip 32-bit builds and musllinux for now
-          CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux_*"
+          # Skip 32-bit builds, musllinux, and Windows ARM64
+          CIBW_SKIP: "*-win32 *-win_arm64 *-manylinux_i686 *-musllinux_*"
           # Pass CMake arguments for building Python module
           CIBW_ENVIRONMENT: >
+            CMAKE_ARGS="-DBUILDPYTHONMODULE=ON -DNOMPI=ON"
+          CIBW_ENVIRONMENT_WINDOWS: >
             CMAKE_ARGS="-DBUILDPYTHONMODULE=ON -DNOMPI=ON"
 
       - uses: actions/upload-artifact@v4
