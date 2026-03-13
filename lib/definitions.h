@@ -34,12 +34,18 @@ typedef double 		EdgeRatingType;
 typedef unsigned int 	PathID;
 typedef unsigned int 	PartitionID;
 typedef unsigned int 	NodeWeight;
-typedef int 		EdgeWeight;
-typedef EdgeWeight 	Gain;
 #ifdef MODE64BITEDGES
-typedef uint64_t 	EdgeID;
+typedef int64_t 	EdgeID;
+typedef int64_t 	EdgeWeight;
 #else
 typedef unsigned int 	EdgeID;
+typedef int 		EdgeWeight;
+#endif
+typedef EdgeWeight 	Gain;
+#ifdef KAHIP_64BIT
+typedef int64_t 	kahip_idx;
+#else
+typedef int32_t 	kahip_idx;
 #endif
 typedef int 		Color;
 typedef unsigned int 	Count;

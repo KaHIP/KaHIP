@@ -52,6 +52,8 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *n                              = arg_int0(NULL, "n", NULL, "");
         struct arg_end *end                            = arg_end(100);
 
+        void* argtable_fordeletion[] = {help, filename, input_partition_filename, user_seed, k, k_opt, inbalance, comm_rounds, cluster_coarsening_factor, stop_factor, evolutionary_time_limit, version, label_iterations_coarsening, label_iterations_refinement, num_tries, binary_io_window_size, initial_partitioning_algorithm, num_vcycles, no_refinement_in_last_iteration, converter_evaluate, save_partition, save_partition_binary, vertex_degree_weights, node_ordering, preconfiguration, ht_fill_factor, n, end};
+
         // Define argtable.
         void* argtable[] = {
 #ifdef PARALLEL_LABEL_COMPRESSION
@@ -73,6 +75,7 @@ int parse_parameters(int argn, char **argv,
                 if( rank == ROOT ) {
                         std::cout <<  KAHIPVERSION  << std::endl;
                 }
+                arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                 return 1;
         }
 
@@ -86,8 +89,8 @@ int parse_parameters(int argn, char **argv,
                         arg_print_syntax(stdout, argtable, "\n");
                         arg_print_glossary(stdout, argtable,"  %-40s %s\n");
                         printf("This is the experimental parallel partitioner program.\n");
-                        arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
                 }
+                arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                 return 1;
         }
 
@@ -98,8 +101,8 @@ int parse_parameters(int argn, char **argv,
                 if( rank == ROOT ) {
                         arg_print_errors(stderr, end, progname);
                         printf("Try '%s --help' for more information.\n",progname);
-                        arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
                 }
+                arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                 return 1; 
         }
 
@@ -121,6 +124,7 @@ int parse_parameters(int argn, char **argv,
         } else {
                 if(partition_config.generate_rgg == false && partition_config.generate_ba == false) {
                         printf("You must specify a filename or enable the graph generator tag.\n");
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         return 1;
                 }
         }
@@ -152,6 +156,7 @@ int parse_parameters(int argn, char **argv,
                         partition_config.cluster_coarsening_factor = 20000;
                 } else {
                         fprintf(stderr, "Invalid preconfconfiguration variant: \"%s\"\n", preconfiguration->sval[0]);
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -253,6 +258,7 @@ int parse_parameters(int argn, char **argv,
                         partition_config.initial_partitioning_algorithm = RANDOMIP;
                 } else {
                         fprintf(stderr, "Invalid initial partitioning algorithm: \"%s\"\n", initial_partitioning_algorithm->sval[0]);
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
@@ -268,11 +274,12 @@ int parse_parameters(int argn, char **argv,
                         partition_config.node_ordering = DEGREE_LEASTGHOSTNODESFIRST_NODEODERING;
                 } else {
                         fprintf(stderr, "Invalid node ordering variant: \"%s\"\n", node_ordering->sval[0]);
+                        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
                         exit(0);
                 }
         }
 
-
+        arg_freetable(argtable_fordeletion, sizeof(argtable_fordeletion) / sizeof(argtable_fordeletion[0]));
         return 0;
 }
 

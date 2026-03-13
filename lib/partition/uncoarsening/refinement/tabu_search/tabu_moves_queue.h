@@ -63,7 +63,7 @@ inline bool tabu_moves_queue::empty( ) {
         return m_priority_queue.empty();        
 }
 
-inline Gain tabu_moves_queue::minValue( ) {
+inline int tabu_moves_queue::minValue( ) {
         return m_priority_queue.top().time;        
 }
 

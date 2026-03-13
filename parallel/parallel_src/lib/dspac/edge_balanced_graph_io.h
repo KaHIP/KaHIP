@@ -18,10 +18,10 @@
 class edge_balanced_graph_io {
 public:
     static void read_binary_graph_edge_balanced(parallel_graph_access &G, const std::string &filename,
-            const PPartitionConfig &config, int rank, int size);
+            const PPartitionConfig &config, std::vector<EdgeID> &permutation, int rank, int size);
 
     static void read_binary_graph_edge_balanced(parallel_graph_access &G, const std::string &filename,
-            const PPartitionConfig &config);
+            const PPartitionConfig &config, std::vector<EdgeID> &permutation);
 };
 
 #endif // KAHIP_EDGEBALANCED_GRAPH_IO_H

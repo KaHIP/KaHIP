@@ -139,6 +139,7 @@ int main(int argn, char **argv) {
         }
 
         std::cout << "time spent to compute node ordering " << nd_time << std::endl;
+	std::cout << "Number of fill-edges: " << compute_fill(input_graph, final_labels) << std::endl;
 
         //std::cout << "Reduction statistics:" << std::endl;
         //reduction_stat_counter::get_instance().print_summary(std::cout);

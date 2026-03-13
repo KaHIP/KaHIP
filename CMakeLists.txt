@@ -74,9 +74,15 @@ endif()
 find_library(LIB_METIS metis)
 if(LIB_METIS)
   message(STATUS "Metis support detected")
-  add_definitions("-DUSEMETIS")
-  if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    include_directories(/usr/local/include)
+  find_library(LIB_GK GKlib)
+  if (NOT LIB_GK)
+    message(STATUS "Metis requires GKlib, but GKlib was not found")
+    set(LIB_METIS "NOTFOUND")
+  else()
+    add_definitions("-DUSEMETIS")
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+      include_directories(/usr/local/include)
+    endif()
   endif()
 endif()
 
@@ -84,6 +90,7 @@ endif()
 option(64BITMODE "64 bit mode" OFF)
 if(64BITMODE)
   add_definitions("-DMODE64BITEDGES")
+  add_definitions("-DKAHIP_64BIT")
   add_definitions("-DPOINTER64=1")
 endif()
 
@@ -274,6 +281,11 @@ target_compile_definitions(evaluator PRIVATE "-DMODE_EVALUATOR")
 target_link_libraries(evaluator ${OpenMP_CXX_LIBRARIES})
 install(TARGETS evaluator DESTINATION bin)
 
+add_executable(edge_evaluator app/edge_evaluator.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
+target_compile_definitions(edge_evaluator PRIVATE "-DMODE_EVALUATOR")
+target_link_libraries(edge_evaluator ${OpenMP_CXX_LIBRARIES})
+install(TARGETS edge_evaluator DESTINATION bin)
+
 add_executable(node_separator app/node_separator_ml.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
 target_compile_definitions(node_separator PRIVATE "-DMODE_NODESEP")
 target_link_libraries(node_separator ${OpenMP_CXX_LIBRARIES})
@@ -289,12 +301,12 @@ target_compile_definitions(partition_to_vertex_separator PRIVATE "-DMODE_PARTITI
 target_link_libraries(partition_to_vertex_separator ${OpenMP_CXX_LIBRARIES})
 install(TARGETS partition_to_vertex_separator DESTINATION bin)
 
-add_executable(interface_test misc/example_library_call/interface_test.cpp interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping> $<TARGET_OBJECTS:libnodeordering>)
+add_executable(interface_test misc/example_library_call/interface_test.cpp interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping> $<TARGET_OBJECTS:libnodeordering> $<TARGET_OBJECTS:libspac>)
 target_include_directories(interface_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(interface_test PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(interface_test ${OpenMP_CXX_LIBRARIES})
 if(LIB_METIS)
-        target_link_libraries(interface_test ${LIB_METIS})
+	target_link_libraries(interface_test ${LIB_METIS} ${LIB_GK})
 endif()
 install(TARGETS interface_test DESTINATION bin)
 
@@ -324,7 +336,7 @@ install(TARGETS node_ordering DESTINATION bin)
 if(LIB_METIS)
   add_executable(fast_node_ordering app/fast_node_ordering.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libnodeordering>)
   target_compile_definitions(fast_node_ordering PRIVATE "-DMODE_NODESEP" "-DMODE_NODEORDERING" "-DFASTORDERING")
-  target_link_libraries(fast_node_ordering ${OpenMP_CXX_LIBRARIES} ${LIB_METIS})
+  target_link_libraries(fast_node_ordering ${OpenMP_CXX_LIBRARIES} ${LIB_METIS} ${LIB_GK})
   install(TARGETS fast_node_ordering DESTINATION bin)
 endif()
 
@@ -332,26 +344,28 @@ endif()
 # Shared interface library
 add_library(kahip SHARED interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
                                                            $<TARGET_OBJECTS:libmapping>
-                                                           $<TARGET_OBJECTS:libnodeordering>)
+                                                           $<TARGET_OBJECTS:libnodeordering>
+                                                           $<TARGET_OBJECTS:libspac>)
 target_include_directories(kahip PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(kahip PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(kahip PUBLIC ${OpenMP_CXX_LIBRARIES})
 if(LIB_METIS)
-        target_link_libraries(kahip PUBLIC ${LIB_METIS})
+	target_link_libraries(kahip PUBLIC ${LIB_METIS} ${LIB_GK})
 endif()
 install(TARGETS kahip DESTINATION lib)
 
 # Static interface library
 add_library(kahip_static interface/kaHIP_interface.cpp $<TARGET_OBJECTS:libkaffpa>
                                                            $<TARGET_OBJECTS:libmapping>
-                                                           $<TARGET_OBJECTS:libnodeordering>)
+                                                           $<TARGET_OBJECTS:libnodeordering>
+                                                           $<TARGET_OBJECTS:libspac>)
 target_include_directories(kahip_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_compile_definitions(kahip_static PRIVATE "-DMODE_KAFFPA")
 target_link_libraries(kahip_static PUBLIC ${OpenMP_CXX_LIBRARIES})
 set_target_properties(kahip_static PROPERTIES PUBLIC_HEADER interface/kaHIP_interface.h)
 
 if(LIB_METIS)
-        target_link_libraries(kahip_static PUBLIC ${LIB_METIS})
+	target_link_libraries(kahip_static PUBLIC ${LIB_METIS} ${LIB_GK})
 endif()
 
 install(TARGETS kahip_static
@@ -384,8 +398,18 @@ endif()
 # pybind11 module
 option(BUILDPYTHONMODULE "Build Python binding." OFF)
 if (BUILDPYTHONMODULE)
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/misc/pymodule/pybind11)
+  find_package(pybind11 REQUIRED)
   pybind11_add_module(kahip_python_binding ${CMAKE_CURRENT_SOURCE_DIR}/misc/pymodule/kahip.cpp)
+
+  # Install to the kahip Python package directory
+  if(SKBUILD)
+    # When building with scikit-build-core, install directly to kahip/
+    install(TARGETS kahip_python_binding DESTINATION kahip)
+  else()
+    # Standard installation path
+    install(TARGETS kahip_python_binding DESTINATION "${CMAKE_INSTALL_PYTHONDIR}/kahip")
+  endif()
+
   target_link_libraries(kahip_python_binding PUBLIC kahip_static)
   set_target_properties(kahip_python_binding PROPERTIES OUTPUT_NAME "kahip")
 endif ()

@@ -23,7 +23,7 @@ public:
 
     std::vector<PartitionID> project_partition();
 
-    unsigned calculate_vertex_cut(const std::vector<PartitionID> &edge_partition);
+    unsigned long calculate_vertex_cut(const std::vector<PartitionID> &edge_partition);
 
 private:
     void find_reverse_edges();

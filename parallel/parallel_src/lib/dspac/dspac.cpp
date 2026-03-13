@@ -389,12 +389,12 @@ bool dspac::assert_node_range_array_ok(const std::vector<NodeID> &node_range_arr
     return true;
 }
 
-std::vector<PartitionID> dspac::project_partition(parallel_graph_access &split_graph) {
+std::vector<PartitionID> dspac::project_partition(parallel_graph_access &split_graph, const std::vector<EdgeID> &permutation) {
     std::vector<PartitionID> edge_partition(m_input_graph.number_of_local_edges());
 
     for (NodeID v = 0; v < m_input_graph.number_of_local_nodes(); ++v) {
         for (EdgeID e = m_input_graph.get_first_edge(v); e < m_input_graph.get_first_invalid_edge(v); ++e) {
-            edge_partition[e] = split_graph.getNodeLabel(e);
+            edge_partition[permutation[e]] = split_graph.getNodeLabel(e);
         }
     }
 

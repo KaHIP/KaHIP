@@ -34,13 +34,14 @@ graph_access &spac::construct_split_graph() {
 
     for (NodeID u = 0; u < m_input_graph.number_of_nodes(); ++u) {
         NodeID deg = m_input_graph.getNodeDegree(u);
+        NodeWeight weight = m_input_graph.getNodeWeight(u);
 
         for (EdgeID e = m_input_graph.get_first_edge(u); e < m_input_graph.get_first_invalid_edge(u); ++e) {
             EdgeID nth_edge_at_u = (e - m_input_graph.get_first_edge(u));
 
             NodeID split_node = m_split_graph.new_node();
             assert(e == split_node);
-            m_split_graph.setNodeWeight(split_node, 1);
+            m_split_graph.setNodeWeight(split_node, m_input_graph.getEdgeWeight(e));
 
             EdgeID dominant_edge = m_split_graph.new_edge(split_node, m_reverse_edge[e]);
             m_split_graph.setEdgeWeight(dominant_edge, m_infinity);
@@ -55,7 +56,7 @@ graph_access &spac::construct_split_graph() {
 
                     auxiliary_edge = m_split_graph.new_edge(split_node, split_node - 1);
                 }
-                m_split_graph.setEdgeWeight(auxiliary_edge, 1);
+                m_split_graph.setEdgeWeight(auxiliary_edge, weight);
             } else if (deg > 2) {
                 // calculate offsets between split_node and the next / prev node in the cycle
                 int prev_offset = -1;
@@ -66,8 +67,8 @@ graph_access &spac::construct_split_graph() {
                     next_offset = -(deg - 1);
                 }
 
-                m_split_graph.setEdgeWeight(m_split_graph.new_edge(split_node, split_node + prev_offset), 1);
-                m_split_graph.setEdgeWeight(m_split_graph.new_edge(split_node, split_node + next_offset), 1);
+                m_split_graph.setEdgeWeight(m_split_graph.new_edge(split_node, split_node + prev_offset), weight);
+                m_split_graph.setEdgeWeight(m_split_graph.new_edge(split_node, split_node + next_offset), weight);
             } else {
                 // nothing to do for leaves
                 assert(deg == 1);
@@ -100,7 +101,7 @@ void spac::fix_cut_dominant_edges() {
             PartitionID u_part = m_split_graph.getPartitionIndex(u);
             PartitionID v_part = m_split_graph.getPartitionIndex(v);
 
-            if (m_split_graph.getEdgeWeight(e) > 1 && u_part != v_part) {
+            if (m_split_graph.getEdgeWeight(e) == m_infinity && u_part != v_part) {
                 ++number_of_bad_edges;
             }
         }
@@ -110,7 +111,7 @@ void spac::fix_cut_dominant_edges() {
     if (number_of_bad_edges > 0) {
         std::vector<NodeID> partition_sizes(m_split_graph.get_partition_count());
         for (NodeID u = 0; u < m_split_graph.number_of_nodes(); ++u) {
-            ++partition_sizes[m_split_graph.getPartitionIndex(u)];
+            partition_sizes[m_split_graph.getPartitionIndex(u)] += m_split_graph.getNodeWeight(u);
         }
 
         for (NodeID u = 0; u < m_split_graph.number_of_nodes(); ++u) {
@@ -123,12 +124,12 @@ void spac::fix_cut_dominant_edges() {
                 // move one endpoint to the smaller partition
                 if (m_split_graph.getEdgeWeight(e) > 1 && u_part != v_part) {
                     if (partition_sizes[u_part] < partition_sizes[v_part]) {
-                        ++partition_sizes[u_part];
-                        --partition_sizes[v_part];
+                        partition_sizes[u_part] += m_split_graph.getNodeWeight(v);
+                        partition_sizes[v_part] -= m_split_graph.getNodeWeight(v);
                         m_split_graph.setPartitionIndex(v, u_part);
                     } else {
-                        --partition_sizes[u_part];
-                        ++partition_sizes[v_part];
+                        partition_sizes[u_part] -= m_split_graph.getNodeWeight(u);
+                        partition_sizes[v_part] += m_split_graph.getNodeWeight(u);
                         m_split_graph.setPartitionIndex(u, v_part);
                     }
                 }
@@ -150,22 +151,25 @@ std::vector<PartitionID> spac::project_partition() {
     return edge_partition;
 }
 
-unsigned spac::calculate_vertex_cut(const std::vector<PartitionID> &edge_partition) {
-    unsigned cost = 0;
+unsigned long spac::calculate_vertex_cut(const std::vector<PartitionID> &edge_partition) {
+    unsigned long cost = 0;
 
     for (NodeID u = 0; u < m_input_graph.number_of_nodes(); ++u) {
         if (m_input_graph.getNodeDegree(u) == 0) continue;
+
+        unsigned long local_cost = 0;
         std::vector<bool> counted(m_split_graph.get_partition_count());
 
         for (EdgeID e = m_input_graph.get_first_edge(u); e < m_input_graph.get_first_invalid_edge(u); ++e) {
             PartitionID part = edge_partition[e];
             if (!counted[part]) {
                 counted[part] = true;
-                ++cost;
+                ++local_cost;
             }
         }
 
-        --cost;
+        --local_cost;
+        cost += local_cost * m_input_graph.getNodeWeight(u);
     }
 
     return cost;
