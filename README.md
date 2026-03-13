@@ -1,4 +1,4 @@
-KaHIP v3.24
+KaHIP v3.25
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![C++](https://img.shields.io/badge/C++-11/14-blue.svg)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.10+-064F8C.svg)](https://cmake.org/)
@@ -32,7 +32,7 @@ KaHIP v3.24
 ## Table of Contents
 
 - [About](#about)
-- [What's New](#new-in-v324)
+- [What's New](#new-in-v325)
 - [Installation](#installation-notes)
   - [Install via Homebrew](#install-via-homebrew)
   - [Downloading KaHIP](#downloading-kahip)
@@ -63,6 +63,9 @@ The graph partitioning problem asks for a division of a graph's node set into k 
   width="601" height="558">
 </p>
 
+
+## NEW in v3.25:
+- *Connected Blocks (Experimental)*: KaFFPa now supports `--connected_blocks` (strong preconfiguration only) to produce partitions where each block is a connected subgraph. The input graph must be connected. Connectivity is enforced via checkpoint-based component elimination during uncoarsening, combined with connectivity-aware refinement and greedy rebalancing. When this flag is not used, KaHIP behavior is unchanged.
 
 ## NEW in v3.24:
 - *64-bit Edge Support*: The C interface now supports 64-bit edges via a compile-time `kahip_idx` typedef. Compile with `-D64BITMODE=On` to enable `int64_t` for all edge-related arrays and values (xadj, adjncy, adjcwgt, edgecut). Node-related parameters remain `int`.
