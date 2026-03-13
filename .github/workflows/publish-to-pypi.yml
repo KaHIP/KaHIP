@@ -24,40 +24,12 @@ jobs:
           fetch-depth: 0  # Fetch all history for setuptools-scm
           fetch-tags: true  # Explicitly fetch tags
 
-      - name: Pre-download virtualenv for cibuildwheel (Unix)
-        if: runner.os != 'Windows'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ "$RUNNER_OS" = "macOS" ]; then
-            CACHE_DIR="$HOME/Library/Caches/cibuildwheel"
-          else
-            CACHE_DIR="$HOME/.cache/cibuildwheel"
-          fi
-          mkdir -p "$CACHE_DIR"
-          curl -L --retry 5 --retry-delay 10 \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -o "$CACHE_DIR/virtualenv-20.27.1.pyz" \
-            "https://github.com/pypa/get-virtualenv/raw/20.27.1/public/virtualenv.pyz"
-
-      - name: Pre-download virtualenv for cibuildwheel (Windows)
-        if: runner.os == 'Windows'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: pwsh
-        run: |
-          $CACHE_DIR = "$env:LOCALAPPDATA\cibuildwheel"
-          New-Item -ItemType Directory -Force -Path $CACHE_DIR | Out-Null
-          Invoke-WebRequest -Uri "https://github.com/pypa/get-virtualenv/raw/20.27.1/public/virtualenv.pyz" `
-            -OutFile "$CACHE_DIR\virtualenv-20.27.1.pyz" -MaximumRetryCount 5
-
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
+        uses: pypa/cibuildwheel@v3.1.0
         with:
           output-dir: wheelhouse
         env:
-          # Build for Python 3.8, 3.9, 3.10, 3.11, 3.12
-          CIBW_BUILD: cp38-* cp39-* cp310-* cp311-* cp312-*
+          CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-*
           # Skip 32-bit builds, musllinux, and Windows ARM64
           CIBW_SKIP: "*-win32 *-win_arm64 *-manylinux_i686 *-musllinux_*"
           # Pass CMake arguments for building Python module
@@ -84,7 +56,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Verify git tags (debug)
         run: |
