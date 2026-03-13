@@ -1,6 +1,4 @@
 cmake_minimum_required(VERSION 3.10)
-set(KAHIP_VERSION 3.15)
-
 include(CheckCXXCompilerFlag)
 include(GNUInstallDirs)
 
@@ -13,7 +11,7 @@ if(CCACHE_PROGRAM)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CCACHE_PROGRAM}")
 endif()
-project(KaHIP C CXX)
+project(KaHIP VERSION 3.24 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

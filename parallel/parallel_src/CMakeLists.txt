@@ -108,6 +108,19 @@ install(TARGETS parhip_interface
         )
 
 # pkg-config
+# Collect MPI flags for the .pc file
+string(REPLACE ";" " -I" PARHIP_MPI_CFLAGS "-I${MPI_CXX_INCLUDE_DIRS}")
+set(PARHIP_MPI_LIBS "")
+foreach(_lib ${MPI_CXX_LIBRARIES})
+  if(IS_ABSOLUTE "${_lib}")
+    get_filename_component(_dir "${_lib}" DIRECTORY)
+    get_filename_component(_name "${_lib}" NAME_WE)
+    string(REGEX REPLACE "^lib" "" _name "${_name}")
+    string(APPEND PARHIP_MPI_LIBS " -L${_dir} -l${_name}")
+  else()
+    string(APPEND PARHIP_MPI_LIBS " ${_lib}")
+  endif()
+endforeach()
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/parhip_interface.pc.in" "${CMAKE_CURRENT_BINARY_DIR}/parhip_interface.pc" @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/parhip_interface.pc" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 

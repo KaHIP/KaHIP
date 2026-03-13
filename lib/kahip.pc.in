@@ -10,6 +10,6 @@ libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
 Name: kahip
 Description: The graph partitioning framework KaHIP
 URL: https://kahip.github.io/
-Version: @KAHIP_VERSION@
+Version: @PROJECT_VERSION@
 Libs: -L${libdir} -lkahip
 Cflags: -I${includedir}
