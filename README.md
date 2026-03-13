@@ -364,6 +364,85 @@ int main(int argn, char **argv) {
         std::cout <<  "edge cut " <<  edge_cut  << std::endl;
 }
 ```
+
+Linking the ParHIP Library (Parallel Partitioning)
+=====
+ParHIP provides a parallel graph partitioning interface using MPI. Each process reads the METIS graph file but only stores its local portion of the distributed CSR structure. The full example can be found in `misc/example_parhip_call/`.
+
+```cpp
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <mpi.h>
+
+#include "parhip_interface.h"
+
+int main(int argc, char **argv) {
+        MPI_Init(&argc, &argv);
+
+        int rank, size;
+        MPI_Comm comm = MPI_COMM_WORLD;
+        MPI_Comm_rank(comm, &rank);
+        MPI_Comm_size(comm, &size);
+
+        // Read header to get number of nodes
+        std::ifstream in(argv[1]);
+        std::string line;
+        while (std::getline(in, line)) { if (line[0] != '%') break; }
+        idxtype n_global; { std::stringstream ss(line); ss >> n_global; }
+
+        // Compute which nodes this PE owns
+        std::vector<idxtype> vtxdist(size + 1);
+        for (int p = 0; p <= size; p++)
+                vtxdist[p] = (idxtype)p * n_global / size;
+        idxtype local_from = vtxdist[rank];
+        idxtype local_to   = vtxdist[rank + 1];
+        idxtype local_n    = local_to - local_from;
+
+        // Scan file, only store local nodes
+        std::vector<idxtype> xadj(local_n + 1);
+        std::vector<idxtype> adjncy;
+        idxtype node = 0, local_idx = 0;
+        xadj[0] = 0;
+        while (std::getline(in, line)) {
+                if (line[0] == '%') continue;
+                if (node >= local_from && node < local_to) {
+                        std::stringstream ss(line);
+                        idxtype target;
+                        while (ss >> target) adjncy.push_back(target - 1);
+                        local_idx++;
+                        xadj[local_idx] = adjncy.size();
+                }
+                node++;
+                if (node >= local_to) break;
+        }
+        in.close();
+
+        // Partition
+        int nparts = 2;
+        double imbalance = 0.03;
+        int edgecut = 0;
+        std::vector<idxtype> part(local_n);
+
+        ParHIPPartitionKWay(vtxdist.data(), xadj.data(), adjncy.data(),
+                            NULL, NULL, &nparts, &imbalance,
+                            false, 0, FASTSOCIAL,
+                            &edgecut, part.data(), &comm);
+
+        if (rank == 0) std::cout << "edge cut: " << edgecut << std::endl;
+
+        MPI_Finalize();
+        return 0;
+}
+```
+
+Compile and run:
+```console
+mpicxx -o parhip_test parhip_test.cpp -I/path/to/kahip/include -L/path/to/kahip/lib -lparhip_interface
+mpirun -np 4 ./parhip_test graph.metis
+```
+
 Using KaHIP in Python
 =====
 KaHIP can also be used in Python. The easiest way is to install it using pip:
