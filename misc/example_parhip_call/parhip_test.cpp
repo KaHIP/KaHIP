@@ -2,8 +2,8 @@
  * parhip_test.cpp
  *
  * Example of how to use the ParHIP parallel partitioning interface.
- * Each MPI process reads the full METIS graph file but only keeps
- * its own portion of the distributed CSR structure.
+ * Each MPI process reads the METIS graph file but only stores its
+ * own portion of the distributed CSR structure in memory.
  *
  * Usage: mpirun -np <P> ./parhip_test <graph.metis> [<k>]
  *
@@ -41,11 +41,7 @@ int main(int argc, char **argv) {
         int nparts = (argc >= 3) ? atoi(argv[2]) : 2;
 
         // -----------------------------------------------------------------
-        // Step 1: Every PE reads the full METIS graph file.
-        //         METIS format: first non-comment line is "n m [fmt]"
-        //         followed by n lines, one per node, listing neighbors
-        //         (1-indexed). fmt=1 means edge weights, fmt=11 means
-        //         node+edge weights, fmt=10 means node weights.
+        // Step 1: Read header to get n and fmt, then compute vtxdist.
         // -----------------------------------------------------------------
         std::ifstream in(filename.c_str());
         if (!in) {
@@ -55,15 +51,14 @@ int main(int argc, char **argv) {
         }
 
         std::string line;
-
-        // skip comments
         while (std::getline(in, line)) {
                 if (line[0] != '%') break;
         }
 
-        idxtype n_global, m_global;
+        idxtype n_global;
         int fmt = 0;
         {
+                idxtype m_global;
                 std::stringstream ss(line);
                 ss >> n_global >> m_global >> fmt;
         }
@@ -71,46 +66,7 @@ int main(int argc, char **argv) {
         bool read_ew = (fmt == 1 || fmt == 11);
         bool read_nw = (fmt == 10 || fmt == 11);
 
-        // Read full graph into CSR arrays (0-indexed)
-        std::vector<idxtype> full_xadj(n_global + 1, 0);
-        std::vector<idxtype> full_adjncy;
-        std::vector<idxtype> full_adjwgt;
-        std::vector<idxtype> full_vwgt(n_global, 1);
-
-        idxtype node_counter = 0;
-        while (std::getline(in, line)) {
-                if (line[0] == '%') continue;
-                if (node_counter >= n_global) break;
-
-                std::stringstream ss(line);
-
-                if (read_nw) {
-                        idxtype w;
-                        ss >> w;
-                        full_vwgt[node_counter] = w;
-                }
-
-                idxtype target;
-                while (ss >> target) {
-                        full_adjncy.push_back(target - 1);  // convert to 0-indexed
-
-                        if (read_ew) {
-                                idxtype ew;
-                                ss >> ew;
-                                full_adjwgt.push_back(ew);
-                        }
-                }
-
-                node_counter++;
-                full_xadj[node_counter] = full_adjncy.size();
-        }
-        in.close();
-
-        // -----------------------------------------------------------------
-        // Step 2: Build the distributed CSR structure.
-        //         vtxdist[p] = first global node index owned by process p.
-        //         Each PE extracts its local portion of xadj/adjncy.
-        // -----------------------------------------------------------------
+        // Compute which nodes this PE owns
         std::vector<idxtype> vtxdist(size + 1);
         for (int p = 0; p <= size; p++) {
                 vtxdist[p] = (idxtype)p * n_global / size;
@@ -120,30 +76,50 @@ int main(int argc, char **argv) {
         idxtype local_to   = vtxdist[rank + 1];
         idxtype local_n    = local_to - local_from;
 
-        // Extract local xadj (re-based to start at 0)
+        // -----------------------------------------------------------------
+        // Step 2: Scan through the file, only storing data for local nodes.
+        // -----------------------------------------------------------------
         std::vector<idxtype> xadj(local_n + 1);
-        idxtype edge_offset = full_xadj[local_from];
-        for (idxtype i = 0; i <= local_n; i++) {
-                xadj[i] = full_xadj[local_from + i] - edge_offset;
-        }
-
-        // Extract local adjncy and adjwgt
-        idxtype local_edges = xadj[local_n];
-        std::vector<idxtype> adjncy(full_adjncy.begin() + edge_offset,
-                                     full_adjncy.begin() + edge_offset + local_edges);
-
-        idxtype* adjwgt_ptr = NULL;
+        std::vector<idxtype> adjncy;
         std::vector<idxtype> adjwgt;
-        if (read_ew) {
-                adjwgt.assign(full_adjwgt.begin() + edge_offset,
-                              full_adjwgt.begin() + edge_offset + local_edges);
-                adjwgt_ptr = adjwgt.data();
-        }
+        std::vector<idxtype> vwgt(local_n, 1);
 
-        // Extract local vwgt
-        std::vector<idxtype> vwgt(full_vwgt.begin() + local_from,
-                                   full_vwgt.begin() + local_to);
-        idxtype* vwgt_ptr = read_nw ? vwgt.data() : NULL;
+        idxtype node_counter = 0;
+        idxtype local_idx = 0;
+        xadj[0] = 0;
+
+        while (std::getline(in, line)) {
+                if (line[0] == '%') continue;
+
+                bool is_local = (node_counter >= local_from && node_counter < local_to);
+
+                if (is_local) {
+                        std::stringstream ss(line);
+
+                        if (read_nw) {
+                                idxtype w;
+                                ss >> w;
+                                vwgt[local_idx] = w;
+                        }
+
+                        idxtype target;
+                        while (ss >> target) {
+                                adjncy.push_back(target - 1);  // 0-indexed
+                                if (read_ew) {
+                                        idxtype ew;
+                                        ss >> ew;
+                                        adjwgt.push_back(ew);
+                                }
+                        }
+
+                        local_idx++;
+                        xadj[local_idx] = adjncy.size();
+                }
+
+                node_counter++;
+                if (node_counter >= local_to) break;
+        }
+        in.close();
 
         // -----------------------------------------------------------------
         // Step 3: Call ParHIP to partition the graph.
@@ -153,7 +129,8 @@ int main(int argc, char **argv) {
         std::vector<idxtype> part(local_n);
 
         ParHIPPartitionKWay(vtxdist.data(), xadj.data(), adjncy.data(),
-                            vwgt_ptr, adjwgt_ptr,
+                            read_nw ? vwgt.data() : NULL,
+                            read_ew ? adjwgt.data() : NULL,
                             &nparts, &imbalance,
                             false,  // suppress_output
                             42,     // seed
