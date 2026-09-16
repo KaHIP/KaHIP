@@ -92,6 +92,9 @@ endif()
 # Windows compatibility
 if(WIN32)
   add_definitions(-DNOMINMAX)
+endif()
+
+if(MSVC)
   # MSVC: use /W3 instead of /Wall (which is extremely pedantic)
   string(REGEX REPLACE "/W[0-4]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   add_compile_options(/W3)
