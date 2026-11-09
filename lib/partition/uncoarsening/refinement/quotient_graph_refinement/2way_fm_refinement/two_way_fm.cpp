@@ -25,6 +25,64 @@ two_way_fm::~two_way_fm() {
 
 }
 
+// Internal/external degree of nodes of the two blocks of the current pair,
+// valid for one perform_refinement call (stamp). All partition changes in a
+// call go through move_node/move_node_back, which update the cached degrees of
+// the moved node's neighbors incrementally instead of rescanning their edges.
+namespace {
+struct fm_degree_cache {
+        std::vector<unsigned>   stamp;
+        std::vector<EdgeWeight> int_deg;
+        std::vector<EdgeWeight> ext_deg;
+        unsigned                cur = 0;
+
+        void start(NodeID n) {
+                if(stamp.size() < n) {
+                        stamp.resize(n, 0);
+                        int_deg.resize(n);
+                        ext_deg.resize(n);
+                }
+                if(++cur == 0) { // wrapped around: invalidate everything
+                        std::fill(stamp.begin(), stamp.end(), 0);
+                        cur = 1;
+                }
+        }
+        bool valid(NodeID u) const { return stamp[u] == cur; }
+        void store(NodeID u, EdgeWeight i, EdgeWeight e) { stamp[u] = cur; int_deg[u] = i; ext_deg[u] = e; }
+};
+fm_degree_cache g_deg;
+}
+
+// int/ext degree of node (in block own, other block other) through the cache
+static inline void cached_int_ext_degree(two_way_fm & fm, graph_access & G, NodeID node,
+                                         PartitionID own, PartitionID other,
+                                         EdgeWeight & int_degree, EdgeWeight & ext_degree) {
+        if(!g_deg.valid(node)) {
+                fm.int_ext_degree(G, node, own, other, int_degree, ext_degree);
+                g_deg.store(node, int_degree, ext_degree);
+        } else {
+                int_degree = g_deg.int_deg[node];
+                ext_degree = g_deg.ext_deg[node];
+        }
+}
+
+// called before node moves from -> to: makes sure every neighbor in from/to is
+// cached with its pre-move degrees, then applies the effect of the move per edge
+static inline void update_neighbor_degrees(two_way_fm & fm, graph_access & G, NodeID node,
+                                           PartitionID from, PartitionID to) {
+        forall_out_edges(G, e, node) {
+                NodeID target = G.getEdgeTarget(e);
+                if(target == node) continue;
+                PartitionID tp = G.getPartitionIndex(target);
+                if(tp != from && tp != to) continue;
+                EdgeWeight i, x;
+                cached_int_ext_degree(fm, G, target, tp, tp == from ? to : from, i, x);
+                EdgeWeight w = G.getEdgeWeight(e);
+                if(tp == from) { g_deg.int_deg[target] -= w; g_deg.ext_deg[target] += w; }
+                else           { g_deg.ext_deg[target] -= w; g_deg.int_deg[target] += w; }
+        } endfor
+}
+
 EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg, 
                                           graph_access& G, 
                                           complete_boundary & boundary,
@@ -55,6 +113,7 @@ EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg,
                 rhs_queue = new maxNodeHeap(); 
         }
 
+        g_deg.start(G.number_of_nodes());
         init_queue_with_boundary(config, G, lhs_start_nodes, lhs_queue, pair->lhs, pair->rhs);  
         init_queue_with_boundary(config, G, rhs_start_nodes, rhs_queue, pair->rhs, pair->lhs);  
 
@@ -243,6 +302,8 @@ void two_way_fm::move_node(const PartitionConfig & config,
                            NodeWeight * from_part_weight,
                            NodeWeight * to_part_weight,
                            complete_boundary & boundary) {
+        update_neighbor_degrees(*this, G, node, from, to);
+
         //move node
         G.setPartitionIndex(node, to);        
         boundary.deleteNode(node, from, pair);
@@ -250,6 +311,7 @@ void two_way_fm::move_node(const PartitionConfig & config,
         EdgeWeight int_degree_node = 0;
         EdgeWeight ext_degree_node = 0;
         bool difficult_update      = int_ext_degree(G, node, to, from, int_degree_node, ext_degree_node);
+        g_deg.store(node, int_degree_node, ext_degree_node);
 
 
         if(ext_degree_node > 0) {
@@ -277,7 +339,7 @@ void two_way_fm::move_node(const PartitionConfig & config,
                 EdgeWeight ext_degree = 0;
 
                 PartitionID other_partition = targets_partition == from ? to : from;
-                int_ext_degree(G, target, targets_partition, other_partition, int_degree, ext_degree); 
+                cached_int_ext_degree(*this, G, target, targets_partition, other_partition, int_degree, ext_degree); 
 
                 refinement_pq * queue_to_update = 0;
                 if(targets_partition == from) {
@@ -326,6 +388,8 @@ void two_way_fm::move_node_back(const PartitionConfig & config,
         ASSERT_NEQ(from, to);
         ASSERT_EQ(from, G.getPartitionIndex(node));
 
+        update_neighbor_degrees(*this, G, node, from, to);
+
         //move node
         G.setPartitionIndex(node, to);         
         boundary.deleteNode(node, from, pair);
@@ -333,6 +397,7 @@ void two_way_fm::move_node_back(const PartitionConfig & config,
         EdgeWeight int_degree_node = 0;
         EdgeWeight ext_degree_node = 0;
         bool update_difficult = int_ext_degree(G, node, to, from, int_degree_node, ext_degree_node);
+        g_deg.store(node, int_degree_node, ext_degree_node);
 
         if(ext_degree_node > 0) {
                 boundary.insert(node, to, pair);
@@ -360,7 +425,7 @@ void two_way_fm::move_node_back(const PartitionConfig & config,
                 EdgeWeight ext_degree = 0;
 
                 PartitionID other_partition = targets_partition == from ? to : from;
-                int_ext_degree(G, target, targets_partition, other_partition, int_degree, ext_degree); 
+                cached_int_ext_degree(*this, G, target, targets_partition, other_partition, int_degree, ext_degree); 
 
                 if(boundary.contains(target, targets_partition, pair)) {
                         if(ext_degree == 0) {
@@ -397,7 +462,7 @@ void two_way_fm::init_queue_with_boundary(const PartitionConfig & config,
                 EdgeWeight int_degree = 0;
                 EdgeWeight ext_degree = 0;
 
-                int_ext_degree(G, cur_bnd_node, partition_of_boundary, other, int_degree, ext_degree);
+                cached_int_ext_degree(*this, G, cur_bnd_node, partition_of_boundary, other, int_degree, ext_degree);
 
                 Gain gain = ext_degree - int_degree;
                 queue->insert(cur_bnd_node, gain);
