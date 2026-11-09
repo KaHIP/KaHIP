@@ -9,6 +9,7 @@
 #include "kway_graph_refinement/kway_graph_refinement.h"
 #include "kway_graph_refinement/multitry_kway_fm.h"
 #include "mixed_refinement.h"
+#include "tools/aae_timer.h"
 #include "quotient_graph_refinement/quotient_graph_refinement.h"
 
 mixed_refinement::mixed_refinement() {
@@ -32,10 +33,12 @@ EdgeWeight mixed_refinement::perform_refinement(PartitionConfig & config, graph_
                 while(sth_changed) {
                         EdgeWeight improvement = 0;
                         if(config.corner_refinement_enabled) {
+                                aae::detail_scope s(aae::D_KWAY);
                                 improvement += kway->perform_refinement(config, G, boundary);
                         }
 
                         if(!config.quotient_graph_refinement_disabled) {
+                                aae::detail_scope s(aae::D_QGRAPH);
                                 improvement += refine->perform_refinement(config, G, boundary);
                         }
 
@@ -45,10 +48,12 @@ EdgeWeight mixed_refinement::perform_refinement(PartitionConfig & config, graph_
 
         } else {
                 if(config.corner_refinement_enabled) {
+                        aae::detail_scope s(aae::D_KWAY);
                         overall_improvement += kway->perform_refinement(config, G, boundary);
                 } 
 
                 if(!config.quotient_graph_refinement_disabled) {
+                        aae::detail_scope s(aae::D_QGRAPH);
                         overall_improvement += refine->perform_refinement(config, G, boundary);
                 }
 

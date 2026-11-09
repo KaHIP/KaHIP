@@ -18,6 +18,7 @@
 #include "matching/gpa/gpa_matching.h"
 #include "matching/random_matching.h"
 #include "stop_rules/stop_rules.h"
+#include "tools/aae_timer.h"
 
 coarsening::coarsening() {
 
@@ -63,6 +64,8 @@ void coarsening::perform_coarsening(const PartitionConfig & partition_config, gr
                 Matching edge_matching;
                 NodePermutationMap permutation;
 
+                {
+                aae::detail_scope s(aae::D_MATCH);
                 coarsening_config.configure_coarsening(copy_of_partition_config, &edge_matcher, level);
                 if( partition_config.matching_type != CLUSTER_COARSENING) 
                         rating.rate(*finer, level);
@@ -71,6 +74,8 @@ void coarsening::perform_coarsening(const PartitionConfig & partition_config, gr
                                     *coarse_mapping, no_of_coarser_vertices, permutation);
 
                 delete edge_matcher; 
+                }
+                aae::detail_scope s(aae::D_CONTRACT);
 
                 if(partition_config.graph_allready_partitioned) {
                         contracter->contract_partitioned(copy_of_partition_config, *finer, *coarser, edge_matching, 
