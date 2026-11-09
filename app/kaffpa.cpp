@@ -37,6 +37,7 @@
 #include "random_functions.h"
 #include "timer.h"
 #include "tools/aae_timer.h"
+#include "tools/aae_alloc.h"
 
 int main(int argn, char **argv) {
 
