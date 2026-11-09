@@ -12,6 +12,7 @@
 #include "flow_refinement/two_way_flow_refinement.h"
 #include "quality_metrics.h"
 #include "quotient_graph_refinement.h"
+#include "tools/aae_timer.h"
 #include "quotient_graph_scheduling/active_block_quotient_graph_scheduler.h"
 #include "quotient_graph_scheduling/simple_quotient_graph_scheduler.h"
 #include "uncoarsening/refinement/kway_graph_refinement/kway_graph_refinement.h"
@@ -108,6 +109,7 @@ EdgeWeight quotient_graph_refinement::perform_refinement(PartitionConfig & confi
                 if(config.refinement_scheduling_algorithm == REFINEMENT_SCHEDULING_ACTIVE_BLOCKS_REF_KWAY ) {
                         multitry_kway_fm kway_ref;
                         std::unordered_map<PartitionID, PartitionID> touched_blocks;
+                        aae::detail_scope aae_s(aae::D_MULTITRY);
 
                         multitry_improvement = kway_ref.perform_refinement_around_parts(cfg, G, 
                                                                                 boundary, true, 
@@ -182,6 +184,7 @@ EdgeWeight quotient_graph_refinement::perform_a_two_way_refinement(PartitionConf
                 rhs_bnd_nodes.clear(); 
                 setup_start_nodes(G, rhs, bp, boundary, rhs_bnd_nodes);
 
+                aae::detail_scope aae_s(aae::D_FLOW);
                 EdgeWeight _improvement = pair_wise_flow.perform_refinement(config, 
                                                                             G, 
                                                                             boundary,

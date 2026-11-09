@@ -17,6 +17,7 @@
 #include "cut_flow_problem_solver.h"
 #include "most_balanced_minimum_cuts/most_balanced_minimum_cuts.h"
 #include "data_structure/flow_graph.h"
+#include "data_structure/node_hash_map.h"
 #include "io/graph_io.h"
 
 
@@ -76,7 +77,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
         //building up the graph as in parse.h of hi_pr code
         NodeID idx = 0;
         new_to_old_ids.resize(lhs_boundary_stripe.size() + rhs_boundary_stripe.size());
-        std::unordered_map<NodeID, NodeID> old_to_new;
+        node_hash_map<NodeID> old_to_new; // lookup only
         for( unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
                 G.setPartitionIndex(lhs_boundary_stripe[i], BOUNDARY_STRIPE_NODE);
                 new_to_old_ids[idx]                = lhs_boundary_stripe[i];
@@ -138,6 +139,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                 fG.new_edge(sourceID, sink, max_capacity);
         }
 
+        fG.finish_construction();
         return true;
 }
 

@@ -17,7 +17,7 @@
 namespace aae {
 
 enum Phase { IO = 0, COARSEN, INITIAL, REFINE, POST,
-             D_MATCH, D_CONTRACT, D_KWAY, D_QGRAPH, D_LPREF, NPHASES };
+             D_MATCH, D_CONTRACT, D_KWAY, D_QGRAPH, D_LPREF, D_FLOW, D_MULTITRY, NPHASES };
 
 struct timer_state {
         double acc[NPHASES];
@@ -72,7 +72,8 @@ private:
 
 inline void print() {
         static const char * names[NPHASES] = {"io", "coarsen", "initial", "refine", "post",
-                                              "d_match", "d_contract", "d_kway", "d_qgraph", "d_lpref"};
+                                              "d_match", "d_contract", "d_kway", "d_qgraph", "d_lpref",
+                                              "d_flow", "d_multitry"};
         timer_state & s = state();
         for(int i = 0; i < NPHASES; i++) {
                 std::printf("aae_time %s %.6f\n", names[i], s.acc[i]);
