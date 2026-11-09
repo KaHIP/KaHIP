@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 #include "definitions.h"
+#include "data_structure/node_hash_map.h"
 #include "limits.h"
 
 struct compare_nodes {
@@ -36,6 +37,7 @@ struct hash_nodes {
        }
 };
 
-typedef std::unordered_map<const NodeID, moved_index, hash_nodes, compare_nodes> vertex_moved_hashtable;
+// lookup-only map (never iterated), so an open-addressing map gives identical results
+typedef node_hash_map<moved_index> vertex_moved_hashtable;
 
 #endif

@@ -16,6 +16,7 @@
 #endif
 
 #include "data_structure/priority_queues/priority_queue_interface.h"
+#include "data_structure/node_hash_map.h"
 
 typedef int Key;
 
@@ -87,7 +88,7 @@ class maxNodeHeap : public priority_queue_interface {
 
         private:
                 std::vector< PQElement >               m_elements;      // elements that contain the data
-                std::unordered_map<NodeID, int>   m_element_index; // stores index of the node in the m_elements array
+                node_hash_map<int>                m_element_index; // stores index of the node in the m_elements array
                 std::vector< std::pair<Key, int> >     m_heap;          // key and index in elements (pointer)
 
                 void siftUp( int pos );
