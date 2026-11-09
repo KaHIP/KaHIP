@@ -202,6 +202,10 @@ class graph_access {
                 NodeWeight getNodeWeight(NodeID node);
                 void setNodeWeight(NodeID node, NodeWeight weight);
 
+                // raw read access to the CSR arrays (for tight loops; valid until the graph is modified)
+                const Node * raw_nodes() { return graphref->m_nodes.data(); }
+                const Edge * raw_edges() { return graphref->m_edges.data(); }
+
                 EdgeWeight getNodeDegree(NodeID node);
                 EdgeWeight getWeightedNodeDegree(NodeID node);
                 EdgeWeight getMaxDegree();

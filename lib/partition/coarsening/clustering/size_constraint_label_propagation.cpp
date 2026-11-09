@@ -151,42 +151,53 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
         node_ordering n_ordering;
         n_ordering.order_nodes(partition_config, G, permutation);
 
+        // Same computation and random number sequence as before, with loop invariants hoisted and the
+        // CSR arrays read through raw pointers.
+        const Node * nodes = G.raw_nodes();
+        const Edge * edges = G.raw_edges();
+        const bool check_partition = partition_config.graph_allready_partitioned;
+        const bool check_second    = partition_config.combine;
+        PartitionID * hm = hash_map.data();
+        NodeWeight * cs  = cluster_sizes.data();
+        NodeWeight * cid = cluster_id.data();
         for( int j = 0; j < partition_config.label_iterations; j++) {
                 unsigned int change_counter = 0;
                 forall_nodes(G, i) {
                         NodeID node = permutation[i];
+                        const EdgeID e_begin = nodes[node].firstEdge;
+                        const EdgeID e_end   = nodes[node+1].firstEdge;
                         //now move the node to the cluster that is most common in the neighborhood
 
-                        forall_out_edges(G, e, node) {
-                                NodeID target = G.getEdgeTarget(e);
-                                hash_map[cluster_id[target]]+=G.getEdgeWeight(e);
-                        } endfor
+                        for( EdgeID e = e_begin; e < e_end; ++e) {
+                                hm[cid[edges[e].target]] += edges[e].weight;
+                        }
 
                         //second sweep for finding max and resetting array
-                        PartitionID max_block = cluster_id[node];
-                        PartitionID my_block  = cluster_id[node];
+                        PartitionID max_block = cid[node];
+                        PartitionID my_block  = cid[node];
+                        const NodeWeight node_weight = nodes[node].weight;
 
                         PartitionID max_value = 0;
-                        forall_out_edges(G, e, node) {
-                                NodeID target             = G.getEdgeTarget(e);
-                                PartitionID cur_block     = cluster_id[target];
-                                PartitionID cur_value     = hash_map[cur_block];
+                        for( EdgeID e = e_begin; e < e_end; ++e) {
+                                NodeID target             = edges[e].target;
+                                PartitionID cur_block     = cid[target];
+                                PartitionID cur_value     = hm[cur_block];
                                 if((cur_value > max_value  || (cur_value == max_value && random_functions::nextBool())) 
-                                && (cluster_sizes[cur_block] + G.getNodeWeight(node) < block_upperbound || cur_block == my_block) 
-                                && (!partition_config.graph_allready_partitioned || G.getPartitionIndex(node) == G.getPartitionIndex(target))
-                                && (!partition_config.combine || G.getSecondPartitionIndex(node) == G.getSecondPartitionIndex(target)))
+                                && (cs[cur_block] + node_weight < block_upperbound || cur_block == my_block) 
+                                && (!check_partition || G.getPartitionIndex(node) == G.getPartitionIndex(target))
+                                && (!check_second || G.getSecondPartitionIndex(node) == G.getSecondPartitionIndex(target)))
                                 {
                                         max_value = cur_value;
                                         max_block = cur_block;
                                 }
 
-                                hash_map[cur_block] = 0;
-                        } endfor
+                                hm[cur_block] = 0;
+                        }
 
-                        cluster_sizes[cluster_id[node]]  -= G.getNodeWeight(node);
-                        cluster_sizes[max_block]         += G.getNodeWeight(node);
-                        change_counter                   += (cluster_id[node] != max_block);
-                        cluster_id[node]                  = max_block;
+                        cs[cid[node]]  -= node_weight;
+                        cs[max_block]  += node_weight;
+                        change_counter += (cid[node] != max_block);
+                        cid[node]       = max_block;
                 } endfor
         }
 
