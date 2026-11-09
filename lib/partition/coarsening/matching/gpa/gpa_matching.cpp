@@ -46,11 +46,24 @@ void gpa_matching::match(const PartitionConfig & partition_config,
                 random_functions::permutate_entries(gpa_perm_config, edge_permutation, false);
         }
 
-        std::sort(edge_permutation.begin(), edge_permutation.end(),
-            [&G](const EdgeRatingType& left, const EdgeRatingType& right)
-            {
-                return G.getEdgeRating(left) > G.getEdgeRating(right);
-            });
+        // Sort (rating, edge) pairs by rating with the same comparison as sorting the edge ids
+        // by G.getEdgeRating: std::sort's steps depend only on the comparison outcomes, so the
+        // resulting order (including ties) is identical, without the indirect rating loads.
+        {
+                typedef std::pair<EdgeRatingType, EdgeID> rated_edge;
+                std::vector<rated_edge> rated(edge_permutation.size());
+                for( size_t i = 0; i < edge_permutation.size(); i++) {
+                        rated[i] = rated_edge(G.getEdgeRating(edge_permutation[i]), edge_permutation[i]);
+                }
+                std::sort(rated.begin(), rated.end(),
+                    [](const rated_edge& left, const rated_edge& right)
+                    {
+                        return left.first > right.first;
+                    });
+                for( size_t i = 0; i < rated.size(); i++) {
+                        edge_permutation[i] = rated[i].second;
+                }
+        }
 
         path_set pathset(&G, &partition_config);
 
