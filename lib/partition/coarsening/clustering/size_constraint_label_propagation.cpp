@@ -6,6 +6,7 @@
  *****************************************************************************/
 
 
+#include <algorithm>
 #include <unordered_map>
 
 #include <sstream>
@@ -160,10 +161,28 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
         PartitionID * hm = hash_map.data();
         NodeWeight * cs  = cluster_sizes.data();
         NodeWeight * cid = cluster_id.data();
+        // The nodes are visited in random order, so the loop is bound by memory latency; prefetch the
+        // node entry three nodes ahead, its edges two ahead and the cluster ids of its neighbors (at most 32) one ahead.
+        const NodeID * perm = permutation.data();
+        const NodeID n      = G.number_of_nodes();
         for( int j = 0; j < partition_config.label_iterations; j++) {
                 unsigned int change_counter = 0;
                 forall_nodes(G, i) {
-                        NodeID node = permutation[i];
+                        NodeID node = perm[i];
+                        if( i + 3 < n ) {
+                                __builtin_prefetch(&nodes[perm[i+3]]);
+                        }
+                        if( i + 2 < n ) {
+                                __builtin_prefetch(&edges[nodes[perm[i+2]].firstEdge]);
+                        }
+                        if( i + 1 < n ) {
+                                const NodeID next = perm[i+1];
+                                const EdgeID p_begin = nodes[next].firstEdge;
+                                const EdgeID p_end   = std::min(nodes[next+1].firstEdge, p_begin + 32);
+                                for( EdgeID e = p_begin; e < p_end; ++e) {
+                                        __builtin_prefetch(&cid[edges[e].target]);
+                                }
+                        }
                         const EdgeID e_begin = nodes[node].firstEdge;
                         const EdgeID e_end   = nodes[node+1].firstEdge;
                         //now move the node to the cluster that is most common in the neighborhood
