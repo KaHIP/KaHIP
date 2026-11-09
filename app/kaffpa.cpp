@@ -363,8 +363,9 @@ int main(int argn, char **argv) {
         {
         aae::phase_scope aae_post(aae::POST);
         // output some information about the partition that we have computed
-        std::cout << "cut \t\t"         << qm.edge_cut(G)                 << std::endl;
-        std::cout << "finalobjective  " << qm.edge_cut(G)                 << std::endl;
+        EdgeWeight final_cut = qm.edge_cut(G);
+        std::cout << "cut \t\t"         << final_cut                      << std::endl;
+        std::cout << "finalobjective  " << final_cut                      << std::endl;
         std::cout << "bnd \t\t"         << qm.boundary_nodes(G)           << std::endl;
         std::cout << "balance \t"       << qm.balance(G)                  << std::endl;
         std::cout << "max_comm_vol \t"  << qm.max_communication_volume(G) << std::endl;
