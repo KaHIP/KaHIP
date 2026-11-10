@@ -149,9 +149,10 @@ class random_functions {
 
                         }
 
+                // Same value and generator draw as std::uniform_int_distribution<unsigned int>(0,1)(m_mt):
+                // for a range of 2, libstdc++ (Lemire's method) returns the top bit of one 32-bit draw.
                 static bool nextBool() {
-                        std::uniform_int_distribution<unsigned int> A(0,1);
-                        return (bool) A(m_mt); 
+                        return (m_mt() >> 31) != 0;
                 }
 
 
