@@ -78,6 +78,7 @@ class complete_boundary {
                 PartitionID        m_lazy_lhs;
                 PartitionID        m_lazy_rhs;
                 boundary_pair*     m_last_pair;
+                data_boundary_pair* m_lazy_dbp; // entry of the pair passed to the last update_lazy_values
                 size_t             m_last_key; 
                 hash_boundary_pair m_hbp;
 
@@ -329,6 +330,7 @@ inline void complete_boundary::update_lazy_values(boundary_pair * pair) {
                         dbp.initialized = true;
                 }
 
+                m_lazy_dbp    = &dbp;
                 m_pb_lhs_lazy = &dbp.pb_lhs;
                 m_pb_rhs_lazy = &dbp.pb_rhs;
                 m_lazy_lhs    = dbp.lhs;

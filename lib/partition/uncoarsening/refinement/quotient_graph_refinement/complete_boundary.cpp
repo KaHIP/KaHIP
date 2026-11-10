@@ -14,6 +14,7 @@ complete_boundary::complete_boundary(graph_access * G) {
         m_pb_lhs_lazy = 0;
         m_pb_rhs_lazy = 0;
         m_last_pair   = 0;
+        m_lazy_dbp    = 0;
         m_last_key    = -1;
         m_block_infos.resize(G->get_partition_count());
         delete Q.graphref;
@@ -65,7 +66,8 @@ void complete_boundary::postMovedBoundaryNodeUpdates(NodeID node, boundary_pair 
                                         deleteNode(target, targetPartition, &delete_bp);
 
                                 if(update_edge_cuts) {
-                                        m_pairs[delete_bp].edge_cut -= edge_weight;    
+                                        // the deleteNode calls above made delete_bp the lazy pair (entry already created)
+                                        m_lazy_dbp->edge_cut -= edge_weight;    
                                 }
                         }
 
@@ -80,7 +82,8 @@ void complete_boundary::postMovedBoundaryNodeUpdates(NodeID node, boundary_pair 
                                 insert(target, targetPartition, &insert_bp); 
 
                                 if(update_edge_cuts) {
-                                        m_pairs[insert_bp].edge_cut += edge_weight;    
+                                        // the insert calls above made insert_bp the lazy pair
+                                        m_lazy_dbp->edge_cut += edge_weight;    
                                 }
                         }
                 } 
