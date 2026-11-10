@@ -64,37 +64,41 @@ public:
                        node = Q.front();
                        Q.pop();  
 
-                       forall_out_edges((*m_G), e, node) {
-                               NodeID target = m_G->getEdgeTarget(node, e);
+                       const rEdge * node_edges = m_G->edges_of(node);
+                       const EdgeID  end        = m_G->get_first_invalid_edge(node);
+                       for(EdgeID e = 0; e < end; ++e) {
+                               NodeID target = node_edges[e].target;
                                if(m_bfstouched[target]) continue;
 
-                               EdgeID rev_e = m_G->getReverseEdge(node, e);
-                               if( m_G->getEdgeCapacity( target, rev_e) - m_G->getEdgeFlow( target, rev_e) > 0 ) {
+                               const rEdge & rev = m_G->edges_of(target)[node_edges[e].reverse_edge_index];
+                               // capacities are read as NodeID, as getEdgeCapacity returns them
+                               if( (NodeID) rev.capacity - rev.flow > 0 ) {
                                         m_count[ m_distance[target] ] --;
                                         m_distance[target] = m_distance[node]+1;
                                         m_count[ m_distance[target] ] ++;
                                         Q.push(target);
                                         m_bfstouched[target] = true;
                                }
-                       } endfor
+                       }
                 }
         }
 
         // push flow from source to target if possible
         void push( NodeID source, EdgeID e) {
                 m_pushes++;
-                FlowType capacity = m_G->getEdgeCapacity(source, e);
-                FlowType flow     = m_G->getEdgeFlow(source, e);
+                rEdge & edge      = m_G->edges_of(source)[e];
+                FlowType capacity = (NodeID) edge.capacity; // as returned by getEdgeCapacity
+                FlowType flow     = edge.flow;
                 FlowType amount   = std::min((long long)(capacity-flow), m_excess[source]);
-                NodeID target     = m_G->getEdgeTarget(source, e);
+                NodeID target     = edge.target;
 
                 if( m_distance[source] <= m_distance[target] || amount == 0) return;
 
-                m_G->setEdgeFlow(source, e, flow+amount);
+                edge.flow = flow+amount;
  
-                EdgeID   rev_e    = m_G->getReverseEdge(source, e);
-                FlowType rev_flow = m_G->getEdgeFlow(target, rev_e);
-                m_G->setEdgeFlow(target, rev_e, rev_flow-amount);
+                rEdge & rev       = m_G->edges_of(target)[edge.reverse_edge_index];
+                FlowType rev_flow = rev.flow;
+                rev.flow          = rev_flow-amount;
 
                 m_excess[source] -= amount;
                 m_excess[target] += amount;
@@ -151,13 +155,15 @@ public:
                 m_count[m_distance[node]]--;
                 m_distance[node] = 2*m_G->number_of_nodes();
 
-                forall_out_edges((*m_G), e, node) {
-                        if( m_G->getEdgeCapacity( node, e) - m_G->getEdgeFlow( node, e) > 0) {
-                                NodeID target    = m_G->getEdgeTarget( node, e);
+                const rEdge * node_edges = m_G->edges_of(node);
+                const EdgeID  end        = m_G->get_first_invalid_edge(node);
+                for(EdgeID e = 0; e < end; ++e) {
+                        if( (NodeID) node_edges[e].capacity - node_edges[e].flow > 0) {
+                                NodeID target    = node_edges[e].target;
                                 m_distance[node] = std::min(m_distance[node], m_distance[target]+1);
                         }
                         m_work++;
-                } endfor
+                }
 
                 m_count[m_distance[node]]++;
                 enqueue(node);
@@ -226,10 +232,10 @@ public:
 private:
         std::vector<long long> m_excess;
         std::vector<NodeID>    m_distance;
-	std::vector<bool>      m_active; // store which nodes are in the queue already
+	std::vector<char>      m_active; // store which nodes are in the queue already
 	std::vector<int>       m_count;
         std::queue<NodeID>     m_Q;
-	std::vector<bool>      m_bfstouched; 
+	std::vector<char>      m_bfstouched; 
         //highest_label_queue    m_Q;
         int m_num_relabels;
         int m_gaps;

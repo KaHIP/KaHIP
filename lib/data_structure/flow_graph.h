@@ -71,6 +71,9 @@ public:
                m_num_edges += 2;
         };
 
+        // the edges of node (local index e is edges_of(node)[e])
+        rEdge * edges_of(NodeID node) {return m_edges.data() + m_offset[node];};
+
         EdgeID get_first_edge(NodeID node) {return 0;};
         EdgeID get_first_invalid_edge(NodeID node) {return m_offset[node+1] - m_offset[node];};
 
