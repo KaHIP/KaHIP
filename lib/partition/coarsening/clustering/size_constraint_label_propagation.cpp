@@ -7,6 +7,7 @@
 
 
 #include <algorithm>
+#include <limits>
 #include <unordered_map>
 
 #include <sstream>
@@ -67,24 +68,45 @@ void size_constraint_label_propagation::ensemble_two_clusterings( graph_access &
                                                                   std::vector< NodeID > & output,
                                                                   NodeID & no_of_coarse_vertices) {
 
-
-        hash_ensemble new_mapping; 
-        no_of_coarse_vertices = 0;
-        for( NodeID node = 0; node < lhs.size(); node++) {
-                ensemble_pair cur_pair;
-                cur_pair.lhs = lhs[node]; 
-                cur_pair.rhs = rhs[node]; 
-                cur_pair.n   = G.number_of_nodes(); 
-
-                if(new_mapping.find(cur_pair) == new_mapping.end() ) {
-                        new_mapping[cur_pair].mapping = no_of_coarse_vertices;
-                        no_of_coarse_vertices++;
-                }
-
-                output[node] = new_mapping[cur_pair].mapping;
+        // Each distinct pair (lhs[node], rhs[node]) gets the next id at its first occurrence in node
+        // order, as with the former hash map. The nodes are bucketed by lhs (stable), so the first
+        // occurrence of every pair is found with an array indexed by rhs instead of hashing.
+        // output may alias lhs or rhs, so all inputs are read before output is written.
+        const NodeID n = lhs.size();
+        NodeID max_lhs = 0, max_rhs = 0;
+        for( NodeID node = 0; node < n; node++) {
+                max_lhs = std::max(max_lhs, lhs[node]);
+                max_rhs = std::max(max_rhs, rhs[node]);
         }
 
-        no_of_coarse_vertices = new_mapping.size();
+        std::vector<NodeID> start(n == 0 ? 1 : max_lhs + 2, 0);
+        for( NodeID node = 0; node < n; node++) start[lhs[node]+1]++;
+        for( NodeID c = 1; c < start.size(); c++) start[c] += start[c-1];
+
+        std::vector<NodeID> order(n);
+        for( NodeID node = 0; node < n; node++) order[start[lhs[node]]++] = node;
+        // start[c] is now the end of bucket c
+
+        const NodeID unset = std::numeric_limits<NodeID>::max();
+        std::vector<NodeID> first_seen(n == 0 ? 1 : max_rhs + 1, unset);
+        std::vector<NodeID> first(n);
+        NodeID begin = 0;
+        for( NodeID c = 0; c + 1 < start.size(); c++) {
+                const NodeID end = start[c];
+                for( NodeID i = begin; i < end; i++) {
+                        const NodeID node = order[i];
+                        NodeID & f = first_seen[rhs[node]];
+                        if( f == unset ) f = node;
+                        first[node] = f;
+                }
+                for( NodeID i = begin; i < end; i++) first_seen[rhs[order[i]]] = unset;
+                begin = end;
+        }
+
+        no_of_coarse_vertices = 0;
+        for( NodeID node = 0; node < n; node++) {
+                output[node] = first[node] == node ? no_of_coarse_vertices++ : output[first[node]];
+        }
 }
 
 
