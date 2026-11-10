@@ -173,7 +173,11 @@ public:
                                          NodeID source, 
                                          NodeID sink, 
                                          bool compute_source_set, 
-                                         std::vector< NodeID > & source_set) {
+                                         std::vector< NodeID > & source_set,
+                                         FlowType stop_flow = std::numeric_limits<FlowType>::max()) {
+                // stop_flow: an upper bound on the maximum flow known to the caller; once the sink
+                // has received that much the flow value is final and the solver returns at once
+                // (source_set is then left empty)
                 m_G                  = & G;
                 m_work               = 0;
                 m_num_relabels       = 0;
@@ -190,6 +194,7 @@ public:
                         NodeID v    = m_Q.front(); m_Q.pop();
                         m_active[v] = false;
                         discharge(v);
+                        if( m_excess[sink] >= stop_flow ) return m_excess[sink];
 
                         if( m_work > GLOBAL_UPDATE_FRQ*work_todo) {
                                 global_relabeling( source,  sink );

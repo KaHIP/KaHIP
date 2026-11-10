@@ -72,7 +72,8 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                                              std::vector<NodeID> & lhs_boundary_stripe,
                                              std::vector<NodeID> & rhs_boundary_stripe,
                                              std::vector<NodeID> & new_to_old_ids,              
-                                             flow_graph & fG) {
+                                             flow_graph & fG,
+                                             FlowType & lhs_rhs_capacity) {
 
         //building up the graph as in parse.h of hi_pr code
         NodeID idx = 0;
@@ -103,6 +104,10 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
         idx = 0;
 
         //add LHS stripe to flow problem
+        // lhs_rhs_capacity: capacity of the edges from the LHS stripe to the RHS stripe, i.e. of the
+        // cut {source} + LHS stripe, an upper bound on the maximum flow
+        lhs_rhs_capacity = 0;
+        NodeID no_lhs_stripe = lhs_boundary_stripe.size();
         for( unsigned i = 0; i < lhs_boundary_stripe.size(); i++, idx++) {
                 NodeID node = lhs_boundary_stripe[i];
                 NodeID sourceID = idx;
@@ -111,6 +116,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                         if(G.getPartitionIndex(G.getEdgeTarget(e)) == BOUNDARY_STRIPE_NODE)  {
                                 NodeID targetID     = old_to_new[G.getEdgeTarget(e)];
                                 fG.new_edge(sourceID, targetID, G.getEdgeWeight(e));
+                                if(targetID >= no_lhs_stripe) lhs_rhs_capacity += (NodeID) G.getEdgeWeight(e);
                         } else is_outer_boundary = true;
                 } endfor
                 if(is_outer_boundary) {
@@ -165,7 +171,8 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                                                       std::vector<NodeID> & new_rhs_nodes) {
 
         flow_graph fG;
-        bool do_sth = convert_ds(config, G, lhs, rhs, lhs_boundary_stripe, rhs_boundary_stripe, new_to_old_ids, fG );
+        FlowType lhs_rhs_capacity = 0;
+        bool do_sth = convert_ds(config, G, lhs, rhs, lhs_boundary_stripe, rhs_boundary_stripe, new_to_old_ids, fG, lhs_rhs_capacity );
 
         if(!do_sth) return initial_cut;
 
@@ -173,7 +180,17 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
         NodeID source = fG.number_of_nodes()-2;
         NodeID sink   = fG.number_of_nodes()-1;
         std::vector< NodeID > source_set;
-        FlowType flowvalue = pr.solve_max_flow_min_cut( fG, source, sink, true, source_set);
+
+        // Without most balanced cuts the caller accepts a result only if its cut is below
+        // initial_cut; a flow of value initial_cut ends the refinement of this pair with every
+        // change undone, whatever source set comes with it. So if the cut {source} + LHS stripe
+        // has exactly that capacity, the solver can stop as soon as the sink has received it.
+        FlowType stop_flow = std::numeric_limits<FlowType>::max();
+        if(!config.most_balanced_minimum_cuts && lhs_rhs_capacity == (FlowType) initial_cut) {
+                stop_flow = lhs_rhs_capacity;
+        }
+        FlowType flowvalue = pr.solve_max_flow_min_cut( fG, source, sink, true, source_set, stop_flow);
+        if(flowvalue >= stop_flow) return initial_cut;
 
         std::vector< bool > new_rhs_flag(fG.number_of_nodes(), true);
         for( unsigned int i = 0; i < source_set.size(); i++) {
