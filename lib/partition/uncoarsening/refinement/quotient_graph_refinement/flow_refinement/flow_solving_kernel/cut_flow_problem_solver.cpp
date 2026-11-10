@@ -92,10 +92,9 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
         std::vector<NodeID>  outer_lhs_boundary;
         std::vector<NodeID>  outer_rhs_boundary;
 
-        regions_no_edges(G, lhs_boundary_stripe, rhs_boundary_stripe, 
-                         lhs, rhs, outer_lhs_boundary, outer_rhs_boundary);
-        
-        if(outer_lhs_boundary.size() == 0 || outer_rhs_boundary.size() == 0) return false;
+        // One pass per stripe node finds both its flow edges and whether it is an outer boundary node
+        // (formerly a separate counting pass, regions_no_edges). The edges are added in the same order;
+        // if a side has no outer boundary node the partially built graph is dropped (the caller returns).
         NodeID n = lhs_boundary_stripe.size() + rhs_boundary_stripe.size() + 2; //+source and target
         fG.start_construction(n);
 
@@ -107,25 +106,35 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
         for( unsigned i = 0; i < lhs_boundary_stripe.size(); i++, idx++) {
                 NodeID node = lhs_boundary_stripe[i];
                 NodeID sourceID = idx;
+                bool is_outer_boundary = false;
                 forall_out_edges(G, e, node) {
                         if(G.getPartitionIndex(G.getEdgeTarget(e)) == BOUNDARY_STRIPE_NODE)  {
                                 NodeID targetID     = old_to_new[G.getEdgeTarget(e)];
                                 fG.new_edge(sourceID, targetID, G.getEdgeWeight(e));
-                        }
+                        } else is_outer_boundary = true;
                 } endfor
+                if(is_outer_boundary) {
+                        outer_lhs_boundary.push_back(idx);
+                }
         }
 
         //add RHS stripe to flow problem
         for( unsigned i = 0; i < rhs_boundary_stripe.size(); i++, idx++) {
                 NodeID node = rhs_boundary_stripe[i];
                 NodeID sourceID = idx;
+                bool is_outer_boundary = false;
                 forall_out_edges(G, e, node) {
                         if(G.getPartitionIndex(G.getEdgeTarget(e)) == BOUNDARY_STRIPE_NODE)  {
                                 NodeID targetID     = old_to_new[G.getEdgeTarget(e)];
                                 fG.new_edge(sourceID, targetID, G.getEdgeWeight(e));
-                        }
+                        } else is_outer_boundary = true;
                 } endfor
+                if(is_outer_boundary) {
+                        outer_rhs_boundary.push_back(idx);
+                }
         }
+
+        if(outer_lhs_boundary.size() == 0 || outer_rhs_boundary.size() == 0) return false;
 
         ////connect source and target with outer boundary nodes 
         FlowType max_capacity = std::numeric_limits<FlowType>::max();
