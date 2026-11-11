@@ -187,10 +187,16 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
         // node entry three nodes ahead, its edges two ahead and the cluster ids of its neighbors (at most 32) one ahead.
         const NodeID * perm = permutation.data();
         const NodeID n      = G.number_of_nodes();
+        // rule (b): a node is revisited only if a neighbor changed its cluster since the node's last
+        // visit (active-node label propagation); untouched neighborhoods would give the same vote.
+        std::vector<char> active(n, 1);
+        char * act = active.data();
         for( int j = 0; j < partition_config.label_iterations; j++) {
                 unsigned int change_counter = 0;
                 forall_nodes(G, i) {
                         NodeID node = perm[i];
+                        if( !act[node] ) continue;
+                        act[node] = 0;
                         if( i + 3 < n ) {
                                 __builtin_prefetch(&nodes[perm[i+3]]);
                         }
@@ -237,9 +243,13 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
 
                         cs[cid[node]]  -= node_weight;
                         cs[max_block]  += node_weight;
-                        change_counter += (cid[node] != max_block);
+                        if( cid[node] != max_block ) {
+                                change_counter++;
+                                for( EdgeID e = e_begin; e < e_end; ++e) act[edges[e].target] = 1;
+                        }
                         cid[node]       = max_block;
                 } endfor
+                if( change_counter == 0 ) break;
         }
 
         remap_cluster_ids( partition_config, G, cluster_id, no_of_blocks);
