@@ -143,7 +143,9 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
         //update gain of neighbors / the boundaries have allready been updated
         forall_out_edges(G, e, node) {
                 NodeID target = G.getEdgeTarget(e);
-                commons->cache_neighbor_moved(target, from, to, G.getEdgeWeight(e));
+                if(G.getNodeDegree(target) >= CACHE_MIN_DEGREE) {
+                        commons->cache_neighbor_moved(target, from, to, G.getEdgeWeight(e));
+                }
                 // rule (b): a moved node that is no longer queued is left untouched below, so its gain
                 // (computed only for the tie draws) is skipped
                 if(!queue->contains(target) && moved_idx.find(target) != moved_idx.end()) continue;

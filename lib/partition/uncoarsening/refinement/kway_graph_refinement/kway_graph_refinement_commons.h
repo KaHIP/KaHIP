@@ -20,6 +20,10 @@
 // A start node of a localized k-way search together with the gain computed
 // for it just before the search and the number of random tie-breaking draws
 // that computation made (the gain does not depend on the draws).
+// Nodes of smaller degree are not cached: a full scan is about as cheap as a cache lookup and they
+// are rarely queried more than once per round.
+const EdgeWeight CACHE_MIN_DEGREE = 32;
+
 struct kway_start_node {
         NodeID   node;
         Gain     gain;
@@ -78,9 +82,14 @@ class kway_graph_refinement_commons  {
                         PartitionID block;
                         EdgeWeight  conn;
                 };
-                std::vector<cache_hdr>   m_cache_hdr;
-                std::vector<cache_entry> m_cache_pool;
-                unsigned                 m_cache_round = 0;
+                // Shared by all instances (single-threaded): a refinement core and its commons are
+                // created per localized search, so per-instance arrays of size n would cost O(n) each.
+                struct cache_store {
+                        std::vector<cache_hdr>   hdr;
+                        std::vector<cache_entry> pool;
+                        unsigned                 round = 0;
+                };
+                static cache_store & cache() { static cache_store s; return s; }
 
                 //for efficient computation of internal and external degrees
                 struct round_struct {
@@ -107,52 +116,57 @@ inline void kway_graph_refinement_commons::init(PartitionConfig & config) {
 }
 
 inline void kway_graph_refinement_commons::begin_cache_round(graph_access & G) {
-        if(m_cache_hdr.size() < G.number_of_nodes()) {
+        cache_store & cs_ = cache();
+        if(cs_.hdr.size() < G.number_of_nodes()) {
                 cache_hdr h; h.stamp = 0; h.off = 0; h.size = 0; h.cap = 0;
-                m_cache_hdr.resize(G.number_of_nodes(), h);
+                cs_.hdr.resize(G.number_of_nodes(), h);
         }
-        m_cache_round++;
-        if(m_cache_round == 0) {
-                for(size_t i = 0; i < m_cache_hdr.size(); i++) m_cache_hdr[i].stamp = 0;
-                m_cache_round = 1;
+        cs_.round++;
+        if(cs_.round == 0) {
+                for(size_t i = 0; i < cs_.hdr.size(); i++) cs_.hdr[i].stamp = 0;
+                cs_.round = 1;
         }
-        m_cache_pool.clear();
+        cs_.pool.clear();
 }
 
 inline Gain kway_graph_refinement_commons::compute_gain_cached(graph_access & G,
                                                                NodeID node,
                                                                PartitionID & max_gainer,
                                                                EdgeWeight & ext_degree) {
-        cache_hdr & h = m_cache_hdr[node];
-        if(h.stamp != m_cache_round) {
+        cache_store & cs_ = cache();
+        if(G.getNodeDegree(node) < CACHE_MIN_DEGREE) {
+                return compute_gain(G, node, max_gainer, ext_degree);
+        }
+        cache_hdr & h = cs_.hdr[node];
+        if(h.stamp != cs_.round) {
                 // build: aggregate the edge weights per adjacent block
-                h.stamp = m_cache_round;
-                h.off   = m_cache_pool.size();
+                h.stamp = cs_.round;
+                h.off   = cs_.pool.size();
                 m_round++;
                 forall_out_edges(G, e, node) {
                         PartitionID b = G.getPartitionIndex(G.getEdgeTarget(e));
                         EdgeWeight  w = G.getEdgeWeight(e);
                         if(m_local_degrees[b].round == m_round) {
-                                m_cache_pool[m_local_degrees[b].local_degree].conn += w;
+                                cs_.pool[m_local_degrees[b].local_degree].conn += w;
                         } else {
                                 m_local_degrees[b].round        = m_round;
-                                m_local_degrees[b].local_degree = m_cache_pool.size();
+                                m_local_degrees[b].local_degree = cs_.pool.size();
                                 cache_entry ce; ce.block = b; ce.conn = w;
-                                m_cache_pool.push_back(ce);
+                                cs_.pool.push_back(ce);
                         }
                 } endfor
-                h.size = m_cache_pool.size() - h.off;
+                h.size = cs_.pool.size() - h.off;
                 // the number of adjacent blocks with positive connectivity is at most min(degree, k)
                 h.cap = std::max<unsigned>(h.size, std::min<size_t>(G.getNodeDegree(node), m_local_degrees.size()));
                 cache_entry ce; ce.block = 0; ce.conn = 0;
-                m_cache_pool.resize(h.off + h.cap, ce);
+                cs_.pool.resize(h.off + h.cap, ce);
         }
 
         PartitionID source_partition = G.getPartitionIndex(node);
         EdgeWeight max_degree = 0;
         EdgeWeight own_degree = 0;
         max_gainer = INVALID_PARTITION;
-        const cache_entry * entries = &m_cache_pool[0] + h.off;
+        const cache_entry * entries = &cs_.pool[0] + h.off;
         for(unsigned i = 0; i < h.size; i++) {
                 const PartitionID b = entries[i].block;
                 const EdgeWeight  c = entries[i].conn;
@@ -171,9 +185,10 @@ inline Gain kway_graph_refinement_commons::compute_gain_cached(graph_access & G,
 }
 
 inline void kway_graph_refinement_commons::cache_neighbor_moved(NodeID u, PartitionID from, PartitionID to, EdgeWeight w) {
-        cache_hdr & h = m_cache_hdr[u];
-        if(h.stamp != m_cache_round || w == 0) return;
-        cache_entry * entries = &m_cache_pool[0] + h.off;
+        cache_store & cs_ = cache();
+        cache_hdr & h = cs_.hdr[u];
+        if(h.stamp != cs_.round || w == 0) return;
+        cache_entry * entries = &cs_.pool[0] + h.off;
         bool found_to = false;
         for(unsigned i = 0; i < h.size; i++) {
                 if(entries[i].block == from) {
@@ -190,13 +205,13 @@ inline void kway_graph_refinement_commons::cache_neighbor_moved(NodeID u, Partit
         }
         if(!found_to) {
                 if(h.size == h.cap) { // only possible with zero-weight edges: relocate
-                        unsigned new_off = m_cache_pool.size();
+                        unsigned new_off = cs_.pool.size();
                         cache_entry ce; ce.block = 0; ce.conn = 0;
-                        m_cache_pool.resize(new_off + 2 * h.cap + 1, ce);
-                        for(unsigned i = 0; i < h.size; i++) m_cache_pool[new_off + i] = m_cache_pool[h.off + i];
+                        cs_.pool.resize(new_off + 2 * h.cap + 1, ce);
+                        for(unsigned i = 0; i < h.size; i++) cs_.pool[new_off + i] = cs_.pool[h.off + i];
                         h.off = new_off;
                         h.cap = 2 * h.cap + 1;
-                        entries = &m_cache_pool[0] + h.off;
+                        entries = &cs_.pool[0] + h.off;
                 }
                 entries[h.size].block = to;
                 entries[h.size].conn  = w;
