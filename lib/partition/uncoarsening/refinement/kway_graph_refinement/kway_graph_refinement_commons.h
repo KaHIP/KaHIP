@@ -16,6 +16,15 @@
 #include "uncoarsening/refinement/refinement.h"
 #include "uncoarsening/refinement/quotient_graph_refinement/2way_fm_refinement/vertex_moved_hashtable.h"
 
+// A start node of a localized k-way search together with the gain computed
+// for it just before the search and the number of random tie-breaking draws
+// that computation made (the gain does not depend on the draws).
+struct kway_start_node {
+        NodeID   node;
+        Gain     gain;
+        unsigned ties;
+};
+
 class kway_graph_refinement_commons  {
         public:
 
@@ -30,6 +39,12 @@ class kway_graph_refinement_commons  {
                                         NodeID & node, 
                                         PartitionID & max_gainer, 
                                         EdgeWeight & ext_degree);
+
+                EdgeWeight compute_gain(graph_access & G, 
+                                        NodeID & node, 
+                                        PartitionID & max_gainer, 
+                                        EdgeWeight & ext_degree,
+                                        unsigned & ties);
 
                 bool int_ext_degree( graph_access & G, 
                                      const NodeID & node,
@@ -124,6 +139,16 @@ inline Gain kway_graph_refinement_commons::compute_gain(graph_access & G,
                                                         NodeID & node, 
                                                         PartitionID & max_gainer, 
                                                         EdgeWeight & ext_degree) {
+        unsigned ties;
+        return compute_gain(G, node, max_gainer, ext_degree, ties);
+}
+
+inline Gain kway_graph_refinement_commons::compute_gain(graph_access & G, 
+                                                        NodeID & node, 
+                                                        PartitionID & max_gainer, 
+                                                        EdgeWeight & ext_degree,
+                                                        unsigned & ties) {
+        ties = 0;
         //for all incident partitions compute gain
         //return max gain and max_gainer partition
         PartitionID source_partition = G.getPartitionIndex(node);
@@ -149,6 +174,7 @@ inline Gain kway_graph_refinement_commons::compute_gain(graph_access & G,
                                 max_gainer = target_partition;
                         } else {
                                 //break ties randomly
+                                ties++;
                                 bool accept = random_functions::nextBool();
                                 if(accept) {
                                         max_degree = m_local_degrees[target_partition].local_degree;

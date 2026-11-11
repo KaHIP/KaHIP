@@ -44,6 +44,20 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round(PartitionCon
 }
 
 
+EdgeWeight kway_graph_refinement_core::single_kway_refinement_round(PartitionConfig & config, 
+                                                                    graph_access & G, 
+                                                                    complete_boundary & boundary, 
+                                                                    std::vector<kway_start_node> & start_nodes, 
+                                                                    int step_limit, 
+                                                                    vertex_moved_hashtable & moved_idx,
+                                                                    bool compute_touched_partitions,
+                                                                    std::unordered_map<PartitionID, PartitionID> & touched_blocks) {
+        boundary_starting_nodes unused;
+        return single_kway_refinement_round_internal(config, G, boundary, unused, 
+                                                     step_limit, moved_idx, compute_touched_partitions, 
+                                                     touched_blocks, &start_nodes);
+}
+
 EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(PartitionConfig & config, 
                                                                     graph_access & G, 
                                                                     complete_boundary & boundary, 
@@ -51,7 +65,8 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
                                                                     int step_limit,
                                                                     vertex_moved_hashtable & moved_idx,
                                                                     bool compute_touched_partitions,
-                                                                    std::unordered_map<PartitionID, PartitionID> &  touched_blocks) {
+                                                                    std::unordered_map<PartitionID, PartitionID> &  touched_blocks,
+                                                                    std::vector<kway_start_node> * cached_start_nodes) {
 
         if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
 
@@ -63,7 +78,11 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
                 queue                 = new maxNodeHeap(); 
         }
 
-        init_queue_with_boundary(config, G, start_nodes, queue, moved_idx);  
+        if(cached_start_nodes != NULL) {
+                init_queue_with_cached_gains(config, *cached_start_nodes, queue, moved_idx);  
+        } else {
+                init_queue_with_boundary(config, G, start_nodes, queue, moved_idx);  
+        }
         
         if(queue->empty()) {delete queue; return 0;}
 
@@ -190,6 +209,41 @@ void kway_graph_refinement_core::init_queue_with_boundary(const PartitionConfig 
                         //compute gain
                         Gain gain = commons->compute_gain(G, node, max_gainer, ext_degree);
                         queue->insert(node, gain);
+                        moved_idx[node].index = NOT_MOVED;
+                }
+        }
+}
+
+
+// Like init_queue_with_boundary, but reuses the gains the caller computed for
+// the start nodes in the current partition. The permutation and the random
+// tie-breaking draws of the skipped gain computations are replayed, so the
+// random number sequence is unchanged.
+void kway_graph_refinement_core::init_queue_with_cached_gains(const PartitionConfig & config,
+                std::vector<kway_start_node> & start_nodes,
+                refinement_pq * queue, vertex_moved_hashtable & moved_idx) {
+
+        // the permutations only swap positions, so permuting the indices of the
+        // start nodes gives the order init_queue_with_boundary would use
+        std::vector<unsigned> order(start_nodes.size());
+        for( unsigned int i = 0; i < order.size(); i++) {
+                order[i] = i;
+        }
+        if(config.permutation_during_refinement == PERMUTATION_QUALITY_FAST) {
+                random_functions::permutate_vector_fast(order, false);
+        } else if(config.permutation_during_refinement == PERMUTATION_QUALITY_GOOD) {
+                random_functions::permutate_vector_good(order, false);
+        }
+
+        for( unsigned int i = 0; i < order.size(); i++) {
+                const kway_start_node & start = start_nodes[order[i]];
+                NodeID node = start.node;
+
+                if( moved_idx.find(node) == moved_idx.end() ) {
+                        for( unsigned t = 0; t < start.ties; t++) {
+                                random_functions::nextBool();
+                        }
+                        queue->insert(node, start.gain);
                         moved_idx[node].index = NOT_MOVED;
                 }
         }

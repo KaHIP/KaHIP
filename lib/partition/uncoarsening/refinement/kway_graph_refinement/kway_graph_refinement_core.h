@@ -39,6 +39,16 @@ class kway_graph_refinement_core  {
                                                         vertex_moved_hashtable & moved_idx,
                                                         std::unordered_map<PartitionID, PartitionID> & touched_blocks); 
 
+                // same as above, but the gains of the start nodes were just computed by the caller
+                EdgeWeight single_kway_refinement_round(PartitionConfig & config, 
+                                                        graph_access & G, 
+                                                        complete_boundary & boundary, 
+                                                        std::vector<kway_start_node> & start_nodes, 
+                                                        int step_limit, 
+                                                        vertex_moved_hashtable & moved_idx,
+                                                        bool compute_touched_partitions,
+                                                        std::unordered_map<PartitionID, PartitionID> & touched_blocks); 
+
 
          private:
                EdgeWeight single_kway_refinement_round_internal(PartitionConfig & config, 
@@ -48,7 +58,8 @@ class kway_graph_refinement_core  {
                                                                 int step_limit,
                                                                 vertex_moved_hashtable & moved_idx,
                                                                 bool compute_touched_partitions,
-                                                                std::unordered_map<PartitionID, PartitionID> &  touched_blocks); 
+                                                                std::unordered_map<PartitionID, PartitionID> &  touched_blocks,
+                                                                std::vector<kway_start_node> * cached_start_nodes = NULL); 
 
 
                 void init_queue_with_boundary(const PartitionConfig & config, 
@@ -56,6 +67,11 @@ class kway_graph_refinement_core  {
                                               std::vector<NodeID> & bnd_nodes, 
                                               refinement_pq * queue, 
                                               vertex_moved_hashtable & moved_idx);
+
+                void init_queue_with_cached_gains(const PartitionConfig & config, 
+                                                  std::vector<kway_start_node> & start_nodes, 
+                                                  refinement_pq * queue, 
+                                                  vertex_moved_hashtable & moved_idx);
 
                 inline bool move_node(PartitionConfig & config, 
                                       graph_access & G, 
