@@ -108,7 +108,7 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
         PartitionID from = G.getPartitionIndex(node);
         PartitionID to;
         EdgeWeight node_ext_deg;
-        commons->compute_gain(G, node, to, node_ext_deg);
+        commons->compute_gain_cached(G, node, to, node_ext_deg);
 
         NodeWeight this_nodes_weight = G.getNodeWeight(node);
         if(boundary.getBlockWeight(to) + this_nodes_weight >= config.upper_bound_partition) 
@@ -143,12 +143,13 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
         //update gain of neighbors / the boundaries have allready been updated
         forall_out_edges(G, e, node) {
                 NodeID target = G.getEdgeTarget(e);
+                commons->cache_neighbor_moved(target, from, to, G.getEdgeWeight(e));
                 // rule (b): a moved node that is no longer queued is left untouched below, so its gain
                 // (computed only for the tie draws) is skipped
                 if(!queue->contains(target) && moved_idx.find(target) != moved_idx.end()) continue;
                 PartitionID targets_max_gainer;
                 EdgeWeight ext_degree; // the local external degree
-                Gain gain = commons->compute_gain(G, target, targets_max_gainer, ext_degree);
+                Gain gain = commons->compute_gain_cached(G, target, targets_max_gainer, ext_degree);
 
                 if(queue->contains(target)) {
                         assert(moved_idx.find(target) != moved_idx.end());

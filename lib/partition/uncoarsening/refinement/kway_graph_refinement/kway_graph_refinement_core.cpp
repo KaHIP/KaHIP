@@ -69,6 +69,7 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
                                                                     std::vector<kway_start_node> * cached_start_nodes) {
 
         if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
+        commons->begin_cache_round(G);
 
         refinement_pq* queue = NULL;
         if(config.use_bucket_queues) {
@@ -207,7 +208,7 @@ void kway_graph_refinement_core::init_queue_with_boundary(const PartitionConfig 
                         PartitionID max_gainer;
                         EdgeWeight ext_degree;
                         //compute gain
-                        Gain gain = commons->compute_gain(G, node, max_gainer, ext_degree);
+                        Gain gain = commons->compute_gain_cached(G, node, max_gainer, ext_degree);
                         queue->insert(node, gain);
                         moved_idx[node].index = NOT_MOVED;
                 }

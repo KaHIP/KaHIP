@@ -8,6 +8,7 @@
 #ifndef KWAY_GRAPH_REFINEMENT_COMMONS_PVGY97EW
 #define KWAY_GRAPH_REFINEMENT_COMMONS_PVGY97EW
 
+#include <algorithm>
 #include <vector>
 
 #include "data_structure/priority_queues/priority_queue_interface.h"
@@ -55,7 +56,31 @@ class kway_graph_refinement_commons  {
 
                 inline unsigned getUnderlyingK();
 
+                // Per-round connectivity cache (rule b): for each node queried during a
+                // k-way refinement round, the summed edge weight towards each adjacent block
+                // is kept and updated incrementally when a neighbor moves, so repeated gain
+                // queries cost O(#adjacent blocks) instead of O(degree).
+                inline void begin_cache_round(graph_access & G);
+                inline Gain compute_gain_cached(graph_access & G,
+                                                NodeID node,
+                                                PartitionID & max_gainer,
+                                                EdgeWeight & ext_degree);
+                inline void cache_neighbor_moved(NodeID u, PartitionID from, PartitionID to, EdgeWeight w);
+
         private:
+                struct cache_hdr {
+                        unsigned stamp;
+                        unsigned off;
+                        unsigned size;
+                        unsigned cap;
+                };
+                struct cache_entry {
+                        PartitionID block;
+                        EdgeWeight  conn;
+                };
+                std::vector<cache_hdr>   m_cache_hdr;
+                std::vector<cache_entry> m_cache_pool;
+                unsigned                 m_cache_round = 0;
 
                 //for efficient computation of internal and external degrees
                 struct round_struct {
@@ -79,6 +104,104 @@ inline void kway_graph_refinement_commons::init(PartitionConfig & config) {
         }
 
         m_round = 0;//needed for the computation of internal and external degrees
+}
+
+inline void kway_graph_refinement_commons::begin_cache_round(graph_access & G) {
+        if(m_cache_hdr.size() < G.number_of_nodes()) {
+                cache_hdr h; h.stamp = 0; h.off = 0; h.size = 0; h.cap = 0;
+                m_cache_hdr.resize(G.number_of_nodes(), h);
+        }
+        m_cache_round++;
+        if(m_cache_round == 0) {
+                for(size_t i = 0; i < m_cache_hdr.size(); i++) m_cache_hdr[i].stamp = 0;
+                m_cache_round = 1;
+        }
+        m_cache_pool.clear();
+}
+
+inline Gain kway_graph_refinement_commons::compute_gain_cached(graph_access & G,
+                                                               NodeID node,
+                                                               PartitionID & max_gainer,
+                                                               EdgeWeight & ext_degree) {
+        cache_hdr & h = m_cache_hdr[node];
+        if(h.stamp != m_cache_round) {
+                // build: aggregate the edge weights per adjacent block
+                h.stamp = m_cache_round;
+                h.off   = m_cache_pool.size();
+                m_round++;
+                forall_out_edges(G, e, node) {
+                        PartitionID b = G.getPartitionIndex(G.getEdgeTarget(e));
+                        EdgeWeight  w = G.getEdgeWeight(e);
+                        if(m_local_degrees[b].round == m_round) {
+                                m_cache_pool[m_local_degrees[b].local_degree].conn += w;
+                        } else {
+                                m_local_degrees[b].round        = m_round;
+                                m_local_degrees[b].local_degree = m_cache_pool.size();
+                                cache_entry ce; ce.block = b; ce.conn = w;
+                                m_cache_pool.push_back(ce);
+                        }
+                } endfor
+                h.size = m_cache_pool.size() - h.off;
+                // the number of adjacent blocks with positive connectivity is at most min(degree, k)
+                h.cap = std::max<unsigned>(h.size, std::min<size_t>(G.getNodeDegree(node), m_local_degrees.size()));
+                cache_entry ce; ce.block = 0; ce.conn = 0;
+                m_cache_pool.resize(h.off + h.cap, ce);
+        }
+
+        PartitionID source_partition = G.getPartitionIndex(node);
+        EdgeWeight max_degree = 0;
+        EdgeWeight own_degree = 0;
+        max_gainer = INVALID_PARTITION;
+        const cache_entry * entries = &m_cache_pool[0] + h.off;
+        for(unsigned i = 0; i < h.size; i++) {
+                const PartitionID b = entries[i].block;
+                const EdgeWeight  c = entries[i].conn;
+                if(b == source_partition) { own_degree = c; continue; }
+                if(c > max_degree) {
+                        max_degree = c;
+                        max_gainer = b;
+                } else if(c == max_degree) {
+                        if(random_functions::nextBool()) {
+                                max_gainer = b;
+                        }
+                }
+        }
+        ext_degree = max_gainer != INVALID_PARTITION ? max_degree : 0;
+        return max_degree - own_degree;
+}
+
+inline void kway_graph_refinement_commons::cache_neighbor_moved(NodeID u, PartitionID from, PartitionID to, EdgeWeight w) {
+        cache_hdr & h = m_cache_hdr[u];
+        if(h.stamp != m_cache_round || w == 0) return;
+        cache_entry * entries = &m_cache_pool[0] + h.off;
+        bool found_to = false;
+        for(unsigned i = 0; i < h.size; i++) {
+                if(entries[i].block == from) {
+                        entries[i].conn -= w;
+                        if(entries[i].conn == 0) {
+                                entries[i] = entries[h.size - 1];
+                                h.size--;
+                                i--;
+                        }
+                } else if(entries[i].block == to) {
+                        entries[i].conn += w;
+                        found_to = true;
+                }
+        }
+        if(!found_to) {
+                if(h.size == h.cap) { // only possible with zero-weight edges: relocate
+                        unsigned new_off = m_cache_pool.size();
+                        cache_entry ce; ce.block = 0; ce.conn = 0;
+                        m_cache_pool.resize(new_off + 2 * h.cap + 1, ce);
+                        for(unsigned i = 0; i < h.size; i++) m_cache_pool[new_off + i] = m_cache_pool[h.off + i];
+                        h.off = new_off;
+                        h.cap = 2 * h.cap + 1;
+                        entries = &m_cache_pool[0] + h.off;
+                }
+                entries[h.size].block = to;
+                entries[h.size].conn  = w;
+                h.size++;
+        }
 }
 
 inline bool kway_graph_refinement_commons::incident_to_more_than_two_partitions(graph_access & G, NodeID & node) {
