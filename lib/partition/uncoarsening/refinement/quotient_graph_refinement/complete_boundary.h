@@ -79,6 +79,8 @@ class complete_boundary {
                 PartitionID        m_lazy_rhs;
                 boundary_pair*     m_last_pair;
                 data_boundary_pair* m_lazy_dbp; // entry of the pair passed to the last update_lazy_values
+                std::vector<data_boundary_pair*> m_pair_index; // entry per pair key (k*k, allocated on first use), 0 until first access
+                PartitionID        m_index_k;          // k the index was built for
                 size_t             m_last_key; 
                 hash_boundary_pair m_hbp;
 
@@ -132,7 +134,7 @@ inline void complete_boundary::build() {
                                 bp.lhs = source_partition;
                                 bp.rhs = target_partition;
                                 update_lazy_values(&bp);
-                                m_pairs[bp].edge_cut += G.getEdgeWeight(e);    
+                                m_lazy_dbp->edge_cut += G.getEdgeWeight(e);    
                                 insert(n, source_partition, &bp);
                         }
                 } endfor
@@ -199,7 +201,7 @@ inline void complete_boundary::build_from_coarser(complete_boundary * coarser_bo
                                 bp.lhs = source_partition;
                                 bp.rhs = target_partition;
                                 update_lazy_values(&bp);
-                                m_pairs[bp].edge_cut += G.getEdgeWeight(e);    
+                                m_lazy_dbp->edge_cut += G.getEdgeWeight(e);    
                                 insert(n, source_partition, &bp);
                         }
                 } endfor
@@ -269,7 +271,7 @@ inline NodeWeight complete_boundary::getBlockNoNodes(PartitionID partition){
 
 inline EdgeWeight complete_boundary::getEdgeCut(boundary_pair * pair){
         update_lazy_values(pair);
-        return m_pairs[*pair].edge_cut;
+        return m_lazy_dbp->edge_cut;
 }
 
 inline EdgeWeight complete_boundary::getEdgeCut(PartitionID lhs, PartitionID rhs) {
@@ -291,7 +293,7 @@ inline void complete_boundary::setBlockNoNodes(PartitionID partition, NodeID no_
 
 inline void complete_boundary::setEdgeCut(boundary_pair * pair, EdgeWeight edge_cut){
         update_lazy_values(pair);
-        m_pairs[*pair].edge_cut = edge_cut;
+        m_lazy_dbp->edge_cut = edge_cut;
 }
 
 inline void complete_boundary::getQuotientGraphEdges(QuotientGraphEdges & qgraph_edges) {
@@ -323,10 +325,24 @@ inline void complete_boundary::update_lazy_values(boundary_pair * pair) {
         boundary_pair & bp = *pair;
         size_t key = m_hbp(bp); 
         if(key != m_last_key) {
-                data_boundary_pair & dbp = m_pairs[*pair]; 
+                // m_pairs is only ever inserted into (operator[] on first access) and its nodes never
+                // move, so the entry of a pair found once can be kept in a flat index by key; the first
+                // access of a pair still goes through m_pairs, so insertion order and iteration are unchanged
+                data_boundary_pair * entry;
+                // the index is allocated on first use and only for small k (a boundary is also built
+                // with one block per coarse node during contraction, where k*k would be far too large)
+                if(bp.k == m_index_k && m_index_k <= 1024 && key < (size_t) m_index_k * m_index_k) {
+                        if(m_pair_index.empty()) m_pair_index.assign((size_t) m_index_k * m_index_k, 0);
+                        data_boundary_pair *& slot = m_pair_index[key];
+                        if(slot == 0) slot = &m_pairs[*pair];
+                        entry = slot;
+                } else {
+                        entry = &m_pairs[*pair];
+                }
+                data_boundary_pair & dbp = *entry; 
                 if(!dbp.initialized) {
-                        m_pairs[*pair].lhs = pair->lhs;
-                        m_pairs[*pair].rhs = pair->rhs;
+                        dbp.lhs = pair->lhs;
+                        dbp.rhs = pair->rhs;
                         dbp.initialized = true;
                 }
 

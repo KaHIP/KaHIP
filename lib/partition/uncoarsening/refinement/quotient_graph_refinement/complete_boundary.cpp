@@ -17,6 +17,7 @@ complete_boundary::complete_boundary(graph_access * G) {
         m_lazy_dbp    = 0;
         m_last_key    = -1;
         m_block_infos.resize(G->get_partition_count());
+        m_index_k     = G->get_partition_count();
         delete Q.graphref;
         Q.graphref    = NULL;
 }
