@@ -207,6 +207,12 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                 graph_access residualGraph;
                 residualGraph.start_construction(fG.number_of_nodes(),fG.number_of_edges());
 
+                // For a saturated edge (node, target) the residual graph gets one edge per edge
+                // (target, node) with positive flow. The edges (target, node) are exactly the reverse
+                // partners of the edges (node, target), so their number is counted in one pass over
+                // the edges of node instead of scanning the edges of target per saturated edge.
+                std::vector<NodeID> pos_back(fG.number_of_nodes(), 0);
+                std::vector<NodeID> pos_stamp(fG.number_of_nodes(), fG.number_of_nodes());
                 forall_nodes(fG, node) {
                         NodeID node = residualGraph.new_node(); // for each node here create a new node 
 
@@ -214,18 +220,24 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                                 residualGraph.setNodeWeight( node, G.getNodeWeight(new_to_old_ids[node]));
                         }
 
+                        bool counted = false;
                         forall_out_edges(fG, e, node) {
                                 NodeID target = fG.getEdgeTarget(node, e);
                                 if( fG.getEdgeCapacity(node, e) > 0 ) {
                                         if( fG.getEdgeFlow(node, e) < (FlowType) fG.getEdgeCapacity(node, e)) {
                                                 residualGraph.new_edge(node, target);
                                         } else {
-                                                forall_out_edges(fG, e_bar, target) {
-                                                        NodeID target_prime = fG.getEdgeTarget(target, e_bar);
-                                                        if( target_prime == node && fG.getEdgeFlow(target, e_bar) > 0) {
-                                                                residualGraph.new_edge(node, target);
-                                                        }
-                                                } endfor
+                                                if(!counted) {
+                                                        forall_out_edges(fG, e2, node) {
+                                                                NodeID t2 = fG.getEdgeTarget(node, e2);
+                                                                if(pos_stamp[t2] != node) { pos_stamp[t2] = node; pos_back[t2] = 0; }
+                                                                if(fG.getEdgeFlow(t2, fG.getReverseEdge(node, e2)) > 0) pos_back[t2]++;
+                                                        } endfor
+                                                        counted = true;
+                                                }
+                                                for( NodeID c = 0; c < pos_back[target]; c++) {
+                                                        residualGraph.new_edge(node, target);
+                                                }
                                         }
                                 }
                         } endfor
