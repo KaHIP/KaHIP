@@ -130,9 +130,13 @@ int multitry_kway_fm::start_more_locallized_search(PartitionConfig & config, gra
                 PartitionID maxgainer;
                 EdgeWeight extdeg = 0;
                 unsigned ties     = 0;
-                Gain gain = commons->compute_gain(G, node, maxgainer, extdeg, ties);
+                Gain gain = 0;
+                // rule (b): the gain of an already moved start node is not computed (it was only
+                // computed for its tie draws)
+                bool not_moved = moved_idx.find(node) == moved_idx.end();
+                if(not_moved) gain = commons->compute_gain(G, node, maxgainer, extdeg, ties);
 
-                if(moved_idx.find(node) == moved_idx.end() && extdeg > 0) { 
+                if(not_moved && extdeg > 0) { 
                         // the start nodes with the gains just computed for them; the partition
                         // does not change before the search inserts them into its queue
                         real_start_nodes.clear();

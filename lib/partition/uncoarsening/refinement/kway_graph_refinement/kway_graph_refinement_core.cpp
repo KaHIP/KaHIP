@@ -240,9 +240,7 @@ void kway_graph_refinement_core::init_queue_with_cached_gains(const PartitionCon
                 NodeID node = start.node;
 
                 if( moved_idx.find(node) == moved_idx.end() ) {
-                        for( unsigned t = 0; t < start.ties; t++) {
-                                random_functions::nextBool();
-                        }
+                        // rule (b): the tie draws of the recomputation are no longer replayed
                         queue->insert(node, start.gain);
                         moved_idx[node].index = NOT_MOVED;
                 }
