@@ -17,7 +17,6 @@
 #include "cut_flow_problem_solver.h"
 #include "most_balanced_minimum_cuts/most_balanced_minimum_cuts.h"
 #include "data_structure/flow_graph.h"
-#include "data_structure/node_hash_map.h"
 #include "io/graph_io.h"
 
 
@@ -78,7 +77,10 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
         //building up the graph as in parse.h of hi_pr code
         NodeID idx = 0;
         new_to_old_ids.resize(lhs_boundary_stripe.size() + rhs_boundary_stripe.size());
-        node_hash_map<NodeID> old_to_new; // lookup only
+        // flow-graph id per stripe node, reused across calls: only stripe nodes (marked
+        // BOUNDARY_STRIPE_NODE below, before any lookup) are read, so stale entries are never used
+        static std::vector<NodeID> old_to_new;
+        if(old_to_new.size() < G.number_of_nodes()) old_to_new.resize(G.number_of_nodes());
         for( unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
                 G.setPartitionIndex(lhs_boundary_stripe[i], BOUNDARY_STRIPE_NODE);
                 new_to_old_ids[idx]                = lhs_boundary_stripe[i];
