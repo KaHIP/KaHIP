@@ -73,6 +73,10 @@ class complete_boundary {
                 inline void getUnderlyingQuotientGraph( graph_access & qgraph );
                 inline void getNeighbors(PartitionID & block, std::vector<PartitionID> & neighbors);
                 inline void fastComputeQuotientGraph( graph_access & Q_bar, const NodeID & no_of_blocks);
+                // fastComputeQuotientGraph of G with the partition index replaced by cmap (no_of_blocks blocks),
+                // without writing cmap into G's partition indices first
+                static inline void computeClusterGraph( graph_access & G, const CoarseMapping & cmap,
+                                                        graph_access & Q_bar, const NodeID no_of_blocks);
 
         private:
                 //updates lazy values that the access functions need
@@ -611,6 +615,80 @@ inline void complete_boundary::fastComputeQuotientGraph( graph_access & Q_bar, c
 
          Q_bar.finish_construction();
 }
+inline void complete_boundary::computeClusterGraph( graph_access & G, const CoarseMapping & cmapping,
+                                                    graph_access & Q_bar, const NodeID no_of_blocks) {
+
+         basicGraph * graphref = new basicGraph;
+         if(Q_bar.graphref != NULL) {
+                delete Q_bar.graphref;
+         }
+         Q_bar.graphref = graphref;
+
+         const NodeID n       = G.number_of_nodes();
+         const Node * nodes   = G.raw_nodes();
+         const Edge * edges   = G.raw_edges();
+         const NodeID * cmap  = cmapping.data();
+
+         std::vector<NodeWeight> block_weight(no_of_blocks,0);
+         std::vector<EdgeWeight> target_edgeweight(no_of_blocks,0);
+         std::vector<PartitionID> list_targets;
+
+         // nodes per block in increasing node order: block p holds block_nodes[block_start[p] .. block_start[p+1])
+         std::vector<NodeID> block_start(no_of_blocks + 1, 0);
+         for( NodeID node = 0; node < n; node++) {
+                 block_start[cmap[node] + 1]++;
+                 block_weight[cmap[node]] += nodes[node].weight;
+         }
+         for( unsigned p = 0; p < no_of_blocks; p++) block_start[p+1] += block_start[p];
+         std::vector<NodeID> block_nodes(n);
+         {
+                 std::vector<NodeID> fill(block_start.begin(), block_start.end() - 1);
+                 for( NodeID node = 0; node < n; node++) block_nodes[fill[cmap[node]]++] = node;
+         }
+
+         struct q_edge {
+                 PartitionID target;
+                 EdgeWeight  weight;
+         };
+         std::vector<q_edge> q_edges;
+         std::vector<EdgeID> q_start(no_of_blocks + 1, 0);
+         for( unsigned p = 0; p < no_of_blocks; p++) {
+                 for( NodeID i = block_start[p]; i < block_start[p+1]; i++ ) {
+                         const NodeID node = block_nodes[i];
+                         const EdgeID e_end = nodes[node+1].firstEdge;
+                         for( EdgeID e = nodes[node].firstEdge; e < e_end; e++) {
+                                 const PartitionID target_partition = cmap[edges[e].target];
+                                 if(p != target_partition) {
+                                         if (target_edgeweight[target_partition] == 0) {
+                                                 list_targets.push_back(target_partition);
+                                         }
+                                         target_edgeweight[target_partition] += edges[e].weight;
+                                 }
+                         }
+                 }
+
+                 for( auto& target_partition : list_targets ) {
+                         q_edges.push_back(q_edge{target_partition, target_edgeweight[target_partition]});
+                         target_edgeweight[target_partition] = 0;
+                 }
+                 list_targets.clear();
+                 q_start[p+1] = q_edges.size();
+         }
+
+         Q_bar.start_construction(no_of_blocks, q_edges.size());
+
+         for( unsigned p = 0; p < no_of_blocks; p++) {
+                 NodeID source_partition = Q_bar.new_node();
+                 Q_bar.setNodeWeight(source_partition,  block_weight[p]);
+                 for( EdgeID i = q_start[p]; i < q_start[p+1]; i++) {
+                         EdgeID e = Q_bar.new_edge(source_partition, q_edges[i].target);
+                         Q_bar.setEdgeWeight(e, q_edges[i].weight);
+                 }
+         }
+
+         Q_bar.finish_construction();
+}
+
 #ifndef NDEBUG
 inline bool complete_boundary::assert_bnodes_in_boundaries() {
         PartitionID k = m_graph_ref->get_partition_count();
