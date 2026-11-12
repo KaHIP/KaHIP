@@ -208,7 +208,12 @@ public:
                                          NodeID sink, 
                                          bool compute_source_set, 
                                          std::vector< NodeID > & source_set,
-                                         FlowType stop_flow = std::numeric_limits<FlowType>::max()) {
+                                         FlowType stop_flow = std::numeric_limits<FlowType>::max(),
+                                         bool preflow_only = false) {
+                // preflow_only: stop after phase 1 and return in source_set the nodes that can reach
+                // the sink in the residual graph (with the sink, without the source). This set is
+                // the same for every maximum preflow and every maximum flow (minimum cut closest to
+                // the sink).
                 // stop_flow: an upper bound on the maximum flow known to the caller; once the sink
                 // has received that much the flow value is final and the solver returns at once
                 // (source_set is then left empty)
@@ -242,6 +247,15 @@ public:
                                 m_work = 0;
                                 m_global_updates++;
                         }
+                }
+
+                if(preflow_only) {
+                        source_set.clear();
+                        global_relabeling_from(sink, source, 0);
+                        forall_nodes(G, node) {
+                                if(m_st[node].touched && node != source) source_set.push_back(node);
+                        } endfor
+                        return m_st[sink].excess;
                 }
 
                 // phase 2: return the remaining excess to the source, with labels n + residual

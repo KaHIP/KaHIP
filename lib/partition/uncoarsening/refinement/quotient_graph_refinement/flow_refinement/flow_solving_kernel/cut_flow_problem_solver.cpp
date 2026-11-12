@@ -173,6 +173,13 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                                                       std::vector<NodeID> & new_rhs_nodes) {
 
         flow_graph fG;
+        // Without most balanced cuts only the set of nodes reachable from the source in the
+        // residual graph of a maximum flow is used; it is the same for every maximum flow. It is
+        // computed on the reversed network: there it is the set of nodes that can reach the
+        // (original) source, which a maximum preflow from the original sink already gives, so the
+        // excess return of the second phase is skipped.
+        const bool reversed = !config.most_balanced_minimum_cuts;
+        fG.set_reversed(reversed);
         FlowType lhs_rhs_capacity = 0;
         bool do_sth = convert_ds(config, G, lhs, rhs, lhs_boundary_stripe, rhs_boundary_stripe, new_to_old_ids, fG, lhs_rhs_capacity );
 
@@ -191,7 +198,9 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
         if(!config.most_balanced_minimum_cuts && lhs_rhs_capacity == (FlowType) initial_cut) {
                 stop_flow = lhs_rhs_capacity;
         }
-        FlowType flowvalue = pr.solve_max_flow_min_cut( fG, source, sink, true, source_set, stop_flow);
+        FlowType flowvalue = reversed
+                ? pr.solve_max_flow_min_cut( fG, sink, source, true, source_set, stop_flow, true)
+                : pr.solve_max_flow_min_cut( fG, source, sink, true, source_set, stop_flow);
         if(flowvalue >= stop_flow) return initial_cut;
 
         std::vector< bool > new_rhs_flag(fG.number_of_nodes(), true);
