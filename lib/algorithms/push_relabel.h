@@ -30,6 +30,10 @@ public:
                 m_active.resize(G.number_of_nodes(), false);
                 m_count.resize(2*G.number_of_nodes(),0);
                 m_bfstouched.resize(G.number_of_nodes());
+                // FIFO of active nodes as a ring (a node is queued at most once at a time)
+                m_ring.assign(std::max<NodeID>(G.number_of_nodes(), 1), 0);
+                m_ring_head  = 0;
+                m_ring_count = 0;
 
                 m_count[0] = G.number_of_nodes()-1;
                 m_count[G.number_of_nodes()] = 1;
@@ -48,21 +52,24 @@ public:
         // perform a backward bfs in the residual starting at the sink
         // to update distance labels
         void global_relabeling( NodeID source, NodeID sink ) {
-                std::queue< NodeID > Q; 
+                // FIFO in an array (each node is queued at most once), same order as std::queue
+                const NodeID n = m_G->number_of_nodes();
+                m_bfsqueue.resize(n);
+                NodeID * Q = m_bfsqueue.data();
+                size_t q_head = 0, q_tail = 0;
                 forall_nodes((*m_G), node) {
-                        m_distance[node]   = std::max(m_distance[node], m_G->number_of_nodes());
+                        m_distance[node]   = std::max(m_distance[node], n);
                         m_bfstouched[node] = false;
                 } endfor
                 
-                Q.push(sink);
+                Q[q_tail++] = sink;
                 m_bfstouched[sink]   = true;
                 m_bfstouched[source] = true;
                 m_distance[sink]     = 0;
 
                 NodeID node = 0;
-                while( !Q.empty() ) {
-                       node = Q.front();
-                       Q.pop();  
+                while( q_head < q_tail ) {
+                       node = Q[q_head++];
 
                        const rEdge * node_edges = m_G->edges_of(node);
                        const EdgeID  end        = m_G->get_first_invalid_edge(node);
@@ -76,7 +83,7 @@ public:
                                         m_count[ m_distance[target] ] --;
                                         m_distance[target] = m_distance[node]+1;
                                         m_count[ m_distance[target] ] ++;
-                                        Q.push(target);
+                                        Q[q_tail++] = target;
                                         m_bfstouched[target] = true;
                                }
                        }
@@ -111,17 +118,41 @@ public:
                 if( m_active[target] ) return;
                 if( m_excess[target] > 0) {
                         m_active[target] = true;
-                        //m_Q.push(target, m_distance[target]);
-                        m_Q.push(target);
+                        size_t pos = m_ring_head + m_ring_count;
+                        if(pos >= m_ring.size()) pos -= m_ring.size();
+                        m_ring[pos] = target;
+                        m_ring_count++;
                 }
         }
 
         // try to push as much excess as possible out of the node node
         void discharge( NodeID node ) {
+                // the pushes of push(node, e) with the node's distance (unchanged by pushes) and
+                // excess held in locals; a push never goes to node itself (equal distance)
                 EdgeID end = m_G->get_first_invalid_edge(node);
-                for(EdgeID e = m_G->get_first_edge(node); e < end && m_excess[node] > 0; ++e) {
-                        push( node, e );
+                rEdge * node_edges     = m_G->edges_of(node);
+                const NodeID dist_node = m_distance[node];
+                long long excess       = m_excess[node];
+                for(EdgeID e = m_G->get_first_edge(node); e < end && excess > 0; ++e) {
+                        m_pushes++;
+                        rEdge & edge      = node_edges[e];
+                        FlowType capacity = (NodeID) edge.capacity; // as returned by getEdgeCapacity
+                        FlowType flow     = edge.flow;
+                        FlowType amount   = std::min((long long)(capacity-flow), excess);
+                        NodeID target     = edge.target;
+
+                        if( dist_node <= m_distance[target] || amount == 0) continue;
+
+                        edge.flow = flow+amount;
+                        rEdge & rev = m_G->edges_of(target)[edge.reverse_edge_index];
+                        rev.flow    = rev.flow-amount;
+
+                        excess            -= amount;
+                        m_excess[target]  += amount;
+
+                        enqueue(target);
                 }
+                m_excess[node] = excess;
 
                 if( m_excess[node] > 0 ) {
                         if( m_count[ m_distance[node] ] == 1 && m_distance[node] < m_G->number_of_nodes()) {
@@ -190,8 +221,10 @@ public:
          
                 int work_todo = WORK_NODE_TO_EDGES*G.number_of_nodes() + G.number_of_edges();
                 // main loop
-                while(!m_Q.empty()) {
-                        NodeID v    = m_Q.front(); m_Q.pop();
+                while(m_ring_count > 0) {
+                        NodeID v    = m_ring[m_ring_head];
+                        if(++m_ring_head == m_ring.size()) m_ring_head = 0;
+                        m_ring_count--;
                         m_active[v] = false;
                         discharge(v);
                         if( m_excess[sink] >= stop_flow ) return m_excess[sink];
@@ -239,8 +272,11 @@ private:
         std::vector<NodeID>    m_distance;
 	std::vector<char>      m_active; // store which nodes are in the queue already
 	std::vector<int>       m_count;
-        std::queue<NodeID>     m_Q;
+        std::vector<NodeID>    m_ring;
+        size_t                 m_ring_head  = 0;
+        size_t                 m_ring_count = 0;
 	std::vector<char>      m_bfstouched; 
+        std::vector<NodeID>    m_bfsqueue;
         //highest_label_queue    m_Q;
         int m_num_relabels;
         int m_gaps;
