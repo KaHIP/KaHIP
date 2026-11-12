@@ -10,6 +10,7 @@
 #include "algorithms/strongly_connected_components.h"
 #include "algorithms/topological_sort.h"
 #include "most_balanced_minimum_cuts.h"
+#include "data_structure/stamped_node_map.h"
 
 most_balanced_minimum_cuts::most_balanced_minimum_cuts() {
 
@@ -170,7 +171,7 @@ void most_balanced_minimum_cuts::build_internal_scc_graph( graph_access & residu
         scc_graph.start_construction(comp_count, edge_count);
         for( unsigned i = 0; i < (unsigned) comp_count; i++) {
                 NodeID node = scc_graph.new_node();
-                std::unordered_map<NodeID, bool> allready_contained;
+                stamped_node_map<char> allready_contained; // lookup only, never iterated
                 for(unsigned j = 0; j < edges[i].size(); j++) {
                         if(allready_contained.find(edges[i][j]) == allready_contained.end()) {
                                 scc_graph.new_edge(node, edges[i][j]);

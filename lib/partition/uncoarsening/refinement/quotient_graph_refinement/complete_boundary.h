@@ -18,6 +18,7 @@
 #include "data_structure/graph_access.h"
 #include "partial_boundary.h"
 #include "partition_config.h"
+#include "data_structure/stamped_node_map.h"
 
 struct block_informations {
         NodeWeight block_weight;
@@ -452,7 +453,7 @@ void complete_boundary::setup_start_nodes_around_blocks(graph_access & G,
         std::vector<PartitionID> rhs_neighbors;
         getNeighbors(rhs, rhs_neighbors);
 
-        std::unordered_map<NodeID, bool> allready_contained;
+        stamped_node_map<char> allready_contained; // lookup only, never iterated
         for( unsigned i = 0; i < lhs_neighbors.size(); i++) {
                 PartitionID neighbor = lhs_neighbors[i];
                 PartialBoundary & partial_boundary_lhs = getDirectedBoundary(lhs, lhs, neighbor);
@@ -501,7 +502,7 @@ void complete_boundary::setup_start_nodes_all(graph_access & G, boundary_startin
         QuotientGraphEdges quotient_graph_edges;
         getQuotientGraphEdges(quotient_graph_edges);
 
-        std::unordered_map<NodeID, bool> allready_contained;
+        stamped_node_map<char> allready_contained; // lookup only, never iterated
         
         for( unsigned i = 0; i < quotient_graph_edges.size(); i++) {
                 boundary_pair & ret_value = quotient_graph_edges[i];
