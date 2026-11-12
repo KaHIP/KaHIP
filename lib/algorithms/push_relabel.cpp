@@ -7,11 +7,5 @@
 
 #include "push_relabel.h"
 
-push_relabel::push_relabel( ) {
-                
-}
 
-push_relabel::~push_relabel() {
-                
-}
 

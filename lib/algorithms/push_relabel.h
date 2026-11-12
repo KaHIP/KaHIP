@@ -21,8 +21,16 @@ const int    WORK_NODE_TO_EDGES = 4;
 
 class push_relabel {
 public:
-        push_relabel( );
-        virtual ~push_relabel();
+        // the per-node arrays come from spare buffers kept between flow problems; they are emptied
+        // here, so init() sees them exactly as in a new object
+        push_relabel( ) {
+                take(m_st, spare_st()); take(m_count, spare_count());
+                take(m_ring, spare_ring()); take(m_bfsqueue, spare_bfsqueue());
+        }
+        virtual ~push_relabel() {
+                give(m_st, spare_st()); give(m_count, spare_count());
+                give(m_ring, spare_ring()); give(m_bfsqueue, spare_bfsqueue());
+        }
 
         void init( flow_graph & G, NodeID source, NodeID sink ) {
                 m_st.resize(G.number_of_nodes(), node_state());
@@ -287,23 +295,28 @@ public:
                                 m_st[node].touched = false;
                         } endfor
 
-                        std::queue< NodeID > Q;
-                        Q.push(source);
+                        // FIFO in an array (each node is queued at most once), same order as std::queue
+                        m_bfsqueue.resize(G.number_of_nodes());
+                        NodeID * Q = m_bfsqueue.data();
+                        size_t q_head = 0, q_tail = 0;
+                        Q[q_tail++] = source;
                         m_st[source].touched = true;
 
-                        while( !Q.empty() ) {
-                                NodeID node = Q.front();
-                                Q.pop();
+                        while( q_head < q_tail ) {
+                                NodeID node = Q[q_head++];
                                 source_set.push_back(node);
 
-                                forall_out_edges(G, e, node) {
-                                        NodeID target = G.getEdgeTarget(node, e);
-                                        FlowType resCap = G.getEdgeCapacity(node, e) - G.getEdgeFlow(node, e);
+                                const rEdge * node_edges = G.edges_of(node);
+                                const EdgeID  end        = G.get_first_invalid_edge(node);
+                                for(EdgeID e = 0; e < end; ++e) {
+                                        NodeID target = node_edges[e].target;
+                                        // capacities are read as NodeID, as getEdgeCapacity returns them
+                                        FlowType resCap = (NodeID) node_edges[e].capacity - node_edges[e].flow;
                                         if(resCap > 0 && !m_st[target].touched) {
-                                                Q.push(target);
+                                                Q[q_tail++] = target;
                                                 m_st[target].touched = true;
                                         }
-                                } endfor
+                                }
                         }
                 }
 
@@ -318,6 +331,13 @@ private:
                 char      active   = 0; // node is in the queue already
                 char      touched  = 0; // BFS mark
         };
+        template<typename T> static void take(std::vector<T> & v, std::vector<T> & spare) { v.swap(spare); v.clear(); }
+        template<typename T> static void give(std::vector<T> & v, std::vector<T> & spare) { if(spare.capacity() < v.capacity()) spare.swap(v); }
+        static std::vector<node_state> & spare_st()  { static std::vector<node_state> b; return b; }
+        static std::vector<int> & spare_count()      { static std::vector<int> b; return b; }
+        static std::vector<NodeID> & spare_ring()    { static std::vector<NodeID> b; return b; }
+        static std::vector<NodeID> & spare_bfsqueue(){ static std::vector<NodeID> b; return b; }
+
         std::vector<node_state> m_st;
 	std::vector<int>       m_count;
         std::vector<NodeID>    m_ring;
