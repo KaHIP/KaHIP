@@ -28,9 +28,10 @@ private:
 
         std::vector<int> m_dfsnum;
         std::vector<int> m_comp_num;
-        std::stack<NodeID> m_unfinished;
-        std::stack<NodeID> m_roots;
-        std::stack< std::pair<NodeID,EdgeID> > iteration_stack;
+        // stacks on vectors (push_back/back/pop_back), kept between calls
+        std::vector<NodeID> m_unfinished;
+        std::vector<NodeID> m_roots;
+        std::vector< std::pair<NodeID,EdgeID> > iteration_stack;
 };
 
 
