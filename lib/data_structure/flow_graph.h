@@ -18,7 +18,8 @@ struct rEdge {
     FlowType   flow;
 };
 
-// Residual graph in CSR form. new_edge() records the edge (and its reverse edge with capacity 0);
+// Residual graph in CSR form. new_edge() records the edge and its reverse edge (capacity rev_capacity, 0
+// by default);
 // finish_construction() lays the edges out per node in insertion order, so the local edge indices and
 // reverse indices are exactly those of the former adjacency-list implementation (one std::vector per
 // node, appended in insertion order). finish_construction() must be called before the graph is used.
@@ -56,7 +57,7 @@ public:
                         rEdge & f = m_edges[m_offset[pe.source] + ls];
                         f.target = pe.target; f.reverse_edge_index = lt; f.capacity = pe.capacity; f.flow = 0;
                         rEdge & r = m_edges[m_offset[pe.target] + lt];
-                        r.target = pe.source; r.reverse_edge_index = ls; r.capacity = 0; r.flow = 0;
+                        r.target = pe.source; r.reverse_edge_index = ls; r.capacity = pe.rev_capacity; r.flow = 0;
                 }
                 m_pending.clear();
                 if(spare_pending().capacity() < m_pending.capacity()) spare_pending().swap(m_pending);
@@ -71,8 +72,9 @@ public:
         void setEdgeFlow(NodeID source, EdgeID e, FlowType flow);
         EdgeID getReverseEdge(NodeID source, EdgeID e);
 
-        void new_edge(NodeID source, NodeID target, FlowType capacity) {
+        void new_edge(NodeID source, NodeID target, FlowType capacity, FlowType rev_capacity = 0) {
                pending_edge pe; pe.source = source; pe.target = target; pe.capacity = capacity;
+               pe.rev_capacity = rev_capacity;
                m_pending.push_back(pe);
                m_offset[source+1]++;
                m_offset[target+1]++;
@@ -90,6 +92,7 @@ private:
                 NodeID source;
                 NodeID target;
                 FlowType capacity;
+                FlowType rev_capacity;
         };
         // buffers kept between flow problems (taken by start_construction, returned when done)
         static std::vector<pending_edge> & spare_pending() { static std::vector<pending_edge> b; return b; }

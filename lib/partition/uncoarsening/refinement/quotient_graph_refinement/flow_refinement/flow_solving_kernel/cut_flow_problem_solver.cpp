@@ -96,6 +96,9 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
         std::vector<NodeID>  outer_lhs_boundary;
         std::vector<NodeID>  outer_rhs_boundary;
 
+        // An edge {u, v} of the stripes becomes one edge pair with capacity w(u, v) in both directions
+        // (added at the endpoint with the smaller id): the same flow network as an edge with a
+        // reverse edge of capacity 0 per direction, with half the edges.
         // One pass per stripe node finds both its flow edges and whether it is an outer boundary node
         // (formerly a separate counting pass, regions_no_edges). The edges are added in the same order;
         // if a side has no outer boundary node the partially built graph is dropped (the caller returns).
@@ -118,7 +121,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                 forall_out_edges(G, e, node) {
                         if(G.getPartitionIndex(G.getEdgeTarget(e)) == BOUNDARY_STRIPE_NODE)  {
                                 NodeID targetID     = old_to_new[G.getEdgeTarget(e)];
-                                fG.new_edge(sourceID, targetID, G.getEdgeWeight(e));
+                                if(sourceID < targetID) fG.new_edge(sourceID, targetID, G.getEdgeWeight(e), G.getEdgeWeight(e));
                                 if(targetID >= no_lhs_stripe) lhs_rhs_capacity += (NodeID) G.getEdgeWeight(e);
                         } else is_outer_boundary = true;
                 } endfor
@@ -135,7 +138,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                 forall_out_edges(G, e, node) {
                         if(G.getPartitionIndex(G.getEdgeTarget(e)) == BOUNDARY_STRIPE_NODE)  {
                                 NodeID targetID     = old_to_new[G.getEdgeTarget(e)];
-                                fG.new_edge(sourceID, targetID, G.getEdgeWeight(e));
+                                if(sourceID < targetID) fG.new_edge(sourceID, targetID, G.getEdgeWeight(e), G.getEdgeWeight(e));
                         } else is_outer_boundary = true;
                 } endfor
                 if(is_outer_boundary) {
@@ -206,12 +209,11 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                 graph_access residualGraph;
                 residualGraph.start_construction(fG.number_of_nodes(),fG.number_of_edges());
 
-                // For a saturated edge (node, target) the residual graph gets one edge per edge
-                // (target, node) with positive flow. The edges (target, node) are exactly the reverse
-                // partners of the edges (node, target), so their number is counted in one pass over
-                // the edges of node instead of scanning the edges of target per saturated edge.
-                std::vector<NodeID> pos_back(fG.number_of_nodes(), 0);
-                std::vector<NodeID> pos_stamp(fG.number_of_nodes(), fG.number_of_nodes());
+                // An edge (node, target) of positive capacity gets a residual edge if it is not
+                // saturated. For a stripe edge pair with flow f this is f < w, the same relation as
+                // "(node, target) unsaturated or (target, node) carries flow" in a network with one
+                // edge per direction; the reverse edges of the source and sink edges (capacity 0)
+                // are left out as before.
                 forall_nodes(fG, node) {
                         NodeID node = residualGraph.new_node(); // for each node here create a new node 
 
@@ -219,25 +221,9 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                                 residualGraph.setNodeWeight( node, G.getNodeWeight(new_to_old_ids[node]));
                         }
 
-                        bool counted = false;
                         forall_out_edges(fG, e, node) {
-                                NodeID target = fG.getEdgeTarget(node, e);
-                                if( fG.getEdgeCapacity(node, e) > 0 ) {
-                                        if( fG.getEdgeFlow(node, e) < (FlowType) fG.getEdgeCapacity(node, e)) {
-                                                residualGraph.new_edge(node, target);
-                                        } else {
-                                                if(!counted) {
-                                                        forall_out_edges(fG, e2, node) {
-                                                                NodeID t2 = fG.getEdgeTarget(node, e2);
-                                                                if(pos_stamp[t2] != node) { pos_stamp[t2] = node; pos_back[t2] = 0; }
-                                                                if(fG.getEdgeFlow(t2, fG.getReverseEdge(node, e2)) > 0) pos_back[t2]++;
-                                                        } endfor
-                                                        counted = true;
-                                                }
-                                                for( NodeID c = 0; c < pos_back[target]; c++) {
-                                                        residualGraph.new_edge(node, target);
-                                                }
-                                        }
+                                if( fG.getEdgeCapacity(node, e) > 0 && fG.getEdgeFlow(node, e) < (FlowType) fG.getEdgeCapacity(node, e)) {
+                                        residualGraph.new_edge(node, fG.getEdgeTarget(node, e));
                                 }
                         } endfor
                 } endfor
