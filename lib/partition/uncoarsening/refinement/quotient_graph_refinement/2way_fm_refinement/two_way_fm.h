@@ -52,12 +52,14 @@ class two_way_fm : public two_way_refinement {
                                 PartitionID other); 
 
 
+                // PQ is refinement_pq or a concrete queue type (calls without virtual dispatch)
+                template <typename PQ>
                 void move_node(const PartitionConfig & config, 
                                graph_access & G,
                                const NodeID & node,
                                vertex_moved_hashtable & moved_idx,
-                               refinement_pq * from_queue,
-                               refinement_pq * to_queue,
+                               PQ * from_queue,
+                               PQ * to_queue,
                                PartitionID from,
                                PartitionID to,
                                boundary_pair * pair,

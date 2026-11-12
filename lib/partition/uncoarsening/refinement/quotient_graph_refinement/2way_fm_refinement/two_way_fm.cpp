@@ -159,6 +159,10 @@ EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg,
                 q_select = topgain_queue_select;
         }
 
+        // the heaps by their concrete type (NULL for bucket queues)
+        maxNodeHeap * lhs_heap = dynamic_cast<maxNodeHeap*>(lhs_queue);
+        maxNodeHeap * rhs_heap = dynamic_cast<maxNodeHeap*>(rhs_queue);
+
         //roll forwards
         EdgeWeight best_cut = cut; 
         int number_of_swaps = 0;
@@ -200,12 +204,23 @@ EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg,
                                 to_part_weight   = &lhs_part_weight; 
                         }
 
-                        move_node(config, G, node, moved_idx, 
-                                        from_queue, to_queue, 
-                                        from, to,
-                                        pair,
-                                        from_part_weight, to_part_weight,
-                                        boundary);
+                        if(lhs_heap && rhs_heap) {
+                                maxNodeHeap * from_heap = from_queue == lhs_queue ? lhs_heap : rhs_heap;
+                                maxNodeHeap * to_heap   = to_queue   == lhs_queue ? lhs_heap : rhs_heap;
+                                move_node(config, G, node, moved_idx, 
+                                                from_heap, to_heap, 
+                                                from, to,
+                                                pair,
+                                                from_part_weight, to_part_weight,
+                                                boundary);
+                        } else {
+                                move_node(config, G, node, moved_idx, 
+                                                from_queue, to_queue, 
+                                                from, to,
+                                                pair,
+                                                from_part_weight, to_part_weight,
+                                                boundary);
+                        }
 
                         cut -= gain;
 
@@ -290,12 +305,13 @@ EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg,
 }
 
 
+template <typename PQ>
 void two_way_fm::move_node(const PartitionConfig & config, 
                            graph_access & G,
                            const NodeID & node,
                            vertex_moved_hashtable & moved_idx,
-                           refinement_pq * from_queue,
-                           refinement_pq * to_queue,
+                           PQ * from_queue,
+                           PQ * to_queue,
                            PartitionID from, 
                            PartitionID to,
                            boundary_pair * pair,         
@@ -332,7 +348,7 @@ void two_way_fm::move_node(const PartitionConfig & config,
                 PartitionID other_partition = targets_partition == from ? to : from;
                 cached_int_ext_degree(*this, G, target, targets_partition, other_partition, int_degree, ext_degree); 
 
-                refinement_pq * queue_to_update = 0;
+                PQ * queue_to_update = 0;
                 if(targets_partition == from) {
                         queue_to_update = from_queue;
                 } else {
