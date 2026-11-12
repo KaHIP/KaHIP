@@ -5,6 +5,7 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
+#include <memory>
 #include <sstream>
 #include <cstring>
 #include "graph_io.h"
@@ -93,20 +94,21 @@ int graph_io::readGraphWeighted(graph_access & G, const std::string & filename) 
                 std::cerr << "Error opening " << filename << std::endl;
                 return 1;
         }
-        std::vector<char> buf;
+        // file contents plus a sentinel, in a buffer that is not zeroed before fread overwrites it
+        std::unique_ptr<char[]> buf;
+        size_t got = 0;
         {
                 fseek(fp, 0, SEEK_END);
                 long size = ftell(fp);
                 fseek(fp, 0, SEEK_SET);
-                buf.resize(size > 0 ? size + 1 : 1);
-                size_t got = size > 0 ? fread(&buf[0], 1, size, fp) : 0;
-                buf.resize(got + 1);
+                buf.reset(new char[size > 0 ? size + 1 : 1]);
+                got = size > 0 ? fread(buf.get(), 1, size, fp) : 0;
                 buf[got] = '\n'; // sentinel
         }
         fclose(fp);
 
-        const char * p   = &buf[0];
-        const char * eof = p + buf.size() - 1; // position of the sentinel
+        const char * p   = buf.get();
+        const char * eof = p + got; // position of the sentinel
 
         // header: first line that does not start with '%'
         const char * line_end = (const char*)memchr(p, '\n', eof - p + 1);
@@ -240,8 +242,8 @@ void graph_io::writePartition(graph_access & G, const std::string & filename) {
         std::cout << "writing partition to " << filename << " ... " << std::endl;
         if(!fp) return;
 
-        std::vector<char> buf(12 * (size_t)G.number_of_nodes() + 16);
-        char * out = &buf[0];
+        std::unique_ptr<char[]> buf(new char[12 * (size_t)G.number_of_nodes() + 16]); // not zeroed
+        char * out = buf.get();
         forall_nodes(G, node) {
                 PartitionID v = G.getPartitionIndex(node);
                 char tmp[12];
@@ -250,7 +252,7 @@ void graph_io::writePartition(graph_access & G, const std::string & filename) {
                 while(len) *out++ = tmp[--len];
                 *out++ = '\n';
         } endfor
-        fwrite(&buf[0], 1, out - &buf[0], fp);
+        fwrite(buf.get(), 1, out - buf.get(), fp);
         fclose(fp);
 }
 
