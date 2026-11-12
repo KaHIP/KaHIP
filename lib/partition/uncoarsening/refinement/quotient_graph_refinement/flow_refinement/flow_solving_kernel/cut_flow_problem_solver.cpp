@@ -206,36 +206,32 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                         }
                 } endfor
         } else {
-                graph_access residualGraph;
-                residualGraph.start_construction(fG.number_of_nodes(),fG.number_of_edges());
-
-                // An edge (node, target) of positive capacity gets a residual edge if it is not
-                // saturated. For a stripe edge pair with flow f this is f < w, the same relation as
-                // "(node, target) unsaturated or (target, node) carries flow" in a network with one
-                // edge per direction; the reverse edges of the source and sink edges (capacity 0)
-                // are left out as before.
+                // The residual graph as arrays (formerly a graph_access): an edge (node, target) of
+                // positive capacity gets a residual edge if it is not saturated. For a stripe edge
+                // pair with flow f this is f < w, the same relation as "(node, target) unsaturated
+                // or (target, node) carries flow" in a network with one edge per direction; the
+                // reverse edges of the source and sink edges (capacity 0) are left out as before.
+                static std::vector<EdgeID> res_first;
+                static std::vector<NodeID> res_targets;
+                static std::vector<NodeWeight> res_weights;
+                res_first.resize(fG.number_of_nodes()+1);
+                res_weights.resize(fG.number_of_nodes());
+                res_targets.clear();
                 forall_nodes(fG, node) {
-                        NodeID node = residualGraph.new_node(); // for each node here create a new node 
-
-                        if( node < fG.number_of_nodes() -2 ) {
-                                residualGraph.setNodeWeight( node, G.getNodeWeight(new_to_old_ids[node]));
-                        }
-
+                        res_first[node]   = res_targets.size();
+                        res_weights[node] = node < fG.number_of_nodes() - 2 ? G.getNodeWeight(new_to_old_ids[node]) : 0;
                         forall_out_edges(fG, e, node) {
                                 if( fG.getEdgeCapacity(node, e) > 0 && fG.getEdgeFlow(node, e) < (FlowType) fG.getEdgeCapacity(node, e)) {
-                                        residualGraph.new_edge(node, fG.getEdgeTarget(node, e));
+                                        res_targets.push_back(fG.getEdgeTarget(node, e));
                                 }
                         } endfor
                 } endfor
-                
-                residualGraph.setNodeWeight(source, 0);
-                residualGraph.setNodeWeight(sink, 0);
-                residualGraph.finish_construction();
+                res_first[fG.number_of_nodes()] = res_targets.size();
                 NodeWeight average_partition_weight = ceil(config.work_load / config.k);
                 NodeWeight perfect_rhs_stripe_weight = abs((int)average_partition_weight - (int)rhs_part_weight+(int) rhs_stripe_weight);
                 
                 most_balanced_minimum_cuts mbmc;
-                mbmc.compute_good_balanced_min_cut(residualGraph, config, perfect_rhs_stripe_weight, new_rhs_nodes);
+                mbmc.compute_good_balanced_min_cut(res_first, res_targets, res_weights, config, perfect_rhs_stripe_weight, new_rhs_nodes);
         }
         
         return flowvalue;

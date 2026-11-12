@@ -7,10 +7,8 @@
 
 #include <unordered_map>
 
-#include "algorithms/strongly_connected_components.h"
 #include "algorithms/topological_sort.h"
 #include "most_balanced_minimum_cuts.h"
-#include "data_structure/stamped_node_map.h"
 
 most_balanced_minimum_cuts::most_balanced_minimum_cuts() {
 
@@ -20,30 +18,149 @@ most_balanced_minimum_cuts::~most_balanced_minimum_cuts() {
 
 }
 
+// Strongly connected components of the graph with the edges targets[first[v] .. first[v+1]) at v:
+// the iterative Tarjan DFS of strongly_connected_components (same visiting order, so the same
+// component numbers), with vector stacks kept between calls.
+static int csr_strong_components( const std::vector<EdgeID> & first, const std::vector<NodeID> & targets,
+                                  NodeID n, std::vector<int> & comp_num) {
+        static std::vector<int> dfsnum;
+        static std::vector<NodeID> unfinished;
+        static std::vector<NodeID> roots;
+        static std::vector< std::pair<NodeID,EdgeID> > iteration_stack;
+        dfsnum.assign(n, -1);
+        comp_num.assign(n, -1);
+        int dfscount   = 0;
+        int comp_count = 0;
+
+        for( NodeID start = 0; start < n; start++) {
+                if(dfsnum[start] != -1) continue;
+                iteration_stack.push_back( std::pair<NodeID,EdgeID>( start, first[start] ) );
+                dfsnum[start] = dfscount++;
+                unfinished.push_back(start);
+                roots.push_back(start);
+
+                while( !iteration_stack.empty() ) {
+                        NodeID current_node = iteration_stack.back().first;
+                        EdgeID current_edge = iteration_stack.back().second;
+                        iteration_stack.pop_back();
+
+                        for( EdgeID e = current_edge, end = first[current_node+1]; e < end; ++e) {
+                                NodeID target = targets[e];
+                                if(dfsnum[target] == -1) {
+                                        iteration_stack.push_back( std::pair<NodeID,EdgeID>( current_node, e ) );
+                                        iteration_stack.push_back( std::pair<NodeID,EdgeID>( target, first[target] ) );
+                                        dfsnum[target] = dfscount++;
+                                        unfinished.push_back(target);
+                                        roots.push_back(target);
+                                        break;
+                                } else if( comp_num[target] == -1) {
+                                        while( dfsnum[roots.back()] > dfsnum[target] ) roots.pop_back();
+                                }
+                        }
+
+                        if(current_node == roots.back()) {
+                                NodeID w = 0;
+                                do {
+                                        w = unfinished.back();
+                                        unfinished.pop_back();
+                                        comp_num[w] = comp_count;
+                                } while( w != current_node );
+                                comp_count++;
+                                roots.pop_back();
+                        }
+                }
+        }
+        return comp_count;
+}
+
 void most_balanced_minimum_cuts::compute_good_balanced_min_cut( graph_access & residualGraph, 
                                                                 const PartitionConfig & config,
                                                                 NodeWeight & perfect_rhs_weight, 
                                                                 std::vector< NodeID > & new_rhs_nodes ) {
-
-        strongly_connected_components scc;
-        std::vector<int> components(residualGraph.number_of_nodes());
-        int comp_count = scc.strong_components(residualGraph,components);
-        
-        std::vector< std::vector<NodeID> > comp_nodes(comp_count);
-        std::vector< NodeWeight > comp_weights(comp_count, 0);
-        
+        std::vector<EdgeID> first(residualGraph.number_of_nodes()+1);
+        std::vector<NodeID> targets(residualGraph.number_of_edges());
+        std::vector<NodeWeight> weights(residualGraph.number_of_nodes());
         forall_nodes(residualGraph, node) {
-               comp_nodes[components[node]].push_back(node);
-               comp_weights[components[node]] += residualGraph.getNodeWeight(node); 
+                first[node]   = residualGraph.get_first_edge(node);
+                weights[node] = residualGraph.getNodeWeight(node);
+                forall_out_edges(residualGraph, e, node) {
+                        targets[e] = residualGraph.getEdgeTarget(e);
+                } endfor
         } endfor
+        first[residualGraph.number_of_nodes()] = residualGraph.number_of_edges();
+        compute_good_balanced_min_cut(first, targets, weights, config, perfect_rhs_weight, new_rhs_nodes);
+}
+
+void most_balanced_minimum_cuts::compute_good_balanced_min_cut( const std::vector<EdgeID> & first,
+                                                                const std::vector<NodeID> & targets,
+                                                                const std::vector<NodeWeight> & weights,
+                                                                const PartitionConfig & config,
+                                                                NodeWeight & perfect_rhs_weight, 
+                                                                std::vector< NodeID > & new_rhs_nodes ) {
+
+        NodeID n = weights.size();
+        static std::vector<int> components;
+        int comp_count = csr_strong_components(first, targets, n, components);
+
+        // nodes of each component in increasing id order: comp_nodes[comp_begin[c] .. comp_begin[c+1])
+        static std::vector<NodeID> comp_begin;
+        static std::vector<NodeID> comp_nodes;
+        static std::vector<NodeID> pos;
+        std::vector< NodeWeight > comp_weights(comp_count, 0);
+        comp_begin.assign(comp_count+1, 0);
+        for( NodeID node = 0; node < n; node++) {
+               comp_begin[components[node]+1]++;
+               comp_weights[components[node]] += weights[node]; 
+        }
+        for( int c = 0; c < comp_count; c++) comp_begin[c+1] += comp_begin[c];
+        pos.assign(comp_begin.begin(), comp_begin.end()-1);
+        comp_nodes.resize(n);
+        for( NodeID node = 0; node < n; node++) comp_nodes[pos[components[node]]++] = node;
        
-        NodeID s = residualGraph.number_of_nodes()-2;
-        NodeID t = residualGraph.number_of_nodes()-1;
+        NodeID s = n-2;
+        NodeID t = n-1;
         int comp_of_s = components[s];
         int comp_of_t = components[t];
         
+        // component graph: the edges between different components, grouped by source component
+        // in node and edge order, each target component once per source component (first occurrence)
+        static std::vector<NodeID> cedge_begin;
+        static std::vector<int> cedges;
+        static std::vector<int> contained;
+        cedge_begin.assign(comp_count+1, 0);
+        unsigned edge_count = 0;
+        for( NodeID node = 0; node < n; node++) {
+                for( EdgeID e = first[node]; e < first[node+1]; e++) {
+                        if(components[node] != components[targets[e]]) {
+                                cedge_begin[components[node]+1]++;
+                                edge_count++;
+                        }
+                }
+        }
+        for( int c = 0; c < comp_count; c++) cedge_begin[c+1] += cedge_begin[c];
+        pos.assign(cedge_begin.begin(), cedge_begin.end()-1);
+        cedges.resize(edge_count);
+        for( NodeID node = 0; node < n; node++) {
+                for( EdgeID e = first[node]; e < first[node+1]; e++) {
+                        if(components[node] != components[targets[e]]) {
+                                cedges[pos[components[node]]++] = components[targets[e]];
+                        }
+                }
+        }
+
         graph_access scc_graph;
-        build_internal_scc_graph( residualGraph, components, comp_count, scc_graph);
+        scc_graph.start_construction(comp_count, edge_count);
+        contained.assign(comp_count, -1);
+        for( int i = 0; i < comp_count; i++) {
+                NodeID node = scc_graph.new_node();
+                for( NodeID j = cedge_begin[i]; j < cedge_begin[i+1]; j++) {
+                        if(contained[cedges[j]] != i) {
+                                scc_graph.new_edge(node, cedges[j]);
+                                contained[cedges[j]] = i;
+                        }
+                }
+        }
+        scc_graph.finish_construction();
          
         std::vector<int> comp_for_rhs;
         compute_new_rhs(scc_graph, config, comp_weights, comp_of_s, comp_of_t, perfect_rhs_weight, comp_for_rhs);
@@ -53,8 +170,8 @@ void most_balanced_minimum_cuts::compute_good_balanced_min_cut( graph_access & r
                 for( unsigned i = 0; i < comp_for_rhs.size(); i++) {    
                         int cur_component = comp_for_rhs[i];
                         if(cur_component != comp_of_s && cur_component != comp_of_t) {
-                                for( unsigned j = 0; j < comp_nodes[cur_component].size(); j++) {
-                                        new_rhs_nodes.push_back(comp_nodes[cur_component][j]);
+                                for( NodeID j = comp_begin[cur_component]; j < comp_begin[cur_component+1]; j++) {
+                                        new_rhs_nodes.push_back(comp_nodes[j]);
                                 }
                         }
                 }
@@ -62,9 +179,9 @@ void most_balanced_minimum_cuts::compute_good_balanced_min_cut( graph_access & r
                 for( unsigned i = 0; i < comp_for_rhs.size(); i++) {    
                         int cur_component = comp_for_rhs[i];
                         if(cur_component != comp_of_s ) {
-                                for( unsigned j = 0; j < comp_nodes[cur_component].size(); j++) {
-                                        if( comp_nodes[cur_component][j] != t )
-                                                new_rhs_nodes.push_back(comp_nodes[cur_component][j]);
+                                for( NodeID j = comp_begin[cur_component]; j < comp_begin[cur_component+1]; j++) {
+                                        if( comp_nodes[j] != t )
+                                                new_rhs_nodes.push_back(comp_nodes[j]);
                                 }
                         }
                 }
@@ -150,36 +267,3 @@ void most_balanced_minimum_cuts::compute_new_rhs( graph_access & scc_graph,
                 }
         }
 }
-
-void most_balanced_minimum_cuts::build_internal_scc_graph( graph_access & residualGraph,  
-                                                           std::vector<int> & components, 
-                                                           int comp_count, 
-                                                           graph_access & scc_graph) {
-        std::vector< std::vector<int> > edges(comp_count);
-        unsigned edge_count = 0;
-        forall_nodes(residualGraph, node) {
-                forall_out_edges(residualGraph, e, node) {
-                        NodeID target = residualGraph.getEdgeTarget(e);
-                        if(components[node] != components[target]) {
-                                edges[components[node]].push_back(components[target]);
-                                edge_count++;
-                        }
-                } endfor
-        } endfor
-
-        //build_scc_graph 
-        scc_graph.start_construction(comp_count, edge_count);
-        for( unsigned i = 0; i < (unsigned) comp_count; i++) {
-                NodeID node = scc_graph.new_node();
-                stamped_node_map<char> allready_contained; // lookup only, never iterated
-                for(unsigned j = 0; j < edges[i].size(); j++) {
-                        if(allready_contained.find(edges[i][j]) == allready_contained.end()) {
-                                scc_graph.new_edge(node, edges[i][j]);
-                                allready_contained[edges[i][j]] = true;
-                        }
-                }
-        }
-
-        scc_graph.finish_construction();
-}
- 

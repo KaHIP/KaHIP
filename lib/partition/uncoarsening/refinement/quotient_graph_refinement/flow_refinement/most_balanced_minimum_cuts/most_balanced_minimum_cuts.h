@@ -21,12 +21,17 @@ class most_balanced_minimum_cuts {
                                                     NodeWeight & perfect_rhs_weight, 
                                                     std::vector< NodeID > & new_rhs_node ); 
 
-        private:
-                void build_internal_scc_graph( graph_access & residualGraph,  
-                                               std::vector<int> & components, 
-                                               int comp_count, 
-                                               graph_access & scc_graph);
+                // the same on a graph given as arrays: the edges of node v are
+                // targets[first[v] .. first[v+1]), its weight is weights[v]; the last two
+                // nodes are the source and the sink
+                void compute_good_balanced_min_cut( const std::vector<EdgeID> & first,
+                                                    const std::vector<NodeID> & targets,
+                                                    const std::vector<NodeWeight> & weights,
+                                                    const PartitionConfig & config,
+                                                    NodeWeight & perfect_rhs_weight, 
+                                                    std::vector< NodeID > & new_rhs_node ); 
 
+        private:
                 void compute_new_rhs( graph_access & scc_graph, 
                                       const PartitionConfig & config,
                                       std::vector< NodeWeight > & comp_weights,
