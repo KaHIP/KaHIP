@@ -137,8 +137,16 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
         ASSERT_TRUE(boundary.assert_boundaries_are_bnodes());
 
         //update gain of neighbors / the boundaries have allready been updated
+        // the neighbors' gains are computed one after the other from random memory: prefetch the node
+        // entries of the (first 32) neighbors now and the edges of the next neighbor one step ahead
+        const Node * nodes   = G.raw_nodes();
+        const Edge * edges   = G.raw_edges();
+        const EdgeID n_begin = nodes[node].firstEdge;
+        const EdgeID n_end   = nodes[node+1].firstEdge;
+        for(EdgeID e = n_begin; e < n_end && e < n_begin + 32; e++) __builtin_prefetch(&nodes[edges[e].target]);
         forall_out_edges(G, e, node) {
                 NodeID target = G.getEdgeTarget(e);
+                if(e + 1 < n_end) __builtin_prefetch(&edges[nodes[edges[e+1].target].firstEdge]);
                 if(G.getNodeDegree(target) >= CACHE_MIN_DEGREE) {
                         commons->cache_neighbor_moved(target, from, to, G.getEdgeWeight(e));
                 }
