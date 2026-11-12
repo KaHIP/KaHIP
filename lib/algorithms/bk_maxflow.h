@@ -14,6 +14,11 @@
  * set of nodes reachable from the source in the residual graph: every tree node
  * has no residual edge to a free node (it would have been grown) and none to the
  * sink tree (that would be a path).
+ *
+ * Precondition: an edge whose ends are both different from s and t has the same
+ * capacity as its reverse edge (cut_flow_problem_solver builds the stripe edges
+ * as such pairs). Then the residual capacity of the reverse edge of e is
+ * cap(e) + flow(e), read from e itself instead of the other node's edge array.
  *****************************************************************************/
 
 #ifndef BK_MAXFLOW_H
@@ -93,6 +98,13 @@ private:
 
         static long long res(const rEdge & e) { return (long long)(NodeID)e.capacity - e.flow; }
 
+        // residual capacity of the reverse edge of e; symmetric: neither end of e is s or t
+        long long res_rev(const rEdge & e, bool symmetric) const {
+                if(symmetric) return (long long)(NodeID)e.capacity + e.flow;
+                return res(m_G->edges_of(e.target)[e.reverse_edge_index]);
+        }
+        rEdge * rev_edge(const rEdge & e) const { return &m_G->edges_of(e.target)[e.reverse_edge_index]; }
+
         // add b to the flow of e and subtract it from the flow of its reverse edge
         void push(rEdge & e, long long b) {
                 e.flow += b;
@@ -128,18 +140,18 @@ private:
                                                 }
                                         }
                                 } else {
+                                        const bool p_terminal = sp.parent == TERMINAL;
                                         for(EdgeID e = 0; e < end; e++) {
                                                 const NodeID q = pe[e].target;
                                                 node_state & sq = m_st[q];
                                                 if(sq.tree == T) continue;
-                                                rEdge & qp = G.edges_of(q)[pe[e].reverse_edge_index];
-                                                if(res(qp) <= 0) continue;
+                                                if(res_rev(pe[e], !p_terminal && sq.parent != TERMINAL) <= 0) continue;
                                                 if(sq.tree == FREE) {
-                                                        sq.tree = T; sq.parent = p; m_pedge[q] = &qp;
+                                                        sq.tree = T; sq.parent = p; m_pedge[q] = rev_edge(pe[e]);
                                                         sq.ts = sp.ts; sq.dist = sp.dist + 1;
                                                         set_active(q);
                                                 } else {
-                                                        mid = &qp; ps = q; pt = p; return;
+                                                        mid = rev_edge(pe[e]); ps = q; pt = p; return;
                                                 }
                                         }
                                 }
@@ -150,7 +162,11 @@ private:
 
         // the edge that would make q the parent of p in tree tr (q -> p in S, p -> q in T)
         rEdge * tree_edge(rEdge & pq, char tr) {
-                return tr == S ? &m_G->edges_of(pq.target)[pq.reverse_edge_index] : &pq;
+                return tr == S ? rev_edge(pq) : &pq;
+        }
+        // its residual capacity (p is never s or t here)
+        long long tree_res(const rEdge & pq, char tr, const node_state & sq) const {
+                return tr == S ? res_rev(pq, sq.parent != TERMINAL) : res(pq);
         }
 
         void adopt(NodeID p) {
@@ -158,12 +174,11 @@ private:
                 rEdge * pe = m_G->edges_of(p);
                 const EdgeID end = m_G->get_first_invalid_edge(p);
                 const char tr = m_st[p].tree;
-                NodeID best = NONE; rEdge * best_edge = nullptr; int dmin = INF;
+                NodeID best = NONE; EdgeID best_e = 0; int dmin = INF;
                 for(EdgeID e = 0; e < end; e++) {
                         const NodeID q = pe[e].target;
                         if(m_st[q].tree != tr) continue;
-                        rEdge * cand = tree_edge(pe[e], tr);
-                        if(res(*cand) <= 0) continue;
+                        if(tree_res(pe[e], tr, m_st[q]) <= 0) continue;
                         // distance of q to the terminal, if q still has an origin
                         int d = 0; NodeID j = q;
                         while(true) {
@@ -174,21 +189,21 @@ private:
                                 d++; j = pj;
                         }
                         if(d == INF) continue;
-                        if(d < dmin) { dmin = d; best = q; best_edge = cand; }
+                        if(d < dmin) { dmin = d; best = q; best_e = e; }
                         int dd = d;
                         for(NodeID k = q; m_st[k].ts != m_time; k = m_st[k].parent) {
                                 m_st[k].ts = m_time; m_st[k].dist = dd; dd--;
                         }
                 }
                 if(best != NONE) {
-                        m_st[p].parent = best; m_pedge[p] = best_edge;
+                        m_st[p].parent = best; m_pedge[p] = tree_edge(pe[best_e], tr);
                         m_st[p].ts = m_time; m_st[p].dist = dmin + 1;
                         return;
                 }
                 for(EdgeID e = 0; e < end; e++) {
                         const NodeID q = pe[e].target;
                         if(m_st[q].tree != tr) continue;
-                        if(res(*tree_edge(pe[e], tr)) > 0) set_active(q);
+                        if(tree_res(pe[e], tr, m_st[q]) > 0) set_active(q);
                         if(m_st[q].parent == p) { m_st[q].parent = ORPHAN; m_orphans.push_back(q); }
                 }
                 m_st[p].tree = FREE; m_st[p].parent = NONE;
