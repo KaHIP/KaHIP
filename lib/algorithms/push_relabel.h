@@ -26,7 +26,7 @@ public:
 
         void init( flow_graph & G, NodeID source, NodeID sink ) {
                 m_st.resize(G.number_of_nodes(), node_state());
-                m_count.resize(2*G.number_of_nodes(),0);
+                m_count.resize(2*G.number_of_nodes()+2,0); // labels go up to 2n
                 // FIFO of active nodes as a ring (a node is queued at most once at a time)
                 m_ring.assign(std::max<NodeID>(G.number_of_nodes(), 1), 0);
                 m_ring_head  = 0;
@@ -49,20 +49,26 @@ public:
         // perform a backward bfs in the residual starting at the sink
         // to update distance labels
         void global_relabeling( NodeID source, NodeID sink ) {
+                global_relabeling_from(sink, source, 0);
+        }
+
+        // labels: base + residual distance to root for the nodes that reach root (other excluded),
+        // at least base + n for all others
+        void global_relabeling_from( NodeID root, NodeID other, NodeID base ) {
                 // FIFO in an array (each node is queued at most once), same order as std::queue
                 const NodeID n = m_G->number_of_nodes();
                 m_bfsqueue.resize(n);
                 NodeID * Q = m_bfsqueue.data();
                 size_t q_head = 0, q_tail = 0;
                 forall_nodes((*m_G), node) {
-                        m_st[node].distance   = std::max(m_st[node].distance, n);
+                        m_st[node].distance   = std::max(m_st[node].distance, base + n);
                         m_st[node].touched = false;
                 } endfor
                 
-                Q[q_tail++] = sink;
-                m_st[sink].touched   = true;
-                m_st[source].touched = true;
-                m_st[sink].distance     = 0;
+                Q[q_tail++] = root;
+                m_st[root].touched   = true;
+                m_st[other].touched  = true;
+                m_st[root].distance  = base;
 
                 NodeID node = 0;
                 while( q_head < q_tail ) {
@@ -217,12 +223,17 @@ public:
                 global_relabeling( source, sink );
          
                 int work_todo = WORK_NODE_TO_EDGES*G.number_of_nodes() + G.number_of_edges();
-                // main loop
+                const NodeID n = G.number_of_nodes();
+                // phase 1: maximum preflow. Only nodes with label < n are discharged; a label >= n
+                // means that the node cannot reach the sink in the residual graph (the labels are
+                // valid and the gap heuristic fires only on true gaps), so its excess cannot reach it
+                // either and stays where it is until phase 2.
                 while(m_ring_count > 0) {
                         NodeID v    = m_ring[m_ring_head];
                         if(++m_ring_head == m_ring.size()) m_ring_head = 0;
                         m_ring_count--;
                         m_st[v].active = false;
+                        if( m_st[v].distance >= n ) continue;
                         discharge(v);
                         if( m_st[sink].excess >= stop_flow ) return m_st[sink].excess;
 
@@ -230,6 +241,27 @@ public:
                                 global_relabeling( source,  sink );
                                 m_work = 0;
                                 m_global_updates++;
+                        }
+                }
+
+                // phase 2: return the remaining excess to the source, with labels n + residual
+                // distance to the source (the sink gets 2n and is never pushed to). The flow value
+                // is final after phase 1; the result is a maximum flow.
+                global_relabeling_from(source, sink, n);
+                m_work = 0;
+                forall_nodes(G, node) {
+                        if(node != source && node != sink) enqueue(node);
+                } endfor
+                while(m_ring_count > 0) {
+                        NodeID v    = m_ring[m_ring_head];
+                        if(++m_ring_head == m_ring.size()) m_ring_head = 0;
+                        m_ring_count--;
+                        m_st[v].active = false;
+                        discharge(v);
+
+                        if( m_work > GLOBAL_UPDATE_FRQ*work_todo) {
+                                global_relabeling_from(source, sink, n);
+                                m_work = 0;
                         }
                 }
 
