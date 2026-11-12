@@ -507,7 +507,7 @@ inline void configuration::standardsnw( PartitionConfig & partition_config ) {
         } else if(16 <= partition_config.k && partition_config.k <= 31) {
                 partition_config.number_of_clusterings = 7;
         } else { 
-                partition_config.number_of_clusterings = 3;
+                partition_config.number_of_clusterings = 2;
         }
 
         partition_config.balance_factor               = 0.016;
