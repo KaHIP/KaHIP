@@ -143,14 +143,7 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
         const Edge * edges   = G.raw_edges();
         const EdgeID n_begin = nodes[node].firstEdge;
         const EdgeID n_end   = nodes[node+1].firstEdge;
-        const refinementNode * parts = G.raw_refinement_props();
-        for(EdgeID e = n_begin; e < n_end && e < n_begin + 32; e++) {
-                const NodeID t = edges[e].target;
-                __builtin_prefetch(&nodes[t]);
-                __builtin_prefetch(&parts[t]);
-                queue->prefetch(t);
-                moved_idx.prefetch(t);
-        }
+        for(EdgeID e = n_begin; e < n_end && e < n_begin + 32; e++) __builtin_prefetch(&nodes[edges[e].target]);
         forall_out_edges(G, e, node) {
                 NodeID target = G.getEdgeTarget(e);
                 if(e + 1 < n_end) __builtin_prefetch(&edges[nodes[edges[e+1].target].firstEdge]);

@@ -32,8 +32,6 @@ class priority_queue_interface {
                 virtual Gain getKey(NodeID element)  = 0;
                 virtual void deleteNode(NodeID node) = 0;
                 virtual bool contains(NodeID node)   = 0;
-                // hint that contains/changeKey for node follow soon (default: nothing)
-                virtual void prefetch(NodeID node) { (void)node; }
 };
 
 typedef priority_queue_interface refinement_pq;

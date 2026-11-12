@@ -77,7 +77,6 @@ class maxNodeHeap : public priority_queue_interface {
                 bool empty() override;
 
                 bool contains(NodeID node) override;
-                void prefetch(NodeID node) override { m_element_index.prefetch(node); }
                 void insert(NodeID id, Gain gain) override;
 
                 NodeID deleteMax() override;
