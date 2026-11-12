@@ -21,53 +21,12 @@
 
 typedef int Key;
 
-template < typename Data >
-class QElement {
-        public:
-                QElement( Data data, Key key, int index ) : m_data(data), m_key (key), m_index(index) {};
-                virtual ~QElement() {};
-
-                Data & get_data() {
-                        return m_data;
-                }
-
-                void set_data(Data & data) {
-                        m_data = data;
-                }
-
-                Key get_key() {
-                        return m_key;
-                }
-
-                void set_key(Key key) {
-                        m_key = key;
-                }
-
-                int get_index() {
-                        return m_index;
-                }
-
-                void set_index(int index) {
-                        m_index = index;
-                }
-
-        private:
-                Data m_data;
-                Key  m_key;
-                int  m_index; // the index of the element in the heap
-
-};
-
+// Binary max-heap of nodes. Each heap entry holds the key and the node, and a node map gives the
+// heap position of each node. The sift operations make the same comparisons and leave every entry
+// at the same position as the former implementation (entries swapped one level at a time, with an
+// element array between heap and node map), so ties are broken identically.
 class maxNodeHeap : public priority_queue_interface {
         public:
-
-                struct Data {
-                        NodeID node;
-                        Data( NodeID node ) : node(node) {};
-                };
-
-                typedef QElement<Data> PQElement;
-
                 maxNodeHeap() {};
                 ~maxNodeHeap() override = default;
                 maxNodeHeap(maxNodeHeap &&) = default;
@@ -90,88 +49,63 @@ class maxNodeHeap : public priority_queue_interface {
                 Gain getKey(NodeID node) override;
 
         private:
-                std::vector< PQElement >               m_elements;      // elements that contain the data
-                stamped_node_map<int>             m_element_index; // stores index of the node in the m_elements array
-                std::vector< std::pair<Key, int> >     m_heap;          // key and index in elements (pointer)
+                struct entry {
+                        Key    key;
+                        NodeID node;
+                };
+                std::vector< entry >   m_heap;     // the heap
+                stamped_node_map<int>  m_position; // position of each node in m_heap
 
                 void siftUp( int pos );
                 void siftDown( int pos );
-
+                void place( int pos, const entry & x ) {
+                        m_heap[pos] = x;
+                        m_position.present(x.node) = pos;
+                }
 };
 
-
-
 inline Gain maxNodeHeap::maxValue() {
-        return m_heap[0].first;
+        return m_heap[0].key;
 };
 
 inline NodeID maxNodeHeap::maxElement() {
-        return m_elements[m_heap[0].second].get_data().node;
+        return m_heap[0].node;
 };
 
+// Moves the entry at pos down: while it has two children and one of them has a key >= its key,
+// it changes places with the larger child (the right one if both are equal); with only a left child
+// it changes places if that key is larger.
 inline void maxNodeHeap::siftDown( int pos ) {
-
-        int curKey   = m_heap[pos].first;
-        int lhsChild = 2*pos+1;
-        int rhsChild = 2*pos+2;
-        if( rhsChild < (int) m_heap.size() ) {
-
-                int lhsKey = m_heap[lhsChild].first;
-                int rhsKey = m_heap[rhsChild].first;
-
-                if( lhsKey < curKey && rhsKey < curKey) {
-                        return; // we are done
-                } else {
-                        //exchange with the larger one (maxHeap)
-                        int swap_pos = lhsKey > rhsKey ? lhsChild : rhsChild;
-                        std::swap( m_heap[pos], m_heap[swap_pos]);
-
-                        int element_pos = m_heap[pos].second;
-                        m_elements[element_pos].set_index(pos);
-
-                        element_pos = m_heap[swap_pos].second;
-                        m_elements[element_pos].set_index(swap_pos);
-
-                        siftDown(swap_pos);
-                        return;
-                }
-
-        } else if ( lhsChild < (int)m_heap.size()) {
-                if( m_heap[pos].first < m_heap[lhsChild].first) {
-                        std::swap( m_heap[pos], m_heap[lhsChild]);
-
-                        int element_pos = m_heap[pos].second;
-                        m_elements[element_pos].set_index(pos);
-
-                        element_pos = m_heap[lhsChild].second;
-                        m_elements[element_pos].set_index(lhsChild);
-
-                        siftDown(lhsChild);
-                        return;
-                } else {
-                        return; // we are done
-                }
+        const entry x    = m_heap[pos];
+        const int   size = m_heap.size();
+        while(true) {
+                const int lhsChild = 2*pos+1;
+                const int rhsChild = 2*pos+2;
+                int next;
+                if( rhsChild < size ) {
+                        const Key lhsKey = m_heap[lhsChild].key;
+                        const Key rhsKey = m_heap[rhsChild].key;
+                        if( lhsKey < x.key && rhsKey < x.key) break;
+                        next = lhsKey > rhsKey ? lhsChild : rhsChild;
+                } else if( lhsChild < size && x.key < m_heap[lhsChild].key ) {
+                        next = lhsChild;
+                } else break;
+                place(pos, m_heap[next]);
+                pos = next;
         }
+        place(pos, x);
 }
 
+// Moves the entry at pos up while its parent has a smaller key.
 inline void maxNodeHeap::siftUp( int pos ) {
-            if( pos > 0 ) {
-                    int parentPos = (int)(pos-1)/2;
-                    if(  m_heap[parentPos].first < m_heap[pos].first) {
-                            //heap condition not fulfulled
-                            std::swap(m_heap[parentPos], m_heap[pos]);
-
-                            int element_pos = m_heap[pos].second;
-                            m_elements[element_pos].set_index(pos);
-
-                            // update the heap index in the element
-                            element_pos = m_heap[parentPos].second;
-                            m_elements[element_pos].set_index(parentPos);
-
-                            siftUp( parentPos );
-                    }
-
-            }
+        const entry x = m_heap[pos];
+        while( pos > 0 ) {
+                const int parentPos = (pos-1)/2;
+                if( !(m_heap[parentPos].key < x.key) ) break;
+                place(pos, m_heap[parentPos]);
+                pos = parentPos;
+        }
+        place(pos, x);
 }
 
 inline NodeID maxNodeHeap::size() {
@@ -183,36 +117,20 @@ inline bool maxNodeHeap::empty( ) {
 }
 
 inline void maxNodeHeap::insert(NodeID node, Gain gain) {
-        if( m_element_index.find(node) == m_element_index.end() ) {
-                int element_index =  m_elements.size();
-                int heap_size     =  m_heap.size();
-
-                m_elements.push_back( PQElement( Data(node), gain, heap_size) );
-                m_heap.push_back( std::pair< Key, int>(gain, element_index) );
-                m_element_index[node] = element_index;
+        if( m_position.find(node) == m_position.end() ) {
+                int heap_size = m_heap.size();
+                m_heap.push_back( entry{gain, node} );
+                m_position[node] = heap_size;
                 siftUp( heap_size );
         }
 }
 
 inline void maxNodeHeap::deleteNode(NodeID node) {
-        int element_index = m_element_index[node];
-        int heap_index    = m_elements[element_index].get_index();
+        int heap_index = m_position.present(node);
+        m_position.erase(node);
 
-        m_element_index.erase(node);
-
-        std::swap( m_heap[heap_index], m_heap[m_heap.size() - 1]);
-        //update the position of its element in the element array
-        m_elements[m_heap[heap_index].second].set_index(heap_index);
-
-        // we dont want holes in the elements array -- delete the deleted element from the array
-        if(element_index != (int)(m_elements.size() - 1)) {
-                std::swap( m_elements[element_index], m_elements[m_elements.size() - 1]);
-                m_heap[ m_elements[element_index].get_index() ].second = element_index;
-                int cnode              = m_elements[element_index].get_data().node;
-                m_element_index[cnode] = element_index;
-        }
-
-        m_elements.pop_back();
+        const int last = m_heap.size() - 1;
+        if( heap_index != last ) place(heap_index, m_heap[last]);
         m_heap.pop_back();
 
         if( m_heap.size() > 1 && heap_index < (int)m_heap.size() ) {
@@ -224,23 +142,11 @@ inline void maxNodeHeap::deleteNode(NodeID node) {
 
 inline NodeID maxNodeHeap::deleteMax() {
         if( m_heap.size() > 0) {
-                int element_index = m_heap[0].second;
-                int node = m_elements[element_index].get_data().node;
-                m_element_index.erase(node);
+                NodeID node = m_heap[0].node;
+                m_position.erase(node);
 
-                m_heap[0] = m_heap[m_heap.size() - 1];
-                //update the position of its element in the element array
-                m_elements[m_heap[0].second].set_index(0);
-
-                // we dont want holes in the elements array -- delete the deleted element from the array
-                if(element_index != (int)(m_elements.size() - 1)) {
-                        m_elements[element_index] = m_elements[m_elements.size() - 1];
-                        m_heap[ m_elements[element_index].get_index() ].second = element_index;
-                        int cnode              = m_elements[element_index].get_data().node;
-                        m_element_index[cnode] = element_index;
-                }
-
-                m_elements.pop_back();
+                const int last = m_heap.size() - 1;
+                if( last != 0 ) place(0, m_heap[last]);
                 m_heap.pop_back();
 
                 if( m_heap.size() > 1) {
@@ -255,7 +161,7 @@ inline NodeID maxNodeHeap::deleteMax() {
 }
 
 inline void maxNodeHeap::changeKey(NodeID node, Gain gain) {
-        Gain old_gain = m_heap[m_elements[m_element_index[node]].get_index()].first;
+        Gain old_gain = m_heap[m_position.present(node)].key;
         if( old_gain > gain ) {
                 decreaseKey(node, gain);
         } else if ( old_gain < gain ) {
@@ -264,30 +170,26 @@ inline void maxNodeHeap::changeKey(NodeID node, Gain gain) {
 };
 
 inline void maxNodeHeap::decreaseKey(NodeID node, Gain gain) {
-        ASSERT_TRUE(m_element_index.find(node) != m_element_index.end());
-        int queue_idx = m_element_index[node];
-        int heap_idx  = m_elements[queue_idx].get_index();
-        m_elements[queue_idx].set_key(gain);
-        m_heap[heap_idx].first = gain;
+        ASSERT_TRUE(m_position.find(node) != m_position.end());
+        int heap_idx = m_position.present(node);
+        m_heap[heap_idx].key = gain;
         siftDown(heap_idx);
 }
 
 inline void maxNodeHeap::increaseKey(NodeID node, Gain gain) {
-        ASSERT_TRUE(m_element_index.find(node) != m_element_index.end());
-        int queue_idx = m_element_index[node];
-        int heap_idx  = m_elements[queue_idx].get_index();
-        m_elements[queue_idx].set_key(gain);
-        m_heap[heap_idx].first = gain;
+        ASSERT_TRUE(m_position.find(node) != m_position.end());
+        int heap_idx = m_position.present(node);
+        m_heap[heap_idx].key = gain;
         siftUp(heap_idx);
 }
 
 inline Gain maxNodeHeap::getKey(NodeID node) {
-        return m_heap[m_elements[m_element_index[node]].get_index()].first;
+        return m_heap[m_position.present(node)].key;
 };
 
 
 inline bool maxNodeHeap::contains(NodeID node) {
-       return m_element_index.find(node) != m_element_index.end();
+       return m_position.find(node) != m_position.end();
 }
 
 #endif

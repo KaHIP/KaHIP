@@ -85,6 +85,9 @@ public:
                 return s.val[key];
         }
 
+        // the value of a key that is present (no stamp check)
+        V & present(NodeID key) { return m_store ? m_store->val[key] : m_fallback[key]; }
+
         size_t erase(NodeID key) {
                 if(!m_store) return m_fallback.erase(key);
                 if(key < m_store->stamp.size() && m_store->stamp[key] == m_gen) {
