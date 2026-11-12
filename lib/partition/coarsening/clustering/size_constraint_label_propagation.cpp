@@ -127,6 +127,7 @@ void size_constraint_label_propagation::ensemble_clusterings(const PartitionConf
                 node_ordering n_ordering;
                 n_ordering.order_nodes(partition_config, G, m_degree_order);
                 m_use_degree_order = true;
+                build_permuted_graph(partition_config, G);
         }
 
         int new_cf = partition_config.cluster_coarsening_factor;
@@ -150,6 +151,10 @@ void size_constraint_label_propagation::ensemble_clusterings(const PartitionConf
         }
 
         m_use_degree_order = false;
+        std::vector<Node>().swap(m_pnodes);
+        std::vector<Edge>().swap(m_pedges);
+        std::vector<PartitionID>().swap(m_ppart);
+        std::vector<PartitionID>().swap(m_psecond);
         create_coarsemapping( partition_config, G, ensemble_cluster, coarse_mapping);
 
 
@@ -169,6 +174,10 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                                                          const NodeWeight & block_upperbound,
                                                          std::vector<NodeWeight> & cluster_id,  
                                                          NodeID & no_of_blocks) {
+        if( m_use_degree_order ) {
+                label_propagation_permuted( partition_config, G, block_upperbound, cluster_id, no_of_blocks);
+                return;
+        }
         // in this case the _matching paramter is not used 
         // coarse_mappng stores cluster id and the mapping (it is identical)
         // vote counter and size of each cluster side by side: the second sweep reads both for the
@@ -274,6 +283,125 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
 }
 
 
+
+void size_constraint_label_propagation::build_permuted_graph(const PartitionConfig & partition_config, graph_access & G) {
+        const NodeID n = G.number_of_nodes();
+        const Node * nodes = G.raw_nodes();
+        const Edge * edges = G.raw_edges();
+        std::vector<NodeID> pos(n);
+        for( NodeID p = 0; p < n; p++) pos[m_degree_order[p]] = p;
+        m_pnodes.resize(n+1);
+        m_pedges.resize(G.number_of_edges());
+        EdgeID cur = 0;
+        for( NodeID p = 0; p < n; p++) {
+                const NodeID node = m_degree_order[p];
+                m_pnodes[p].firstEdge = cur;
+                m_pnodes[p].weight    = nodes[node].weight;
+                for( EdgeID e = nodes[node].firstEdge; e < nodes[node+1].firstEdge; ++e, ++cur) {
+                        m_pedges[cur].target = pos[edges[e].target];
+                        m_pedges[cur].weight = edges[e].weight;
+                }
+        }
+        m_pnodes[n].firstEdge = cur;
+        m_pnodes[n].weight    = 0;
+        if( partition_config.graph_allready_partitioned ) {
+                m_ppart.resize(n);
+                for( NodeID p = 0; p < n; p++) m_ppart[p] = G.getPartitionIndex(m_degree_order[p]);
+        }
+        if( partition_config.combine ) {
+                m_psecond.resize(n);
+                for( NodeID p = 0; p < n; p++) m_psecond[p] = G.getSecondPartitionIndex(m_degree_order[p]);
+        }
+}
+
+// The label propagation above on the permuted copy of G: position p (node m_degree_order[p]) is
+// visited p-th, so the node and edge arrays are read sequentially. The clusters are labeled by
+// positions instead of node ids; the computation only compares labels for equality, so it makes the
+// same choices with the same random numbers, and remap_cluster_ids (first occurrence in node order)
+// gives the same ids.
+void size_constraint_label_propagation::label_propagation_permuted(const PartitionConfig & partition_config, 
+                                                         graph_access & G, 
+                                                         const NodeWeight & block_upperbound,
+                                                         std::vector<NodeWeight> & cluster_id,  
+                                                         NodeID & no_of_blocks) {
+        struct cluster_slot {
+                PartitionID votes;
+                NodeWeight  size;
+        };
+        const NodeID n = G.number_of_nodes();
+        const Node * nodes = m_pnodes.data();
+        const Edge * edges = m_pedges.data();
+        std::vector<cluster_slot> slots(n);
+        std::vector<NodeID> pcid(n);
+        for( NodeID p = 0; p < n; p++) {
+                slots[p].votes = 0;
+                slots[p].size  = nodes[p].weight;
+                pcid[p]        = p;
+        }
+
+        const bool check_partition = partition_config.graph_allready_partitioned;
+        const bool check_second    = partition_config.combine;
+        const PartitionID * ppart   = m_ppart.data();
+        const PartitionID * psecond = m_psecond.data();
+        cluster_slot * cl = slots.data();
+        NodeID * cid = pcid.data();
+        std::vector<char> active(n, 1);
+        char * act = active.data();
+        for( int j = 0; j < partition_config.label_iterations; j++) {
+                unsigned int change_counter = 0;
+                for( NodeID node = 0; node < n; node++) {
+                        if( !act[node] ) continue;
+                        act[node] = 0;
+                        if( node + 1 < n ) {
+                                const EdgeID p_begin = nodes[node+1].firstEdge;
+                                const EdgeID p_end   = std::min(nodes[node+2].firstEdge, p_begin + 32);
+                                for( EdgeID e = p_begin; e < p_end; ++e) {
+                                        __builtin_prefetch(&cid[edges[e].target]);
+                                }
+                        }
+                        const EdgeID e_begin = nodes[node].firstEdge;
+                        const EdgeID e_end   = nodes[node+1].firstEdge;
+
+                        for( EdgeID e = e_begin; e < e_end; ++e) {
+                                cl[cid[edges[e].target]].votes += edges[e].weight;
+                        }
+
+                        PartitionID max_block = cid[node];
+                        PartitionID my_block  = cid[node];
+                        const NodeWeight node_weight = nodes[node].weight;
+
+                        PartitionID max_value = 0;
+                        for( EdgeID e = e_begin; e < e_end; ++e) {
+                                NodeID target             = edges[e].target;
+                                PartitionID cur_block     = cid[target];
+                                PartitionID cur_value     = cl[cur_block].votes;
+                                if((cur_value > max_value  || (cur_value == max_value && random_functions::nextBool())) 
+                                && (cl[cur_block].size + node_weight < block_upperbound || cur_block == my_block) 
+                                && (!check_partition || ppart[node] == ppart[target])
+                                && (!check_second || psecond[node] == psecond[target]))
+                                {
+                                        max_value = cur_value;
+                                        max_block = cur_block;
+                                }
+
+                                cl[cur_block].votes = 0;
+                        }
+
+                        cl[cid[node]].size  -= node_weight;
+                        cl[max_block].size  += node_weight;
+                        if( cid[node] != max_block ) {
+                                change_counter++;
+                                for( EdgeID e = e_begin; e < e_end; ++e) act[edges[e].target] = 1;
+                        }
+                        cid[node]       = max_block;
+                }
+                if( change_counter == 0 ) break;
+        }
+
+        cluster_id.resize(n);
+        for( NodeID p = 0; p < n; p++) cluster_id[m_degree_order[p]] = pcid[p];
+        remap_cluster_ids( partition_config, G, cluster_id, no_of_blocks);
+}
 
 void size_constraint_label_propagation::create_coarsemapping(const PartitionConfig & partition_config, 
                                                              graph_access & G,

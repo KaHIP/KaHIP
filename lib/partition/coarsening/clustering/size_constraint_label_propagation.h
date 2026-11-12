@@ -104,6 +104,19 @@ class size_constraint_label_propagation : public matching {
                 std::vector<NodeID> m_degree_order;
                 bool m_use_degree_order = false; 
 
+                // G stored in m_degree_order (visiting) order, built once per ensemble: position p holds
+                // node m_degree_order[p], edge targets are positions, edges in the same order per node
+                void build_permuted_graph(const PartitionConfig & partition_config, graph_access & G);
+                void label_propagation_permuted(const PartitionConfig & partition_config,
+                                graph_access & G,
+                                const NodeWeight & block_upperbound,
+                                std::vector<NodeID> & cluster_id,
+                                NodeID & number_of_blocks);
+                std::vector<Node> m_pnodes;
+                std::vector<Edge> m_pedges;
+                std::vector<PartitionID> m_ppart;
+                std::vector<PartitionID> m_psecond;
+
 };
 
 
