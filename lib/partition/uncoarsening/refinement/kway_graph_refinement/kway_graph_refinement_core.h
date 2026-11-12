@@ -73,11 +73,13 @@ class kway_graph_refinement_core  {
                                                   refinement_pq * queue, 
                                                   vertex_moved_hashtable & moved_idx);
 
+                // PQ is refinement_pq or a concrete queue class (calls without virtual dispatch)
+                template <typename PQ>
                 inline bool move_node(PartitionConfig & config, 
                                       graph_access & G, 
                                       NodeID & node, 
                                       vertex_moved_hashtable & moved_idx, 
-                                      refinement_pq * queue, 
+                                      PQ * queue, 
                                       complete_boundary & boundary);
 
                 inline void move_node_back(PartitionConfig & config, 
@@ -95,11 +97,12 @@ class kway_graph_refinement_core  {
                 kway_graph_refinement_commons* commons;
 };
 
+template <typename PQ>
 inline bool kway_graph_refinement_core::move_node(PartitionConfig & config, 
                 graph_access & G, 
                 NodeID & node, 
                 vertex_moved_hashtable & moved_idx, 
-                refinement_pq * queue, 
+                PQ * queue, 
                 complete_boundary & boundary) {
 
         ASSERT_TRUE(boundary.assert_bnodes_in_boundaries());
@@ -152,12 +155,15 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
                 }
                 // rule (b): a moved node that is no longer queued is left untouched below, so its gain
                 // (computed only for the tie draws) is skipped
-                if(!queue->contains(target) && moved_idx.find(target) != moved_idx.end()) continue;
+                // (queue and moved_idx do not change between the tests below, so each is made once)
+                const bool queued = queue->contains(target);
+                const bool seen   = !queued && moved_idx.find(target) != moved_idx.end();
+                if(seen) continue;
                 PartitionID targets_max_gainer;
                 EdgeWeight ext_degree; // the local external degree
                 Gain gain = commons->compute_gain_cached(G, target, targets_max_gainer, ext_degree);
 
-                if(queue->contains(target)) {
+                if(queued) {
                         assert(moved_idx.find(target) != moved_idx.end());
                         if(ext_degree > 0) {
                                 queue->changeKey(target, gain);
@@ -166,10 +172,9 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
                         }
                 } else {
                         if(ext_degree > 0) {
-                                if(moved_idx.find(target) == moved_idx.end()) {
-                                        queue->insert(target, gain);
-                                        moved_idx[target].index = NOT_MOVED;
-                                } 
+                                // not queued and not seen: not in moved_idx
+                                queue->insert(target, gain);
+                                moved_idx[target].index = NOT_MOVED;
                         } 
                 }
         } endfor

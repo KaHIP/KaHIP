@@ -113,6 +113,7 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
 
         }
 
+        maxNodeHeap * heap = dynamic_cast<maxNodeHeap*>(queue);
         for(number_of_swaps = 0, movements = 0; movements < max_number_of_swaps; movements++, number_of_swaps++) {
                 if( queue->empty() ) break;
                 if( stopping_rule->search_should_stop(min_cut_index, number_of_swaps, step_limit) ) break;
@@ -129,7 +130,8 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
 #endif
 
                 PartitionID from = G.getPartitionIndex(node); 
-                bool successfull = move_node(config, G, node, moved_idx, queue, boundary);
+                bool successfull = heap ? move_node(config, G, node, moved_idx, heap, boundary)
+                                        : move_node(config, G, node, moved_idx, queue, boundary);
 
                 if(successfull) {
                         cut -= gain;

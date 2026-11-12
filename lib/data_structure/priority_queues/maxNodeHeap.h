@@ -25,7 +25,7 @@ typedef int Key;
 // heap position of each node. The sift operations make the same comparisons and leave every entry
 // at the same position as the former implementation (entries swapped one level at a time, with an
 // element array between heap and node map), so ties are broken identically.
-class maxNodeHeap : public priority_queue_interface {
+class maxNodeHeap final : public priority_queue_interface {
         public:
                 maxNodeHeap() {};
                 ~maxNodeHeap() override = default;
