@@ -32,9 +32,31 @@ public:
                                 order_nodes_random(config, G, ordered_nodes);
                              break;
                         case DEGREE_NODEORDERING:
-                                order_nodes_degree(config, G, ordered_nodes);
+                                order_nodes_degree_cached(config, G, ordered_nodes);
                              break;
                  }
+        }
+
+        // The degree order of the identity permutation depends only on the degree sequence. Initial
+        // partitioning repeats the same coarsening of the same graph, so the last result is kept and
+        // reused when the degree sequence is the same (checked entry by entry).
+        void order_nodes_degree_cached(const PartitionConfig & config, graph_access & G, std::vector< NodeID > & ordered_nodes) {
+                static std::vector<EdgeID> cached_degrees;
+                static std::vector<NodeID> cached_order;
+                const NodeID n = G.number_of_nodes();
+                bool same = cached_degrees.size() == n && ordered_nodes.size() == n;
+                for( NodeID node = 0; same && node < n; node++) {
+                        same = cached_degrees[node] == G.getNodeDegree(node);
+                }
+                if(same) {
+                        std::copy(cached_order.begin(), cached_order.end(), ordered_nodes.begin());
+                        return;
+                }
+                order_nodes_degree(config, G, ordered_nodes);
+                if(ordered_nodes.size() != n) { cached_degrees.clear(); return; }
+                cached_degrees.resize(n);
+                for( NodeID node = 0; node < n; node++) cached_degrees[node] = G.getNodeDegree(node);
+                cached_order.assign(ordered_nodes.begin(), ordered_nodes.end());
         }
 
         void order_nodes_random(const PartitionConfig & config, graph_access & G, std::vector< NodeID > & ordered_nodes) { 

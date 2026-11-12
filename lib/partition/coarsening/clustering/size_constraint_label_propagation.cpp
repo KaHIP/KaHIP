@@ -182,6 +182,30 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
         }
 
         // a single clustering also runs on a copy of G in its visiting order
+        reuse_store & r = reuse();
+        if( r.graph == &G && partition_config.node_ordering == DEGREE_NODEORDERING
+            && !partition_config.graph_allready_partitioned && !partition_config.combine ) {
+                if( !r.valid ) {
+                        std::vector<NodeID> permutation(G.number_of_nodes());
+                        node_ordering n_ordering;
+                        n_ordering.order_nodes(partition_config, G, permutation);
+                        r.order.swap(permutation);
+                        m_degree_order.swap(r.order);
+                        build_permuted_graph(partition_config, G);
+                        m_degree_order.swap(r.order);
+                        r.pnodes.swap(m_pnodes);
+                        r.pedges.swap(m_pedges);
+                        r.valid = true;
+                }
+                m_degree_order.swap(r.order);
+                m_pnodes.swap(r.pnodes);
+                m_pedges.swap(r.pedges);
+                label_propagation_permuted( partition_config, G, block_upperbound, cluster_id, no_of_blocks);
+                m_degree_order.swap(r.order);
+                m_pnodes.swap(r.pnodes);
+                m_pedges.swap(r.pedges);
+                return;
+        }
         std::vector<NodeID> permutation(G.number_of_nodes());
         node_ordering n_ordering;
         n_ordering.order_nodes(partition_config, G, permutation);
@@ -192,6 +216,15 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
 }
 
 
+
+void size_constraint_label_propagation::set_reuse_graph(const graph_access * G) {
+        reuse_store & r = reuse();
+        r.graph = G;
+        r.valid = false;
+        std::vector<NodeID>().swap(r.order);
+        std::vector<Node>().swap(r.pnodes);
+        std::vector<Edge>().swap(r.pedges);
+}
 
 void size_constraint_label_propagation::build_permuted_graph(const PartitionConfig & partition_config, graph_access & G) {
         const NodeID n = G.number_of_nodes();
