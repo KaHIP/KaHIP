@@ -364,12 +364,14 @@ int main(int argn, char **argv) {
         {
         aae::phase_scope aae_post(aae::POST);
         // output some information about the partition that we have computed
-        EdgeWeight final_cut = qm.edge_cut(G);
+        EdgeWeight final_cut = 0, max_comm_vol = 0;
+        int bnd = 0;
+        qm.cut_boundary_comm_volume(G, final_cut, bnd, max_comm_vol);
         std::cout << "cut \t\t"         << final_cut                      << std::endl;
         std::cout << "finalobjective  " << final_cut                      << std::endl;
-        std::cout << "bnd \t\t"         << qm.boundary_nodes(G)           << std::endl;
+        std::cout << "bnd \t\t"         << bnd                            << std::endl;
         std::cout << "balance \t"       << qm.balance(G)                  << std::endl;
-        std::cout << "max_comm_vol \t"  << qm.max_communication_volume(G) << std::endl;
+        std::cout << "max_comm_vol \t"  << max_comm_vol                   << std::endl;
         if(partition_config.enable_mapping) std::cout <<  "quadratic assignment objective J(C,D,Pi') = " << qap << std::endl;
 
         // write the partition to the disc 

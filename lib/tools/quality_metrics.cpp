@@ -206,6 +206,33 @@ EdgeWeight quality_metrics::total_communication_volume(graph_access & G) {
 
 
 
+void quality_metrics::cut_boundary_comm_volume(graph_access & G, EdgeWeight & cut, int & bnd, EdgeWeight & max_comm_vol) {
+        std::vector<EdgeWeight> block_volume(G.get_partition_count(),0);
+        // last_seen[b] == node + 1 marks block b as incident to the current node
+        std::vector<NodeID> last_seen(G.get_partition_count(), 0);
+        EdgeWeight edgeCut = 0;
+        int no_of_boundary_nodes = 0;
+        forall_nodes(G, node) {
+                PartitionID block = G.getPartitionIndex(node);
+                last_seen[block] = node + 1;
+                int num_incident_blocks = 0;
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+                        PartitionID target_block = G.getPartitionIndex(target);
+                        if(target_block != block) edgeCut += G.getEdgeWeight(e);
+                        if(last_seen[target_block] != node + 1) {
+                                last_seen[target_block] = node + 1;
+                                num_incident_blocks++;
+                        }
+                } endfor
+                if(num_incident_blocks > 0) no_of_boundary_nodes++;
+                block_volume[block] += num_incident_blocks;
+        } endfor
+        cut          = edgeCut/2;
+        bnd          = no_of_boundary_nodes;
+        max_comm_vol = *(std::max_element(block_volume.begin(), block_volume.end()));
+}
+
 int quality_metrics::boundary_nodes(graph_access& G) {
         int no_of_boundary_nodes = 0;
         forall_nodes(G, n) { 

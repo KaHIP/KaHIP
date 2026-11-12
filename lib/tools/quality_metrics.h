@@ -28,6 +28,8 @@ public:
         EdgeWeight objective(const PartitionConfig & config, graph_access & G, int * partition_map);
         EdgeWeight edge_cut_connected(graph_access & G, int * partition_map);
         int boundary_nodes(graph_access & G);
+        // edge_cut(G), boundary_nodes(G) and max_communication_volume(G) in one pass over the edges
+        void cut_boundary_comm_volume(graph_access & G, EdgeWeight & cut, int & bnd, EdgeWeight & max_comm_vol);
         NodeWeight separator_weight(graph_access& G);
         double balance(graph_access & G);
         double balance_edges(graph_access & G);
