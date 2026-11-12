@@ -40,6 +40,11 @@ class complete_boundary {
                 inline void deleteNode(NodeID node, PartitionID partition, boundary_pair * pair);
                 void postMovedBoundaryNodeUpdates(NodeID target, boundary_pair * pair, 
                                                   bool update_edge_cuts, bool update_all_boundaries);
+                // Between begin_ and end_fixed_partition_updates no partition index changes (only
+                // postMovedBoundaryNodeUpdates calls for nodes already moved), so whether a node has a
+                // neighbor in a given block is remembered for the batch instead of rescanned.
+                void begin_fixed_partition_updates();
+                void end_fixed_partition_updates() { m_fixed_partition = false; }
                 void balance_singletons(const PartitionConfig & config, graph_access & G); 
 
                 inline NodeID size(PartitionID partition, boundary_pair * pair);
@@ -83,6 +88,7 @@ class complete_boundary {
                 std::vector<data_boundary_pair*> m_pair_index; // entry per pair key (k*k, allocated on first use), 0 until first access
                 PartitionID        m_index_k;          // k the index was built for
                 size_t             m_last_key; 
+                bool               m_fixed_partition = false;
                 hash_boundary_pair m_hbp;
 
                 graph_access * m_graph_ref;

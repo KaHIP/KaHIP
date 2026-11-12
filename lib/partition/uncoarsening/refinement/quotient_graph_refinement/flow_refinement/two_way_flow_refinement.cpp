@@ -368,6 +368,7 @@ void two_way_flow_refinement::apply_partition_and_update_boundary( const Partiti
 
 
         //this can be improved by only calling this method on the nodes that changed the partition
+        boundary.begin_fixed_partition_updates();
         for(unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
                 boundary.postMovedBoundaryNodeUpdates(lhs_boundary_stripe[i], refinement_pair, false, true); 
         }
@@ -375,6 +376,7 @@ void two_way_flow_refinement::apply_partition_and_update_boundary( const Partiti
         for(unsigned i = 0; i < rhs_boundary_stripe.size(); i++) {
                 boundary.postMovedBoundaryNodeUpdates(rhs_boundary_stripe[i], refinement_pair, false, true); 
         }
+        boundary.end_fixed_partition_updates();
 
 } 
 
