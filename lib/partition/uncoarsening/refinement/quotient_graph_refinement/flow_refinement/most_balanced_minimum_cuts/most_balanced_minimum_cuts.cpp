@@ -7,7 +7,10 @@
 
 #include <unordered_map>
 
+#include <algorithm>
+#include <queue>
 #include "algorithms/topological_sort.h"
+#include "random_functions.h"
 #include "most_balanced_minimum_cuts.h"
 
 most_balanced_minimum_cuts::most_balanced_minimum_cuts() {
@@ -91,6 +94,119 @@ void most_balanced_minimum_cuts::compute_good_balanced_min_cut( graph_access & r
         compute_good_balanced_min_cut(first, targets, weights, config, perfect_rhs_weight, new_rhs_nodes);
 }
 
+// topological_sort::sort on CSR arrays: the same random start order (same draws), the same
+// depth-first search with an explicit stack (same finishing order), reversed
+static void csr_topological_sort( const std::vector<NodeID> & dag_first, const std::vector<NodeID> & dag_targets,
+                                  std::vector<NodeID> & sorted_sequence) {
+        const NodeID n = dag_first.size() - 1;
+        static std::vector<char> visited;
+        static std::vector<std::pair<NodeID, NodeID> > stack;
+        visited.assign(n, 0);
+        std::vector<NodeID> nodes(n);
+        random_functions::permutate_vector_good(nodes, true);
+        sorted_sequence.reserve(n);
+        for( NodeID i = 0; i < n; i++) {
+                NodeID start = nodes[i];
+                if(visited[start]) continue;
+                visited[start] = 1;
+                stack.clear();
+                stack.push_back(std::make_pair(start, dag_first[start]));
+                while(!stack.empty()) {
+                        std::pair<NodeID, NodeID> & top = stack.back();
+                        if(top.second < dag_first[top.first+1]) {
+                                NodeID target = dag_targets[top.second++];
+                                if(!visited[target]) {
+                                        visited[target] = 1;
+                                        stack.push_back(std::make_pair(target, dag_first[target]));
+                                }
+                        } else {
+                                sorted_sequence.push_back(top.first);
+                                stack.pop_back();
+                        }
+                }
+        }
+        std::reverse(sorted_sequence.begin(), sorted_sequence.end());
+}
+
+static void compute_new_rhs_csr( const std::vector<NodeID> & dag_first, const std::vector<NodeID> & dag_targets, 
+                                                  const PartitionConfig & config,
+                                                  std::vector< NodeWeight > & comp_weights,
+                                                  int comp_of_s,
+                                                  int comp_of_t,
+                                                  NodeWeight optimal_rhs_stripe_weight,
+                                                  std::vector<int> & comp_for_rhs) {
+        //all successors of s cant be in any closure so they are marked invalid / this is basically a bfs in a DAG
+        const NodeID dag_n = dag_first.size() - 1;
+        std::vector<bool> valid_to_add(dag_n, true);
+        std::queue<NodeID> node_queue;
+        node_queue.push(comp_of_s);
+        valid_to_add[comp_of_s] = false;
+
+        while (!node_queue.empty()) {
+                NodeID node = node_queue.front();
+                node_queue.pop();
+                for( NodeID e = dag_first[node]; e < dag_first[node+1]; e++) {
+                        NodeID target = dag_targets[e];
+                        if(valid_to_add[target] == true) {
+                                valid_to_add[target] = false;
+                                node_queue.push(target);
+                        }
+                }
+        }
+
+        std::vector<int> tmp_comp_for_rhs;
+        int best_diff = std::numeric_limits<int>::max();
+        for(unsigned i = 0; i < config.toposort_iterations; i++) {
+                std::vector<NodeID> sorted_sequence;
+                csr_topological_sort(dag_first, dag_targets, sorted_sequence);
+
+                tmp_comp_for_rhs.clear();
+
+                bool t_contained   = false;
+                int cur_rhs_weight = 0;
+                int diff           = std::numeric_limits<int>::max();
+                for( unsigned idx = 0; idx < sorted_sequence.size(); idx++) {
+                        int cur_component = sorted_sequence[idx];
+
+                        if( cur_component == comp_of_t ) {
+                                t_contained = true;
+                                tmp_comp_for_rhs.push_back(cur_component);
+                                continue;
+                        }
+
+                        if(valid_to_add[cur_component]) {
+                                int tmpdiff = (int)optimal_rhs_stripe_weight - (int)cur_rhs_weight - (int)comp_weights[cur_component];
+                                bool would_break = tmpdiff <= 0 && t_contained;
+                                if(!would_break) {
+                                        tmp_comp_for_rhs.push_back(cur_component);
+                                        cur_rhs_weight += comp_weights[cur_component];
+                                } else {
+                                        //decide wether we should add this component now
+                                        if(abs(tmpdiff) < abs(diff)) {
+                                                //add it 
+                                                tmp_comp_for_rhs.push_back(cur_component);
+                                                cur_rhs_weight += comp_weights[cur_component];
+                                                diff = optimal_rhs_stripe_weight - cur_rhs_weight;
+                                        }       
+                                        break;                                
+                                }
+
+                        }       
+
+                        diff = optimal_rhs_stripe_weight - cur_rhs_weight;
+                        if( diff <= 0 && t_contained) {
+                                break;
+                        }
+                       
+                }
+
+                if(abs(diff) < best_diff) {
+                        best_diff    = abs(diff);
+                        comp_for_rhs = tmp_comp_for_rhs;
+                }
+        }
+}
+
 void most_balanced_minimum_cuts::compute_good_balanced_min_cut( const std::vector<EdgeID> & first,
                                                                 const std::vector<NodeID> & targets,
                                                                 const std::vector<NodeWeight> & weights,
@@ -148,22 +264,25 @@ void most_balanced_minimum_cuts::compute_good_balanced_min_cut( const std::vecto
                 }
         }
 
-        graph_access scc_graph;
-        scc_graph.start_construction(comp_count, edge_count);
+        // the component DAG as CSR arrays (the same edges in the same order as the graph built before)
+        static std::vector<NodeID> dag_first;
+        static std::vector<NodeID> dag_targets;
+        dag_first.resize(comp_count + 1);
+        dag_targets.clear();
         contained.assign(comp_count, -1);
         for( int i = 0; i < comp_count; i++) {
-                NodeID node = scc_graph.new_node();
+                dag_first[i] = dag_targets.size();
                 for( NodeID j = cedge_begin[i]; j < cedge_begin[i+1]; j++) {
                         if(contained[cedges[j]] != i) {
-                                scc_graph.new_edge(node, cedges[j]);
+                                dag_targets.push_back(cedges[j]);
                                 contained[cedges[j]] = i;
                         }
                 }
         }
-        scc_graph.finish_construction();
+        dag_first[comp_count] = dag_targets.size();
          
         std::vector<int> comp_for_rhs;
-        compute_new_rhs(scc_graph, config, comp_weights, comp_of_s, comp_of_t, perfect_rhs_weight, comp_for_rhs);
+        compute_new_rhs_csr(dag_first, dag_targets, config, comp_weights, comp_of_s, comp_of_t, perfect_rhs_weight, comp_for_rhs);
    
         //add comp_for_rhs nodes to new rhs   
         if(!config.mode_node_separators) {
