@@ -202,7 +202,8 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
         cluster_slot * cl = slots.data();
         NodeWeight * cid = cluster_id.data();
         // The nodes are visited in random order, so the loop is bound by memory latency; prefetch the
-        // node entry three nodes ahead, its edges two ahead and the cluster ids of its neighbors (at most 32) one ahead.
+        // node entry four nodes ahead, its edges three ahead, the cluster ids of its neighbors (at most
+        // 32) two ahead and their cluster slots one ahead.
         const NodeID * perm = m_use_degree_order ? m_degree_order.data() : permutation.data();
         const NodeID n      = G.number_of_nodes();
         // rule (b): a node is revisited only if a neighbor changed its cluster since the node's last
@@ -215,18 +216,28 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                         NodeID node = perm[i];
                         if( !act[node] ) continue;
                         act[node] = 0;
+                        if( i + 4 < n ) {
+                                __builtin_prefetch(&nodes[perm[i+4]]);
+                        }
                         if( i + 3 < n ) {
-                                __builtin_prefetch(&nodes[perm[i+3]]);
+                                __builtin_prefetch(&edges[nodes[perm[i+3]].firstEdge]);
                         }
                         if( i + 2 < n ) {
-                                __builtin_prefetch(&edges[nodes[perm[i+2]].firstEdge]);
+                                const NodeID next = perm[i+2];
+                                const EdgeID p_begin = nodes[next].firstEdge;
+                                const EdgeID p_end   = std::min(nodes[next+1].firstEdge, p_begin + 32);
+                                for( EdgeID e = p_begin; e < p_end; ++e) {
+                                        __builtin_prefetch(&cid[edges[e].target]);
+                                }
                         }
+                        // the cluster ids of the next node's neighbors were prefetched one step ago:
+                        // prefetch their cluster slots
                         if( i + 1 < n ) {
                                 const NodeID next = perm[i+1];
                                 const EdgeID p_begin = nodes[next].firstEdge;
                                 const EdgeID p_end   = std::min(nodes[next+1].firstEdge, p_begin + 32);
                                 for( EdgeID e = p_begin; e < p_end; ++e) {
-                                        __builtin_prefetch(&cid[edges[e].target]);
+                                        __builtin_prefetch(&cl[cid[edges[e].target]]);
                                 }
                         }
                         const EdgeID e_begin = nodes[node].firstEdge;
