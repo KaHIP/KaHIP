@@ -34,7 +34,7 @@ public:
                 if(m_store) {
                         m_store->busy = true;
                         if(++m_store->gen == 0) {
-                                std::fill(m_store->stamp.begin(), m_store->stamp.end(), 0);
+                                for(slot & e : m_store->slots) e.stamp = 0;
                                 m_store->gen = 1;
                         }
                         m_gen = m_store->gen;
@@ -63,7 +63,7 @@ public:
 
         V * find(NodeID key) {
                 if(!m_store) return m_fallback.find(key);
-                if(key < m_store->stamp.size() && m_store->stamp[key] == m_gen) return &m_store->val[key];
+                if(key < m_store->slots.size() && m_store->slots[key].stamp == m_gen) return &m_store->slots[key].val;
                 return nullptr;
         }
 
@@ -72,26 +72,26 @@ public:
         V & operator[](NodeID key) {
                 if(!m_store) return m_fallback[key];
                 store & s = *m_store;
-                if(key >= s.stamp.size()) {
-                        size_t cap = std::max((size_t)key + 1, 2 * s.stamp.size());
-                        s.stamp.resize(cap, 0);
-                        s.val.resize(cap);
+                if(key >= s.slots.size()) {
+                        size_t cap = std::max((size_t)key + 1, 2 * s.slots.size());
+                        s.slots.resize(cap);
                 }
-                if(s.stamp[key] != m_gen) {
-                        s.stamp[key] = m_gen;
-                        s.val[key]   = V();
+                slot & e = s.slots[key];
+                if(e.stamp != m_gen) {
+                        e.stamp = m_gen;
+                        e.val   = V();
                         ++m_size;
                 }
-                return s.val[key];
+                return e.val;
         }
 
         // the value of a key that is present (no stamp check)
-        V & present(NodeID key) { return m_store ? m_store->val[key] : m_fallback[key]; }
+        V & present(NodeID key) { return m_store ? m_store->slots[key].val : m_fallback[key]; }
 
         size_t erase(NodeID key) {
                 if(!m_store) return m_fallback.erase(key);
-                if(key < m_store->stamp.size() && m_store->stamp[key] == m_gen) {
-                        m_store->stamp[key] = 0;
+                if(key < m_store->slots.size() && m_store->slots[key].stamp == m_gen) {
+                        m_store->slots[key].stamp = 0;
                         --m_size;
                         return 1;
                 }
@@ -103,9 +103,13 @@ public:
 private:
         static const size_t MAX_STORES = 4;
 
+        // stamp and value of a key side by side (one cache line per lookup)
+        struct slot {
+                unsigned stamp = 0;
+                V        val   = V();
+        };
         struct store {
-                std::vector<unsigned> stamp;
-                std::vector<V> val;
+                std::vector<slot> slots;
                 unsigned gen = 0;
                 bool busy    = false;
         };
