@@ -106,15 +106,36 @@ class random_functions {
                                 std::uniform_int_distribution<unsigned int> A(0,size - 4);
                                 std::uniform_int_distribution<unsigned int> B(0,size - 4);
 
+                                // The positions are drawn AHEAD iterations early (in the same order,
+                                // A then B per iteration, so the random sequence and the swaps are
+                                // unchanged) and their entries prefetched.
+                                const unsigned int AHEAD = 16;
+                                unsigned int pa[AHEAD], pb[AHEAD];
+                                const unsigned int pre = size < AHEAD ? size : AHEAD;
+                                for( unsigned int i = 0; i < pre; i++) {
+                                        pa[i] = A(m_mt); pb[i] = B(m_mt);
+                                        prefetch_block(vec, pa[i]); prefetch_block(vec, pb[i]);
+                                }
                                 for( unsigned int i = 0; i < size; i++) {
-                                        unsigned int posA = A(m_mt);
-                                        unsigned int posB = B(m_mt);
+                                        const unsigned int slot = i % AHEAD;
+                                        unsigned int posA = pa[slot];
+                                        unsigned int posB = pb[slot];
+                                        if(i + AHEAD < size) {
+                                                pa[slot] = A(m_mt); pb[slot] = B(m_mt);
+                                                prefetch_block(vec, pa[slot]); prefetch_block(vec, pb[slot]);
+                                        }
                                         std::swap(vec[posA], vec[posB]); 
                                         std::swap(vec[posA+1], vec[posB+1]); 
                                         std::swap(vec[posA+2], vec[posB+2]); 
                                         std::swap(vec[posA+3], vec[posB+3]); 
 
                                 } 
+                        }
+
+                template<typename sometype>
+                        static void prefetch_block(std::vector<sometype> & vec, unsigned int pos) {
+                                __builtin_prefetch(&vec[pos], 1);
+                                __builtin_prefetch(&vec[pos+3], 1);
                         }
 
                 template<typename sometype>
