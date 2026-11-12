@@ -171,13 +171,19 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                                                          NodeID & no_of_blocks) {
         // in this case the _matching paramter is not used 
         // coarse_mappng stores cluster id and the mapping (it is identical)
-        std::vector<PartitionID> hash_map(G.number_of_nodes(),0);
+        // vote counter and size of each cluster side by side: the second sweep reads both for the
+        // same cluster
+        struct cluster_slot {
+                PartitionID votes;
+                NodeWeight  size;
+        };
+        std::vector<cluster_slot> slots(G.number_of_nodes());
         std::vector<NodeID> permutation;
-        std::vector<NodeWeight> cluster_sizes(G.number_of_nodes());
         cluster_id.resize(G.number_of_nodes());
 
         forall_nodes(G, node) {
-                cluster_sizes[node] = G.getNodeWeight(node);
+                slots[node].votes   = 0;
+                slots[node].size    = G.getNodeWeight(node);
                 cluster_id[node]    = node;
         } endfor
         
@@ -193,8 +199,7 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
         const Edge * edges = G.raw_edges();
         const bool check_partition = partition_config.graph_allready_partitioned;
         const bool check_second    = partition_config.combine;
-        PartitionID * hm = hash_map.data();
-        NodeWeight * cs  = cluster_sizes.data();
+        cluster_slot * cl = slots.data();
         NodeWeight * cid = cluster_id.data();
         // The nodes are visited in random order, so the loop is bound by memory latency; prefetch the
         // node entry three nodes ahead, its edges two ahead and the cluster ids of its neighbors (at most 32) one ahead.
@@ -229,7 +234,7 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                         //now move the node to the cluster that is most common in the neighborhood
 
                         for( EdgeID e = e_begin; e < e_end; ++e) {
-                                hm[cid[edges[e].target]] += edges[e].weight;
+                                cl[cid[edges[e].target]].votes += edges[e].weight;
                         }
 
                         //second sweep for finding max and resetting array
@@ -241,9 +246,9 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                         for( EdgeID e = e_begin; e < e_end; ++e) {
                                 NodeID target             = edges[e].target;
                                 PartitionID cur_block     = cid[target];
-                                PartitionID cur_value     = hm[cur_block];
+                                PartitionID cur_value     = cl[cur_block].votes;
                                 if((cur_value > max_value  || (cur_value == max_value && random_functions::nextBool())) 
-                                && (cs[cur_block] + node_weight < block_upperbound || cur_block == my_block) 
+                                && (cl[cur_block].size + node_weight < block_upperbound || cur_block == my_block) 
                                 && (!check_partition || G.getPartitionIndex(node) == G.getPartitionIndex(target))
                                 && (!check_second || G.getSecondPartitionIndex(node) == G.getSecondPartitionIndex(target)))
                                 {
@@ -251,11 +256,11 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                                         max_block = cur_block;
                                 }
 
-                                hm[cur_block] = 0;
+                                cl[cur_block].votes = 0;
                         }
 
-                        cs[cid[node]]  -= node_weight;
-                        cs[max_block]  += node_weight;
+                        cl[cid[node]].size  -= node_weight;
+                        cl[max_block].size  += node_weight;
                         if( cid[node] != max_block ) {
                                 change_counter++;
                                 for( EdgeID e = e_begin; e < e_end; ++e) act[edges[e].target] = 1;
