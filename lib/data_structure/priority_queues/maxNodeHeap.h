@@ -17,6 +17,7 @@
 
 #include "data_structure/priority_queues/priority_queue_interface.h"
 #include "data_structure/node_hash_map.h"
+#include "data_structure/stamped_node_map.h"
 
 typedef int Key;
 
@@ -69,6 +70,8 @@ class maxNodeHeap : public priority_queue_interface {
 
                 maxNodeHeap() {};
                 ~maxNodeHeap() override = default;
+                maxNodeHeap(maxNodeHeap &&) = default;
+                maxNodeHeap & operator=(maxNodeHeap &&) = default;
 
                 NodeID size() override;
                 bool empty() override;
@@ -88,7 +91,7 @@ class maxNodeHeap : public priority_queue_interface {
 
         private:
                 std::vector< PQElement >               m_elements;      // elements that contain the data
-                node_hash_map<int>                m_element_index; // stores index of the node in the m_elements array
+                stamped_node_map<int>             m_element_index; // stores index of the node in the m_elements array
                 std::vector< std::pair<Key, int> >     m_heap;          // key and index in elements (pointer)
 
                 void siftUp( int pos );

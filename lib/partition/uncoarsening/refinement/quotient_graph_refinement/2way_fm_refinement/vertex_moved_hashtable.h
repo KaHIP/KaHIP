@@ -12,6 +12,7 @@
 
 #include "definitions.h"
 #include "data_structure/node_hash_map.h"
+#include "data_structure/stamped_node_map.h"
 #include "limits.h"
 
 struct compare_nodes {
@@ -37,7 +38,7 @@ struct hash_nodes {
        }
 };
 
-// lookup-only map (never iterated), so an open-addressing map gives identical results
-typedef node_hash_map<moved_index> vertex_moved_hashtable;
+// lookup-only map (never iterated), so a stamped per-node map gives identical results
+typedef stamped_node_map<moved_index> vertex_moved_hashtable;
 
 #endif
