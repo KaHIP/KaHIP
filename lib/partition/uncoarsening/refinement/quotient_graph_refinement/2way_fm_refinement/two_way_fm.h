@@ -65,6 +65,9 @@ class two_way_fm : public two_way_refinement {
                                NodeWeight * to_part_weight,
                                complete_boundary & boundary);
 
+                void replay_kept_moves(graph_access & G, std::vector<NodeID> & kept,
+                                       boundary_pair * pair, complete_boundary & boundary);
+
                 void move_node_back(const PartitionConfig & config, 
                                     graph_access & G,
                                     const NodeID & node,

@@ -258,14 +258,14 @@ EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg,
                 boundary.setBlockNoNodes(from, boundary.getBlockNoNodes(from)-1);
                 boundary.setBlockNoNodes(to, boundary.getBlockNoNodes(to)+1);
 
-                move_node_back(config, G, node, moved_idx, 
-                                from_queue, to_queue, 
-                                from, to,
-                                pair,
-                                from_part_weight, 
-                                to_part_weight,
-                                boundary);
+                // undo: partition and weights only, the boundary never saw this move
+                G.setPartitionIndex(node, to);
+                NodeWeight this_nodes_weight = G.getNodeWeight(node);
+                (*from_part_weight) -= this_nodes_weight; 
+                (*to_part_weight)   += this_nodes_weight; 
         }
+
+        replay_kept_moves(G, transpositions, pair, boundary);
 
         //clean up
         cut = best_cut;
@@ -304,23 +304,14 @@ void two_way_fm::move_node(const PartitionConfig & config,
                            complete_boundary & boundary) {
         update_neighbor_degrees(*this, G, node, from, to);
 
-        //move node
+        //move node (rule b: the pair boundary is not read during the search; it is updated at the end of
+        //perform_refinement for the kept moves only, see replay_kept_moves)
         G.setPartitionIndex(node, to);        
-        boundary.deleteNode(node, from, pair);
 
         EdgeWeight int_degree_node = 0;
         EdgeWeight ext_degree_node = 0;
-        bool difficult_update      = int_ext_degree(G, node, to, from, int_degree_node, ext_degree_node);
+        int_ext_degree(G, node, to, from, int_degree_node, ext_degree_node);
         g_deg.store(node, int_degree_node, ext_degree_node);
-
-
-        if(ext_degree_node > 0) {
-                boundary.insert(node, to, pair);
-        }
-
-        if(difficult_update)
-                boundary.postMovedBoundaryNodeUpdates(node, pair, true, false);
-
 
         NodeWeight this_nodes_weight = G.getNodeWeight(node);
         (*from_part_weight) -= this_nodes_weight; 
@@ -352,7 +343,6 @@ void two_way_fm::move_node(const PartitionConfig & config,
                 if(queue_to_update->contains(target)) {
                         if(ext_degree == 0) {
                                 queue_to_update->deleteNode(target);
-                                boundary.deleteNode(target, targets_partition, pair);
                         } else {
                                 queue_to_update->changeKey(target, gain);
                         }
@@ -361,9 +351,6 @@ void two_way_fm::move_node(const PartitionConfig & config,
                                 if(moved_idx[target].index == NOT_MOVED) {
                                         queue_to_update->insert(target, gain);
                                 }
-                                boundary.insert(target, targets_partition, pair);
-                        } else {
-                                boundary.deleteNode(target, targets_partition, pair);
                         }
                 }
 
@@ -439,6 +426,48 @@ void two_way_fm::move_node_back(const PartitionConfig & config,
 
         } endfor
 
+}
+
+
+// Applies the boundary updates of the kept moves (the prefix up to the best cut) in their original
+// order and partition states: the same operations move_node performed on the boundary before.
+void two_way_fm::replay_kept_moves(graph_access & G, std::vector<NodeID> & kept,
+                                   boundary_pair * pair, complete_boundary & boundary) {
+        if(kept.empty()) return;
+        for(size_t i = kept.size(); i-- > 0; ) {
+                NodeID node = kept[i];
+                PartitionID p = G.getPartitionIndex(node);
+                G.setPartitionIndex(node, p == pair->lhs ? pair->rhs : pair->lhs);
+        }
+        g_deg.start(G.number_of_nodes());
+        for(size_t i = 0; i < kept.size(); i++) {
+                NodeID node      = kept[i];
+                PartitionID from = G.getPartitionIndex(node);
+                PartitionID to   = from == pair->lhs ? pair->rhs : pair->lhs;
+
+                update_neighbor_degrees(*this, G, node, from, to);
+                G.setPartitionIndex(node, to);
+                boundary.deleteNode(node, from, pair);
+
+                EdgeWeight int_degree_node = 0;
+                EdgeWeight ext_degree_node = 0;
+                bool difficult_update = int_ext_degree(G, node, to, from, int_degree_node, ext_degree_node);
+                g_deg.store(node, int_degree_node, ext_degree_node);
+                if(ext_degree_node > 0) boundary.insert(node, to, pair);
+                if(difficult_update) boundary.postMovedBoundaryNodeUpdates(node, pair, true, false);
+
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+                        PartitionID targets_partition = G.getPartitionIndex(target);
+                        if(targets_partition != from && targets_partition != to) continue;
+                        EdgeWeight int_degree = 0;
+                        EdgeWeight ext_degree = 0;
+                        PartitionID other_partition = targets_partition == from ? to : from;
+                        cached_int_ext_degree(*this, G, target, targets_partition, other_partition, int_degree, ext_degree); 
+                        if(ext_degree > 0) boundary.insert(target, targets_partition, pair);
+                        else               boundary.deleteNode(target, targets_partition, pair);
+                } endfor
+        }
 }
 
 
