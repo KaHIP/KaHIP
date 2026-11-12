@@ -202,27 +202,45 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
         cluster_slot * cl = slots.data();
         NodeWeight * cid = cluster_id.data();
         // The nodes are visited in random order, so the loop is bound by memory latency; prefetch the
-        // node entry three nodes ahead, its edges two ahead and the cluster ids of its neighbors (at most 32) one ahead.
+        // node entry of the third next active node, its edges at the second and the cluster ids of the
+        // neighbors (at most 32) of the next one.
         const NodeID * perm = m_use_degree_order ? m_degree_order.data() : permutation.data();
         const NodeID n      = G.number_of_nodes();
         // rule (b): a node is revisited only if a neighbor changed its cluster since the node's last
         // visit (active-node label propagation); untouched neighborhoods would give the same vote.
-        std::vector<char> active(n, 1);
-        char * act = active.data();
+        // The active flags are kept as a bitset over the visiting positions (pos_of maps a node to its
+        // position), so inactive positions are skipped word-wise; the visiting order is unchanged.
+        std::vector<NodeID> pos_of(n);
+        for( NodeID i = 0; i < n; i++) pos_of[perm[i]] = i;
+        const NodeID * pos = pos_of.data();
+        const size_t words = ((size_t)n + 63) / 64;
+        std::vector<uint64_t> active(words + 1, ~(uint64_t)0);
+        if( n % 64 != 0 ) active[words - 1] = ((uint64_t)1 << (n % 64)) - 1;
+        active[words] = 1; // sentinel at position 64 * words (>= n)
+        uint64_t * act = active.data();
+        // first active position >= p (n or more if there is none)
+        auto next_active = [act](NodeID p) -> NodeID {
+                size_t w = p >> 6;
+                uint64_t bits = act[w] & (~(uint64_t)0 << (p & 63));
+                while( !bits ) bits = act[++w];
+                return (NodeID)(w * 64 + __builtin_ctzll(bits));
+        };
         for( int j = 0; j < partition_config.label_iterations; j++) {
                 unsigned int change_counter = 0;
-                forall_nodes(G, i) {
+                for( NodeID i = next_active(0); i < n; i = next_active(i + 1)) {
                         NodeID node = perm[i];
-                        if( !act[node] ) continue;
-                        act[node] = 0;
-                        if( i + 3 < n ) {
-                                __builtin_prefetch(&nodes[perm[i+3]]);
-                        }
-                        if( i + 2 < n ) {
-                                __builtin_prefetch(&edges[nodes[perm[i+2]].firstEdge]);
-                        }
-                        if( i + 1 < n ) {
-                                const NodeID next = perm[i+1];
+                        act[i >> 6] &= ~((uint64_t)1 << (i & 63));
+                        const NodeID i1 = next_active(i + 1);
+                        if( i1 < n ) {
+                                const NodeID i2 = next_active(i1 + 1);
+                                if( i2 < n ) {
+                                        const NodeID i3 = next_active(i2 + 1);
+                                        if( i3 < n ) {
+                                                __builtin_prefetch(&nodes[perm[i3]]);
+                                        }
+                                        __builtin_prefetch(&edges[nodes[perm[i2]].firstEdge]);
+                                }
+                                const NodeID next = perm[i1];
                                 const EdgeID p_begin = nodes[next].firstEdge;
                                 const EdgeID p_end   = std::min(nodes[next+1].firstEdge, p_begin + 32);
                                 for( EdgeID e = p_begin; e < p_end; ++e) {
@@ -263,10 +281,13 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                         cl[max_block].size  += node_weight;
                         if( cid[node] != max_block ) {
                                 change_counter++;
-                                for( EdgeID e = e_begin; e < e_end; ++e) act[edges[e].target] = 1;
+                                for( EdgeID e = e_begin; e < e_end; ++e) {
+                                        const NodeID t = pos[edges[e].target];
+                                        act[t >> 6] |= (uint64_t)1 << (t & 63);
+                                }
                         }
                         cid[node]       = max_block;
-                } endfor
+                }
                 if( change_counter == 0 ) break;
         }
 
