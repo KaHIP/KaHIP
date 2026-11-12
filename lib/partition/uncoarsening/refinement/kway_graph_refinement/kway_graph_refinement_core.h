@@ -125,12 +125,8 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
 
         G.setPartitionIndex(node, to);        
 
-        boundary_pair pair;
-        pair.k = config.k;
-        pair.lhs = from;
-        pair.rhs = to;
-
-        boundary.postMovedBoundaryNodeUpdates(node, &pair, true, true);
+        // rule (b): the block-pair boundaries are not read during the search; they are updated at the
+        // end of the round for the kept moves only (single_kway_refinement_round_internal)
 
         boundary.setBlockNoNodes(from, boundary.getBlockNoNodes(from)-1);
         boundary.setBlockNoNodes(to,   boundary.getBlockNoNodes(to)+1);

@@ -169,7 +169,27 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
                 from_partitions.pop_back();
                 to_partitions.pop_back();
 
-                move_node_back(config, G, node, to,  moved_idx, queue, boundary);
+                // undo the move: partition and block weights only, the boundaries never saw it
+                PartitionID cur = G.getPartitionIndex(node);
+                NodeWeight w    = G.getNodeWeight(node);
+                G.setPartitionIndex(node, to);
+                boundary.setBlockNoNodes(cur, boundary.getBlockNoNodes(cur)-1);
+                boundary.setBlockNoNodes(to,  boundary.getBlockNoNodes(to)+1);
+                boundary.setBlockWeight( cur, boundary.getBlockWeight(cur)-w);
+                boundary.setBlockWeight( to,  boundary.getBlockWeight(to)+w);
+        }
+
+        // replay the kept moves on the boundaries in their original order and partition states
+        for(size_t i = transpositions.size(); i-- > 0; ) {
+                G.setPartitionIndex(transpositions[i], from_partitions[i]);
+        }
+        for(size_t i = 0; i < transpositions.size(); i++) {
+                G.setPartitionIndex(transpositions[i], to_partitions[i]);
+                boundary_pair pair;
+                pair.k   = config.k;
+                pair.lhs = from_partitions[i];
+                pair.rhs = to_partitions[i];
+                boundary.postMovedBoundaryNodeUpdates(transpositions[i], &pair, true, true);
         }
 
        
