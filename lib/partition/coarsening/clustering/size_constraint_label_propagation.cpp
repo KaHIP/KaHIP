@@ -174,112 +174,21 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                                                          const NodeWeight & block_upperbound,
                                                          std::vector<NodeWeight> & cluster_id,  
                                                          NodeID & no_of_blocks) {
-        if( m_use_degree_order ) {
+        // in this case the _matching paramter is not used 
+        // coarse_mappng stores cluster id and the mapping (it is identical)
+        if( m_use_degree_order ) { // ensemble: order and permuted copy of G built once for all clusterings
                 label_propagation_permuted( partition_config, G, block_upperbound, cluster_id, no_of_blocks);
                 return;
         }
-        // in this case the _matching paramter is not used 
-        // coarse_mappng stores cluster id and the mapping (it is identical)
-        // vote counter and size of each cluster side by side: the second sweep reads both for the
-        // same cluster
-        struct cluster_slot {
-                PartitionID votes;
-                NodeWeight  size;
-        };
-        std::vector<cluster_slot> slots(G.number_of_nodes());
-        std::vector<NodeID> permutation;
-        cluster_id.resize(G.number_of_nodes());
 
-        forall_nodes(G, node) {
-                slots[node].votes   = 0;
-                slots[node].size    = G.getNodeWeight(node);
-                cluster_id[node]    = node;
-        } endfor
-        
-        if( !m_use_degree_order ) {
-                permutation.resize(G.number_of_nodes());
-                node_ordering n_ordering;
-                n_ordering.order_nodes(partition_config, G, permutation);
-        }
-
-        // Same computation and random number sequence as before, with loop invariants hoisted and the
-        // CSR arrays read through raw pointers.
-        const Node * nodes = G.raw_nodes();
-        const Edge * edges = G.raw_edges();
-        const bool check_partition = partition_config.graph_allready_partitioned;
-        const bool check_second    = partition_config.combine;
-        cluster_slot * cl = slots.data();
-        NodeWeight * cid = cluster_id.data();
-        // The nodes are visited in random order, so the loop is bound by memory latency; prefetch the
-        // node entry three nodes ahead, its edges two ahead and the cluster ids of its neighbors (at most 32) one ahead.
-        const NodeID * perm = m_use_degree_order ? m_degree_order.data() : permutation.data();
-        const NodeID n      = G.number_of_nodes();
-        // rule (b): a node is revisited only if a neighbor changed its cluster since the node's last
-        // visit (active-node label propagation); untouched neighborhoods would give the same vote.
-        std::vector<char> active(n, 1);
-        char * act = active.data();
-        for( int j = 0; j < partition_config.label_iterations; j++) {
-                unsigned int change_counter = 0;
-                forall_nodes(G, i) {
-                        NodeID node = perm[i];
-                        if( !act[node] ) continue;
-                        act[node] = 0;
-                        if( i + 3 < n ) {
-                                __builtin_prefetch(&nodes[perm[i+3]]);
-                        }
-                        if( i + 2 < n ) {
-                                __builtin_prefetch(&edges[nodes[perm[i+2]].firstEdge]);
-                        }
-                        if( i + 1 < n ) {
-                                const NodeID next = perm[i+1];
-                                const EdgeID p_begin = nodes[next].firstEdge;
-                                const EdgeID p_end   = std::min(nodes[next+1].firstEdge, p_begin + 32);
-                                for( EdgeID e = p_begin; e < p_end; ++e) {
-                                        __builtin_prefetch(&cid[edges[e].target]);
-                                }
-                        }
-                        const EdgeID e_begin = nodes[node].firstEdge;
-                        const EdgeID e_end   = nodes[node+1].firstEdge;
-                        //now move the node to the cluster that is most common in the neighborhood
-
-                        for( EdgeID e = e_begin; e < e_end; ++e) {
-                                cl[cid[edges[e].target]].votes += edges[e].weight;
-                        }
-
-                        //second sweep for finding max and resetting array
-                        PartitionID max_block = cid[node];
-                        PartitionID my_block  = cid[node];
-                        const NodeWeight node_weight = nodes[node].weight;
-
-                        PartitionID max_value = 0;
-                        for( EdgeID e = e_begin; e < e_end; ++e) {
-                                NodeID target             = edges[e].target;
-                                PartitionID cur_block     = cid[target];
-                                PartitionID cur_value     = cl[cur_block].votes;
-                                if((cur_value > max_value  || (cur_value == max_value && random_functions::nextBool())) 
-                                && (cl[cur_block].size + node_weight < block_upperbound || cur_block == my_block) 
-                                && (!check_partition || G.getPartitionIndex(node) == G.getPartitionIndex(target))
-                                && (!check_second || G.getSecondPartitionIndex(node) == G.getSecondPartitionIndex(target)))
-                                {
-                                        max_value = cur_value;
-                                        max_block = cur_block;
-                                }
-
-                                cl[cur_block].votes = 0;
-                        }
-
-                        cl[cid[node]].size  -= node_weight;
-                        cl[max_block].size  += node_weight;
-                        if( cid[node] != max_block ) {
-                                change_counter++;
-                                for( EdgeID e = e_begin; e < e_end; ++e) act[edges[e].target] = 1;
-                        }
-                        cid[node]       = max_block;
-                } endfor
-                if( change_counter == 0 ) break;
-        }
-
-        remap_cluster_ids( partition_config, G, cluster_id, no_of_blocks);
+        // a single clustering also runs on a copy of G in its visiting order
+        std::vector<NodeID> permutation(G.number_of_nodes());
+        node_ordering n_ordering;
+        n_ordering.order_nodes(partition_config, G, permutation);
+        m_degree_order.swap(permutation);
+        build_permuted_graph(partition_config, G);
+        label_propagation_permuted( partition_config, G, block_upperbound, cluster_id, no_of_blocks);
+        m_degree_order.swap(permutation);
 }
 
 
