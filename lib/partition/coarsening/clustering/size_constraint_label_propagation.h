@@ -97,7 +97,12 @@ class size_constraint_label_propagation : public matching {
                 void label_propagation(const PartitionConfig & partition_config, 
                                 graph_access & G, 
                                 std::vector<NodeWeight> & cluster_id,
-                                NodeID & number_of_blocks ); 
+                                NodeID & number_of_blocks );
+
+        private:
+                // degree node order of the graph, computed once per ensemble (it depends only on G)
+                std::vector<NodeID> m_degree_order;
+                bool m_use_degree_order = false; 
 
 };
 

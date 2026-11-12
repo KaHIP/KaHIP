@@ -120,6 +120,15 @@ void size_constraint_label_propagation::ensemble_clusterings(const PartitionConf
         std::vector< NodeID >  cur_cluster(G.number_of_nodes(), 0);
         std::vector< NodeID >  ensemble_cluster(G.number_of_nodes(),0);
 
+        // The degree order is deterministic and the graph does not change between the runs, so it is
+        // sorted once (the random order draws randoms and is still computed per run).
+        if( partition_config.node_ordering == DEGREE_NODEORDERING ) {
+                m_degree_order.resize(G.number_of_nodes());
+                node_ordering n_ordering;
+                n_ordering.order_nodes(partition_config, G, m_degree_order);
+                m_use_degree_order = true;
+        }
+
         int new_cf = partition_config.cluster_coarsening_factor;
         for( int i = 0; i < runs; i++) {
                 PartitionConfig config = partition_config;
@@ -140,6 +149,7 @@ void size_constraint_label_propagation::ensemble_clusterings(const PartitionConf
                 new_cf = random_functions::nextInt(10, 30);
         }
 
+        m_use_degree_order = false;
         create_coarsemapping( partition_config, G, ensemble_cluster, coarse_mapping);
 
 
@@ -162,7 +172,7 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
         // in this case the _matching paramter is not used 
         // coarse_mappng stores cluster id and the mapping (it is identical)
         std::vector<PartitionID> hash_map(G.number_of_nodes(),0);
-        std::vector<NodeID> permutation(G.number_of_nodes());
+        std::vector<NodeID> permutation;
         std::vector<NodeWeight> cluster_sizes(G.number_of_nodes());
         cluster_id.resize(G.number_of_nodes());
 
@@ -171,8 +181,11 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                 cluster_id[node]    = node;
         } endfor
         
-        node_ordering n_ordering;
-        n_ordering.order_nodes(partition_config, G, permutation);
+        if( !m_use_degree_order ) {
+                permutation.resize(G.number_of_nodes());
+                node_ordering n_ordering;
+                n_ordering.order_nodes(partition_config, G, permutation);
+        }
 
         // Same computation and random number sequence as before, with loop invariants hoisted and the
         // CSR arrays read through raw pointers.
@@ -185,7 +198,7 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
         NodeWeight * cid = cluster_id.data();
         // The nodes are visited in random order, so the loop is bound by memory latency; prefetch the
         // node entry three nodes ahead, its edges two ahead and the cluster ids of its neighbors (at most 32) one ahead.
-        const NodeID * perm = permutation.data();
+        const NodeID * perm = m_use_degree_order ? m_degree_order.data() : permutation.data();
         const NodeID n      = G.number_of_nodes();
         // rule (b): a node is revisited only if a neighbor changed its cluster since the node's last
         // visit (active-node label propagation); untouched neighborhoods would give the same vote.
@@ -271,16 +284,18 @@ void size_constraint_label_propagation::remap_cluster_ids(const PartitionConfig 
                                                           std::vector<NodeWeight> & cluster_id,
                                                           NodeID & no_of_coarse_vertices, bool apply_to_graph) {
 
+        // ids in order of first occurrence, as with the former hash map; an array indexed by the old id
         PartitionID cur_no_clusters = 0;
-        std::unordered_map<PartitionID, PartitionID> remap;
+        PartitionID max_id = 0;
         forall_nodes(G, node) {
-                PartitionID cur_cluster = cluster_id[node];
-                //check wether we already had that
-                if( remap.find( cur_cluster ) == remap.end() ) {
-                        remap[cur_cluster] = cur_no_clusters++;
-                }
-
-                cluster_id[node] = remap[cur_cluster];
+                max_id = std::max(max_id, (PartitionID)cluster_id[node]);
+        } endfor
+        const PartitionID unset = std::numeric_limits<PartitionID>::max();
+        std::vector<PartitionID> remap(G.number_of_nodes() == 0 ? 1 : max_id + 1, unset);
+        forall_nodes(G, node) {
+                PartitionID & r = remap[cluster_id[node]];
+                if( r == unset ) r = cur_no_clusters++;
+                cluster_id[node] = r;
         } endfor
 
         if( apply_to_graph ) {
