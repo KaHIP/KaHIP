@@ -8,7 +8,6 @@
 #ifndef FLOW_GRAPH_636S5L2S
 #define FLOW_GRAPH_636S5L2S
 
-#include <utility>
 #include <vector>
 #include "definitions.h"
 
@@ -72,11 +71,7 @@ public:
         void setEdgeFlow(NodeID source, EdgeID e, FlowType flow);
         EdgeID getReverseEdge(NodeID source, EdgeID e);
 
-        // reversed: every edge is added with its direction swapped (the reversed flow network)
-        void set_reversed(bool reversed) {m_reversed = reversed;};
-
         void new_edge(NodeID source, NodeID target, FlowType capacity) {
-               if(m_reversed) std::swap(source, target);
                pending_edge pe; pe.source = source; pe.target = target; pe.capacity = capacity;
                m_pending.push_back(pe);
                m_offset[source+1]++;
@@ -105,7 +100,6 @@ private:
         std::vector<pending_edge> m_pending;
         NodeID m_num_nodes;
         NodeID m_num_edges;
-        bool m_reversed = false;
 };
 
 inline

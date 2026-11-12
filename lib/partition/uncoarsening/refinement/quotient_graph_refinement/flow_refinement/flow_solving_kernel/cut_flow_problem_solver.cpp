@@ -13,7 +13,8 @@
 #include <unordered_map>
 #include <limits>
 
-#include "algorithms/push_relabel.h"
+#include "algorithms/bk_maxflow.h"
+#include "data_structure/graph_access.h"
 #include "cut_flow_problem_solver.h"
 #include "most_balanced_minimum_cuts/most_balanced_minimum_cuts.h"
 #include "data_structure/flow_graph.h"
@@ -173,22 +174,13 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
                                                       std::vector<NodeID> & new_rhs_nodes) {
 
         flow_graph fG;
-        // Without most balanced cuts only the set of nodes reachable from the source in the
-        // residual graph of a maximum flow is used; it is the same for every maximum flow. It is
-        // computed on the reversed network: there it is the set of nodes that can reach the
-        // (original) source, which a maximum preflow from the original sink already gives, so the
-        // excess return of the second phase is skipped.
-        const bool reversed = !config.most_balanced_minimum_cuts;
-        fG.set_reversed(reversed);
         FlowType lhs_rhs_capacity = 0;
         bool do_sth = convert_ds(config, G, lhs, rhs, lhs_boundary_stripe, rhs_boundary_stripe, new_to_old_ids, fG, lhs_rhs_capacity );
 
         if(!do_sth) return initial_cut;
 
-        push_relabel pr;
         NodeID source = fG.number_of_nodes()-2;
         NodeID sink   = fG.number_of_nodes()-1;
-        std::vector< NodeID > source_set;
 
         // Without most balanced cuts the caller accepts a result only if its cut is below
         // initial_cut; a flow of value initial_cut ends the refinement of this pair with every
@@ -198,19 +190,15 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
         if(!config.most_balanced_minimum_cuts && lhs_rhs_capacity == (FlowType) initial_cut) {
                 stop_flow = lhs_rhs_capacity;
         }
-        FlowType flowvalue = reversed
-                ? pr.solve_max_flow_min_cut( fG, sink, source, true, source_set, stop_flow, true)
-                : pr.solve_max_flow_min_cut( fG, source, sink, false, source_set, stop_flow); // the most balanced cut reads only the residual graph
+        static bk_maxflow mf; // keeps its arrays between flow problems
+        FlowType flowvalue = mf.solve( fG, source, sink, stop_flow);
         if(flowvalue >= stop_flow) return initial_cut;
 
         if(!config.most_balanced_minimum_cuts) {
-                std::vector< bool > new_rhs_flag(fG.number_of_nodes(), true);
-                for( unsigned int i = 0; i < source_set.size(); i++) {
-                        new_rhs_flag[source_set[i]] = false;
-                }
-
+                // the source tree is the set of nodes reachable from the source in the residual
+                // graph, which is the same for every maximum flow
                 forall_nodes(fG, node) {
-                        if(new_rhs_flag[node] && node < fG.number_of_nodes()-2) {
+                        if(!mf.in_source_tree(node) && node < fG.number_of_nodes()-2) {
                                 new_rhs_nodes.push_back(node);
                         }
                 } endfor
