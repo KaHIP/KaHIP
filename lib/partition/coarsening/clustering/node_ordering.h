@@ -41,10 +41,23 @@ public:
         }
 
         void order_nodes_degree(const PartitionConfig & config, graph_access & G, std::vector< NodeID > & ordered_nodes) { 
-                std::sort( ordered_nodes.begin(), ordered_nodes.end(), 
-                           [&]( const NodeID & lhs, const NodeID & rhs) -> bool {
-                                return (G.getNodeDegree(lhs) < G.getNodeDegree(rhs));
+                // The same std::sort with the same comparisons on (degree, node) entries: std::sort's
+                // steps depend only on the comparison results, so the order is the same, but the
+                // degrees are read from the entries instead of the node array.
+                struct entry {
+                        EdgeWeight degree;
+                        NodeID     node;
+                };
+                std::vector<entry> entries(ordered_nodes.size());
+                for( size_t i = 0; i < entries.size(); i++) {
+                        entries[i].degree = G.getNodeDegree(ordered_nodes[i]);
+                        entries[i].node   = ordered_nodes[i];
+                }
+                std::sort( entries.begin(), entries.end(), 
+                           []( const entry & lhs, const entry & rhs) -> bool {
+                                return lhs.degree < rhs.degree;
                            });
+                for( size_t i = 0; i < entries.size(); i++) ordered_nodes[i] = entries[i].node;
         }
 
  };
