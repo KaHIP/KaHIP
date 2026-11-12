@@ -537,17 +537,26 @@ inline void complete_boundary::fastComputeQuotientGraph( graph_access & Q_bar, c
          }
          Q_bar.graphref = graphref;
 
-         std::vector<std::vector<NodeID>> block_list_nodes(no_of_blocks);
          std::vector<NodeWeight> block_weight(no_of_blocks,0);
          std::vector<EdgeWeight> target_edgeweight(no_of_blocks,0);
          std::vector<PartitionID> list_targets;
 
-	 // Fill out list of nodes per block
+	 // Nodes per block in increasing node order (as the former per-block push_back lists), bucketed
+	 // in one array: block p holds block_nodes[block_start[p] .. block_start[p+1])
+         std::vector<NodeID> block_start(no_of_blocks + 1, 0);
          forall_nodes((*m_graph_ref), node) {
 		PartitionID source_partition = m_graph_ref->getPartitionIndex(node);
-		block_list_nodes[source_partition].push_back(node);
+		block_start[source_partition + 1]++;
                 block_weight[source_partition] += m_graph_ref->getNodeWeight(node);
          } endfor
+         for( unsigned p = 0; p < no_of_blocks; p++) block_start[p+1] += block_start[p];
+         std::vector<NodeID> block_nodes(m_graph_ref->number_of_nodes());
+         {
+                 std::vector<NodeID> fill(block_start.begin(), block_start.end() - 1);
+                 forall_nodes((*m_graph_ref), node) {
+                         block_nodes[fill[m_graph_ref->getPartitionIndex(node)]++] = node;
+                 } endfor
+         }
 
          Q_bar.start_construction(no_of_blocks, m_graph_ref->number_of_edges());
 
@@ -556,7 +565,8 @@ inline void complete_boundary::fastComputeQuotientGraph( graph_access & Q_bar, c
                  Q_bar.setNodeWeight(source_partition,  block_weight[p]);
 
 		 // Fill out list of neighboring blocks
-		 for( auto& node : block_list_nodes[source_partition] ) {
+		 for( NodeID i = block_start[source_partition]; i < block_start[source_partition+1]; i++ ) {
+			NodeID node = block_nodes[i];
 			forall_out_edges((*m_graph_ref), e, node) {
 				NodeID targetID              = m_graph_ref->getEdgeTarget(e);
 				PartitionID target_partition = m_graph_ref->getPartitionIndex(targetID);
