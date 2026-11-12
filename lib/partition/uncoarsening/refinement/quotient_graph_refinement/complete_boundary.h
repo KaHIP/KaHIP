@@ -565,19 +565,22 @@ inline void complete_boundary::fastComputeQuotientGraph( graph_access & Q_bar, c
                  } endfor
          }
 
-         Q_bar.start_construction(no_of_blocks, m_graph_ref->number_of_edges());
-
+         // The quotient edges are collected first (block p's edges at q_edges[q_start[p] .. q_start[p+1])),
+         // so the graph is built with its real edge count instead of allocating and zeroing m edges.
+         struct q_edge {
+                 PartitionID target;
+                 EdgeWeight  weight;
+         };
+         std::vector<q_edge> q_edges;
+         std::vector<EdgeID> q_start(no_of_blocks + 1, 0);
          for( unsigned p = 0; p < no_of_blocks; p++) {
-                 NodeID source_partition = Q_bar.new_node();
-                 Q_bar.setNodeWeight(source_partition,  block_weight[p]);
-
 		 // Fill out list of neighboring blocks
-		 for( NodeID i = block_start[source_partition]; i < block_start[source_partition+1]; i++ ) {
+		 for( NodeID i = block_start[p]; i < block_start[p+1]; i++ ) {
 			NodeID node = block_nodes[i];
 			forall_out_edges((*m_graph_ref), e, node) {
 				NodeID targetID              = m_graph_ref->getEdgeTarget(e);
 				PartitionID target_partition = m_graph_ref->getPartitionIndex(targetID);
-				bool is_cut_edge             = (source_partition != target_partition);
+				bool is_cut_edge             = (p != target_partition);
 				if(is_cut_edge) {
 					if (target_edgeweight[target_partition] == 0) {
 						list_targets.push_back(target_partition);
@@ -588,11 +591,22 @@ inline void complete_boundary::fastComputeQuotientGraph( graph_access & Q_bar, c
 		 }
 
 		 for( auto& target_partition : list_targets ) {
-                         EdgeID e = Q_bar.new_edge(source_partition, target_partition);
-                         Q_bar.setEdgeWeight(e, target_edgeweight[target_partition]);
+                         q_edges.push_back(q_edge{target_partition, target_edgeweight[target_partition]});
 			 target_edgeweight[target_partition] = 0;
 		 }
 		 list_targets.clear();
+                 q_start[p+1] = q_edges.size();
+         }
+
+         Q_bar.start_construction(no_of_blocks, q_edges.size());
+
+         for( unsigned p = 0; p < no_of_blocks; p++) {
+                 NodeID source_partition = Q_bar.new_node();
+                 Q_bar.setNodeWeight(source_partition,  block_weight[p]);
+                 for( EdgeID i = q_start[p]; i < q_start[p+1]; i++) {
+                         EdgeID e = Q_bar.new_edge(source_partition, q_edges[i].target);
+                         Q_bar.setEdgeWeight(e, q_edges[i].weight);
+                 }
          }
 
          Q_bar.finish_construction();
