@@ -11,7 +11,6 @@
 #include <math.h>
 #include <sstream>
 #include <unordered_map>
-#include <cstdint>
 #include <limits>
 
 #include "algorithms/bk_maxflow.h"
@@ -83,23 +82,13 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
         // BOUNDARY_STRIPE_NODE below, before any lookup) are read, so stale entries are never used
         static std::vector<NodeID> old_to_new;
         if(old_to_new.size() < G.number_of_nodes()) old_to_new.resize(G.number_of_nodes());
-        // one bit per node, set exactly for the stripe nodes (the nodes marked BOUNDARY_STRIPE_NODE):
-        // the scans below test their neighbors here instead of in the partition index array, which on
-        // large graphs is not in the cache (hubs in the stripe have many neighbors); cleared after the scans
-        static std::vector<uint64_t> in_stripe;
-        if(in_stripe.size() < G.number_of_nodes()/64 + 1) in_stripe.resize(G.number_of_nodes()/64 + 1, 0);
-        uint64_t * stripe_bits = in_stripe.data();
-        auto set_stripe_bit = [stripe_bits](NodeID v) { stripe_bits[v >> 6] |= (uint64_t)1 << (v & 63); };
-        auto is_stripe      = [stripe_bits](NodeID v) { return (stripe_bits[v >> 6] >> (v & 63)) & 1; };
         for( unsigned i = 0; i < lhs_boundary_stripe.size(); i++) {
                 G.setPartitionIndex(lhs_boundary_stripe[i], BOUNDARY_STRIPE_NODE);
-                set_stripe_bit(lhs_boundary_stripe[i]);
                 new_to_old_ids[idx]                = lhs_boundary_stripe[i];
                 old_to_new[lhs_boundary_stripe[i]] = idx++ ;
         }
         for( unsigned i = 0; i < rhs_boundary_stripe.size(); i++) {
                 G.setPartitionIndex(rhs_boundary_stripe[i], BOUNDARY_STRIPE_NODE); 
-                set_stripe_bit(rhs_boundary_stripe[i]);
                 new_to_old_ids[idx]                = rhs_boundary_stripe[i];
                 old_to_new[rhs_boundary_stripe[i]] = idx++;
         }
@@ -130,7 +119,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                 NodeID sourceID = idx;
                 bool is_outer_boundary = false;
                 forall_out_edges(G, e, node) {
-                        if(is_stripe(G.getEdgeTarget(e)))  {
+                        if(G.getPartitionIndex(G.getEdgeTarget(e)) == BOUNDARY_STRIPE_NODE)  {
                                 NodeID targetID     = old_to_new[G.getEdgeTarget(e)];
                                 if(sourceID < targetID) fG.new_edge(sourceID, targetID, G.getEdgeWeight(e), G.getEdgeWeight(e));
                                 if(targetID >= no_lhs_stripe) lhs_rhs_capacity += (NodeID) G.getEdgeWeight(e);
@@ -147,7 +136,7 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                 NodeID sourceID = idx;
                 bool is_outer_boundary = false;
                 forall_out_edges(G, e, node) {
-                        if(is_stripe(G.getEdgeTarget(e)))  {
+                        if(G.getPartitionIndex(G.getEdgeTarget(e)) == BOUNDARY_STRIPE_NODE)  {
                                 NodeID targetID     = old_to_new[G.getEdgeTarget(e)];
                                 if(sourceID < targetID) fG.new_edge(sourceID, targetID, G.getEdgeWeight(e), G.getEdgeWeight(e));
                         } else is_outer_boundary = true;
@@ -156,9 +145,6 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
                         outer_rhs_boundary.push_back(idx);
                 }
         }
-
-        for( unsigned i = 0; i < lhs_boundary_stripe.size(); i++) stripe_bits[lhs_boundary_stripe[i] >> 6] = 0;
-        for( unsigned i = 0; i < rhs_boundary_stripe.size(); i++) stripe_bits[rhs_boundary_stripe[i] >> 6] = 0;
 
         if(outer_lhs_boundary.size() == 0 || outer_rhs_boundary.size() == 0) return false;
 
