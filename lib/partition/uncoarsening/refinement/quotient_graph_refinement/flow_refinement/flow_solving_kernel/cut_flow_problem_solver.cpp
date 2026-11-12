@@ -200,15 +200,15 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
         }
         FlowType flowvalue = reversed
                 ? pr.solve_max_flow_min_cut( fG, sink, source, true, source_set, stop_flow, true)
-                : pr.solve_max_flow_min_cut( fG, source, sink, true, source_set, stop_flow);
+                : pr.solve_max_flow_min_cut( fG, source, sink, false, source_set, stop_flow); // the most balanced cut reads only the residual graph
         if(flowvalue >= stop_flow) return initial_cut;
 
-        std::vector< bool > new_rhs_flag(fG.number_of_nodes(), true);
-        for( unsigned int i = 0; i < source_set.size(); i++) {
-                new_rhs_flag[source_set[i]] = false;
-        }
-
         if(!config.most_balanced_minimum_cuts) {
+                std::vector< bool > new_rhs_flag(fG.number_of_nodes(), true);
+                for( unsigned int i = 0; i < source_set.size(); i++) {
+                        new_rhs_flag[source_set[i]] = false;
+                }
+
                 forall_nodes(fG, node) {
                         if(new_rhs_flag[node] && node < fG.number_of_nodes()-2) {
                                 new_rhs_nodes.push_back(node);
