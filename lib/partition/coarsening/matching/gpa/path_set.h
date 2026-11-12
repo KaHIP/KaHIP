@@ -25,6 +25,13 @@ class path_set {
                 //returns the number of paths in the set
                 PathID path_count() const;
 
+                // prefetch the entries of v read by add_if_applicable
+                void prefetch(const NodeID v) const {
+                        __builtin_prefetch(&m_vertex_to_path[v]);
+                        __builtin_prefetch(&m_next[v]);
+                        __builtin_prefetch(&m_prev[v]);
+                }
+
                 // add the edge with given id to the path set if it is applicable
                 // returns true iff the edge was applicable
                 bool add_if_applicable(const NodeID & source, const EdgeID & e); 

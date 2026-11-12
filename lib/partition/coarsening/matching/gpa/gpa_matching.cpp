@@ -52,7 +52,9 @@ void gpa_matching::match(const PartitionConfig & partition_config,
         {
                 typedef std::pair<EdgeRatingType, EdgeID> rated_edge;
                 std::vector<rated_edge> rated(edge_permutation.size());
+                const coarseningEdge * ratings = G.raw_coarsening_edges();
                 for( size_t i = 0; i < edge_permutation.size(); i++) {
+                        if(i + 16 < edge_permutation.size()) __builtin_prefetch(&ratings[edge_permutation[i+16]]);
                         rated[i] = rated_edge(G.getEdgeRating(edge_permutation[i]), edge_permutation[i]);
                 }
                 std::sort(rated.begin(), rated.end(),
@@ -68,7 +70,27 @@ void gpa_matching::match(const PartitionConfig & partition_config,
         path_set pathset(&G, &partition_config);
 
         //grow the paths
+        // The edges come in rating order, i.e. at random positions: the entries of edge e+16
+        // and then the node and path entries of edge e+8 are prefetched.
+        const Edge * edges = G.raw_edges();
+        const Node * nodes = G.raw_nodes();
+        const coarseningEdge * edge_ratings = G.raw_coarsening_edges();
+        const EdgeID no_edges = G.number_of_edges();
         forall_edges(G, e) {
+                if(e + 16 < no_edges) {
+                        const EdgeID f = edge_permutation[e+16];
+                        __builtin_prefetch(&sources[f]);
+                        __builtin_prefetch(&edges[f]);
+                        __builtin_prefetch(&edge_ratings[f]);
+                }
+                if(e + 8 < no_edges) {
+                        const EdgeID f = edge_permutation[e+8];
+                        const NodeID s = sources[f], t = edges[f].target;
+                        if(t > s) {
+                                __builtin_prefetch(&nodes[s]); __builtin_prefetch(&nodes[t]);
+                                pathset.prefetch(s); pathset.prefetch(t);
+                        }
+                }
                 EdgeID curEdge = edge_permutation[e];
                 NodeID source  = sources[curEdge];
                 NodeID target  = G.getEdgeTarget(curEdge); 

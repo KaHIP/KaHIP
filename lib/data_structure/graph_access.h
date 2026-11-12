@@ -205,6 +205,7 @@ class graph_access {
                 // raw read access to the CSR arrays (for tight loops; valid until the graph is modified)
                 const Node * raw_nodes() { return graphref->m_nodes.data(); }
                 const Edge * raw_edges() { return graphref->m_edges.data(); }
+                const coarseningEdge * raw_coarsening_edges() { return graphref->m_coarsening_edge_props.data(); }
 
                 EdgeWeight getNodeDegree(NodeID node);
                 EdgeWeight getWeightedNodeDegree(NodeID node);
