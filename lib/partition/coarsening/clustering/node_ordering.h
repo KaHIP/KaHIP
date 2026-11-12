@@ -15,6 +15,7 @@
 #include "partition_config.h"
 #include "data_structure/graph_access.h"
 #include "tools/random_functions.h"
+#include "tools/aae_sort.h"
 
 class node_ordering {
 public:
@@ -53,7 +54,8 @@ public:
                         entries[i].degree = G.getNodeDegree(ordered_nodes[i]);
                         entries[i].node   = ordered_nodes[i];
                 }
-                std::sort( entries.begin(), entries.end(), 
+                // aae_sort: the same arrangement as std::sort, see tools/aae_sort.h
+                if(!entries.empty()) aae_sort( entries.data(), entries.data() + entries.size(), 
                            []( const entry & lhs, const entry & rhs) -> bool {
                                 return lhs.degree < rhs.degree;
                            });

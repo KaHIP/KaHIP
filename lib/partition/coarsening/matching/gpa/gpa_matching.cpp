@@ -12,6 +12,7 @@
 #include "gpa_matching.h"
 #include "macros_assertions.h"
 #include "random_functions.h"
+#include "tools/aae_sort.h"
 
 gpa_matching::gpa_matching() {
 
@@ -76,7 +77,8 @@ void gpa_matching::match(const PartitionConfig & partition_config,
                         if(i + 16 < edge_permutation.size()) __builtin_prefetch(&ratings[edge_permutation[i+16]]);
                         rated[i] = rated_edge(G.getEdgeRating(edge_permutation[i]), edge_permutation[i]);
                 }
-                std::sort(rated.begin(), rated.end(),
+                // aae_sort: the same arrangement as std::sort, see tools/aae_sort.h
+                if(!rated.empty()) aae_sort(rated.data(), rated.data() + rated.size(),
                     [](const rated_edge& left, const rated_edge& right)
                     {
                         return left.first > right.first;
