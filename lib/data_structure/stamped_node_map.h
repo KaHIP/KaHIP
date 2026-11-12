@@ -69,6 +69,11 @@ public:
 
         V * end() { return nullptr; }
 
+        // prefetch the stamp of key (the entry a find or operator[] reads first)
+        void prefetch(NodeID key) const {
+                if(m_store && key < m_store->stamp.size()) __builtin_prefetch(&m_store->stamp[key]);
+        }
+
         V & operator[](NodeID key) {
                 if(!m_store) return m_fallback[key];
                 store & s = *m_store;

@@ -206,6 +206,7 @@ class graph_access {
                 const Node * raw_nodes() { return graphref->m_nodes.data(); }
                 const Edge * raw_edges() { return graphref->m_edges.data(); }
                 const coarseningEdge * raw_coarsening_edges() { return graphref->m_coarsening_edge_props.data(); }
+                const refinementNode * raw_refinement_props() { return graphref->m_refinement_node_props.data(); }
 
                 EdgeWeight getNodeDegree(NodeID node);
                 EdgeWeight getWeightedNodeDegree(NodeID node);
