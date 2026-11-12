@@ -39,6 +39,25 @@ void gpa_matching::match(const PartitionConfig & partition_config,
 
         init(G, partition_config, permutation, edge_matching, edge_permutation, sources);
 
+        // Only the edges that the grow loop below can use are permuted and sorted: one direction
+        // per edge (target > source), positive rating, within the vertex weight bound and, with
+        // combine, inside a block of the second partition. (The order of equally rated edges is
+        // random either way.)
+        {
+                size_t kept = 0;
+                for( size_t i = 0; i < edge_permutation.size(); i++) {
+                        const EdgeID e      = edge_permutation[i];
+                        const NodeID source = sources[e];
+                        const NodeID target = G.getEdgeTarget(e);
+                        if(target < source) continue;
+                        if(G.getEdgeRating(e) == 0.0) continue;
+                        if(G.getNodeWeight(source) + G.getNodeWeight(target) > partition_config.max_vertex_weight) continue;
+                        if(partition_config.combine && G.getSecondPartitionIndex(source) != G.getSecondPartitionIndex(target)) continue;
+                        edge_permutation[kept++] = e;
+                }
+                edge_permutation.resize(kept);
+        }
+
         //permutation of the edges for random tie breaking
         if(partition_config.edge_rating_tiebreaking) {
                 PartitionConfig gpa_perm_config     = partition_config;
@@ -69,50 +88,24 @@ void gpa_matching::match(const PartitionConfig & partition_config,
 
         path_set pathset(&G, &partition_config);
 
-        //grow the paths
-        // The edges come in rating order, i.e. at random positions: the entries of edge e+16
-        // and then the node and path entries of edge e+8 are prefetched.
+        //grow the paths (the edges are all usable, see above)
+        // The edges come in rating order, i.e. at random positions: the source and edge entries
+        // of edge i+16 and then the path entries of the endpoints of edge i+8 are prefetched.
         const Edge * edges = G.raw_edges();
-        const Node * nodes = G.raw_nodes();
-        const coarseningEdge * edge_ratings = G.raw_coarsening_edges();
-        const EdgeID no_edges = G.number_of_edges();
-        forall_edges(G, e) {
-                if(e + 16 < no_edges) {
-                        const EdgeID f = edge_permutation[e+16];
+        const size_t no_edges = edge_permutation.size();
+        for( size_t i = 0; i < no_edges; i++) {
+                if(i + 16 < no_edges) {
+                        const EdgeID f = edge_permutation[i+16];
                         __builtin_prefetch(&sources[f]);
                         __builtin_prefetch(&edges[f]);
-                        __builtin_prefetch(&edge_ratings[f]);
                 }
-                if(e + 8 < no_edges) {
-                        const EdgeID f = edge_permutation[e+8];
-                        const NodeID s = sources[f], t = edges[f].target;
-                        if(t > s) {
-                                __builtin_prefetch(&nodes[s]); __builtin_prefetch(&nodes[t]);
-                                pathset.prefetch(s); pathset.prefetch(t);
-                        }
+                if(i + 8 < no_edges) {
+                        const EdgeID f = edge_permutation[i+8];
+                        pathset.prefetch(sources[f]); pathset.prefetch(edges[f].target);
                 }
-                EdgeID curEdge = edge_permutation[e];
-                NodeID source  = sources[curEdge];
-                NodeID target  = G.getEdgeTarget(curEdge); 
-                if(target < source) continue; // get rid of double edges
-
-                if(G.getEdgeRating(curEdge) == 0.0) {
-                        continue;
-                }
-
-                //max vertex weight constraint
-                if(G.getNodeWeight(source) + G.getNodeWeight(target) > partition_config.max_vertex_weight) {
-                        continue;
-                }
-
-                if( partition_config.combine ) {
-                        if(G.getSecondPartitionIndex(source) != G.getSecondPartitionIndex(target) ) {
-                                continue;
-                        }
-                }
-
-                pathset.add_if_applicable(source, curEdge);
-        } endfor 
+                const EdgeID curEdge = edge_permutation[i];
+                pathset.add_if_applicable(sources[curEdge], curEdge);
+        }
 
         extract_paths_apply_matching(G, sources, edge_matching, pathset); 
 
