@@ -228,18 +228,8 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                         const EdgeID e_end   = nodes[node+1].firstEdge;
                         //now move the node to the cluster that is most common in the neighborhood
 
-                        // beyond the neighbors prefetched one node ahead (32), prefetch the cluster id of
-                        // edge e+16 and the counter of the cluster of edge e+8
-                        if( e_end - e_begin > 32 ) {
-                                for( EdgeID e = e_begin; e < e_end; ++e) {
-                                        if( e + 16 < e_end ) __builtin_prefetch(&cid[edges[e+16].target]);
-                                        if( e + 8 < e_end ) __builtin_prefetch(&hm[cid[edges[e+8].target]]);
-                                        hm[cid[edges[e].target]] += edges[e].weight;
-                                }
-                        } else {
-                                for( EdgeID e = e_begin; e < e_end; ++e) {
-                                        hm[cid[edges[e].target]] += edges[e].weight;
-                                }
+                        for( EdgeID e = e_begin; e < e_end; ++e) {
+                                hm[cid[edges[e].target]] += edges[e].weight;
                         }
 
                         //second sweep for finding max and resetting array
