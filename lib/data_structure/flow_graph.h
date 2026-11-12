@@ -28,13 +28,20 @@ public:
                 m_num_edges = 0;
                 m_num_nodes = 0;
         };
-        virtual ~flow_graph() {};
+        // the edge arrays go back to the spare buffers, so the next flow problem reuses their capacity
+        virtual ~flow_graph() {
+                if(spare_edges().capacity() < m_edges.capacity()) spare_edges().swap(m_edges);
+                if(spare_pending().capacity() < m_pending.capacity()) spare_pending().swap(m_pending);
+        };
 
         void start_construction(NodeID nodes, EdgeID edges = 0) {
                 m_num_nodes = nodes;
                 m_num_edges = edges;
                 m_offset.assign(nodes + 1, 0);
+                if(m_pending.capacity() == 0) m_pending.swap(spare_pending());
                 m_pending.clear();
+                if(m_edges.capacity() == 0) m_edges.swap(spare_edges());
+                m_edges.clear();
         }
 
         void finish_construction() {
@@ -51,7 +58,8 @@ public:
                         rEdge & r = m_edges[m_offset[pe.target] + lt];
                         r.target = pe.source; r.reverse_edge_index = ls; r.capacity = 0; r.flow = 0;
                 }
-                std::vector<pending_edge>().swap(m_pending);
+                m_pending.clear();
+                if(spare_pending().capacity() < m_pending.capacity()) spare_pending().swap(m_pending);
         };
 
         NodeID number_of_nodes() {return m_num_nodes;};
@@ -83,6 +91,10 @@ private:
                 NodeID target;
                 FlowType capacity;
         };
+        // buffers kept between flow problems (taken by start_construction, returned when done)
+        static std::vector<pending_edge> & spare_pending() { static std::vector<pending_edge> b; return b; }
+        static std::vector<rEdge> & spare_edges() { static std::vector<rEdge> b; return b; }
+
         std::vector<EdgeID> m_offset;
         std::vector<rEdge> m_edges;
         std::vector<pending_edge> m_pending;
