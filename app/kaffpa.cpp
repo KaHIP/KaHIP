@@ -57,6 +57,7 @@ int main(int argn, char **argv) {
         if(ret_code) {
                 return 0;
         }
+        partition_config.gpa_usable_edges_only = true;
 
         std::streambuf* backup = std::cout.rdbuf();
         std::ofstream ofs;

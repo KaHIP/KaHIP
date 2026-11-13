@@ -40,11 +40,12 @@ void gpa_matching::match(const PartitionConfig & partition_config,
 
         init(G, partition_config, permutation, edge_matching, edge_permutation, sources);
 
-        // Only the edges that the grow loop below can use are permuted and sorted: one direction
-        // per edge (target > source), positive rating, within the vertex weight bound and, with
-        // combine, inside a block of the second partition. (The order of equally rated edges is
-        // random either way.)
-        {
+        // The grow loop below takes only usable edges: one direction per edge (target > source),
+        // positive rating, within the vertex weight bound and, with combine, inside a block of the
+        // second partition. With gpa_usable_edges_only (set by the kaffpa program, rule b) only these
+        // are permuted and sorted. Otherwise the full list is permuted and sorted as in the original
+        // and filtered afterwards, which keeps the original order of the usable edges.
+        auto keep_usable_edges = [&]() {
                 size_t kept = 0;
                 for( size_t i = 0; i < edge_permutation.size(); i++) {
                         const EdgeID e      = edge_permutation[i];
@@ -57,7 +58,8 @@ void gpa_matching::match(const PartitionConfig & partition_config,
                         edge_permutation[kept++] = e;
                 }
                 edge_permutation.resize(kept);
-        }
+        };
+        if(partition_config.gpa_usable_edges_only) keep_usable_edges();
 
         //permutation of the edges for random tie breaking
         if(partition_config.edge_rating_tiebreaking) {
@@ -87,6 +89,8 @@ void gpa_matching::match(const PartitionConfig & partition_config,
                         edge_permutation[i] = rated[i].second;
                 }
         }
+
+        if(!partition_config.gpa_usable_edges_only) keep_usable_edges();
 
         path_set pathset(&G, &partition_config);
 
