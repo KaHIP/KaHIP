@@ -28,7 +28,16 @@ bool boundary_bfs::boundary_bfs_search(graph_access & G,
                                        bool flow_tiebreaking) {
 
         std::queue<NodeID> node_queue;
-	std::vector<int> deepth(G.number_of_nodes(), -1);
+        // depth per node, reused across calls: all entries are -1 between calls; the nodes set in
+        // this call are exactly the ones appended to reached_nodes, which are reset before returning
+        static std::vector<int> deepth_store;
+        if(deepth_store.size() < G.number_of_nodes()) deepth_store.resize(G.number_of_nodes(), -1);
+        int * deepth = deepth_store.data();
+        const size_t reached_begin = reached_nodes.size();
+        struct reset_depths {
+                int * d; std::vector<NodeID> & r; size_t b;
+                ~reset_depths() { for(size_t i = b; i < r.size(); i++) d[r[i]] = -1; }
+        } reset_on_return = {deepth, reached_nodes, reached_begin};
 	int cur_deepth = 0;
        
         if(flow_tiebreaking) {

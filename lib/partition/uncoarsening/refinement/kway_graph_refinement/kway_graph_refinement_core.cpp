@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include "data_structure/priority_queues/bucket_pq.h"
-#include "data_structure/priority_queues/maxNodeHeap.h"
+#include "data_structure/priority_queues/fastMaxNodeHeap.h"
 #include "kway_graph_refinement_core.h"
 #include "kway_stop_rule.h"
 #include "quality_metrics.h"
@@ -44,6 +44,20 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round(PartitionCon
 }
 
 
+EdgeWeight kway_graph_refinement_core::single_kway_refinement_round(PartitionConfig & config, 
+                                                                    graph_access & G, 
+                                                                    complete_boundary & boundary, 
+                                                                    std::vector<kway_start_node> & start_nodes, 
+                                                                    int step_limit, 
+                                                                    vertex_moved_hashtable & moved_idx,
+                                                                    bool compute_touched_partitions,
+                                                                    std::unordered_map<PartitionID, PartitionID> & touched_blocks) {
+        boundary_starting_nodes unused;
+        return single_kway_refinement_round_internal(config, G, boundary, unused, 
+                                                     step_limit, moved_idx, compute_touched_partitions, 
+                                                     touched_blocks, &start_nodes);
+}
+
 EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(PartitionConfig & config, 
                                                                     graph_access & G, 
                                                                     complete_boundary & boundary, 
@@ -51,19 +65,25 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
                                                                     int step_limit,
                                                                     vertex_moved_hashtable & moved_idx,
                                                                     bool compute_touched_partitions,
-                                                                    std::unordered_map<PartitionID, PartitionID> &  touched_blocks) {
+                                                                    std::unordered_map<PartitionID, PartitionID> &  touched_blocks,
+                                                                    std::vector<kway_start_node> * cached_start_nodes) {
 
         if( commons == NULL ) commons = new kway_graph_refinement_commons(config);
+        commons->begin_cache_round(G);
 
         refinement_pq* queue = NULL;
         if(config.use_bucket_queues) {
                 EdgeWeight max_degree = G.getMaxDegree();
                 queue                 = new bucket_pq(max_degree);
         } else {
-                queue                 = new maxNodeHeap(); 
+                queue                 = new fastMaxNodeHeap(); 
         }
 
-        init_queue_with_boundary(config, G, start_nodes, queue, moved_idx);  
+        if(cached_start_nodes != NULL) {
+                init_queue_with_cached_gains(config, *cached_start_nodes, queue, moved_idx);  
+        } else {
+                init_queue_with_boundary(config, G, start_nodes, queue, moved_idx);  
+        }
         
         if(queue->empty()) {delete queue; return 0;}
 
@@ -93,6 +113,7 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
 
         }
 
+        fastMaxNodeHeap * heap = dynamic_cast<fastMaxNodeHeap*>(queue);
         for(number_of_swaps = 0, movements = 0; movements < max_number_of_swaps; movements++, number_of_swaps++) {
                 if( queue->empty() ) break;
                 if( stopping_rule->search_should_stop(min_cut_index, number_of_swaps, step_limit) ) break;
@@ -109,7 +130,8 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
 #endif
 
                 PartitionID from = G.getPartitionIndex(node); 
-                bool successfull = move_node(config, G, node, moved_idx, queue, boundary);
+                bool successfull = heap ? move_node(config, G, node, moved_idx, heap, boundary)
+                                        : move_node(config, G, node, moved_idx, queue, boundary);
 
                 if(successfull) {
                         cut -= gain;
@@ -149,7 +171,27 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
                 from_partitions.pop_back();
                 to_partitions.pop_back();
 
-                move_node_back(config, G, node, to,  moved_idx, queue, boundary);
+                // undo the move: partition and block weights only, the boundaries never saw it
+                PartitionID cur = G.getPartitionIndex(node);
+                NodeWeight w    = G.getNodeWeight(node);
+                G.setPartitionIndex(node, to);
+                boundary.setBlockNoNodes(cur, boundary.getBlockNoNodes(cur)-1);
+                boundary.setBlockNoNodes(to,  boundary.getBlockNoNodes(to)+1);
+                boundary.setBlockWeight( cur, boundary.getBlockWeight(cur)-w);
+                boundary.setBlockWeight( to,  boundary.getBlockWeight(to)+w);
+        }
+
+        // replay the kept moves on the boundaries in their original order and partition states
+        for(size_t i = transpositions.size(); i-- > 0; ) {
+                G.setPartitionIndex(transpositions[i], from_partitions[i]);
+        }
+        for(size_t i = 0; i < transpositions.size(); i++) {
+                G.setPartitionIndex(transpositions[i], to_partitions[i]);
+                boundary_pair pair;
+                pair.k   = config.k;
+                pair.lhs = from_partitions[i];
+                pair.rhs = to_partitions[i];
+                boundary.postMovedBoundaryNodeUpdates(transpositions[i], &pair, true, true);
         }
 
        
@@ -188,8 +230,41 @@ void kway_graph_refinement_core::init_queue_with_boundary(const PartitionConfig 
                         PartitionID max_gainer;
                         EdgeWeight ext_degree;
                         //compute gain
-                        Gain gain = commons->compute_gain(G, node, max_gainer, ext_degree);
+                        Gain gain = commons->compute_gain_cached(G, node, max_gainer, ext_degree);
                         queue->insert(node, gain);
+                        moved_idx[node].index = NOT_MOVED;
+                }
+        }
+}
+
+
+// Like init_queue_with_boundary, but reuses the gains the caller computed for
+// the start nodes in the current partition. The permutation and the random
+// tie-breaking draws of the skipped gain computations are replayed, so the
+// random number sequence is unchanged.
+void kway_graph_refinement_core::init_queue_with_cached_gains(const PartitionConfig & config,
+                std::vector<kway_start_node> & start_nodes,
+                refinement_pq * queue, vertex_moved_hashtable & moved_idx) {
+
+        // the permutations only swap positions, so permuting the indices of the
+        // start nodes gives the order init_queue_with_boundary would use
+        std::vector<unsigned> order(start_nodes.size());
+        for( unsigned int i = 0; i < order.size(); i++) {
+                order[i] = i;
+        }
+        if(config.permutation_during_refinement == PERMUTATION_QUALITY_FAST) {
+                random_functions::permutate_vector_fast(order, false);
+        } else if(config.permutation_during_refinement == PERMUTATION_QUALITY_GOOD) {
+                random_functions::permutate_vector_good(order, false);
+        }
+
+        for( unsigned int i = 0; i < order.size(); i++) {
+                const kway_start_node & start = start_nodes[order[i]];
+                NodeID node = start.node;
+
+                if( moved_idx.find(node) == moved_idx.end() ) {
+                        // rule (b): the tie draws of the recomputation are no longer replayed
+                        queue->insert(node, start.gain);
                         moved_idx[node].index = NOT_MOVED;
                 }
         }

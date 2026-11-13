@@ -97,7 +97,44 @@ class size_constraint_label_propagation : public matching {
                 void label_propagation(const PartitionConfig & partition_config, 
                                 graph_access & G, 
                                 std::vector<NodeWeight> & cluster_id,
-                                NodeID & number_of_blocks ); 
+                                NodeID & number_of_blocks );
+
+                // Initial partitioning coarsens the same graph once per repetition. While a graph is set
+                // here (it must stay structurally unchanged), its degree order and visiting-order copy are
+                // built once and reused by the single-clustering label propagation. nullptr clears it.
+                static void set_reuse_graph(const graph_access * G);
+
+        private:
+                struct reuse_store {
+                        const graph_access * graph = nullptr;
+                        bool                 valid = false;
+                        std::vector<NodeID>  order;
+                        std::vector<Node>    pnodes;
+                        std::vector<Edge>    pedges;
+                };
+                static reuse_store & reuse() { static reuse_store r; return r; }
+
+                // degree node order of the graph, computed once per ensemble (it depends only on G)
+                std::vector<NodeID> m_degree_order;
+                bool m_use_degree_order = false; 
+
+                // active-node sweeps (revisit only nodes whose neighborhood changed, stop when an iteration changes
+                // nothing) only for coarsening, where they were checked against the quality gate; direct calls
+                // (the label_propagation program) keep the original full sweeps
+                bool m_active_nodes = false;
+
+                // G stored in m_degree_order (visiting) order, built once per ensemble: position p holds
+                // node m_degree_order[p], edge targets are positions, edges in the same order per node
+                void build_permuted_graph(const PartitionConfig & partition_config, graph_access & G);
+                void label_propagation_permuted(const PartitionConfig & partition_config,
+                                graph_access & G,
+                                const NodeWeight & block_upperbound,
+                                std::vector<NodeID> & cluster_id,
+                                NodeID & number_of_blocks);
+                std::vector<Node> m_pnodes;
+                std::vector<Edge> m_pedges;
+                std::vector<PartitionID> m_ppart;
+                std::vector<PartitionID> m_psecond;
 
 };
 

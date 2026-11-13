@@ -5,6 +5,9 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
+#include <algorithm>
+#include <vector>
+
 #include "complete_boundary.h"
 #include "quality_metrics.h"
 #include "uncoarsening/refinement/connectivity_check.h"
@@ -14,13 +17,34 @@ complete_boundary::complete_boundary(graph_access * G) {
         m_pb_lhs_lazy = 0;
         m_pb_rhs_lazy = 0;
         m_last_pair   = 0;
+        m_lazy_dbp    = 0;
         m_last_key    = -1;
         m_block_infos.resize(G->get_partition_count());
+        m_index_k     = G->get_partition_count();
         delete Q.graphref;
         Q.graphref    = NULL;
 }
 
 complete_boundary::~complete_boundary() {
+}
+
+namespace {
+// per node: batch stamp, blocks already checked and result (bit 1: pair lhs, bit 2: pair rhs)
+struct incidence_memo {
+        std::vector<unsigned>      stamp;
+        std::vector<unsigned char> known;
+        std::vector<unsigned char> value;
+        unsigned                   cur = 0;
+};
+incidence_memo & inc_memo() { static incidence_memo m; return m; }
+}
+
+void complete_boundary::begin_fixed_partition_updates() {
+        incidence_memo & m = inc_memo();
+        const NodeID n = m_graph_ref->number_of_nodes();
+        if(m.stamp.size() < n) { m.stamp.resize(n, 0); m.known.resize(n, 0); m.value.resize(n, 0); }
+        if(++m.cur == 0) { std::fill(m.stamp.begin(), m.stamp.end(), 0); m.cur = 1; }
+        m_fixed_partition = true;
 }
 
 void complete_boundary::postMovedBoundaryNodeUpdates(NodeID node, boundary_pair * pair, 
@@ -49,23 +73,37 @@ void complete_boundary::postMovedBoundaryNodeUpdates(NodeID node, boundary_pair 
                                 deleteNode(node, from, &delete_bp);
 
                                 bool target_is_still_incident = false;
-                                //this should only be delete if there is other incident partition
-                                forall_out_edges(G, t_e, target) {
-                                        NodeID targets_target = G.getEdgeTarget(t_e); 
-                                        NodeID targets_target_partition = G.getPartitionIndex(targets_target); 
-                                        if(targets_target_partition == from) {
-                                                //since partition index of node is to it cant be node, and this edge is 
-                                                //a widness that target can remain in this boundary
-                                                target_is_still_incident = true;
-                                                break;
+                                incidence_memo & m = inc_memo();
+                                const unsigned char bit = from == pair->lhs ? 1 : 2;
+                                if(m_fixed_partition) {
+                                        if(m.stamp[target] != m.cur) { m.stamp[target] = m.cur; m.known[target] = 0; m.value[target] = 0; }
+                                }
+                                if(m_fixed_partition && (m.known[target] & bit)) {
+                                        target_is_still_incident = m.value[target] & bit;
+                                } else {
+                                        //this should only be delete if there is other incident partition
+                                        forall_out_edges(G, t_e, target) {
+                                                NodeID targets_target = G.getEdgeTarget(t_e); 
+                                                NodeID targets_target_partition = G.getPartitionIndex(targets_target); 
+                                                if(targets_target_partition == from) {
+                                                        //since partition index of node is to it cant be node, and this edge is 
+                                                        //a widness that target can remain in this boundary
+                                                        target_is_still_incident = true;
+                                                        break;
+                                                }
+                                        } endfor
+                                        if(m_fixed_partition) {
+                                                m.known[target] |= bit;
+                                                if(target_is_still_incident) m.value[target] |= bit;
                                         }
-                                } endfor
+                                }
 
                                 if(!target_is_still_incident)
                                         deleteNode(target, targetPartition, &delete_bp);
 
                                 if(update_edge_cuts) {
-                                        m_pairs[delete_bp].edge_cut -= edge_weight;    
+                                        // the deleteNode calls above made delete_bp the lazy pair (entry already created)
+                                        m_lazy_dbp->edge_cut -= edge_weight;    
                                 }
                         }
 
@@ -80,7 +118,8 @@ void complete_boundary::postMovedBoundaryNodeUpdates(NodeID node, boundary_pair 
                                 insert(target, targetPartition, &insert_bp); 
 
                                 if(update_edge_cuts) {
-                                        m_pairs[insert_bp].edge_cut += edge_weight;    
+                                        // the insert calls above made insert_bp the lazy pair
+                                        m_lazy_dbp->edge_cut += edge_weight;    
                                 }
                         }
                 } 

@@ -18,6 +18,7 @@
 #include "uncoarsening/refinement/quotient_graph_refinement/2way_fm_refinement/vertex_moved_hashtable.h"
 #include "uncoarsening/refinement/connectivity_check.h"
 #include "uncoarsening/refinement/refinement.h"
+#include "tools/cpu_hints.h"
 
 class kway_graph_refinement_core  {
         public:
@@ -39,6 +40,16 @@ class kway_graph_refinement_core  {
                                                         vertex_moved_hashtable & moved_idx,
                                                         std::unordered_map<PartitionID, PartitionID> & touched_blocks); 
 
+                // same as above, but the gains of the start nodes were just computed by the caller
+                EdgeWeight single_kway_refinement_round(PartitionConfig & config, 
+                                                        graph_access & G, 
+                                                        complete_boundary & boundary, 
+                                                        std::vector<kway_start_node> & start_nodes, 
+                                                        int step_limit, 
+                                                        vertex_moved_hashtable & moved_idx,
+                                                        bool compute_touched_partitions,
+                                                        std::unordered_map<PartitionID, PartitionID> & touched_blocks); 
+
 
          private:
                EdgeWeight single_kway_refinement_round_internal(PartitionConfig & config, 
@@ -48,7 +59,8 @@ class kway_graph_refinement_core  {
                                                                 int step_limit,
                                                                 vertex_moved_hashtable & moved_idx,
                                                                 bool compute_touched_partitions,
-                                                                std::unordered_map<PartitionID, PartitionID> &  touched_blocks); 
+                                                                std::unordered_map<PartitionID, PartitionID> &  touched_blocks,
+                                                                std::vector<kway_start_node> * cached_start_nodes = NULL); 
 
 
                 void init_queue_with_boundary(const PartitionConfig & config, 
@@ -57,11 +69,18 @@ class kway_graph_refinement_core  {
                                               refinement_pq * queue, 
                                               vertex_moved_hashtable & moved_idx);
 
+                void init_queue_with_cached_gains(const PartitionConfig & config, 
+                                                  std::vector<kway_start_node> & start_nodes, 
+                                                  refinement_pq * queue, 
+                                                  vertex_moved_hashtable & moved_idx);
+
+                // PQ is refinement_pq or a concrete queue class (calls without virtual dispatch)
+                template <typename PQ>
                 inline bool move_node(PartitionConfig & config, 
                                       graph_access & G, 
                                       NodeID & node, 
                                       vertex_moved_hashtable & moved_idx, 
-                                      refinement_pq * queue, 
+                                      PQ * queue, 
                                       complete_boundary & boundary);
 
                 inline void move_node_back(PartitionConfig & config, 
@@ -79,11 +98,12 @@ class kway_graph_refinement_core  {
                 kway_graph_refinement_commons* commons;
 };
 
+template <typename PQ>
 inline bool kway_graph_refinement_core::move_node(PartitionConfig & config, 
                 graph_access & G, 
                 NodeID & node, 
                 vertex_moved_hashtable & moved_idx, 
-                refinement_pq * queue, 
+                PQ * queue, 
                 complete_boundary & boundary) {
 
         ASSERT_TRUE(boundary.assert_bnodes_in_boundaries());
@@ -92,7 +112,7 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
         PartitionID from = G.getPartitionIndex(node);
         PartitionID to;
         EdgeWeight node_ext_deg;
-        commons->compute_gain(G, node, to, node_ext_deg);
+        commons->compute_gain_cached(G, node, to, node_ext_deg);
 
         NodeWeight this_nodes_weight = G.getNodeWeight(node);
         if(boundary.getBlockWeight(to) + this_nodes_weight >= config.upper_bound_partition) 
@@ -109,12 +129,8 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
 
         G.setPartitionIndex(node, to);        
 
-        boundary_pair pair;
-        pair.k = config.k;
-        pair.lhs = from;
-        pair.rhs = to;
-
-        boundary.postMovedBoundaryNodeUpdates(node, &pair, true, true);
+        // rule (b): the block-pair boundaries are not read during the search; they are updated at the
+        // end of the round for the kept moves only (single_kway_refinement_round_internal)
 
         boundary.setBlockNoNodes(from, boundary.getBlockNoNodes(from)-1);
         boundary.setBlockNoNodes(to,   boundary.getBlockNoNodes(to)+1);
@@ -125,13 +141,30 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
         ASSERT_TRUE(boundary.assert_boundaries_are_bnodes());
 
         //update gain of neighbors / the boundaries have allready been updated
+        // the neighbors' gains are computed one after the other from random memory: prefetch the node
+        // entries of the (first 32) neighbors now and the edges of the next neighbor one step ahead
+        const Node * nodes   = G.raw_nodes();
+        const Edge * edges   = G.raw_edges();
+        const EdgeID n_begin = nodes[node].firstEdge;
+        const EdgeID n_end   = nodes[node+1].firstEdge;
+        for(EdgeID e = n_begin; e < n_end && e < n_begin + 32; e++) KAHIP_PREFETCH(&nodes[edges[e].target]);
         forall_out_edges(G, e, node) {
                 NodeID target = G.getEdgeTarget(e);
+                if(e + 1 < n_end) KAHIP_PREFETCH(&edges[nodes[edges[e+1].target].firstEdge]);
+                if(G.getNodeDegree(target) >= CACHE_MIN_DEGREE) {
+                        commons->cache_neighbor_moved(target, from, to, G.getEdgeWeight(e));
+                }
+                // rule (b): a moved node that is no longer queued is left untouched below, so its gain
+                // (computed only for the tie draws) is skipped
+                // (queue and moved_idx do not change between the tests below, so each is made once)
+                const bool queued = queue->contains(target);
+                const bool seen   = !queued && moved_idx.find(target) != moved_idx.end();
+                if(seen) continue;
                 PartitionID targets_max_gainer;
                 EdgeWeight ext_degree; // the local external degree
-                Gain gain = commons->compute_gain(G, target, targets_max_gainer, ext_degree);
+                Gain gain = commons->compute_gain_cached(G, target, targets_max_gainer, ext_degree);
 
-                if(queue->contains(target)) {
+                if(queued) {
                         assert(moved_idx.find(target) != moved_idx.end());
                         if(ext_degree > 0) {
                                 queue->changeKey(target, gain);
@@ -140,10 +173,9 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
                         }
                 } else {
                         if(ext_degree > 0) {
-                                if(moved_idx.find(target) == moved_idx.end()) {
-                                        queue->insert(target, gain);
-                                        moved_idx[target].index = NOT_MOVED;
-                                } 
+                                // not queued and not seen: not in moved_idx
+                                queue->insert(target, gain);
+                                moved_idx[target].index = NOT_MOVED;
                         } 
                 }
         } endfor

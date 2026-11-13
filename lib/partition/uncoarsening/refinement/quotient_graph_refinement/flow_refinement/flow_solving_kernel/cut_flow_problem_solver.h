@@ -45,7 +45,8 @@ class cut_flow_problem_solver  {
                                       std::vector<NodeID> & lhs_boundary_stripe,
                                       std::vector<NodeID> & rhs_boundary_stripe,
                                       std::vector<NodeID> & new_to_old_ids,              
-                                      flow_graph & rG); 
+                                      flow_graph & rG,
+                                      FlowType & lhs_rhs_capacity); 
 
 };
 

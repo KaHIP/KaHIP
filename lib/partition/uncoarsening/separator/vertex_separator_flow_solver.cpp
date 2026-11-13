@@ -138,6 +138,7 @@ bool vertex_separator_flow_solver::build_flow_pb( const PartitionConfig & config
                 fG.new_edge(sourceID, sink, G.getNodeWeight(rhs_nodes[i]));
         }
 
+        fG.finish_construction();
         return true;
 }
 

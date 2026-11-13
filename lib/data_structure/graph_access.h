@@ -11,6 +11,8 @@
 #include <bitset>
 #include <cassert>
 #include <iostream>
+#include <memory>
+#include <utility>
 #include <vector>
 
 #include "definitions.h"
@@ -32,6 +34,19 @@ struct refinementNode {
 
 struct coarseningEdge {
     EdgeRatingType rating;
+};
+
+// Allocator whose value-less construct default-initializes: resize() of a vector of trivial
+// structs then leaves the new elements unwritten instead of zeroing them.
+template <typename T>
+struct default_init_allocator : std::allocator<T> {
+        template <typename U> struct rebind { typedef default_init_allocator<U> other; };
+        default_init_allocator() noexcept {}
+        template <typename U> default_init_allocator(const default_init_allocator<U> &) noexcept {}
+        template <typename U> void construct(U * p) noexcept { ::new (static_cast<void*>(p)) U; }
+        template <typename U, typename... Args> void construct(U * p, Args&&... args) {
+                ::new (static_cast<void*>(p)) U(std::forward<Args>(args)...);
+        }
 };
 
 class graph_access;
@@ -87,7 +102,11 @@ private:
         ASSERT_TRUE(m_building_graph);
         ASSERT_TRUE(e < m_edges.size());
        
+        // the edge arrays are not zeroed by start_construction; an edge gets the values it had
+        // there (weight 0, rating 0) when it is created
         m_edges[e].target = target;
+        m_edges[e].weight = 0;
+        m_coarsening_edge_props[e].rating = 0;
         EdgeID e_bar = e;
         ++e;
 
@@ -133,10 +152,10 @@ private:
     // %%%%%%%%%%%%%%%%%%% DATA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     // split properties for coarsening and uncoarsening
     std::vector<Node> m_nodes;
-    std::vector<Edge> m_edges;
+    std::vector<Edge, default_init_allocator<Edge> > m_edges;
     
     std::vector<refinementNode> m_refinement_node_props;
-    std::vector<coarseningEdge> m_coarsening_edge_props;
+    std::vector<coarseningEdge, default_init_allocator<coarseningEdge> > m_coarsening_edge_props;
 
     // Offsets for computing sizes of reachable sets for contracted nodes
     std::vector<NodeWeight> m_contraction_offset;
@@ -201,6 +220,11 @@ class graph_access {
 
                 NodeWeight getNodeWeight(NodeID node);
                 void setNodeWeight(NodeID node, NodeWeight weight);
+
+                // raw read access to the CSR arrays (for tight loops; valid until the graph is modified)
+                const Node * raw_nodes() { return graphref->m_nodes.data(); }
+                const Edge * raw_edges() { return graphref->m_edges.data(); }
+                const coarseningEdge * raw_coarsening_edges() { return graphref->m_coarsening_edge_props.data(); }
 
                 EdgeWeight getNodeDegree(NodeID node);
                 EdgeWeight getWeightedNodeDegree(NodeID node);

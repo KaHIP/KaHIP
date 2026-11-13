@@ -183,9 +183,17 @@ void edge_ratings::rate_expansion_star_2(graph_access & G) {
 }
 
 void edge_ratings::rate_inner_outer(graph_access & G) {
+#ifndef WALSHAWMH
+        // weighted degree of every node computed once (was recomputed per incident edge, which is
+        // quadratic in the degree of hubs); edge weights do not change in this loop
+        std::vector<EdgeWeight> weighted_degree(G.number_of_nodes());
+        forall_nodes(G,n) {
+                weighted_degree[n] = G.getWeightedNodeDegree(n);
+        } endfor
+#endif
         forall_nodes(G,n) {
 #ifndef WALSHAWMH
-                EdgeWeight sourceDegree = G.getWeightedNodeDegree(n);
+                EdgeWeight sourceDegree = weighted_degree[n];
 #else
                 EdgeWeight sourceDegree = G.getNodeDegree(n);
 #endif
@@ -194,7 +202,7 @@ void edge_ratings::rate_inner_outer(graph_access & G) {
                 forall_out_edges(G, e, n) {
                         NodeID targetNode = G.getEdgeTarget(e);
 #ifndef WALSHAWMH
-                        EdgeWeight targetDegree = G.getWeightedNodeDegree(targetNode);
+                        EdgeWeight targetDegree = weighted_degree[targetNode];
 #else
                         EdgeWeight targetDegree = G.getNodeDegree(targetNode);
 #endif

@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include "bipartition.h"
+#include "coarsening/clustering/size_constraint_label_propagation.h"
 #include "graph_partition_assertions.h"
 #include "graph_partitioner.h"
 #include "initial_partition_bipartition.h"
@@ -85,6 +86,9 @@ void initial_partitioning::perform_initial_partitioning(const PartitionConfig & 
         PRINT(std::cout << "no of initial partitioning repetitions = " << reps_to_do                     << std::endl;);
         PRINT(std::cout << "no of nodes for partition = "              << G.number_of_nodes()            << std::endl;);
         if(!((config.graph_allready_partitioned && config.no_new_initial_partitioning) || config.omit_given_partitioning)) {
+                // the repetitions coarsen the same (unchanged) graph G again: reuse its LP visiting-order copy
+                const bool reuse_lp = config.initial_partitioning_type == INITIAL_PARTITIONING_RECPARTITION;
+                if(reuse_lp) size_constraint_label_propagation::set_reuse_graph(&G);
                 for(unsigned int rep = 0; rep < reps_to_do; rep++) {
                         unsigned seed = random_functions::nextInt(0, std::numeric_limits<int>::max()); 
                         PartitionConfig working_config = config;
@@ -104,6 +108,8 @@ void initial_partitioning::perform_initial_partitioning(const PartitionConfig & 
                                 if(best_cut == 0) break;
                         }
                 }
+
+                if(reuse_lp) size_constraint_label_propagation::set_reuse_graph(nullptr);
 
                 forall_nodes(G, n) {
                         G.setPartitionIndex(n,best_map[n]); 

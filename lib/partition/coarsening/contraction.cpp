@@ -103,25 +103,11 @@ void contraction::contract_clustering(const PartitionConfig & partition_config,
                 coarser.resizeSecondPartitionIndex(no_of_coarse_vertices);
         }
 
-        //save partition map -- important if the graph is allready partitioned
-        std::vector< int > partition_map(G.number_of_nodes());
-        int k = G.get_partition_count();
+        // the coarse graph is the quotient graph of the clustering, built from coarse_mapping directly
+        // (G's partition indices are left untouched)
+        complete_boundary::computeClusterGraph(G, coarse_mapping, coarser, no_of_coarse_vertices);
+
         forall_nodes(G, node) {
-                partition_map[node] = G.getPartitionIndex(node);
-                G.setPartitionIndex(node, coarse_mapping[node]);
-        } endfor
-
-        G.set_partition_count(no_of_coarse_vertices);
-
-        complete_boundary bnd(&G);
-        //bnd.build();
-        bnd.fastComputeQuotientGraph(coarser, no_of_coarse_vertices);
-        //bnd.getUnderlyingQuotientGraph(coarser);
-        //
-
-        G.set_partition_count(k);
-        forall_nodes(G, node) {
-                G.setPartitionIndex(node, partition_map[node]);
                 coarser.setPartitionIndex(coarse_mapping[node], G.getPartitionIndex(node));
 
                 if(partition_config.combine) {

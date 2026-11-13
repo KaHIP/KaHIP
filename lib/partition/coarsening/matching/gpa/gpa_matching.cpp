@@ -12,6 +12,8 @@
 #include "gpa_matching.h"
 #include "macros_assertions.h"
 #include "random_functions.h"
+#include "tools/std_sort_replica.h"
+#include "tools/cpu_hints.h"
 
 gpa_matching::gpa_matching() {
 
@@ -39,6 +41,27 @@ void gpa_matching::match(const PartitionConfig & partition_config,
 
         init(G, partition_config, permutation, edge_matching, edge_permutation, sources);
 
+        // The grow loop below takes only usable edges: one direction per edge (target > source),
+        // positive rating, within the vertex weight bound and, with combine, inside a block of the
+        // second partition. With gpa_usable_edges_only (set by the kaffpa program, rule b) only these
+        // are permuted and sorted. Otherwise the full list is permuted and sorted as in the original
+        // and filtered afterwards, which keeps the original order of the usable edges.
+        auto keep_usable_edges = [&]() {
+                size_t kept = 0;
+                for( size_t i = 0; i < edge_permutation.size(); i++) {
+                        const EdgeID e      = edge_permutation[i];
+                        const NodeID source = sources[e];
+                        const NodeID target = G.getEdgeTarget(e);
+                        if(target < source) continue;
+                        if(G.getEdgeRating(e) == 0.0) continue;
+                        if(G.getNodeWeight(source) + G.getNodeWeight(target) > partition_config.max_vertex_weight) continue;
+                        if(partition_config.combine && G.getSecondPartitionIndex(source) != G.getSecondPartitionIndex(target)) continue;
+                        edge_permutation[kept++] = e;
+                }
+                edge_permutation.resize(kept);
+        };
+        if(partition_config.gpa_usable_edges_only) keep_usable_edges();
+
         //permutation of the edges for random tie breaking
         if(partition_config.edge_rating_tiebreaking) {
                 PartitionConfig gpa_perm_config     = partition_config;
@@ -46,38 +69,50 @@ void gpa_matching::match(const PartitionConfig & partition_config,
                 random_functions::permutate_entries(gpa_perm_config, edge_permutation, false);
         }
 
-        std::sort(edge_permutation.begin(), edge_permutation.end(),
-            [&G](const EdgeRatingType& left, const EdgeRatingType& right)
-            {
-                return G.getEdgeRating(left) > G.getEdgeRating(right);
-            });
+        // Sort (rating, edge) pairs by rating with the same comparison as sorting the edge ids
+        // by G.getEdgeRating: std::sort's steps depend only on the comparison outcomes, so the
+        // resulting order (including ties) is identical, without the indirect rating loads.
+        {
+                typedef std::pair<EdgeRatingType, EdgeID> rated_edge;
+                std::vector<rated_edge> rated(edge_permutation.size());
+                const coarseningEdge * ratings = G.raw_coarsening_edges();
+                for( size_t i = 0; i < edge_permutation.size(); i++) {
+                        if(i + 16 < edge_permutation.size()) KAHIP_PREFETCH(&ratings[edge_permutation[i+16]]);
+                        rated[i] = rated_edge(G.getEdgeRating(edge_permutation[i]), edge_permutation[i]);
+                }
+                // std_sort_replica: the same arrangement as std::sort, see tools/std_sort_replica.h
+                if(!rated.empty()) std_sort_replica(rated.data(), rated.data() + rated.size(),
+                    [](const rated_edge& left, const rated_edge& right)
+                    {
+                        return left.first > right.first;
+                    });
+                for( size_t i = 0; i < rated.size(); i++) {
+                        edge_permutation[i] = rated[i].second;
+                }
+        }
+
+        if(!partition_config.gpa_usable_edges_only) keep_usable_edges();
 
         path_set pathset(&G, &partition_config);
 
-        //grow the paths
-        forall_edges(G, e) {
-                EdgeID curEdge = edge_permutation[e];
-                NodeID source  = sources[curEdge];
-                NodeID target  = G.getEdgeTarget(curEdge); 
-                if(target < source) continue; // get rid of double edges
-
-                if(G.getEdgeRating(curEdge) == 0.0) {
-                        continue;
+        //grow the paths (the edges are all usable, see above)
+        // The edges come in rating order, i.e. at random positions: the source and edge entries
+        // of edge i+16 and then the path entries of the endpoints of edge i+8 are prefetched.
+        const Edge * edges = G.raw_edges();
+        const size_t no_edges = edge_permutation.size();
+        for( size_t i = 0; i < no_edges; i++) {
+                if(i + 16 < no_edges) {
+                        const EdgeID f = edge_permutation[i+16];
+                        KAHIP_PREFETCH(&sources[f]);
+                        KAHIP_PREFETCH(&edges[f]);
                 }
-
-                //max vertex weight constraint
-                if(G.getNodeWeight(source) + G.getNodeWeight(target) > partition_config.max_vertex_weight) {
-                        continue;
+                if(i + 8 < no_edges) {
+                        const EdgeID f = edge_permutation[i+8];
+                        pathset.prefetch(sources[f]); pathset.prefetch(edges[f].target);
                 }
-
-                if( partition_config.combine ) {
-                        if(G.getSecondPartitionIndex(source) != G.getSecondPartitionIndex(target) ) {
-                                continue;
-                        }
-                }
-
-                pathset.add_if_applicable(source, curEdge);
-        } endfor 
+                const EdgeID curEdge = edge_permutation[i];
+                pathset.add_if_applicable(sources[curEdge], curEdge);
+        }
 
         extract_paths_apply_matching(G, sources, edge_matching, pathset); 
 

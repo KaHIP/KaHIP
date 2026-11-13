@@ -24,6 +24,11 @@ struct PartitionConfig
         //============================================================
         bool edge_rating_tiebreaking;
 
+        // gpa matching permutes and sorts only the usable edges (rule b, checked on the kaffpa program's quality
+        // gate). Set only by app/kaffpa.cpp; the other programs keep the original full sort (edge_partitioning's
+        // split graphs, with many equally rated edges, lost about 1.2% in vertex cut with it).
+        bool gpa_usable_edges_only = false;
+
         EdgeRating edge_rating;
         
         PermutationQuality permutation_quality;

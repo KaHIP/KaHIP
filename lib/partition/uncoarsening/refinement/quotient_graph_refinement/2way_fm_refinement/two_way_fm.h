@@ -52,18 +52,23 @@ class two_way_fm : public two_way_refinement {
                                 PartitionID other); 
 
 
+                // PQ is refinement_pq or a concrete queue type (calls without virtual dispatch)
+                template <typename PQ>
                 void move_node(const PartitionConfig & config, 
                                graph_access & G,
                                const NodeID & node,
                                vertex_moved_hashtable & moved_idx,
-                               refinement_pq * from_queue,
-                               refinement_pq * to_queue,
+                               PQ * from_queue,
+                               PQ * to_queue,
                                PartitionID from,
                                PartitionID to,
                                boundary_pair * pair,
                                NodeWeight * from_part_weight,
                                NodeWeight * to_part_weight,
                                complete_boundary & boundary);
+
+                void replay_kept_moves(graph_access & G, std::vector<NodeID> & kept,
+                                       boundary_pair * pair, complete_boundary & boundary);
 
                 void move_node_back(const PartitionConfig & config, 
                                     graph_access & G,

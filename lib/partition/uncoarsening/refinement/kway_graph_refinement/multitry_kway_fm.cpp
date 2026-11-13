@@ -119,6 +119,7 @@ int multitry_kway_fm::start_more_locallized_search(PartitionConfig & config, gra
         int local_step_limit = 0;
 
         vertex_moved_hashtable moved_idx;
+        std::vector<kway_start_node> real_start_nodes;
         unsigned idx            = todolist.size()-1;
         int overall_improvement = 0;
         
@@ -128,40 +129,38 @@ int multitry_kway_fm::start_more_locallized_search(PartitionConfig & config, gra
 
                 PartitionID maxgainer;
                 EdgeWeight extdeg = 0;
-                commons->compute_gain(G, node, maxgainer, extdeg);
+                unsigned ties     = 0;
+                Gain gain = 0;
+                // rule (b): the gain of an already moved start node is not computed (it was only
+                // computed for its tie draws)
+                bool not_moved = moved_idx.find(node) == moved_idx.end();
+                if(not_moved) gain = commons->compute_gain(G, node, maxgainer, extdeg, ties);
 
-                if(moved_idx.find(node) == moved_idx.end() && extdeg > 0) { 
-                        boundary_starting_nodes real_start_nodes;
-                        real_start_nodes.push_back(node);
+                if(not_moved && extdeg > 0) { 
+                        // the start nodes with the gains just computed for them; the partition
+                        // does not change before the search inserts them into its queue
+                        real_start_nodes.clear();
+                        real_start_nodes.push_back(kway_start_node{node, gain, ties});
 
                         if(init_neighbors) {
                                 forall_out_edges(G, e, node) {
                                         NodeID target = G.getEdgeTarget(e);
                                         if(moved_idx.find(target) == moved_idx.end()) {
                                                 extdeg = 0;                                        
-                                                commons->compute_gain(G, target, maxgainer, extdeg);
+                                                gain = commons->compute_gain(G, target, maxgainer, extdeg, ties);
                                                 if(extdeg > 0) {
-                                                        real_start_nodes.push_back(target);
+                                                        real_start_nodes.push_back(kway_start_node{target, gain, ties});
                                                 }
                                         }
                                 } endfor
                         }        
-                        int improvement = 0;
-                        if(compute_touched_blocks) {
-                                improvement = refinement_core.single_kway_refinement_round(config, G, 
-                                                                                           boundary, real_start_nodes, 
-                                                                                           local_step_limit, moved_idx, 
-                                                                                           touched_blocks);
-                                if(improvement < 0) {
-                                        std::cout <<  "buf error improvement < 0"  << std::endl;
-                                }
-                        } else {
-                                improvement = refinement_core.single_kway_refinement_round(config, G, 
-                                                                                           boundary, real_start_nodes, 
-                                                                                           local_step_limit, moved_idx);
-                                if(improvement < 0) {
-                                        std::cout <<  "buf error improvement < 0"  << std::endl;
-                                }
+                        int improvement = refinement_core.single_kway_refinement_round(config, G, 
+                                                                                       boundary, real_start_nodes, 
+                                                                                       local_step_limit, moved_idx, 
+                                                                                       compute_touched_blocks,
+                                                                                       touched_blocks);
+                        if(improvement < 0) {
+                                std::cout <<  "buf error improvement < 0"  << std::endl;
                         }
 
                         overall_improvement += improvement;

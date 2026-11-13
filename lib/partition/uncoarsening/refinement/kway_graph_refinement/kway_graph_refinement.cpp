@@ -13,6 +13,7 @@
 #include "kway_stop_rule.h"
 #include "quality_metrics.h"
 #include "random_functions.h"
+#include "data_structure/stamped_node_map.h"
 
 kway_graph_refinement::kway_graph_refinement() {
 }
@@ -61,7 +62,7 @@ void kway_graph_refinement::setup_start_nodes(PartitionConfig & config, graph_ac
         QuotientGraphEdges quotient_graph_edges;
         boundary.getQuotientGraphEdges(quotient_graph_edges);
 
-        std::unordered_map<NodeID, bool> allready_contained;
+        stamped_node_map<char> allready_contained; // lookup only, never iterated
 
         for( unsigned i = 0; i < quotient_graph_edges.size(); i++) {
                 boundary_pair & ret_value = quotient_graph_edges[i];

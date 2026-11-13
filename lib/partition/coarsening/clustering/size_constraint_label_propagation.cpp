@@ -6,6 +6,8 @@
  *****************************************************************************/
 
 
+#include <algorithm>
+#include <limits>
 #include <unordered_map>
 
 #include <sstream>
@@ -20,6 +22,7 @@
 #include "io/graph_io.h"
 
 #include "size_constraint_label_propagation.h"
+#include "tools/cpu_hints.h"
 
 size_constraint_label_propagation::size_constraint_label_propagation() {
                 
@@ -39,11 +42,13 @@ void size_constraint_label_propagation::match(const PartitionConfig & partition_
         coarse_mapping.resize(G.number_of_nodes());
         no_of_coarse_vertices = 0;
 
+        m_active_nodes = true;
         if ( partition_config.ensemble_clusterings ) {
                 ensemble_clusterings(partition_config, G, _matching, coarse_mapping, no_of_coarse_vertices, permutation);
         } else {
                 match_internal(partition_config, G, _matching, coarse_mapping, no_of_coarse_vertices, permutation);
         }
+        m_active_nodes = false;
 }
 
 void size_constraint_label_propagation::match_internal(const PartitionConfig & partition_config, 
@@ -66,24 +71,45 @@ void size_constraint_label_propagation::ensemble_two_clusterings( graph_access &
                                                                   std::vector< NodeID > & output,
                                                                   NodeID & no_of_coarse_vertices) {
 
-
-        hash_ensemble new_mapping; 
-        no_of_coarse_vertices = 0;
-        for( NodeID node = 0; node < lhs.size(); node++) {
-                ensemble_pair cur_pair;
-                cur_pair.lhs = lhs[node]; 
-                cur_pair.rhs = rhs[node]; 
-                cur_pair.n   = G.number_of_nodes(); 
-
-                if(new_mapping.find(cur_pair) == new_mapping.end() ) {
-                        new_mapping[cur_pair].mapping = no_of_coarse_vertices;
-                        no_of_coarse_vertices++;
-                }
-
-                output[node] = new_mapping[cur_pair].mapping;
+        // Each distinct pair (lhs[node], rhs[node]) gets the next id at its first occurrence in node
+        // order, as with the former hash map. The nodes are bucketed by lhs (stable), so the first
+        // occurrence of every pair is found with an array indexed by rhs instead of hashing.
+        // output may alias lhs or rhs, so all inputs are read before output is written.
+        const NodeID n = lhs.size();
+        NodeID max_lhs = 0, max_rhs = 0;
+        for( NodeID node = 0; node < n; node++) {
+                max_lhs = std::max(max_lhs, lhs[node]);
+                max_rhs = std::max(max_rhs, rhs[node]);
         }
 
-        no_of_coarse_vertices = new_mapping.size();
+        std::vector<NodeID> start(n == 0 ? 1 : max_lhs + 2, 0);
+        for( NodeID node = 0; node < n; node++) start[lhs[node]+1]++;
+        for( NodeID c = 1; c < start.size(); c++) start[c] += start[c-1];
+
+        std::vector<NodeID> order(n);
+        for( NodeID node = 0; node < n; node++) order[start[lhs[node]]++] = node;
+        // start[c] is now the end of bucket c
+
+        const NodeID unset = std::numeric_limits<NodeID>::max();
+        std::vector<NodeID> first_seen(n == 0 ? 1 : max_rhs + 1, unset);
+        std::vector<NodeID> first(n);
+        NodeID begin = 0;
+        for( NodeID c = 0; c + 1 < start.size(); c++) {
+                const NodeID end = start[c];
+                for( NodeID i = begin; i < end; i++) {
+                        const NodeID node = order[i];
+                        NodeID & f = first_seen[rhs[node]];
+                        if( f == unset ) f = node;
+                        first[node] = f;
+                }
+                for( NodeID i = begin; i < end; i++) first_seen[rhs[order[i]]] = unset;
+                begin = end;
+        }
+
+        no_of_coarse_vertices = 0;
+        for( NodeID node = 0; node < n; node++) {
+                output[node] = first[node] == node ? no_of_coarse_vertices++ : output[first[node]];
+        }
 }
 
 
@@ -96,6 +122,16 @@ void size_constraint_label_propagation::ensemble_clusterings(const PartitionConf
         int runs = partition_config.number_of_clusterings;
         std::vector< NodeID >  cur_cluster(G.number_of_nodes(), 0);
         std::vector< NodeID >  ensemble_cluster(G.number_of_nodes(),0);
+
+        // The degree order is deterministic and the graph does not change between the runs, so it is
+        // sorted once (the random order draws randoms and is still computed per run).
+        if( partition_config.node_ordering == DEGREE_NODEORDERING ) {
+                m_degree_order.resize(G.number_of_nodes());
+                node_ordering n_ordering;
+                n_ordering.order_nodes(partition_config, G, m_degree_order);
+                m_use_degree_order = true;
+                build_permuted_graph(partition_config, G);
+        }
 
         int new_cf = partition_config.cluster_coarsening_factor;
         for( int i = 0; i < runs; i++) {
@@ -117,6 +153,11 @@ void size_constraint_label_propagation::ensemble_clusterings(const PartitionConf
                 new_cf = random_functions::nextInt(10, 30);
         }
 
+        m_use_degree_order = false;
+        std::vector<Node>().swap(m_pnodes);
+        std::vector<Edge>().swap(m_pedges);
+        std::vector<PartitionID>().swap(m_ppart);
+        std::vector<PartitionID>().swap(m_psecond);
         create_coarsemapping( partition_config, G, ensemble_cluster, coarse_mapping);
 
 
@@ -138,62 +179,197 @@ void size_constraint_label_propagation::label_propagation(const PartitionConfig 
                                                          NodeID & no_of_blocks) {
         // in this case the _matching paramter is not used 
         // coarse_mappng stores cluster id and the mapping (it is identical)
-        std::vector<PartitionID> hash_map(G.number_of_nodes(),0);
-        std::vector<NodeID> permutation(G.number_of_nodes());
-        std::vector<NodeWeight> cluster_sizes(G.number_of_nodes());
-        cluster_id.resize(G.number_of_nodes());
+        if( m_use_degree_order ) { // ensemble: order and permuted copy of G built once for all clusterings
+                label_propagation_permuted( partition_config, G, block_upperbound, cluster_id, no_of_blocks);
+                return;
+        }
 
-        forall_nodes(G, node) {
-                cluster_sizes[node] = G.getNodeWeight(node);
-                cluster_id[node]    = node;
-        } endfor
-        
+        // a single clustering also runs on a copy of G in its visiting order
+        reuse_store & r = reuse();
+        if( r.graph == &G && partition_config.node_ordering == DEGREE_NODEORDERING
+            && !partition_config.graph_allready_partitioned && !partition_config.combine ) {
+                if( !r.valid ) {
+                        std::vector<NodeID> permutation(G.number_of_nodes());
+                        node_ordering n_ordering;
+                        n_ordering.order_nodes(partition_config, G, permutation);
+                        r.order.swap(permutation);
+                        m_degree_order.swap(r.order);
+                        build_permuted_graph(partition_config, G);
+                        m_degree_order.swap(r.order);
+                        r.pnodes.swap(m_pnodes);
+                        r.pedges.swap(m_pedges);
+                        r.valid = true;
+                }
+                m_degree_order.swap(r.order);
+                m_pnodes.swap(r.pnodes);
+                m_pedges.swap(r.pedges);
+                label_propagation_permuted( partition_config, G, block_upperbound, cluster_id, no_of_blocks);
+                m_degree_order.swap(r.order);
+                m_pnodes.swap(r.pnodes);
+                m_pedges.swap(r.pedges);
+                return;
+        }
+        std::vector<NodeID> permutation(G.number_of_nodes());
         node_ordering n_ordering;
         n_ordering.order_nodes(partition_config, G, permutation);
+        m_degree_order.swap(permutation);
+        build_permuted_graph(partition_config, G);
+        label_propagation_permuted( partition_config, G, block_upperbound, cluster_id, no_of_blocks);
+        m_degree_order.swap(permutation);
+}
 
-        for( int j = 0; j < partition_config.label_iterations; j++) {
+
+
+void size_constraint_label_propagation::set_reuse_graph(const graph_access * G) {
+        reuse_store & r = reuse();
+        r.graph = G;
+        r.valid = false;
+        std::vector<NodeID>().swap(r.order);
+        std::vector<Node>().swap(r.pnodes);
+        std::vector<Edge>().swap(r.pedges);
+}
+
+void size_constraint_label_propagation::build_permuted_graph(const PartitionConfig & partition_config, graph_access & G) {
+        const NodeID n = G.number_of_nodes();
+        const Node * nodes = G.raw_nodes();
+        const Edge * edges = G.raw_edges();
+        std::vector<NodeID> pos(n);
+        for( NodeID p = 0; p < n; p++) pos[m_degree_order[p]] = p;
+        m_pnodes.resize(n+1);
+        m_pedges.resize(G.number_of_edges());
+        EdgeID cur = 0;
+        for( NodeID p = 0; p < n; p++) {
+                const NodeID node = m_degree_order[p];
+                m_pnodes[p].firstEdge = cur;
+                m_pnodes[p].weight    = nodes[node].weight;
+                for( EdgeID e = nodes[node].firstEdge; e < nodes[node+1].firstEdge; ++e, ++cur) {
+                        m_pedges[cur].target = pos[edges[e].target];
+                        m_pedges[cur].weight = edges[e].weight;
+                }
+        }
+        m_pnodes[n].firstEdge = cur;
+        m_pnodes[n].weight    = 0;
+        if( partition_config.graph_allready_partitioned ) {
+                m_ppart.resize(n);
+                for( NodeID p = 0; p < n; p++) m_ppart[p] = G.getPartitionIndex(m_degree_order[p]);
+        }
+        if( partition_config.combine ) {
+                m_psecond.resize(n);
+                for( NodeID p = 0; p < n; p++) m_psecond[p] = G.getSecondPartitionIndex(m_degree_order[p]);
+        }
+}
+
+namespace {
+struct lp_cluster_slot {
+        PartitionID votes;
+        NodeWeight  size;
+};
+
+// The sweeps of label_propagation_permuted. ActiveNodes (coarsening only, checked against the quality gate): revisit
+// only nodes whose neighborhood changed and stop when an iteration changes nothing. Without it (direct calls such as
+// the label_propagation program): the original full sweeps. A template, so the coarsening loop has no extra branch.
+template<bool ActiveNodes>
+void lp_sweeps(const NodeID n, const Node * nodes, const Edge * edges, lp_cluster_slot * cl, NodeID * cid,
+               const bool check_partition, const bool check_second, const PartitionID * ppart,
+               const PartitionID * psecond, const NodeWeight block_upperbound, const int label_iterations) {
+        std::vector<char> active(ActiveNodes ? n : 0, 1);
+        char * act = active.data();
+        for( int j = 0; j < label_iterations; j++) {
                 unsigned int change_counter = 0;
-                forall_nodes(G, i) {
-                        NodeID node = permutation[i];
-                        //now move the node to the cluster that is most common in the neighborhood
+                for( NodeID node = 0; node < n; node++) {
+                        if( ActiveNodes ) {
+                                if( !act[node] ) continue;
+                                act[node] = 0;
+                        }
+                        if( node + 1 < n ) {
+                                const EdgeID p_begin = nodes[node+1].firstEdge;
+                                const EdgeID p_end   = std::min(nodes[node+2].firstEdge, p_begin + 32);
+                                for( EdgeID e = p_begin; e < p_end; ++e) {
+                                        KAHIP_PREFETCH(&cid[edges[e].target]);
+                                }
+                        }
+                        const EdgeID e_begin = nodes[node].firstEdge;
+                        const EdgeID e_end   = nodes[node+1].firstEdge;
 
-                        forall_out_edges(G, e, node) {
-                                NodeID target = G.getEdgeTarget(e);
-                                hash_map[cluster_id[target]]+=G.getEdgeWeight(e);
-                        } endfor
+                        for( EdgeID e = e_begin; e < e_end; ++e) {
+                                cl[cid[edges[e].target]].votes += edges[e].weight;
+                        }
 
-                        //second sweep for finding max and resetting array
-                        PartitionID max_block = cluster_id[node];
-                        PartitionID my_block  = cluster_id[node];
+                        PartitionID max_block = cid[node];
+                        PartitionID my_block  = cid[node];
+                        const NodeWeight node_weight = nodes[node].weight;
 
                         PartitionID max_value = 0;
-                        forall_out_edges(G, e, node) {
-                                NodeID target             = G.getEdgeTarget(e);
-                                PartitionID cur_block     = cluster_id[target];
-                                PartitionID cur_value     = hash_map[cur_block];
+                        for( EdgeID e = e_begin; e < e_end; ++e) {
+                                NodeID target             = edges[e].target;
+                                PartitionID cur_block     = cid[target];
+                                PartitionID cur_value     = cl[cur_block].votes;
                                 if((cur_value > max_value  || (cur_value == max_value && random_functions::nextBool())) 
-                                && (cluster_sizes[cur_block] + G.getNodeWeight(node) < block_upperbound || cur_block == my_block) 
-                                && (!partition_config.graph_allready_partitioned || G.getPartitionIndex(node) == G.getPartitionIndex(target))
-                                && (!partition_config.combine || G.getSecondPartitionIndex(node) == G.getSecondPartitionIndex(target)))
+                                && (cl[cur_block].size + node_weight < block_upperbound || cur_block == my_block) 
+                                && (!check_partition || ppart[node] == ppart[target])
+                                && (!check_second || psecond[node] == psecond[target]))
                                 {
                                         max_value = cur_value;
                                         max_block = cur_block;
                                 }
 
-                                hash_map[cur_block] = 0;
-                        } endfor
+                                cl[cur_block].votes = 0;
+                        }
 
-                        cluster_sizes[cluster_id[node]]  -= G.getNodeWeight(node);
-                        cluster_sizes[max_block]         += G.getNodeWeight(node);
-                        change_counter                   += (cluster_id[node] != max_block);
-                        cluster_id[node]                  = max_block;
-                } endfor
+                        cl[cid[node]].size  -= node_weight;
+                        cl[max_block].size  += node_weight;
+                        if( cid[node] != max_block ) {
+                                change_counter++;
+                                if( ActiveNodes ) {
+                                        for( EdgeID e = e_begin; e < e_end; ++e) act[edges[e].target] = 1;
+                                }
+                        }
+                        cid[node]       = max_block;
+                }
+                if( ActiveNodes && change_counter == 0 ) break;
         }
-
-        remap_cluster_ids( partition_config, G, cluster_id, no_of_blocks);
+}
 }
 
+// The label propagation above on the permuted copy of G: position p (node m_degree_order[p]) is
+// visited p-th, so the node and edge arrays are read sequentially. The clusters are labeled by
+// positions instead of node ids; the computation only compares labels for equality, so it makes the
+// same choices with the same random numbers, and remap_cluster_ids (first occurrence in node order)
+// gives the same ids.
+void size_constraint_label_propagation::label_propagation_permuted(const PartitionConfig & partition_config, 
+                                                         graph_access & G, 
+                                                         const NodeWeight & block_upperbound,
+                                                         std::vector<NodeWeight> & cluster_id,  
+                                                         NodeID & no_of_blocks) {
+        const NodeID n = G.number_of_nodes();
+        const Node * nodes = m_pnodes.data();
+        const Edge * edges = m_pedges.data();
+        std::vector<lp_cluster_slot> slots(n);
+        std::vector<NodeID> pcid(n);
+        for( NodeID p = 0; p < n; p++) {
+                slots[p].votes = 0;
+                slots[p].size  = nodes[p].weight;
+                pcid[p]        = p;
+        }
 
+        const bool check_partition = partition_config.graph_allready_partitioned;
+        const bool check_second    = partition_config.combine;
+        const PartitionID * ppart   = m_ppart.data();
+        const PartitionID * psecond = m_psecond.data();
+        lp_cluster_slot * cl = slots.data();
+        NodeID * cid = pcid.data();
+        if( m_active_nodes ) {
+                lp_sweeps<true>(n, nodes, edges, cl, cid, check_partition, check_second, ppart, psecond,
+                                block_upperbound, partition_config.label_iterations);
+        } else {
+                lp_sweeps<false>(n, nodes, edges, cl, cid, check_partition, check_second, ppart, psecond,
+                                 block_upperbound, partition_config.label_iterations);
+        }
+
+        cluster_id.resize(n);
+        for( NodeID p = 0; p < n; p++) cluster_id[m_degree_order[p]] = pcid[p];
+        remap_cluster_ids( partition_config, G, cluster_id, no_of_blocks);
+}
 
 void size_constraint_label_propagation::create_coarsemapping(const PartitionConfig & partition_config, 
                                                              graph_access & G,
@@ -209,16 +385,18 @@ void size_constraint_label_propagation::remap_cluster_ids(const PartitionConfig 
                                                           std::vector<NodeWeight> & cluster_id,
                                                           NodeID & no_of_coarse_vertices, bool apply_to_graph) {
 
+        // ids in order of first occurrence, as with the former hash map; an array indexed by the old id
         PartitionID cur_no_clusters = 0;
-        std::unordered_map<PartitionID, PartitionID> remap;
+        PartitionID max_id = 0;
         forall_nodes(G, node) {
-                PartitionID cur_cluster = cluster_id[node];
-                //check wether we already had that
-                if( remap.find( cur_cluster ) == remap.end() ) {
-                        remap[cur_cluster] = cur_no_clusters++;
-                }
-
-                cluster_id[node] = remap[cur_cluster];
+                max_id = std::max(max_id, (PartitionID)cluster_id[node]);
+        } endfor
+        const PartitionID unset = std::numeric_limits<PartitionID>::max();
+        std::vector<PartitionID> remap(G.number_of_nodes() == 0 ? 1 : max_id + 1, unset);
+        forall_nodes(G, node) {
+                PartitionID & r = remap[cluster_id[node]];
+                if( r == unset ) r = cur_no_clusters++;
+                cluster_id[node] = r;
         } endfor
 
         if( apply_to_graph ) {

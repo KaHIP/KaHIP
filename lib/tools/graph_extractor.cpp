@@ -75,21 +75,26 @@ void graph_extractor::extract_two_blocks(graph_access & G,
         partition_weight_lhs = 0;
         partition_weight_rhs = 0;
         NodeID dummy_node    = G.number_of_nodes() + 1;
+        // upper bounds for the edges of each block: the degree sums of its nodes (instead of m each)
+        EdgeID edges_lhs     = 0;
+        EdgeID edges_rhs     = 0;
 
         forall_nodes(G, node) {
                 if(G.getPartitionIndex(node) == lhs) {
                         reverse_mapping_lhs.push_back(nodes_lhs++);
                         reverse_mapping_rhs.push_back(dummy_node);
                         partition_weight_lhs += G.getNodeWeight(node);
+                        edges_lhs += G.getNodeDegree(node);
                 } else {
                         reverse_mapping_rhs.push_back(nodes_rhs++);
                         reverse_mapping_lhs.push_back(dummy_node);
                         partition_weight_rhs += G.getNodeWeight(node);
+                        edges_rhs += G.getNodeDegree(node);
                 }
         } endfor
 
-        extracted_block_lhs.start_construction(nodes_lhs, G.number_of_edges());
-        extracted_block_rhs.start_construction(nodes_rhs, G.number_of_edges());
+        extracted_block_lhs.start_construction(nodes_lhs, edges_lhs);
+        extracted_block_rhs.start_construction(nodes_rhs, edges_rhs);
 
         forall_nodes(G, node) {
                 if(G.getPartitionIndex(node) == lhs) {

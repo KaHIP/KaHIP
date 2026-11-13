@@ -499,15 +499,15 @@ inline void configuration::standardsnw( PartitionConfig & partition_config ) {
         partition_config.num_vert_stop_factor = 5000;
 
         if(2 <= partition_config.k && partition_config.k <= 3) {
-                partition_config.number_of_clusterings = 18;
+                partition_config.number_of_clusterings = 9;
         } else if(4 <= partition_config.k && partition_config.k <= 7) {
-                partition_config.number_of_clusterings = 17;
+                partition_config.number_of_clusterings = 9;
         } else if(8 <= partition_config.k && partition_config.k <= 15) {
                 partition_config.number_of_clusterings = 15;
         } else if(16 <= partition_config.k && partition_config.k <= 31) {
                 partition_config.number_of_clusterings = 7;
         } else { 
-                partition_config.number_of_clusterings = 3;
+                partition_config.number_of_clusterings = 2;
         }
 
         partition_config.balance_factor               = 0.016;

@@ -14,6 +14,7 @@
 
 #include "definitions.h"
 #include "partition_config.h"
+#include "tools/cpu_hints.h"
 
 typedef std::mt19937 MersenneTwister;
 
@@ -106,15 +107,36 @@ class random_functions {
                                 std::uniform_int_distribution<unsigned int> A(0,size - 4);
                                 std::uniform_int_distribution<unsigned int> B(0,size - 4);
 
+                                // The positions are drawn AHEAD iterations early (in the same order,
+                                // A then B per iteration, so the random sequence and the swaps are
+                                // unchanged) and their entries prefetched.
+                                const unsigned int AHEAD = 16;
+                                unsigned int pa[AHEAD], pb[AHEAD];
+                                const unsigned int pre = size < AHEAD ? size : AHEAD;
+                                for( unsigned int i = 0; i < pre; i++) {
+                                        pa[i] = A(m_mt); pb[i] = B(m_mt);
+                                        prefetch_block(vec, pa[i]); prefetch_block(vec, pb[i]);
+                                }
                                 for( unsigned int i = 0; i < size; i++) {
-                                        unsigned int posA = A(m_mt);
-                                        unsigned int posB = B(m_mt);
+                                        const unsigned int slot = i % AHEAD;
+                                        unsigned int posA = pa[slot];
+                                        unsigned int posB = pb[slot];
+                                        if(i + AHEAD < size) {
+                                                pa[slot] = A(m_mt); pb[slot] = B(m_mt);
+                                                prefetch_block(vec, pa[slot]); prefetch_block(vec, pb[slot]);
+                                        }
                                         std::swap(vec[posA], vec[posB]); 
                                         std::swap(vec[posA+1], vec[posB+1]); 
                                         std::swap(vec[posA+2], vec[posB+2]); 
                                         std::swap(vec[posA+3], vec[posB+3]); 
 
                                 } 
+                        }
+
+                template<typename sometype>
+                        static void prefetch_block(std::vector<sometype> & vec, unsigned int pos) {
+                                KAHIP_PREFETCH_WRITE(&vec[pos]);
+                                KAHIP_PREFETCH_WRITE(&vec[pos+3]);
                         }
 
                 template<typename sometype>
@@ -149,9 +171,10 @@ class random_functions {
 
                         }
 
+                // Same value and generator draw as std::uniform_int_distribution<unsigned int>(0,1)(m_mt):
+                // for a range of 2, libstdc++ (Lemire's method) returns the top bit of one 32-bit draw.
                 static bool nextBool() {
-                        std::uniform_int_distribution<unsigned int> A(0,1);
-                        return (bool) A(m_mt); 
+                        return (m_mt() >> 31) != 0;
                 }
 
 

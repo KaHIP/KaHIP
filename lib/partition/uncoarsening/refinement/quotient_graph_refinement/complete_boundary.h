@@ -18,6 +18,7 @@
 #include "data_structure/graph_access.h"
 #include "partial_boundary.h"
 #include "partition_config.h"
+#include "data_structure/stamped_node_map.h"
 
 struct block_informations {
         NodeWeight block_weight;
@@ -39,6 +40,11 @@ class complete_boundary {
                 inline void deleteNode(NodeID node, PartitionID partition, boundary_pair * pair);
                 void postMovedBoundaryNodeUpdates(NodeID target, boundary_pair * pair, 
                                                   bool update_edge_cuts, bool update_all_boundaries);
+                // Between begin_ and end_fixed_partition_updates no partition index changes (only
+                // postMovedBoundaryNodeUpdates calls for nodes already moved), so whether a node has a
+                // neighbor in a given block is remembered for the batch instead of rescanned.
+                void begin_fixed_partition_updates();
+                void end_fixed_partition_updates() { m_fixed_partition = false; }
                 void balance_singletons(const PartitionConfig & config, graph_access & G); 
 
                 inline NodeID size(PartitionID partition, boundary_pair * pair);
@@ -67,6 +73,10 @@ class complete_boundary {
                 inline void getUnderlyingQuotientGraph( graph_access & qgraph );
                 inline void getNeighbors(PartitionID & block, std::vector<PartitionID> & neighbors);
                 inline void fastComputeQuotientGraph( graph_access & Q_bar, const NodeID & no_of_blocks);
+                // fastComputeQuotientGraph of G with the partition index replaced by cmap (no_of_blocks blocks),
+                // without writing cmap into G's partition indices first
+                static inline void computeClusterGraph( graph_access & G, const CoarseMapping & cmap,
+                                                        graph_access & Q_bar, const NodeID no_of_blocks);
 
         private:
                 //updates lazy values that the access functions need
@@ -78,7 +88,11 @@ class complete_boundary {
                 PartitionID        m_lazy_lhs;
                 PartitionID        m_lazy_rhs;
                 boundary_pair*     m_last_pair;
+                data_boundary_pair* m_lazy_dbp; // entry of the pair passed to the last update_lazy_values
+                std::vector<data_boundary_pair*> m_pair_index; // entry per pair key (k*k, allocated on first use), 0 until first access
+                PartitionID        m_index_k;          // k the index was built for
                 size_t             m_last_key; 
+                bool               m_fixed_partition = false;
                 hash_boundary_pair m_hbp;
 
                 graph_access * m_graph_ref;
@@ -131,7 +145,7 @@ inline void complete_boundary::build() {
                                 bp.lhs = source_partition;
                                 bp.rhs = target_partition;
                                 update_lazy_values(&bp);
-                                m_pairs[bp].edge_cut += G.getEdgeWeight(e);    
+                                m_lazy_dbp->edge_cut += G.getEdgeWeight(e);    
                                 insert(n, source_partition, &bp);
                         }
                 } endfor
@@ -198,7 +212,7 @@ inline void complete_boundary::build_from_coarser(complete_boundary * coarser_bo
                                 bp.lhs = source_partition;
                                 bp.rhs = target_partition;
                                 update_lazy_values(&bp);
-                                m_pairs[bp].edge_cut += G.getEdgeWeight(e);    
+                                m_lazy_dbp->edge_cut += G.getEdgeWeight(e);    
                                 insert(n, source_partition, &bp);
                         }
                 } endfor
@@ -268,7 +282,7 @@ inline NodeWeight complete_boundary::getBlockNoNodes(PartitionID partition){
 
 inline EdgeWeight complete_boundary::getEdgeCut(boundary_pair * pair){
         update_lazy_values(pair);
-        return m_pairs[*pair].edge_cut;
+        return m_lazy_dbp->edge_cut;
 }
 
 inline EdgeWeight complete_boundary::getEdgeCut(PartitionID lhs, PartitionID rhs) {
@@ -290,7 +304,7 @@ inline void complete_boundary::setBlockNoNodes(PartitionID partition, NodeID no_
 
 inline void complete_boundary::setEdgeCut(boundary_pair * pair, EdgeWeight edge_cut){
         update_lazy_values(pair);
-        m_pairs[*pair].edge_cut = edge_cut;
+        m_lazy_dbp->edge_cut = edge_cut;
 }
 
 inline void complete_boundary::getQuotientGraphEdges(QuotientGraphEdges & qgraph_edges) {
@@ -322,13 +336,28 @@ inline void complete_boundary::update_lazy_values(boundary_pair * pair) {
         boundary_pair & bp = *pair;
         size_t key = m_hbp(bp); 
         if(key != m_last_key) {
-                data_boundary_pair & dbp = m_pairs[*pair]; 
+                // m_pairs is only ever inserted into (operator[] on first access) and its nodes never
+                // move, so the entry of a pair found once can be kept in a flat index by key; the first
+                // access of a pair still goes through m_pairs, so insertion order and iteration are unchanged
+                data_boundary_pair * entry;
+                // the index is allocated on first use and only for small k (a boundary is also built
+                // with one block per coarse node during contraction, where k*k would be far too large)
+                if(bp.k == m_index_k && m_index_k <= 1024 && key < (size_t) m_index_k * m_index_k) {
+                        if(m_pair_index.empty()) m_pair_index.assign((size_t) m_index_k * m_index_k, 0);
+                        data_boundary_pair *& slot = m_pair_index[key];
+                        if(slot == 0) slot = &m_pairs[*pair];
+                        entry = slot;
+                } else {
+                        entry = &m_pairs[*pair];
+                }
+                data_boundary_pair & dbp = *entry; 
                 if(!dbp.initialized) {
-                        m_pairs[*pair].lhs = pair->lhs;
-                        m_pairs[*pair].rhs = pair->rhs;
+                        dbp.lhs = pair->lhs;
+                        dbp.rhs = pair->rhs;
                         dbp.initialized = true;
                 }
 
+                m_lazy_dbp    = &dbp;
                 m_pb_lhs_lazy = &dbp.pb_lhs;
                 m_pb_rhs_lazy = &dbp.pb_rhs;
                 m_lazy_lhs    = dbp.lhs;
@@ -434,7 +463,7 @@ void complete_boundary::setup_start_nodes_around_blocks(graph_access & G,
         std::vector<PartitionID> rhs_neighbors;
         getNeighbors(rhs, rhs_neighbors);
 
-        std::unordered_map<NodeID, bool> allready_contained;
+        stamped_node_map<char> allready_contained; // lookup only, never iterated
         for( unsigned i = 0; i < lhs_neighbors.size(); i++) {
                 PartitionID neighbor = lhs_neighbors[i];
                 PartialBoundary & partial_boundary_lhs = getDirectedBoundary(lhs, lhs, neighbor);
@@ -483,7 +512,7 @@ void complete_boundary::setup_start_nodes_all(graph_access & G, boundary_startin
         QuotientGraphEdges quotient_graph_edges;
         getQuotientGraphEdges(quotient_graph_edges);
 
-        std::unordered_map<NodeID, bool> allready_contained;
+        stamped_node_map<char> allready_contained; // lookup only, never iterated
         
         for( unsigned i = 0; i < quotient_graph_edges.size(); i++) {
                 boundary_pair & ret_value = quotient_graph_edges[i];
@@ -519,30 +548,43 @@ inline void complete_boundary::fastComputeQuotientGraph( graph_access & Q_bar, c
          }
          Q_bar.graphref = graphref;
 
-         std::vector<std::vector<NodeID>> block_list_nodes(no_of_blocks);
          std::vector<NodeWeight> block_weight(no_of_blocks,0);
          std::vector<EdgeWeight> target_edgeweight(no_of_blocks,0);
          std::vector<PartitionID> list_targets;
 
-	 // Fill out list of nodes per block
+	 // Nodes per block in increasing node order (as the former per-block push_back lists), bucketed
+	 // in one array: block p holds block_nodes[block_start[p] .. block_start[p+1])
+         std::vector<NodeID> block_start(no_of_blocks + 1, 0);
          forall_nodes((*m_graph_ref), node) {
 		PartitionID source_partition = m_graph_ref->getPartitionIndex(node);
-		block_list_nodes[source_partition].push_back(node);
+		block_start[source_partition + 1]++;
                 block_weight[source_partition] += m_graph_ref->getNodeWeight(node);
          } endfor
+         for( unsigned p = 0; p < no_of_blocks; p++) block_start[p+1] += block_start[p];
+         std::vector<NodeID> block_nodes(m_graph_ref->number_of_nodes());
+         {
+                 std::vector<NodeID> fill(block_start.begin(), block_start.end() - 1);
+                 forall_nodes((*m_graph_ref), node) {
+                         block_nodes[fill[m_graph_ref->getPartitionIndex(node)]++] = node;
+                 } endfor
+         }
 
-         Q_bar.start_construction(no_of_blocks, m_graph_ref->number_of_edges());
-
+         // The quotient edges are collected first (block p's edges at q_edges[q_start[p] .. q_start[p+1])),
+         // so the graph is built with its real edge count instead of allocating and zeroing m edges.
+         struct q_edge {
+                 PartitionID target;
+                 EdgeWeight  weight;
+         };
+         std::vector<q_edge> q_edges;
+         std::vector<EdgeID> q_start(no_of_blocks + 1, 0);
          for( unsigned p = 0; p < no_of_blocks; p++) {
-                 NodeID source_partition = Q_bar.new_node();
-                 Q_bar.setNodeWeight(source_partition,  block_weight[p]);
-
 		 // Fill out list of neighboring blocks
-		 for( auto& node : block_list_nodes[source_partition] ) {
+		 for( NodeID i = block_start[p]; i < block_start[p+1]; i++ ) {
+			NodeID node = block_nodes[i];
 			forall_out_edges((*m_graph_ref), e, node) {
 				NodeID targetID              = m_graph_ref->getEdgeTarget(e);
 				PartitionID target_partition = m_graph_ref->getPartitionIndex(targetID);
-				bool is_cut_edge             = (source_partition != target_partition);
+				bool is_cut_edge             = (p != target_partition);
 				if(is_cut_edge) {
 					if (target_edgeweight[target_partition] == 0) {
 						list_targets.push_back(target_partition);
@@ -553,15 +595,100 @@ inline void complete_boundary::fastComputeQuotientGraph( graph_access & Q_bar, c
 		 }
 
 		 for( auto& target_partition : list_targets ) {
-                         EdgeID e = Q_bar.new_edge(source_partition, target_partition);
-                         Q_bar.setEdgeWeight(e, target_edgeweight[target_partition]);
+                         q_edges.push_back(q_edge{target_partition, target_edgeweight[target_partition]});
 			 target_edgeweight[target_partition] = 0;
 		 }
 		 list_targets.clear();
+                 q_start[p+1] = q_edges.size();
+         }
+
+         Q_bar.start_construction(no_of_blocks, q_edges.size());
+
+         for( unsigned p = 0; p < no_of_blocks; p++) {
+                 NodeID source_partition = Q_bar.new_node();
+                 Q_bar.setNodeWeight(source_partition,  block_weight[p]);
+                 for( EdgeID i = q_start[p]; i < q_start[p+1]; i++) {
+                         EdgeID e = Q_bar.new_edge(source_partition, q_edges[i].target);
+                         Q_bar.setEdgeWeight(e, q_edges[i].weight);
+                 }
          }
 
          Q_bar.finish_construction();
 }
+inline void complete_boundary::computeClusterGraph( graph_access & G, const CoarseMapping & cmapping,
+                                                    graph_access & Q_bar, const NodeID no_of_blocks) {
+
+         basicGraph * graphref = new basicGraph;
+         if(Q_bar.graphref != NULL) {
+                delete Q_bar.graphref;
+         }
+         Q_bar.graphref = graphref;
+
+         const NodeID n       = G.number_of_nodes();
+         const Node * nodes   = G.raw_nodes();
+         const Edge * edges   = G.raw_edges();
+         const NodeID * cmap  = cmapping.data();
+
+         std::vector<NodeWeight> block_weight(no_of_blocks,0);
+         std::vector<EdgeWeight> target_edgeweight(no_of_blocks,0);
+         std::vector<PartitionID> list_targets;
+
+         // nodes per block in increasing node order: block p holds block_nodes[block_start[p] .. block_start[p+1])
+         std::vector<NodeID> block_start(no_of_blocks + 1, 0);
+         for( NodeID node = 0; node < n; node++) {
+                 block_start[cmap[node] + 1]++;
+                 block_weight[cmap[node]] += nodes[node].weight;
+         }
+         for( unsigned p = 0; p < no_of_blocks; p++) block_start[p+1] += block_start[p];
+         std::vector<NodeID> block_nodes(n);
+         {
+                 std::vector<NodeID> fill(block_start.begin(), block_start.end() - 1);
+                 for( NodeID node = 0; node < n; node++) block_nodes[fill[cmap[node]]++] = node;
+         }
+
+         struct q_edge {
+                 PartitionID target;
+                 EdgeWeight  weight;
+         };
+         std::vector<q_edge> q_edges;
+         std::vector<EdgeID> q_start(no_of_blocks + 1, 0);
+         for( unsigned p = 0; p < no_of_blocks; p++) {
+                 for( NodeID i = block_start[p]; i < block_start[p+1]; i++ ) {
+                         const NodeID node = block_nodes[i];
+                         const EdgeID e_end = nodes[node+1].firstEdge;
+                         for( EdgeID e = nodes[node].firstEdge; e < e_end; e++) {
+                                 const PartitionID target_partition = cmap[edges[e].target];
+                                 if(p != target_partition) {
+                                         if (target_edgeweight[target_partition] == 0) {
+                                                 list_targets.push_back(target_partition);
+                                         }
+                                         target_edgeweight[target_partition] += edges[e].weight;
+                                 }
+                         }
+                 }
+
+                 for( auto& target_partition : list_targets ) {
+                         q_edges.push_back(q_edge{target_partition, target_edgeweight[target_partition]});
+                         target_edgeweight[target_partition] = 0;
+                 }
+                 list_targets.clear();
+                 q_start[p+1] = q_edges.size();
+         }
+
+         Q_bar.start_construction(no_of_blocks, q_edges.size());
+
+         for( unsigned p = 0; p < no_of_blocks; p++) {
+                 NodeID source_partition = Q_bar.new_node();
+                 Q_bar.setNodeWeight(source_partition,  block_weight[p]);
+                 for( EdgeID i = q_start[p]; i < q_start[p+1]; i++) {
+                         EdgeID e = Q_bar.new_edge(source_partition, q_edges[i].target);
+                         Q_bar.setEdgeWeight(e, q_edges[i].weight);
+                 }
+         }
+
+         Q_bar.finish_construction();
+}
+
 #ifndef NDEBUG
 inline bool complete_boundary::assert_bnodes_in_boundaries() {
         PartitionID k = m_graph_ref->get_partition_count();
