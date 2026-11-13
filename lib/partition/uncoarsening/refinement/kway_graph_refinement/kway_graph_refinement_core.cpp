@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include "data_structure/priority_queues/bucket_pq.h"
-#include "data_structure/priority_queues/maxNodeHeap.h"
+#include "data_structure/priority_queues/fastMaxNodeHeap.h"
 #include "kway_graph_refinement_core.h"
 #include "kway_stop_rule.h"
 #include "quality_metrics.h"
@@ -76,7 +76,7 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
                 EdgeWeight max_degree = G.getMaxDegree();
                 queue                 = new bucket_pq(max_degree);
         } else {
-                queue                 = new maxNodeHeap(); 
+                queue                 = new fastMaxNodeHeap(); 
         }
 
         if(cached_start_nodes != NULL) {
@@ -113,7 +113,7 @@ EdgeWeight kway_graph_refinement_core::single_kway_refinement_round_internal(Par
 
         }
 
-        maxNodeHeap * heap = dynamic_cast<maxNodeHeap*>(queue);
+        fastMaxNodeHeap * heap = dynamic_cast<fastMaxNodeHeap*>(queue);
         for(number_of_swaps = 0, movements = 0; movements < max_number_of_swaps; movements++, number_of_swaps++) {
                 if( queue->empty() ) break;
                 if( stopping_rule->search_should_stop(min_cut_index, number_of_swaps, step_limit) ) break;

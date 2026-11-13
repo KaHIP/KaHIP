@@ -118,6 +118,11 @@ class size_constraint_label_propagation : public matching {
                 std::vector<NodeID> m_degree_order;
                 bool m_use_degree_order = false; 
 
+                // active-node sweeps (revisit only nodes whose neighborhood changed, stop when an iteration changes
+                // nothing) only for coarsening, where they were checked against the quality gate; direct calls
+                // (the label_propagation program) keep the original full sweeps
+                bool m_active_nodes = false;
+
                 // G stored in m_degree_order (visiting) order, built once per ensemble: position p holds
                 // node m_degree_order[p], edge targets are positions, edges in the same order per node
                 void build_permuted_graph(const PartitionConfig & partition_config, graph_access & G);

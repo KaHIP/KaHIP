@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 #include "data_structure/priority_queues/bucket_pq.h"
-#include "data_structure/priority_queues/maxNodeHeap.h"
+#include "data_structure/priority_queues/fastMaxNodeHeap.h"
 #include "macros_assertions.h"
 #include "partition_accept_rule.h"
 #include "queue_selection_strategie.h"
@@ -109,8 +109,8 @@ EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg,
                 lhs_queue = new bucket_pq(max_degree); 
                 rhs_queue = new bucket_pq(max_degree); 
         } else {
-                lhs_queue = new maxNodeHeap(); 
-                rhs_queue = new maxNodeHeap(); 
+                lhs_queue = new fastMaxNodeHeap(); 
+                rhs_queue = new fastMaxNodeHeap(); 
         }
 
         g_deg.start(G.number_of_nodes());
@@ -160,8 +160,8 @@ EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg,
         }
 
         // the heaps by their concrete type (NULL for bucket queues)
-        maxNodeHeap * lhs_heap = dynamic_cast<maxNodeHeap*>(lhs_queue);
-        maxNodeHeap * rhs_heap = dynamic_cast<maxNodeHeap*>(rhs_queue);
+        fastMaxNodeHeap * lhs_heap = dynamic_cast<fastMaxNodeHeap*>(lhs_queue);
+        fastMaxNodeHeap * rhs_heap = dynamic_cast<fastMaxNodeHeap*>(rhs_queue);
 
         //roll forwards
         EdgeWeight best_cut = cut; 
@@ -205,8 +205,8 @@ EdgeWeight two_way_fm::perform_refinement(PartitionConfig & cfg,
                         }
 
                         if(lhs_heap && rhs_heap) {
-                                maxNodeHeap * from_heap = from_queue == lhs_queue ? lhs_heap : rhs_heap;
-                                maxNodeHeap * to_heap   = to_queue   == lhs_queue ? lhs_heap : rhs_heap;
+                                fastMaxNodeHeap * from_heap = from_queue == lhs_queue ? lhs_heap : rhs_heap;
+                                fastMaxNodeHeap * to_heap   = to_queue   == lhs_queue ? lhs_heap : rhs_heap;
                                 move_node(config, G, node, moved_idx, 
                                                 from_heap, to_heap, 
                                                 from, to,

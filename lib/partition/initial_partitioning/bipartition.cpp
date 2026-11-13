@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <queue>
 #include "bipartition.h"
-#include "data_structure/priority_queues/maxNodeHeap.h"
+#include "data_structure/priority_queues/fastMaxNodeHeap.h"
 #include "quality_metrics.h"
 #include "random_functions.h"
 #include "timer.h"
@@ -368,7 +368,7 @@ void bipartition::grow_regions_fm(const PartitionConfig & config, graph_access &
         NodeID nodes_left = G.number_of_nodes()-1;
 
         //now perform a pseudo dijkstra to get a partition
-        maxNodeHeap* queue = new maxNodeHeap();
+        fastMaxNodeHeap* queue = new fastMaxNodeHeap();
         queue->insert(startNode, 0); // in this case the gain doesn't really matter
 
         for(;;) {

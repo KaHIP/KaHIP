@@ -41,11 +41,13 @@ void size_constraint_label_propagation::match(const PartitionConfig & partition_
         coarse_mapping.resize(G.number_of_nodes());
         no_of_coarse_vertices = 0;
 
+        m_active_nodes = true;
         if ( partition_config.ensemble_clusterings ) {
                 ensemble_clusterings(partition_config, G, _matching, coarse_mapping, no_of_coarse_vertices, permutation);
         } else {
                 match_internal(partition_config, G, _matching, coarse_mapping, no_of_coarse_vertices, permutation);
         }
+        m_active_nodes = false;
 }
 
 void size_constraint_label_propagation::match_internal(const PartitionConfig & partition_config, 
@@ -287,13 +289,16 @@ void size_constraint_label_propagation::label_propagation_permuted(const Partiti
         const PartitionID * psecond = m_psecond.data();
         cluster_slot * cl = slots.data();
         NodeID * cid = pcid.data();
+        const bool active_nodes = m_active_nodes;
         std::vector<char> active(n, 1);
         char * act = active.data();
         for( int j = 0; j < partition_config.label_iterations; j++) {
                 unsigned int change_counter = 0;
                 for( NodeID node = 0; node < n; node++) {
-                        if( !act[node] ) continue;
-                        act[node] = 0;
+                        if( active_nodes ) {
+                                if( !act[node] ) continue;
+                                act[node] = 0;
+                        }
                         if( node + 1 < n ) {
                                 const EdgeID p_begin = nodes[node+1].firstEdge;
                                 const EdgeID p_end   = std::min(nodes[node+2].firstEdge, p_begin + 32);
@@ -333,11 +338,13 @@ void size_constraint_label_propagation::label_propagation_permuted(const Partiti
                         cl[max_block].size  += node_weight;
                         if( cid[node] != max_block ) {
                                 change_counter++;
-                                for( EdgeID e = e_begin; e < e_end; ++e) act[edges[e].target] = 1;
+                                if( active_nodes ) {
+                                        for( EdgeID e = e_begin; e < e_end; ++e) act[edges[e].target] = 1;
+                                }
                         }
                         cid[node]       = max_block;
                 }
-                if( change_counter == 0 ) break;
+                if( active_nodes && change_counter == 0 ) break;
         }
 
         cluster_id.resize(n);
