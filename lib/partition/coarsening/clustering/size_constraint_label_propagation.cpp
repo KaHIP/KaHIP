@@ -258,44 +258,25 @@ void size_constraint_label_propagation::build_permuted_graph(const PartitionConf
         }
 }
 
-// The label propagation above on the permuted copy of G: position p (node m_degree_order[p]) is
-// visited p-th, so the node and edge arrays are read sequentially. The clusters are labeled by
-// positions instead of node ids; the computation only compares labels for equality, so it makes the
-// same choices with the same random numbers, and remap_cluster_ids (first occurrence in node order)
-// gives the same ids.
-void size_constraint_label_propagation::label_propagation_permuted(const PartitionConfig & partition_config, 
-                                                         graph_access & G, 
-                                                         const NodeWeight & block_upperbound,
-                                                         std::vector<NodeWeight> & cluster_id,  
-                                                         NodeID & no_of_blocks) {
-        struct cluster_slot {
-                PartitionID votes;
-                NodeWeight  size;
-        };
-        const NodeID n = G.number_of_nodes();
-        const Node * nodes = m_pnodes.data();
-        const Edge * edges = m_pedges.data();
-        std::vector<cluster_slot> slots(n);
-        std::vector<NodeID> pcid(n);
-        for( NodeID p = 0; p < n; p++) {
-                slots[p].votes = 0;
-                slots[p].size  = nodes[p].weight;
-                pcid[p]        = p;
-        }
+namespace {
+struct lp_cluster_slot {
+        PartitionID votes;
+        NodeWeight  size;
+};
 
-        const bool check_partition = partition_config.graph_allready_partitioned;
-        const bool check_second    = partition_config.combine;
-        const PartitionID * ppart   = m_ppart.data();
-        const PartitionID * psecond = m_psecond.data();
-        cluster_slot * cl = slots.data();
-        NodeID * cid = pcid.data();
-        const bool active_nodes = m_active_nodes;
-        std::vector<char> active(n, 1);
+// The sweeps of label_propagation_permuted. ActiveNodes (coarsening only, checked against the quality gate): revisit
+// only nodes whose neighborhood changed and stop when an iteration changes nothing. Without it (direct calls such as
+// the label_propagation program): the original full sweeps. A template, so the coarsening loop has no extra branch.
+template<bool ActiveNodes>
+void lp_sweeps(const NodeID n, const Node * nodes, const Edge * edges, lp_cluster_slot * cl, NodeID * cid,
+               const bool check_partition, const bool check_second, const PartitionID * ppart,
+               const PartitionID * psecond, const NodeWeight block_upperbound, const int label_iterations) {
+        std::vector<char> active(ActiveNodes ? n : 0, 1);
         char * act = active.data();
-        for( int j = 0; j < partition_config.label_iterations; j++) {
+        for( int j = 0; j < label_iterations; j++) {
                 unsigned int change_counter = 0;
                 for( NodeID node = 0; node < n; node++) {
-                        if( active_nodes ) {
+                        if( ActiveNodes ) {
                                 if( !act[node] ) continue;
                                 act[node] = 0;
                         }
@@ -338,13 +319,50 @@ void size_constraint_label_propagation::label_propagation_permuted(const Partiti
                         cl[max_block].size  += node_weight;
                         if( cid[node] != max_block ) {
                                 change_counter++;
-                                if( active_nodes ) {
+                                if( ActiveNodes ) {
                                         for( EdgeID e = e_begin; e < e_end; ++e) act[edges[e].target] = 1;
                                 }
                         }
                         cid[node]       = max_block;
                 }
-                if( active_nodes && change_counter == 0 ) break;
+                if( ActiveNodes && change_counter == 0 ) break;
+        }
+}
+}
+
+// The label propagation above on the permuted copy of G: position p (node m_degree_order[p]) is
+// visited p-th, so the node and edge arrays are read sequentially. The clusters are labeled by
+// positions instead of node ids; the computation only compares labels for equality, so it makes the
+// same choices with the same random numbers, and remap_cluster_ids (first occurrence in node order)
+// gives the same ids.
+void size_constraint_label_propagation::label_propagation_permuted(const PartitionConfig & partition_config, 
+                                                         graph_access & G, 
+                                                         const NodeWeight & block_upperbound,
+                                                         std::vector<NodeWeight> & cluster_id,  
+                                                         NodeID & no_of_blocks) {
+        const NodeID n = G.number_of_nodes();
+        const Node * nodes = m_pnodes.data();
+        const Edge * edges = m_pedges.data();
+        std::vector<lp_cluster_slot> slots(n);
+        std::vector<NodeID> pcid(n);
+        for( NodeID p = 0; p < n; p++) {
+                slots[p].votes = 0;
+                slots[p].size  = nodes[p].weight;
+                pcid[p]        = p;
+        }
+
+        const bool check_partition = partition_config.graph_allready_partitioned;
+        const bool check_second    = partition_config.combine;
+        const PartitionID * ppart   = m_ppart.data();
+        const PartitionID * psecond = m_psecond.data();
+        lp_cluster_slot * cl = slots.data();
+        NodeID * cid = pcid.data();
+        if( m_active_nodes ) {
+                lp_sweeps<true>(n, nodes, edges, cl, cid, check_partition, check_second, ppart, psecond,
+                                block_upperbound, partition_config.label_iterations);
+        } else {
+                lp_sweeps<false>(n, nodes, edges, cl, cid, check_partition, check_second, ppart, psecond,
+                                 block_upperbound, partition_config.label_iterations);
         }
 
         cluster_id.resize(n);
