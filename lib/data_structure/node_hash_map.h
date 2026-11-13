@@ -115,4 +115,8 @@ private:
         size_t m_mask;
 };
 
+// Out-of-class definition: grow() binds EMPTY to a const reference (odr-use), which needs it in C++11.
+template <typename V>
+const NodeID node_hash_map<V>::EMPTY;
+
 #endif
