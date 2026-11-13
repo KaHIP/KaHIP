@@ -1,5 +1,5 @@
 /******************************************************************************
- * aae_alloc.h
+ * small_block_alloc.h
  *
  * Replacement of the global operator new/delete for the single-threaded
  * kaffpa binary: small blocks (up to 512 bytes) come from per-size-class
@@ -10,8 +10,8 @@
  * Include in exactly one translation unit (app/kaffpa.cpp).
  *****************************************************************************/
 
-#ifndef AAE_ALLOC_H
-#define AAE_ALLOC_H
+#ifndef SMALL_BLOCK_ALLOC_H
+#define SMALL_BLOCK_ALLOC_H
 
 #include <cstddef>
 #include <cstdint>
@@ -19,7 +19,7 @@
 #include <new>
 #include <sys/mman.h>
 
-namespace aae_alloc {
+namespace small_block_alloc {
 
 static const size_t GRANULE     = 16;
 static const size_t NCLASSES    = 32;            // sizes 16, 32, ..., 512
@@ -92,19 +92,19 @@ static inline void deallocate(void * p) {
 
 }
 
-void * operator new(size_t size) { return aae_alloc::allocate(size); }
-void * operator new[](size_t size) { return aae_alloc::allocate(size); }
+void * operator new(size_t size) { return small_block_alloc::allocate(size); }
+void * operator new[](size_t size) { return small_block_alloc::allocate(size); }
 void * operator new(size_t size, const std::nothrow_t &) noexcept {
-        try { return aae_alloc::allocate(size); } catch(...) { return nullptr; }
+        try { return small_block_alloc::allocate(size); } catch(...) { return nullptr; }
 }
 void * operator new[](size_t size, const std::nothrow_t &) noexcept {
-        try { return aae_alloc::allocate(size); } catch(...) { return nullptr; }
+        try { return small_block_alloc::allocate(size); } catch(...) { return nullptr; }
 }
-void operator delete(void * p) noexcept { aae_alloc::deallocate(p); }
-void operator delete[](void * p) noexcept { aae_alloc::deallocate(p); }
-void operator delete(void * p, const std::nothrow_t &) noexcept { aae_alloc::deallocate(p); }
-void operator delete[](void * p, const std::nothrow_t &) noexcept { aae_alloc::deallocate(p); }
-void operator delete(void * p, size_t) noexcept { aae_alloc::deallocate(p); }
-void operator delete[](void * p, size_t) noexcept { aae_alloc::deallocate(p); }
+void operator delete(void * p) noexcept { small_block_alloc::deallocate(p); }
+void operator delete[](void * p) noexcept { small_block_alloc::deallocate(p); }
+void operator delete(void * p, const std::nothrow_t &) noexcept { small_block_alloc::deallocate(p); }
+void operator delete[](void * p, const std::nothrow_t &) noexcept { small_block_alloc::deallocate(p); }
+void operator delete(void * p, size_t) noexcept { small_block_alloc::deallocate(p); }
+void operator delete[](void * p, size_t) noexcept { small_block_alloc::deallocate(p); }
 
 #endif

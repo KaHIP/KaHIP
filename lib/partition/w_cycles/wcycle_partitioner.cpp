@@ -24,7 +24,6 @@
 #include "uncoarsening/refinement/label_propagation_refinement/label_propagation_refinement.h"
 #include "uncoarsening/refinement/refinement.h"
 #include "wcycle_partitioner.h"
-#include "tools/aae_timer.h"
 
 // Defined in uncoarsening.cpp
 void eliminate_and_rebalance(const PartitionConfig & config, graph_access & G);
@@ -72,7 +71,6 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
         Matching edge_matching;
         NodePermutationMap permutation;
 
-        aae::phase_scope* aae_coarsen = new aae::phase_scope(aae::COARSEN);
         coarsening_configurator coarsening_config;
         coarsening_config.configure_coarsening(partition_config, &edge_matcher, m_level);
         
@@ -94,7 +92,6 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
         }
 
         coarser->set_partition_count(partition_config.k);
-        delete aae_coarsen;
         complete_boundary* coarser_boundary =  NULL;
         refinement* refine = NULL;
 
@@ -113,9 +110,8 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
                 cfg.upper_bound_partition = (factor +1.0)*partition_config.upper_bound_partition;
 
 	        initial_partitioning init_part;
-		{ aae::phase_scope s(aae::INITIAL); init_part.perform_initial_partitioning(cfg, *coarser); }
+		init_part.perform_initial_partitioning(cfg, *coarser);
 
-                aae::phase_scope s(aae::REFINE);
                 if(!partition_config.label_propagation_refinement) coarser_boundary->build();
 
                 //PRINT(std::cout <<  "upper bound " <<  cfg.upper_bound_partition  << std::endl;)
@@ -157,7 +153,6 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
 
         }
 
-        aae::phase_scope* aae_refine = new aae::phase_scope(aae::REFINE);
         if(partition_config.use_balance_singletons && !partition_config.label_propagation_refinement) {
                 coarser_boundary->balance_singletons( partition_config, *coarser );
         }
@@ -206,7 +201,6 @@ int wcycle_partitioner::perform_partitioning_recursive( PartitionConfig & partit
                 cfg.connected_blocks = false;
         }
 
-        delete aae_refine;
         if(c_boundary != NULL) {
                 delete *c_boundary;
                 *c_boundary = current_boundary;

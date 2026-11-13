@@ -1,7 +1,7 @@
 /******************************************************************************
- * aae_sort.h
+ * std_sort_replica.h
  *
- * aae_sort(first, last, comp) produces exactly the same arrangement as
+ * std_sort_replica(first, last, comp) produces exactly the same arrangement as
  * libstdc++'s std::sort(first, last, comp) (introsort with median-of-three
  * pivots, unguarded Hoare partition, heap sort fallback and final insertion
  * sort), including the order of elements that compare equal.
@@ -16,15 +16,15 @@
  * reached itself.
  *****************************************************************************/
 
-#ifndef AAE_SORT_H
-#define AAE_SORT_H
+#ifndef STD_SORT_REPLICA_H
+#define STD_SORT_REPLICA_H
 
 #include <algorithm>
 #include <utility>
 
-namespace aae_sort_detail {
+namespace std_sort_replica_detail {
 
-const long AAE_SORT_BLOCK = 128;
+const long SORT_REPLICA_BLOCK = 128;
 
 template<typename T, typename Comp>
 inline void move_median_to_first(T* result, T* a, T* b, T* c, Comp comp) {
@@ -40,9 +40,9 @@ inline void move_median_to_first(T* result, T* a, T* b, T* c, Comp comp) {
 // libstdc++'s __unguarded_partition(first, last, pivot) with the candidate search done in blocks
 template<typename T, typename Comp>
 inline T* unguarded_partition(T* first, T* last, const T* pivot, Comp comp) {
-        const long B = AAE_SORT_BLOCK;
+        const long B = SORT_REPLICA_BLOCK;
         if (last - first >= 4 * B) {
-                unsigned char offl[AAE_SORT_BLOCK], offr[AAE_SORT_BLOCK];
+                unsigned char offl[SORT_REPLICA_BLOCK], offr[SORT_REPLICA_BLOCK];
                 T* ls = first;        // left positions < ls are scanned
                 T* rs = last;         // right positions >= rs are scanned
                 T* lbase = first; T* rbase = last;
@@ -133,8 +133,8 @@ void insertion_sort(T* first, T* last, Comp comp) {
 }
 
 template<typename T, typename Comp>
-void aae_sort(T* first, T* last, Comp comp) {
-        using namespace aae_sort_detail;
+void std_sort_replica(T* first, T* last, Comp comp) {
+        using namespace std_sort_replica_detail;
         if (first == last) return;
         long n = last - first;
         long lg = 63 - __builtin_clzl((unsigned long) n);

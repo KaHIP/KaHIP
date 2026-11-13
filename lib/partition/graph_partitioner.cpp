@@ -11,7 +11,6 @@
 #include "initial_partitioning/initial_partitioning.h"
 #include "quality_metrics.h"
 #include "tools/random_functions.h"
-#include "tools/aae_timer.h"
 #include "uncoarsening/uncoarsening.h"
 #include "uncoarsening/refinement/mixed_refinement.h"
 #include "w_cycles/wcycle_partitioner.h"
@@ -264,9 +263,9 @@ void graph_partitioner::single_run( PartitionConfig & config, graph_access & G) 
                                                 config.edge_rating = SEPARATOR_LOG;
                                         } 
                                 }
-                                { aae::phase_scope s(aae::COARSEN); coarsen.perform_coarsening(config, G, hierarchy); }
-                                { aae::phase_scope s(aae::INITIAL); init_part.perform_initial_partitioning(config, hierarchy); }
-                                { aae::phase_scope s(aae::REFINE); uncoarsen.perform_uncoarsening(config, hierarchy); }
+                                coarsen.perform_coarsening(config, G, hierarchy);
+                                init_part.perform_initial_partitioning(config, hierarchy);
+                                uncoarsen.perform_uncoarsening(config, hierarchy);
                         }
                 config.graph_allready_partitioned = true;
                 config.balance_factor             = 0;

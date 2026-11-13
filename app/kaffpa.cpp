@@ -36,8 +36,9 @@
 #include "quality_metrics.h"
 #include "random_functions.h"
 #include "timer.h"
-#include "tools/aae_timer.h"
-#include "tools/aae_alloc.h"
+#ifndef _WIN32
+#include "tools/small_block_alloc.h"
+#endif
 
 int main(int argn, char **argv) {
 
@@ -74,8 +75,6 @@ int main(int argn, char **argv) {
         graph_access G;     
 
         timer t;
-        {
-        aae::phase_scope aae_io(aae::IO);
 #ifndef _WIN32
         if (partition_config.use_mmap_io) {
                 kahip::mmap_io::graph_from_metis_file(G, graph_filename);
@@ -83,7 +82,6 @@ int main(int argn, char **argv) {
 #endif
         {
                 graph_io::readGraphWeighted(G, graph_filename);
-        }
         }
         std::cout << "io time: " << t.elapsed()  << std::endl;
 
@@ -362,8 +360,6 @@ int main(int argn, char **argv) {
                 }
         }
 #endif
-        {
-        aae::phase_scope aae_post(aae::POST);
         // output some information about the partition that we have computed
         EdgeWeight final_cut = 0, max_comm_vol = 0;
         int bnd = 0;
@@ -384,7 +380,5 @@ int main(int argn, char **argv) {
         }
 
         graph_io::writePartition(G, filename.str());
-        }
-        aae::print();
 
 }

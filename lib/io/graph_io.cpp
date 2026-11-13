@@ -84,7 +84,7 @@ int graph_io::readPartition(graph_access & G, const std::string & filename) {
 // Reads the whole file into memory and parses it with a hand-written scanner. Semantics are those of the
 // former std::getline/std::stringstream reader: lines starting with '%' are comments, every other line
 // (including an empty one) is a node, numbers are separated by whitespace.
-static inline bool aae_is_space(char c) {
+static inline bool is_space_char(char c) {
         return c == ' ' || c == '\t' || c == '\r' || c == '\v' || c == '\f';
 }
 
@@ -171,7 +171,7 @@ int graph_io::readGraphWeighted(graph_access & G, const std::string & filename) 
 
                 NodeWeight weight = 1;
                 if( read_nw ) {
-                        while(aae_is_space(*p)) p++;
+                        while(is_space_char(*p)) p++;
                         if(*p >= '0' && *p <= '9') {
                                 unsigned long long w = 0;
                                 while(*p >= '0' && *p <= '9') { w = w*10 + (*p - '0'); p++; }
@@ -187,7 +187,7 @@ int graph_io::readGraphWeighted(graph_access & G, const std::string & filename) 
                 G.setNodeWeight(node, weight);
 
                 for(;;) {
-                        while(aae_is_space(*p)) p++;
+                        while(is_space_char(*p)) p++;
                         if(*p < '0' || *p > '9') break;
                         NodeID target = 0;
                         while(*p >= '0' && *p <= '9') { target = target*10 + (*p - '0'); p++; }
@@ -199,7 +199,7 @@ int graph_io::readGraphWeighted(graph_access & G, const std::string & filename) 
 
                         EdgeWeight edge_weight = 1;
                         if( read_ew ) {
-                                while(aae_is_space(*p)) p++;
+                                while(is_space_char(*p)) p++;
                                 if(*p >= '0' && *p <= '9') {
                                         EdgeWeight w = 0;
                                         while(*p >= '0' && *p <= '9') { w = w*10 + (*p - '0'); p++; }

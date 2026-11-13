@@ -9,7 +9,6 @@
 #include "label_propagation_refinement.h"
 #include "partition/coarsening/clustering/node_ordering.h"
 #include "tools/random_functions.h"
-#include "tools/aae_timer.h"
 #include "uncoarsening/refinement/connectivity_check.h"
 
 label_propagation_refinement::label_propagation_refinement() {
@@ -23,7 +22,6 @@ label_propagation_refinement::~label_propagation_refinement() {
 EdgeWeight label_propagation_refinement::perform_refinement(PartitionConfig & partition_config, 
                                                             graph_access & G, 
                                                             complete_boundary & boundary) {
-        aae::detail_scope aae_s(aae::D_LPREF);
         NodeWeight block_upperbound = partition_config.upper_bound_partition;
 
         // in this case the _matching paramter is not used 

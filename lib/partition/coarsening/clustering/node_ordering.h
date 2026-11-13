@@ -15,7 +15,7 @@
 #include "partition_config.h"
 #include "data_structure/graph_access.h"
 #include "tools/random_functions.h"
-#include "tools/aae_sort.h"
+#include "tools/std_sort_replica.h"
 
 class node_ordering {
 public:
@@ -76,8 +76,8 @@ public:
                         entries[i].degree = G.getNodeDegree(ordered_nodes[i]);
                         entries[i].node   = ordered_nodes[i];
                 }
-                // aae_sort: the same arrangement as std::sort, see tools/aae_sort.h
-                if(!entries.empty()) aae_sort( entries.data(), entries.data() + entries.size(), 
+                // std_sort_replica: the same arrangement as std::sort, see tools/std_sort_replica.h
+                if(!entries.empty()) std_sort_replica( entries.data(), entries.data() + entries.size(), 
                            []( const entry & lhs, const entry & rhs) -> bool {
                                 return lhs.degree < rhs.degree;
                            });
