@@ -1,4 +1,4 @@
-KaHIP v3.26
+KaHIP v3.27
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![C++](https://img.shields.io/badge/C++-11/14-blue.svg)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.10+-064F8C.svg)](https://cmake.org/)
@@ -32,7 +32,7 @@ KaHIP v3.26
 ## Table of Contents
 
 - [About](#about)
-- [What's New](#new-in-v326)
+- [What's New](#new-in-v327)
 - [Installation](#installation-notes)
   - [Install via Homebrew](#install-via-homebrew)
   - [Downloading KaHIP](#downloading-kahip)
@@ -65,6 +65,9 @@ The graph partitioning problem asks for a division of a graph's node set into k 
   width="601" height="558">
 </p>
 
+
+## NEW in v3.27:
+- *Bug fix*: Debug builds and the macOS/Homebrew build of v3.26 failed to link `node_ordering` and other programs (undefined `node_hash_map<T>::EMPTY`). Fixed in [PR #173](https://github.com/KaHIP/KaHIP/pull/173); results are unchanged.
 
 ## NEW in v3.26:
 - *Faster KaFFPa*: `kaffpa` is now 3.9x faster in total time and 2.8x faster in geometric mean over a benchmark of 537 runs (20 mesh, road and social/web graphs, all six preconfigurations, k = 2 to 256), with partition quality unchanged (geometric mean cut within 0.1% of v3.25, no more imbalanced partitions). Every preconfiguration gains, from 2.3x (fastsocial) to 5.5x (eco) in total time. Most changes give bit-identical partitions for a given seed; the others only change tie breaking or random decisions and passed a quality gate against v3.25. Main changes: a fast graph reader and writer, cached gains and boundary updates for kept moves only in 2-way and k-way FM, Boykov-Kolmogorov maximum flows for flow refinement, cache-friendly label propagation on a copy of the graph in visiting order, and fewer ensemble clusterings in strongsocial. Details are in [PR #171](https://github.com/KaHIP/KaHIP/pull/171).
