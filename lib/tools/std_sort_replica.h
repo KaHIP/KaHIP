@@ -20,7 +20,10 @@
 #define STD_SORT_REPLICA_H
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <utility>
+#include "tools/cpu_hints.h"
 
 namespace std_sort_replica_detail {
 
@@ -89,7 +92,7 @@ inline T* unguarded_partition(T* first, T* last, const T* pivot, Comp comp) {
 }
 
 template<typename T, typename Comp>
-void introsort_loop(T* first, T* last, long depth_limit, Comp comp) {
+void introsort_loop(T* first, T* last, std::ptrdiff_t depth_limit, Comp comp) {
         while (last - first > 16) {
                 if (depth_limit == 0) {
                         std::partial_sort(first, last, last, comp);
@@ -136,8 +139,8 @@ template<typename T, typename Comp>
 void std_sort_replica(T* first, T* last, Comp comp) {
         using namespace std_sort_replica_detail;
         if (first == last) return;
-        long n = last - first;
-        long lg = 63 - __builtin_clzl((unsigned long) n);
+        std::ptrdiff_t n = last - first;
+        std::ptrdiff_t lg = kahip_floor_log2((uint64_t) n);
         introsort_loop(first, last, lg * 2, comp);
         if (n > 16) {
                 insertion_sort(first, first + 16, comp);

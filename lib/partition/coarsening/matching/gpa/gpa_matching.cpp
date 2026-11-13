@@ -13,6 +13,7 @@
 #include "macros_assertions.h"
 #include "random_functions.h"
 #include "tools/std_sort_replica.h"
+#include "tools/cpu_hints.h"
 
 gpa_matching::gpa_matching() {
 
@@ -76,7 +77,7 @@ void gpa_matching::match(const PartitionConfig & partition_config,
                 std::vector<rated_edge> rated(edge_permutation.size());
                 const coarseningEdge * ratings = G.raw_coarsening_edges();
                 for( size_t i = 0; i < edge_permutation.size(); i++) {
-                        if(i + 16 < edge_permutation.size()) __builtin_prefetch(&ratings[edge_permutation[i+16]]);
+                        if(i + 16 < edge_permutation.size()) KAHIP_PREFETCH(&ratings[edge_permutation[i+16]]);
                         rated[i] = rated_edge(G.getEdgeRating(edge_permutation[i]), edge_permutation[i]);
                 }
                 // std_sort_replica: the same arrangement as std::sort, see tools/std_sort_replica.h
@@ -102,8 +103,8 @@ void gpa_matching::match(const PartitionConfig & partition_config,
         for( size_t i = 0; i < no_edges; i++) {
                 if(i + 16 < no_edges) {
                         const EdgeID f = edge_permutation[i+16];
-                        __builtin_prefetch(&sources[f]);
-                        __builtin_prefetch(&edges[f]);
+                        KAHIP_PREFETCH(&sources[f]);
+                        KAHIP_PREFETCH(&edges[f]);
                 }
                 if(i + 8 < no_edges) {
                         const EdgeID f = edge_permutation[i+8];

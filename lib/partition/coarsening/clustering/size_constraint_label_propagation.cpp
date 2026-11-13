@@ -22,6 +22,7 @@
 #include "io/graph_io.h"
 
 #include "size_constraint_label_propagation.h"
+#include "tools/cpu_hints.h"
 
 size_constraint_label_propagation::size_constraint_label_propagation() {
                 
@@ -284,7 +285,7 @@ void lp_sweeps(const NodeID n, const Node * nodes, const Edge * edges, lp_cluste
                                 const EdgeID p_begin = nodes[node+1].firstEdge;
                                 const EdgeID p_end   = std::min(nodes[node+2].firstEdge, p_begin + 32);
                                 for( EdgeID e = p_begin; e < p_end; ++e) {
-                                        __builtin_prefetch(&cid[edges[e].target]);
+                                        KAHIP_PREFETCH(&cid[edges[e].target]);
                                 }
                         }
                         const EdgeID e_begin = nodes[node].firstEdge;

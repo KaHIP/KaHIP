@@ -98,9 +98,16 @@ int graph_io::readGraphWeighted(graph_access & G, const std::string & filename) 
         std::unique_ptr<char[]> buf;
         size_t got = 0;
         {
+#ifdef _WIN32
+                // long is 32 bits on Windows: 64-bit positions for files over 2 GB
+                _fseeki64(fp, 0, SEEK_END);
+                long long size = _ftelli64(fp);
+                _fseeki64(fp, 0, SEEK_SET);
+#else
                 fseek(fp, 0, SEEK_END);
                 long size = ftell(fp);
                 fseek(fp, 0, SEEK_SET);
+#endif
                 buf.reset(new char[size > 0 ? size + 1 : 1]);
                 got = size > 0 ? fread(buf.get(), 1, size, fp) : 0;
                 buf[got] = '\n'; // sentinel

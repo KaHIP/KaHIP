@@ -14,6 +14,7 @@
 
 #include "definitions.h"
 #include "partition_config.h"
+#include "tools/cpu_hints.h"
 
 typedef std::mt19937 MersenneTwister;
 
@@ -134,8 +135,8 @@ class random_functions {
 
                 template<typename sometype>
                         static void prefetch_block(std::vector<sometype> & vec, unsigned int pos) {
-                                __builtin_prefetch(&vec[pos], 1);
-                                __builtin_prefetch(&vec[pos+3], 1);
+                                KAHIP_PREFETCH_WRITE(&vec[pos]);
+                                KAHIP_PREFETCH_WRITE(&vec[pos+3]);
                         }
 
                 template<typename sometype>

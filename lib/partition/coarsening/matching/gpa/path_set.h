@@ -12,6 +12,7 @@
 #include "macros_assertions.h"
 #include "partition_config.h"
 #include "path.h"
+#include "tools/cpu_hints.h"
 
 class path_set {
         public:
@@ -27,9 +28,9 @@ class path_set {
 
                 // prefetch the entries of v read by add_if_applicable
                 void prefetch(const NodeID v) const {
-                        __builtin_prefetch(&m_vertex_to_path[v]);
-                        __builtin_prefetch(&m_next[v]);
-                        __builtin_prefetch(&m_prev[v]);
+                        KAHIP_PREFETCH(&m_vertex_to_path[v]);
+                        KAHIP_PREFETCH(&m_next[v]);
+                        KAHIP_PREFETCH(&m_prev[v]);
                 }
 
                 // add the edge with given id to the path set if it is applicable

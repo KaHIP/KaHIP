@@ -18,6 +18,7 @@
 #include "uncoarsening/refinement/quotient_graph_refinement/2way_fm_refinement/vertex_moved_hashtable.h"
 #include "uncoarsening/refinement/connectivity_check.h"
 #include "uncoarsening/refinement/refinement.h"
+#include "tools/cpu_hints.h"
 
 class kway_graph_refinement_core  {
         public:
@@ -146,10 +147,10 @@ inline bool kway_graph_refinement_core::move_node(PartitionConfig & config,
         const Edge * edges   = G.raw_edges();
         const EdgeID n_begin = nodes[node].firstEdge;
         const EdgeID n_end   = nodes[node+1].firstEdge;
-        for(EdgeID e = n_begin; e < n_end && e < n_begin + 32; e++) __builtin_prefetch(&nodes[edges[e].target]);
+        for(EdgeID e = n_begin; e < n_end && e < n_begin + 32; e++) KAHIP_PREFETCH(&nodes[edges[e].target]);
         forall_out_edges(G, e, node) {
                 NodeID target = G.getEdgeTarget(e);
-                if(e + 1 < n_end) __builtin_prefetch(&edges[nodes[edges[e+1].target].firstEdge]);
+                if(e + 1 < n_end) KAHIP_PREFETCH(&edges[nodes[edges[e+1].target].firstEdge]);
                 if(G.getNodeDegree(target) >= CACHE_MIN_DEGREE) {
                         commons->cache_neighbor_moved(target, from, to, G.getEdgeWeight(e));
                 }
