@@ -44,29 +44,38 @@ public:
                  }
         }
 
+        // std::sort of the nodes by degree. The degree is packed into the upper 32 bits of a key
+        // with the node in the lower bits and only the upper bits are compared, so std::sort sees
+        // the same comparison results as with the original comparator on the node ids and
+        // produces the same permutation, without loading two degrees per comparison.
+        void sort_by_degree(parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) {
+                std::vector< unsigned long long > keys( ordered_nodes.size() );
+                for( size_t i = 0; i < ordered_nodes.size(); i++) {
+                        keys[i] = ((unsigned long long) G.getNodeDegree(ordered_nodes[i]) << 32) | ordered_nodes[i];
+                }
+                std::sort( keys.begin(), keys.end(), 
+                           []( const unsigned long long & lhs, const unsigned long long & rhs) -> bool {
+                                return (lhs >> 32) < (rhs >> 32);
+                           });
+                for( size_t i = 0; i < ordered_nodes.size(); i++) {
+                        ordered_nodes[i] = (NodeID)(keys[i] & 0xFFFFFFFFULL);
+                }
+        }
+
         void order_nodes_random(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) { 
                 random_functions::permutate_vector_fast(ordered_nodes, false);
         }
 
         void order_nodes_degree(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) { 
-                std::sort( ordered_nodes.begin(), ordered_nodes.end(), 
-                           [&]( const NodeID & lhs, const NodeID & rhs) -> bool {
-                                return (G.getNodeDegree(lhs) < G.getNodeDegree(rhs));
-                           });
+                sort_by_degree(G, ordered_nodes);
         }
 
         void order_leastghostnodes_nodes_degree(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) { 
-                std::sort( ordered_nodes.begin(), ordered_nodes.end(), 
-                           [&]( const NodeID & lhs, const NodeID & rhs) -> bool {
-                                return (G.getNodeDegree(lhs) < G.getNodeDegree(rhs));
-                           });
+                sort_by_degree(G, ordered_nodes);
         }
 
 	void order_nodes_degree_leastghostnodes(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) { 
-                std::sort( ordered_nodes.begin(), ordered_nodes.end(), 
-                           [&]( const NodeID & lhs, const NodeID & rhs) -> bool {
-				return (G.getNodeDegree(lhs) < G.getNodeDegree(rhs));
-                           });
+                sort_by_degree(G, ordered_nodes);
         }
 };
 
