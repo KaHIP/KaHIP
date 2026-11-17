@@ -25,21 +25,21 @@ void parallel_contraction::contract_to_distributed_quotient( MPI_Comm communicat
 
         // maps old ids to new ids in interval [0, ...., num_of_distinct_labels
         // and stores this information only for the local nodes 
-        std::unordered_map< NodeID, NodeID > label_mapping;
+        open_hash_map< NodeID > label_mapping;
 
         compute_label_mapping( communicator, G, number_of_distinct_labels, label_mapping);
         
         // compute the projection table
         G.allocate_node_to_cnode();
         forall_local_nodes(G, node) {
-                G.setCNode( node, label_mapping[ G.getNodeLabel( node )]);
+                G.setCNode( node, label_mapping.ref( G.getNodeLabel( node )));
         } endfor
 
         get_nodes_to_cnodes_ghost_nodes( communicator, G );   
 
         //now we can really build the edges of the quotient graph
         hashed_graph hG;
-        std::unordered_map< NodeID, NodeWeight > node_weights;
+        open_hash_map< NodeWeight > node_weights;
 
         build_quotient_graph_locally( G, number_of_distinct_labels, hG, node_weights);
         
@@ -58,7 +58,7 @@ void parallel_contraction::contract_to_distributed_quotient( MPI_Comm communicat
 
 void parallel_contraction::compute_label_mapping( MPI_Comm communicator, parallel_graph_access & G, 
                                                   NodeID & global_num_distinct_ids,
-                                                  std::unordered_map< NodeID, NodeID > & label_mapping ) {
+                                                  open_hash_map< NodeID > & label_mapping ) {
         PEID rank, size;
         MPI_Comm_rank( communicator, &rank);
         MPI_Comm_size( communicator, &size);
@@ -68,19 +68,16 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
         helpers helper;
         m_messages.resize(size);
 
-        std::vector< std::unordered_map< NodeID, bool > > filter;
-        filter.resize(size);
+        // distinct labels of the local nodes, grouped by the PE that numbers them
+        // (the order inside a message is irrelevant: the answers are aligned with it)
+        open_hash_map< char > filter;
+        filter.reserve(G.number_of_local_nodes());
         forall_local_nodes(G, node) {
-                PEID peID = G.getNodeLabel(node) / divisor;
-                filter[ peID ][G.getNodeLabel(node)] = true;
+                filter.ref(G.getNodeLabel(node)) = 1;
         } endfor
-
-        for( PEID peID = 0; peID < (PEID) size; peID++) {
-                std::unordered_map< NodeID, bool >::iterator it;
-                for( it = filter[peID].begin(); it != filter[peID].end(); it++) {
-                        m_messages[peID].push_back(it->first);
-                }
-        }
+        filter.for_each([&](NodeID label, char) {
+                m_messages[ label / divisor ].push_back(label);
+        });
 
         // now flood the network
         std::vector<MPI_Request> requests(size, MPI_REQUEST_NULL);
@@ -176,10 +173,11 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         // build the mapping locally
-        std::unordered_map< NodeID, NodeID > label_mapping_to_cnode;
+        open_hash_map< NodeID > label_mapping_to_cnode;
+        label_mapping_to_cnode.reserve(local_labels.size());
         NodeID cur_id = num_smaller_ids;
         for( ULONG i = 0; i < local_labels.size(); i++) {
-                label_mapping_to_cnode[local_labels[i]] = cur_id++;
+                label_mapping_to_cnode.ref(local_labels[i]) = cur_id++;
         }
 
         // now send the processes the mapping back
@@ -195,7 +193,7 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
                 }
 
                 for( ULONG i = 0; i < inc_messages[peID].size(); i++) {
-                        m_out_messages[peID].push_back( label_mapping_to_cnode[ inc_messages[peID][i] ] );
+                        m_out_messages[peID].push_back( label_mapping_to_cnode.ref( inc_messages[peID][i] ) );
                 }
         }
 
@@ -210,7 +208,7 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
 
         // first the local labels 
         for( ULONG i = 0; i < m_messages[rank].size(); i++) {
-                label_mapping[ m_messages[rank][i] ] = label_mapping_to_cnode[m_messages[rank][i]];
+                label_mapping.ref( m_messages[rank][i] ) = label_mapping_to_cnode.ref( m_messages[rank][i] );
         }
 
         counter = 0;
@@ -232,7 +230,7 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
 
                 PEID peID = st.MPI_SOURCE;
                 for( int i = 0; i < message_length; i++) {
-                        label_mapping[ m_messages[peID][i] ] = incmessage[i];
+                        label_mapping.ref( m_messages[peID][i] ) = incmessage[i];
                 }
         }
         MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
@@ -318,14 +316,10 @@ void parallel_contraction::get_nodes_to_cnodes_ghost_nodes( MPI_Comm communicato
 void parallel_contraction::build_quotient_graph_locally( parallel_graph_access & G, 
                                                          NodeID number_of_distinct_labels, 
                                                          hashed_graph & hG, 
-                                                         std::unordered_map< NodeID, NodeWeight > & node_weights) {
+                                                         open_hash_map< NodeWeight > & node_weights) {
         forall_local_nodes(G, node) {
                 NodeID cur_cnode = G.getCNode( node );
-                if( node_weights.find(cur_cnode) == node_weights.end()) {
-                        node_weights[cur_cnode] = 0;
-                }
-
-                node_weights[cur_cnode] += G.getNodeWeight( node );
+                node_weights.ref(cur_cnode) += G.getNodeWeight( node );
 
                 forall_out_edges(G, e, node) {
                         NodeID target       = G.getEdgeTarget(e);
@@ -346,7 +340,7 @@ void parallel_contraction::build_quotient_graph_locally( parallel_graph_access &
 
 
 void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI_Comm communicator, hashed_graph &  hG, 
-                                                                             std::unordered_map< NodeID, NodeWeight > & node_weights,
+                                                                             open_hash_map< NodeWeight > & node_weights,
                                                                              NodeID number_of_cnodes, 
                                                                              parallel_graph_access & Q  ) {
         PEID rank, size;
@@ -506,15 +500,13 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         }
         //now distribute the node weights
         //pack messages
-        std::unordered_map< NodeID, NodeWeight >::iterator wit;
-        for( wit = node_weights.begin(); wit != node_weights.end(); wit++) {
-                NodeID node       = wit->first;
-                NodeWeight weight = wit->second;
+        // the order of the (node, weight) pairs is irrelevant: the receiver adds them up
+        node_weights.for_each([&](NodeID node, NodeWeight weight) {
                 PEID peID         = node / divisor;
 
                 m_messages[ peID ].push_back( node );
                 m_messages[ peID ].push_back( weight );
-        }
+        });
 
         for( PEID peID = 0; peID < size; peID++) {
                 if( peID != rank ) {
