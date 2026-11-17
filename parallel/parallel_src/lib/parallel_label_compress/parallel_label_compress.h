@@ -76,14 +76,17 @@ class parallel_label_compress {
                                                         bool improvement = cur_value > max_value;
                                                         improvement |= cur_value == max_value && random_functions::nextBool();
 
-                                                        bool sizeconstraint = G.getBlockSize(cur_block) + node_weight <= cluster_upperbound;
-                                                        sizeconstraint |= cur_block == old_block;
+                                                        if( !improvement ) continue; // nothing below has side effects
 
                                                         bool cycle = !config.vcycle;
                                                         cycle |= G.getSecondPartitionIndex( node ) == G.getSecondPartitionIndex(target);
 
                                                         bool balancing = own_block_balanced || cur_block != old_block;
-                                                        if( improvement  && sizeconstraint && cycle && balancing) {
+                                                        if( !(cycle && balancing) ) continue;
+
+                                                        bool sizeconstraint = cur_block == old_block;
+                                                        sizeconstraint = sizeconstraint || G.getBlockSize(cur_block) + node_weight <= cluster_upperbound;
+                                                        if( sizeconstraint ) {
                                                                 max_value = cur_value;
                                                                 max_block = cur_block;
                                                         }
