@@ -55,6 +55,9 @@ void internal_kaffpa_set_configuration( configuration & cfg,
                 case STRONG: 
                         cfg.strong(partition_config);
                         break;
+                case ULTRA: 
+                        cfg.ultra(partition_config);
+                        break;
                 case FASTSOCIAL: 
                         cfg.fastsocial(partition_config);
                         break;
@@ -277,6 +280,7 @@ void internal_nodeseparator_call(PartitionConfig & partition_config,
                         case ECO: 
                                 cfg.eco_separator(partition_config);
                                 break;
+                        case ULTRA: 
                         case STRONG: 
                                 cfg.strong_separator(partition_config);
                                 break;
@@ -346,6 +350,9 @@ void node_separator(int* n,
                 case STRONG: 
                         cfg.strong(partition_config);
                         break;
+                case ULTRA: 
+                        cfg.ultra(partition_config);
+                        break;
                 case FASTSOCIAL: 
                         cfg.fastsocial(partition_config);
                         break;
@@ -397,6 +404,7 @@ void reduced_nd(int* n,
                 case ECO: 
                         cfg.eco_separator(partition_config);
                         break;
+                case ULTRA: 
                 case STRONG: 
                         cfg.strong_separator(partition_config);
                         break;
@@ -634,6 +642,9 @@ void process_mapping(int* n, int* vwgt, kahip_idx* xadj,
                         break;
                 case STRONG: 
                         cfg.strong(partition_config);
+                        break;
+                case ULTRA: 
+                        cfg.ultra(partition_config);
                         break;
                 case FASTSOCIAL: 
                         cfg.fastsocial(partition_config);

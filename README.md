@@ -219,6 +219,7 @@ These programs and configurations take a graph and partition it more or less seq
 | Fast Partitioning      | Meshes | kaffpa preconfiguration set to fast                                                                |
 | Good Partitioning      | Meshes | kaffpa preconfiguration set to eco                                                                 |
 | Very Good Partitioning | Meshes | kaffpa preconfiguration set to strong                                                              |
+| Best kaffpa Quality    | Meshes | kaffpa preconfiguration set to ultra (about 2x the time of strong; also for kaffpaE)               |
 | Highest Quality        | Meshes | kaffpaE, use mpirun, large time limit                                                              |
 | Fast Partitioning      | Social | kaffpa preconfiguration set to fsocial                                                             |
 | Good Partitioning      | Social | kaffpa preconfiguration set to esocial                                                             |
@@ -233,6 +234,10 @@ These programs and configurations take a graph and partition it more or less seq
 
 ```console
 ./deploy/kaffpa ./examples/rgg_n_2_15_s0.graph --k 4  --preconfiguration=strong
+```
+
+```console
+./deploy/kaffpa ./examples/rgg_n_2_15_s0.graph --k 4  --preconfiguration=ultra
 ```
 
 ```console

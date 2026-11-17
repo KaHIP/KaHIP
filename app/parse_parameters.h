@@ -129,11 +129,11 @@ int parse_parameters(int argn, char **argv,
         struct arg_int *initial_partition_optimize_multitry_rounds   = arg_int0(NULL, "initial_partition_optimize_multitry_rounds", NULL, "(Default: 100)");
 
 #ifdef MODE_KAFFPA
-        struct arg_rex *preconfiguration                     = arg_rex1(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fsocial|esocial|ssocial]." );
+        struct arg_rex *preconfiguration                     = arg_rex1(NULL, "preconfiguration", "^(ultra|strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [ultra|strong|eco|fast|fsocial|esocial|ssocial]." );
 #elif MODE_NODEORDERING
-        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [strong|eco|fast|fsocial|esocial|ssocial]." );
+        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(ultra|strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: eco) [ultra|strong|eco|fast|fsocial|esocial|ssocial]." );
 #else
-        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [strong|eco|fast|fsocial|esocial|ssocial]." );
+        struct arg_rex *preconfiguration                     = arg_rex0(NULL, "preconfiguration", "^(ultra|strong|eco|fast|fsocial|esocial|ssocial)$", "VARIANT", REG_EXTENDED, "Use a preconfiguration. (Default: strong) [ultra|strong|eco|fast|fsocial|esocial|ssocial]." );
 #endif
 
         struct arg_dbl *time_limit                           = arg_dbl0(NULL, "time_limit", NULL, "Time limit in s. Default 0s .");
@@ -406,7 +406,7 @@ int parse_parameters(int argn, char **argv,
 
         if(preconfiguration->count > 0) {
 #ifdef MODE_NODESEP
-                if(strcmp("strong", preconfiguration->sval[0]) == 0) {
+                if(strcmp("strong", preconfiguration->sval[0]) == 0 || strcmp("ultra", preconfiguration->sval[0]) == 0) {
                         cfg.strong_separator(partition_config);
                 } else if (strcmp("eco", preconfiguration->sval[0]) == 0) {
                         cfg.eco_separator(partition_config);
@@ -426,6 +426,8 @@ int parse_parameters(int argn, char **argv,
 #else
                 if(strcmp("strong", preconfiguration->sval[0]) == 0) {
                         cfg.strong(partition_config);
+                } else if (strcmp("ultra", preconfiguration->sval[0]) == 0) {
+                        cfg.ultra(partition_config);
                 } else if (strcmp("eco", preconfiguration->sval[0]) == 0) {
                         cfg.eco(partition_config);
                 } else if (strcmp("fast", preconfiguration->sval[0]) == 0) {
