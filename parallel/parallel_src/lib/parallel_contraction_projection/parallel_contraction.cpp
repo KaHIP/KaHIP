@@ -242,7 +242,8 @@ void parallel_contraction::get_nodes_to_cnodes_ghost_nodes( MPI_Comm communicato
         MPI_Comm_rank( communicator, &rank);
         MPI_Comm_size( communicator, &size);
         
-        std::vector< bool > PE_packed( size, false );
+        // PE_packed_by[peID] == node + 1 iff node was already sent to peID (replaces resetting flags in a second edge scan)
+        std::vector< NodeID > PE_packed_by( size, 0 );
         m_send_buffers.resize( size );
 
         forall_local_nodes(G, node) {
@@ -251,17 +252,11 @@ void parallel_contraction::get_nodes_to_cnodes_ghost_nodes( MPI_Comm communicato
                                 NodeID target = G.getEdgeTarget(e);
                                 if( !G.is_local_node(target)  ) {
                                         PEID peID = G.getTargetPE(target);
-                                        if( !PE_packed[peID] ) { // make sure a node is sent at most once
+                                        if( PE_packed_by[peID] != node + 1 ) { // make sure a node is sent at most once
                                                 m_send_buffers[peID].push_back(G.getGlobalID(node));
                                                 m_send_buffers[peID].push_back(G.getCNode(node));
-                                                PE_packed[peID] = true;
+                                                PE_packed_by[peID] = node + 1;
                                         }
-                                }
-                        } endfor
-                        forall_out_edges(G, e, node) {
-                                NodeID target = G.getEdgeTarget(e);
-                                if( !G.is_local_node(target)  ) {
-                                        PE_packed[G.getTargetPE(target)] = false;
                                 }
                         } endfor
                 }
