@@ -107,6 +107,7 @@ void balance_management_coarsening::setBlockSize( PartitionID block, NodeWeight 
 
 inline
 void balance_management_coarsening::update_non_contained_block_balance( PartitionID from, PartitionID to, NodeWeight node_weight) {
+        if( from == to ) return; // subtracting and adding the same weight changes nothing
         m_fuzzy_block_weights.ref(from) -= node_weight;
         m_fuzzy_block_weights.ref(to)   += node_weight;
 }
