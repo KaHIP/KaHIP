@@ -147,6 +147,7 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         // local_targets[local_offsets[i] .. local_offsets[i+1])
         std::vector< NodeID > local_targets;
         std::vector< EdgeID > local_offsets;
+        local_targets.reserve( (2 * (ULONG)nmbEdges) / comm_size + 1 ); // average share; grows if needed
         local_offsets.reserve(local_no_nodes + 1);
         local_offsets.push_back(0);
 
