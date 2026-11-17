@@ -378,6 +378,27 @@ void two_way_flow_refinement::apply_partition_and_update_boundary( const Partiti
         }
         boundary.end_fixed_partition_updates();
 
+        if(config.flow_unlocked_model) {
+                // in the unlocked flow model stripe nodes with neighbors in third blocks may change sides:
+                // move the weight of those edges from the cut of (from, block) to the cut of (to, block)
+                for(unsigned i = 0; i < lhs_boundary_stripe.size() + rhs_boundary_stripe.size(); i++) {
+                        bool in_lhs_stripe = i < lhs_boundary_stripe.size();
+                        NodeID node        = in_lhs_stripe ? lhs_boundary_stripe[i] : rhs_boundary_stripe[i - lhs_boundary_stripe.size()];
+                        PartitionID from   = in_lhs_stripe ? lhs : rhs;
+                        PartitionID to     = G.getPartitionIndex(node);
+                        if(to == from) continue;
+                        forall_out_edges(G, e, node) {
+                                PartitionID block = G.getPartitionIndex(G.getEdgeTarget(e));
+                                if(block == lhs || block == rhs) continue;
+                                EdgeWeight w = G.getEdgeWeight(e);
+                                boundary_pair from_bp; from_bp.k = G.get_partition_count(); from_bp.lhs = from; from_bp.rhs = block;
+                                boundary.setEdgeCut(&from_bp, boundary.getEdgeCut(&from_bp) - w);
+                                boundary_pair to_bp; to_bp.k = G.get_partition_count(); to_bp.lhs = to; to_bp.rhs = block;
+                                boundary.setEdgeCut(&to_bp, boundary.getEdgeCut(&to_bp) + w);
+                        } endfor
+                }
+        }
+
 } 
 
 

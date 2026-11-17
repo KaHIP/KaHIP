@@ -85,6 +85,7 @@ inline void configuration::strong( PartitionConfig & partition_config ) {
 // speed improvements of v3.26
 inline void configuration::ultra( PartitionConfig & partition_config ) {
         strong(partition_config);
+        partition_config.flow_unlocked_model = true;
         // k = 2 has the least time headroom: one more V-cycle; otherwise best of two full runs
         if( partition_config.k == 2 ) {
                 partition_config.global_cycle_iterations = 3;

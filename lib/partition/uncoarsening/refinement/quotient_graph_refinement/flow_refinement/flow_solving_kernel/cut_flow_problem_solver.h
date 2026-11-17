@@ -37,6 +37,15 @@ class cut_flow_problem_solver  {
                                         std::vector<NodeID> & outer_rhs_boundary_nodes ); 
 
 
+                // ultra only (config.flow_unlocked_model): terminal edges of the unlocked flow model
+                bool connect_terminals_unlocked(graph_access & G,
+                                                PartitionID & lhs,
+                                                PartitionID & rhs,
+                                                std::vector<NodeID> & lhs_boundary_stripe,
+                                                std::vector<NodeID> & rhs_boundary_stripe,
+                                                flow_graph & fG,
+                                                FlowType & lhs_rhs_capacity);
+
                 //modified parse code from hi_pr
                 EdgeWeight convert_ds(const PartitionConfig & config, 
                                       graph_access & G, 
