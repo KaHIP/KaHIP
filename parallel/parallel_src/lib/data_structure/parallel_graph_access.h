@@ -995,6 +995,8 @@ inline void ghost_node_communication::update_ghost_node_data_global() {
         std::vector< std::vector< NodeID > > send_buffers; // buffers to send messages
         send_buffers.resize(m_size);
         forall_local_nodes((*m_G), node) {
+                // only interface nodes have ghost neighbors (new_edge marks them), so the others add nothing
+                if( !m_G->is_interface_node(node) ) continue;
                 forall_out_edges((*m_G), e, node) {
                         NodeID target = m_G->getEdgeTarget(e);
                         if( !m_G->is_local_node(target)  ) {
