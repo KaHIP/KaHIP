@@ -68,6 +68,7 @@ class parallel_label_compress {
 
                                         } else {
                                                 forall_out_edges(G, e, node) {
+                                                        if( e + 8 < end ) G.prefetchTargetData(e + 8);
                                                         NodeID target             = G.getEdgeTarget(e);
                                                         PartitionID cur_block     = G.getNodeLabel(target);
                                                         NodeWeight & cur_weight   = hash_map[cur_block]; // one lookup per edge

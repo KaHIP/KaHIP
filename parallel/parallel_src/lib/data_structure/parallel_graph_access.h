@@ -457,6 +457,11 @@ public:
 
         NodeID getEdgeTarget(EdgeID e);
 
+        // hint the cache about the node data (label, block) of the target of edge e; no effect on results
+        void prefetchTargetData(EdgeID e) {
+                __builtin_prefetch(&m_nodes_data[m_edges[e].local_target]);
+        }
+
         //methods for non-local / ghost nodes only
         //these methods are usally called to communicate data
         PEID getTargetPE(NodeID node);
