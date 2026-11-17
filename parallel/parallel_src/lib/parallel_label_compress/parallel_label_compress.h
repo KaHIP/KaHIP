@@ -70,8 +70,9 @@ class parallel_label_compress {
                                                 forall_out_edges(G, e, node) {
                                                         NodeID target             = G.getEdgeTarget(e);
                                                         PartitionID cur_block     = G.getNodeLabel(target);
-                                                        hash_map[cur_block] += G.getEdgeWeight(e);
-                                                        PartitionID cur_value     = hash_map[cur_block];
+                                                        NodeWeight & cur_weight   = hash_map[cur_block]; // one lookup per edge
+                                                        cur_weight               += G.getEdgeWeight(e);
+                                                        PartitionID cur_value     = cur_weight;
 
                                                         bool improvement = cur_value > max_value;
                                                         improvement |= cur_value == max_value && random_functions::nextBool();
