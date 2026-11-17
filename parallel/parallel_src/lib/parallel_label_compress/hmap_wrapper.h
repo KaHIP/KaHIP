@@ -82,19 +82,33 @@ class hmap_wrapper <std::vector<NodeWeight> > {
                         for( ULONG k = 0; k < m_config.k; k++) {
                                 mapping_type[k] = 0;
                         }
-
+                        // for large k, remember the entries that may be nonzero and reset only those
+                        m_track = m_config.k > 32;
+                        m_touched.clear();
                 };
 
                 void clear() { 
-                        for( ULONG k = 0; k < m_config.k; k++) {
-                                mapping_type[k] = 0;
+                        if( m_track && m_touched.size() < m_config.k ) {
+                                for( ULONG i = 0; i < m_touched.size(); i++) {
+                                        mapping_type[m_touched[i]] = 0;
+                                }
+                        } else {
+                                for( ULONG k = 0; k < m_config.k; k++) {
+                                        mapping_type[k] = 0;
+                                }
                         }
+                        m_touched.clear();
                 };
 
-                NodeWeight & operator[](NodeID node) {return mapping_type[node];};
+                NodeWeight & operator[](NodeID node) {
+                        if( m_track && mapping_type[node] == 0 ) m_touched.push_back(node);
+                        return mapping_type[node];
+                };
 
          private:
                 std::vector<NodeWeight> mapping_type;
+                std::vector<NodeID> m_touched;
+                bool m_track;
                 PPartitionConfig m_config;
 };
 
