@@ -11,7 +11,7 @@ if(CCACHE_PROGRAM)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CCACHE_PROGRAM}")
 endif()
-project(KaHIP VERSION 3.27 LANGUAGES C CXX)
+project(KaHIP VERSION 3.28 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -199,6 +199,7 @@ set(LIBKAFFPA_SOURCE_FILES
   lib/partition/uncoarsening/refinement/cycle_improvements/problem_factory.cpp
   lib/partition/uncoarsening/refinement/cycle_improvements/augmented_Qgraph.cpp
   lib/partition/uncoarsening/refinement/mixed_refinement.cpp
+  lib/partition/uncoarsening/refinement/jet_refinement/jet_refinement.cpp
   lib/partition/uncoarsening/refinement/label_propagation_refinement/label_propagation_refinement.cpp
   lib/partition/uncoarsening/refinement/refinement.cpp
   lib/partition/uncoarsening/refinement/quotient_graph_refinement/2way_fm_refinement/two_way_fm.cpp

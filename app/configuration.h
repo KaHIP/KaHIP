@@ -17,6 +17,7 @@ class configuration {
                 virtual ~configuration() {};
 
                 void strong( PartitionConfig & config );
+                void ultra( PartitionConfig & config );
                 void eco( PartitionConfig & config );
                 void fast( PartitionConfig & config );
 
@@ -78,6 +79,24 @@ inline void configuration::strong( PartitionConfig & partition_config ) {
         partition_config.initial_partitioning_repetitions       = 64;
         partition_config.strong = true;
 
+}
+
+// ultra: strong with more work per run for better cuts, within the running time of strong before the
+// speed improvements of v3.26
+inline void configuration::ultra( PartitionConfig & partition_config ) {
+        strong(partition_config);
+        partition_config.flow_unlocked_model = true;
+        partition_config.jet_refinement      = true;
+        // kaffpaE: individuals over the balance bound rank behind every balanced one (fitness and final choice)
+        partition_config.mh_penalty_for_imbalance = true;
+        // kaffpaE: the input partition enters the population unchanged (never end worse than the input)
+        partition_config.mh_keep_input            = true;
+        // k = 2 has the least time headroom: one more V-cycle; otherwise best of two full runs
+        if( partition_config.k == 2 ) {
+                partition_config.global_cycle_iterations = 3;
+        } else {
+                partition_config.repetitions = 2;
+        }
 }
 
 inline void configuration::eco( PartitionConfig & partition_config ) {

@@ -20,6 +20,8 @@
 #include "parallel_mh_async.h"
 #include "quality_metrics.h"
 #include "random_functions.h"
+#include "uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
+#include "uncoarsening/refinement/quotient_graph_refinement/complete_boundary.h"
 
 parallel_mh_async::parallel_mh_async() : MASTER(0), m_time_limit(0) {
         m_best_global_objective = std::numeric_limits<EdgeWeight>::max();
@@ -55,7 +57,24 @@ void parallel_mh_async::perform_partitioning(const PartitionConfig & partition_c
         random_functions::setSeed(partition_config.seed*m_size+m_rank);
 
         PartitionConfig ini_working_config  = partition_config; 
+        // ultra: the input partition also enters the population unchanged, so the result is never worse than it
+        bool keep_input = partition_config.mh_keep_input && partition_config.graph_allready_partitioned;
+        std::vector<PartitionID> input_map;
+        if(keep_input) {
+                input_map.resize(G.number_of_nodes());
+                forall_nodes(G, node) {
+                        input_map[node] = G.getPartitionIndex(node);
+                } endfor
+        }
         initialize( ini_working_config, G);
+        if(keep_input) {
+                forall_nodes(G, node) {
+                        G.setPartitionIndex(node, input_map[node]);
+                } endfor
+                Individuum input_ind;
+                m_island->createIndividuumFromPartition(partition_config, G, input_ind);
+                m_island->insert(G, input_ind);
+        }
 
         m_t.restart();
         exchanger ex(m_communicator);
@@ -89,6 +108,9 @@ void parallel_mh_async::perform_partitioning(const PartitionConfig & partition_c
         } while( m_t.elapsed() <= m_time_limit );
 
         collect_best_partitioning(G, partition_config);
+        if(partition_config.mh_penalty_for_imbalance) {
+                rebalance_if_overloaded(partition_config, G);
+        }
         m_island->print();
 
         //print logfile (for convergence plots)
@@ -320,3 +342,20 @@ EdgeWeight parallel_mh_async::perform_local_partitioning(PartitionConfig & worki
 }
 
 
+
+// ultra: if even the best individual is over the balance bound (no balanced individual exists), rebalance it with
+// the negative-cycle model, which moves nodes until no block is overloaded
+void parallel_mh_async::rebalance_if_overloaded(const PartitionConfig & partition_config, graph_access & G) {
+        std::vector<NodeWeight> block_weight(partition_config.k, 0);
+        forall_nodes(G, node) {
+                block_weight[G.getPartitionIndex(node)] += G.getNodeWeight(node);
+        } endfor
+        if(*std::max_element(block_weight.begin(), block_weight.end()) <= partition_config.upper_bound_partition) return;
+
+        PartitionConfig copy = partition_config;
+        copy.cycle_refinement_algorithm = CYCLE_REFINEMENT_ALGORITHM_ULTRA_MODEL;
+        complete_boundary boundary(&G);
+        boundary.build();
+        cycle_refinement cr;
+        cr.perform_refinement(copy, G, boundary);
+}

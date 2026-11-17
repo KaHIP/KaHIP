@@ -19,6 +19,8 @@ extern "C" {
 #define KaHIPWrapper_KAHIP_ECOSOCIAL 4L
 #undef KaHIPWrapper_KAHIP_STRONGSOCIAL
 #define KaHIPWrapper_KAHIP_STRONGSOCIAL 5L
+#undef KaHIPWrapper_KAHIP_ULTRA
+#define KaHIPWrapper_KAHIP_ULTRA 6L
 /*
  * Class:     KaHIPWrapper
  * Method:    cnativeKaffpa

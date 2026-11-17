@@ -1,4 +1,4 @@
-KaHIP v3.27
+KaHIP v3.28
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![C++](https://img.shields.io/badge/C++-11/14-blue.svg)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.10+-064F8C.svg)](https://cmake.org/)
@@ -32,7 +32,7 @@ KaHIP v3.27
 ## Table of Contents
 
 - [About](#about)
-- [What's New](#new-in-v327)
+- [What's New](#new-in-v328)
 - [Installation](#installation-notes)
   - [Install via Homebrew](#install-via-homebrew)
   - [Downloading KaHIP](#downloading-kahip)
@@ -65,6 +65,10 @@ The graph partitioning problem asks for a division of a graph's node set into k 
   width="601" height="558">
 </p>
 
+
+## NEW in v3.28:
+- *New preconfiguration `ultra`*: `--preconfiguration=ultra` (mode `ULTRA` in the C/C++ interface, `kahip.ULTRA` in Python) starts from `strong` and adds Jet refinement (label propagation with bounded negative-gain moves) before the k-way FM on every level, the unlocked flow model in the pairwise flow refinement, and more global work (3 V-cycles for k = 2, the best of 2 runs for k > 2). Against v3.26 `strong` it gives 2.2% smaller cuts in geometric mean (7% on social graphs) at 2.0x its time, which is still below the time of v3.25 `strong` on every job of our benchmark. Inside kaffpaE and KaBaPE, `ultra` also keeps balanced individuals ahead of overloaded ones and, with `--input_partition`, keeps the input partition, so the result is never worse than the input. All other preconfigurations are unchanged. It was developed with [Agentic Algorithm Engineering](https://github.com/CHSZLab/AgenticAlgorithmEngineering) (AAE), run with a focus on solution quality. Details are in [PR #176](https://github.com/KaHIP/KaHIP/pull/176).
+- *Bug fix*: when no flow network could be built for a pair of blocks, flow refinement could move a whole stripe of nodes while keeping the old cut value. This changes the output of `strong` and `strongsocial` in rare cases (cut quality unchanged on average); all other preconfigurations are unchanged. Fixed in [PR #175](https://github.com/KaHIP/KaHIP/pull/175).
 
 ## NEW in v3.27:
 - *Bug fix*: Debug builds and the macOS/Homebrew build of v3.26 failed to link `node_ordering` and other programs (undefined `node_hash_map<T>::EMPTY`). Fixed in [PR #173](https://github.com/KaHIP/KaHIP/pull/173); results are unchanged.
@@ -219,6 +223,7 @@ These programs and configurations take a graph and partition it more or less seq
 | Fast Partitioning      | Meshes | kaffpa preconfiguration set to fast                                                                |
 | Good Partitioning      | Meshes | kaffpa preconfiguration set to eco                                                                 |
 | Very Good Partitioning | Meshes | kaffpa preconfiguration set to strong                                                              |
+| Best kaffpa Quality    | Meshes | kaffpa preconfiguration set to ultra (about 2x the time of strong; also for kaffpaE)               |
 | Highest Quality        | Meshes | kaffpaE, use mpirun, large time limit                                                              |
 | Fast Partitioning      | Social | kaffpa preconfiguration set to fsocial                                                             |
 | Good Partitioning      | Social | kaffpa preconfiguration set to esocial                                                             |
@@ -233,6 +238,10 @@ These programs and configurations take a graph and partition it more or less seq
 
 ```console
 ./deploy/kaffpa ./examples/rgg_n_2_15_s0.graph --k 4  --preconfiguration=strong
+```
+
+```console
+./deploy/kaffpa ./examples/rgg_n_2_15_s0.graph --k 4  --preconfiguration=ultra
 ```
 
 ```console

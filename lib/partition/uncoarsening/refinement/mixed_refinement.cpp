@@ -6,6 +6,7 @@
  *****************************************************************************/
 
 #include "cycle_improvements/cycle_refinement.h"
+#include "jet_refinement/jet_refinement.h"
 #include "kway_graph_refinement/kway_graph_refinement.h"
 #include "kway_graph_refinement/multitry_kway_fm.h"
 #include "mixed_refinement.h"
@@ -44,6 +45,11 @@ EdgeWeight mixed_refinement::perform_refinement(PartitionConfig & config, graph_
                 }
 
         } else {
+                if(config.jet_refinement) {
+                        jet_refinement jet;
+                        overall_improvement += jet.perform_refinement(config, G, boundary);
+                }
+
                 if(config.corner_refinement_enabled) {
                         overall_improvement += kway->perform_refinement(config, G, boundary);
                 } 

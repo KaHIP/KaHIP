@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include <vector>
+
 #include "quality_metrics.h"
 #include "data_structure/union_find.h"
 
@@ -370,6 +372,28 @@ EdgeWeight quality_metrics::objective(const PartitionConfig & config, graph_acce
                 return max_communication_volume(G, partition_map);
         } else if(config.mh_penalty_for_unconnected) {
                 return edge_cut_connected(G, partition_map);
+        } else if(config.mh_penalty_for_imbalance) {
+                // ultra: an individual over the balance bound is worse than every balanced one (its objective is the
+                // total edge weight + 1 + its overload), so neither selection nor the final choice prefers it
+                EdgeWeight cut = edge_cut(G, partition_map);
+                std::vector<NodeWeight> block_weight(config.k, 0);
+                forall_nodes(G, node) {
+                        block_weight[partition_map[node]] += G.getNodeWeight(node);
+                } endfor
+                EdgeWeight overload = 0;
+                for(PartitionID b = 0; b < config.k; b++) {
+                        if(block_weight[b] > config.upper_bound_partition) {
+                                overload += block_weight[b] - (EdgeWeight)config.upper_bound_partition;
+                        }
+                }
+                if(overload == 0) return cut;
+                EdgeWeight total = 0;
+                forall_nodes(G, node) {
+                        forall_out_edges(G, e, node) {
+                                total += G.getEdgeWeight(e);
+                        } endfor
+                } endfor
+                return total + 1 + overload;
         } else {
                 return edge_cut(G, partition_map);
         }

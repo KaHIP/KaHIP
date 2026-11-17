@@ -148,6 +148,12 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
 
         if(outer_lhs_boundary.size() == 0 || outer_rhs_boundary.size() == 0) return false;
 
+        // without a source or a sink edge in the unlocked model, use the locked model for this problem
+        if(config.flow_unlocked_model && connect_terminals_unlocked(G, lhs, rhs, lhs_boundary_stripe, rhs_boundary_stripe,
+                                                                    fG, lhs_rhs_capacity)) {
+                return true;
+        }
+
         ////connect source and target with outer boundary nodes 
         FlowType max_capacity = std::numeric_limits<FlowType>::max();
         for(unsigned i = 0; i < outer_lhs_boundary.size(); i++) {
@@ -158,6 +164,60 @@ EdgeWeight cut_flow_problem_solver::convert_ds( const PartitionConfig & config,
         for(unsigned i = 0; i < outer_rhs_boundary.size(); i++) {
                 NodeID sourceID = outer_rhs_boundary[i];
                 fG.new_edge(sourceID, sink, max_capacity);
+        }
+
+        fG.finish_construction();
+        return true;
+}
+
+// Unlocked flow model (model F_H of Heuer, Sanders, Schlag, "Network Flow-Based Refinement for Multilevel
+// Hypergraph Partitioning", SEA 2018, restricted to graphs): a stripe node gets an edge from the source with
+// the weight of its edges to lhs nodes outside the stripes and an edge to the sink with the weight of its
+// edges to rhs nodes outside the stripes; edges to third blocks are left out, since they are cut on either
+// side. The value of an s-t cut is then the lhs-rhs cut of the partition it induces, and stripe nodes at the
+// border of the region may change sides (the original model ties them to source or sink).
+// The stripe edges are already in fG; the terminal edges are appended in stripe order, source edges first.
+bool cut_flow_problem_solver::connect_terminals_unlocked(graph_access & G,
+                                                         PartitionID & lhs,
+                                                         PartitionID & rhs,
+                                                         std::vector<NodeID> & lhs_boundary_stripe,
+                                                         std::vector<NodeID> & rhs_boundary_stripe,
+                                                         flow_graph & fG,
+                                                         FlowType & lhs_rhs_capacity) {
+        NodeID no_lhs_stripe = lhs_boundary_stripe.size();
+        NodeID no_stripe     = no_lhs_stripe + rhs_boundary_stripe.size();
+        NodeID source        = no_stripe;
+        NodeID sink          = no_stripe + 1;
+
+        std::vector<FlowType> to_source(no_stripe, 0);
+        std::vector<FlowType> to_sink(no_stripe, 0);
+        bool has_source_edge = false;
+        bool has_sink_edge   = false;
+        for( NodeID idx = 0; idx < no_stripe; idx++) {
+                NodeID node = idx < no_lhs_stripe ? lhs_boundary_stripe[idx] : rhs_boundary_stripe[idx - no_lhs_stripe];
+                forall_out_edges(G, e, node) {
+                        PartitionID target_block = G.getPartitionIndex(G.getEdgeTarget(e));
+                        if(target_block == lhs) {
+                                to_source[idx] += G.getEdgeWeight(e);
+                        } else if(target_block == rhs) {
+                                to_sink[idx]   += G.getEdgeWeight(e);
+                        }
+                } endfor
+                has_source_edge |= to_source[idx] > 0;
+                has_sink_edge   |= to_sink[idx] > 0;
+        }
+        // without a source (sink) edge, one side of the region would be free to take all of it; the
+        // caller then uses the locked model (no edge has been added yet)
+        if(!has_source_edge || !has_sink_edge) return false;
+
+        for( NodeID idx = 0; idx < no_stripe; idx++) {
+                if(to_source[idx] > 0) fG.new_edge(source, idx, to_source[idx]);
+                // lhs_rhs_capacity is the capacity of the cut {source} + LHS stripe
+                if(idx >= no_lhs_stripe) lhs_rhs_capacity += to_source[idx];
+        }
+        for( NodeID idx = 0; idx < no_stripe; idx++) {
+                if(to_sink[idx] > 0) fG.new_edge(idx, sink, to_sink[idx]);
+                if(idx < no_lhs_stripe) lhs_rhs_capacity += to_sink[idx];
         }
 
         fG.finish_construction();

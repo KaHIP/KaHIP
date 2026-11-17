@@ -119,6 +119,15 @@ struct PartitionConfig
 
         bool most_balanced_minimum_cuts;
 
+        // ultra only: pairwise flow refinement with the unlocked flow model (Heuer, Sanders, Schlag, ACM JEA 2019):
+        // region nodes are tied to source / sink by their edges to the rest of their block, edges to
+        // third blocks are left out, so region nodes next to the region border can change sides
+        bool flow_unlocked_model = false;
+
+        // ultra only: Jet label propagation with negative-gain moves and rebalancing (Gilbert et al., SIAM J. Sci. Comput. 2024)
+        // before the k-way FM on every level
+        bool jet_refinement = false;
+
         bool most_balanced_minimum_cuts_node_sep;
         
         unsigned toposort_iterations;
@@ -256,6 +265,13 @@ struct PartitionConfig
         bool kabapE;
         
         bool mh_penalty_for_unconnected;
+
+        // ultra: kaffpaE ranks individuals over the balance bound behind every balanced one and rebalances the
+        // final partition with the negative-cycle model if it is still over the bound
+        bool mh_penalty_for_imbalance = false;
+
+        // ultra: kaffpaE inserts the input partition (--input_partition) unchanged as one individual
+        bool mh_keep_input = false;
         bool connected_blocks;
         bool connected_blocks_init_done;
         //=======================================

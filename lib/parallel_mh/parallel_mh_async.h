@@ -24,6 +24,7 @@ public:
         void initialize(PartitionConfig & graph_partitioner_config, graph_access & G);
         EdgeWeight perform_local_partitioning(PartitionConfig & graph_partitioner_config, graph_access & G);
         EdgeWeight collect_best_partitioning(graph_access & G, const PartitionConfig & config);
+        void rebalance_if_overloaded(const PartitionConfig & partition_config, graph_access & G);
         void perform_cycle_partitioning(PartitionConfig & graph_partitioner_config, graph_access & G);
 
 private:

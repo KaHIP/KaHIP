@@ -121,6 +121,32 @@ void population::createIndividuum(const PartitionConfig & config,
         }
 }
 
+// ultra: an individual from the partition currently stored in G, unchanged (used for the input partition)
+void population::createIndividuumFromPartition(const PartitionConfig & config, graph_access & G, Individuum & ind) {
+        quality_metrics qm;
+        int* partition_map = new int[G.number_of_nodes()];
+
+        forall_nodes(G, node) {
+                partition_map[node] = G.getPartitionIndex(node);
+        } endfor
+
+        ind.objective     = qm.objective(config, G, partition_map);
+        ind.partition_map = partition_map;
+        ind.cut_edges     = new std::vector<EdgeID>();
+
+        forall_nodes(G, node) {
+                forall_out_edges(G, e, node) {
+                        NodeID target = G.getEdgeTarget(e);
+                        if(partition_map[node] != partition_map[target]) {
+                                ind.cut_edges->push_back(e);
+                        }
+                } endfor
+        } endfor
+
+        m_filebuffer_string <<  m_global_timer.elapsed() <<  " " <<  ind.cut_edges->size()/2 <<  std::endl;
+        m_time_stamp++;
+}
+
 void population::insert(graph_access & G, Individuum & ind) {
 
         m_no_partition_calls++;

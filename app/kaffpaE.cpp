@@ -80,7 +80,9 @@ int main(int argn, char **argv) {
 
         omp_set_num_threads(1);
         G.set_partition_count(partition_config.k); 
-        partition_config.kaffpaE = true; // necessary for balance configuration 
+        partition_config.kaffpaE = true; // necessary for balance configuration
+        // every operator of the evolutionary algorithm computes one partition (ultra sets repetitions = 2 for kaffpa)
+        partition_config.repetitions = 1;
         if( partition_config.imbalance < 1 ) {
                 partition_config.kabapE = true;
         }
