@@ -8,8 +8,6 @@
 #ifndef HMAP_WRAPPER_RQFK3ARC
 #define HMAP_WRAPPER_RQFK3ARC
 
-#include <algorithm>
-
 #include "data_structure/linear_probing_hashmap.h"
 
 template <typename T>
@@ -87,11 +85,10 @@ class hmap_wrapper <std::vector<NodeWeight> > {
 
                 };
 
-                // mapping_type has exactly m_config.k entries; std::fill does not reload the bound
-                // after each store (PartitionID and NodeWeight are the same type, so the loop over
-                // m_config.k could not be vectorized)
                 void clear() { 
-                        std::fill( mapping_type.begin(), mapping_type.end(), 0 );
+                        for( ULONG k = 0; k < m_config.k; k++) {
+                                mapping_type[k] = 0;
+                        }
                 };
 
                 NodeWeight & operator[](NodeID node) {return mapping_type[node];};
