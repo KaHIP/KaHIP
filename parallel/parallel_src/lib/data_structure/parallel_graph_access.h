@@ -1000,21 +1000,16 @@ inline void ghost_node_communication::update_ghost_node_data_global() {
         forall_local_nodes((*m_G), node) {
                 // only interface nodes have ghost neighbors (new_edge marks them), so the others add nothing
                 if( !m_G->is_interface_node(node) ) continue;
+                const ULONG stamp = ++m_add_label_stamp; // fresh mark per node, as in addLabel
                 forall_out_edges((*m_G), e, node) {
                         NodeID target = m_G->getEdgeTarget(e);
                         if( !m_G->is_local_node(target)  ) {
                                 PEID peID = m_G->getTargetPE(target);
-                                if( !m_PE_packed[peID] ) { // make sure a node is sent at most once
+                                if( m_PE_sent_stamp[peID] != stamp ) { // make sure a node is sent at most once
                                         send_buffers[peID].push_back(m_G->getGlobalID(node));
                                         send_buffers[peID].push_back(m_G->getNodeLabel(node));
-                                        m_PE_packed[peID] = true;
+                                        m_PE_sent_stamp[peID] = stamp;
                                 }
-                        }
-                } endfor
-                forall_out_edges((*m_G), e, node) {
-                        NodeID target = m_G->getEdgeTarget(e);
-                        if( !m_G->is_local_node(target)  ) {
-                                m_PE_packed[m_G->getTargetPE(target)] = false;
                         }
                 } endfor
         } endfor
