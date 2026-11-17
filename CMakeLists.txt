@@ -333,6 +333,20 @@ if(NOT NOMPI)
   install(TARGETS kaffpaE DESTINATION bin)
 endif()
 
+# kaffpaE as a library call on an MPI communicator (kaffpaE_comm), used by ParHIP for initial partitioning
+if(NOT NOMPI)
+  add_library(kahip_parallel_static STATIC interface/kaHIP_interface_mpi.cpp $<TARGET_OBJECTS:libkaffpa>
+                                                                          $<TARGET_OBJECTS:libmapping>
+                                                                          $<TARGET_OBJECTS:libkaffpa_parallel>)
+  target_include_directories(kahip_parallel_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface ${MPI_CXX_INCLUDE_PATH})
+  target_link_libraries(kahip_parallel_static PUBLIC ${MPI_CXX_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
+  set_target_properties(kahip_parallel_static PROPERTIES PUBLIC_HEADER "interface/kaHIP_interface_mpi.h;interface/kaHIP_interface.h")
+  install(TARGETS kahip_parallel_static
+          ARCHIVE DESTINATION lib
+          PUBLIC_HEADER DESTINATION include
+          )
+endif()
+
 add_executable(graphchecker app/graphchecker.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
 target_compile_definitions(graphchecker PRIVATE "-DMODE_GRAPHCHECKER")
 target_link_libraries(graphchecker ${OpenMP_CXX_LIBRARIES})
@@ -396,7 +410,6 @@ install(TARGETS kahip_static
 
 # ParHIP
 if(NOT NOMPI AND PARHIP)
-  add_subdirectory(parallel/modified_kahip)
   add_subdirectory(parallel/parallel_src)
 endif()
 
@@ -426,8 +439,17 @@ if (BUILDPYTHONMODULE)
     # When building with scikit-build-core, install directly to kahip/
     install(TARGETS kahip_python_binding DESTINATION kahip)
   else()
-    # Standard installation path
+    # Plain cmake --install: the package kahip (extension and __init__.py, as in the wheel) goes to
+    # CMAKE_INSTALL_PYTHONDIR, by default lib/pythonX.Y/site-packages relative to the install prefix
+    if(DEFINED Python_VERSION_MAJOR)
+      set(KAHIP_PYTHON_VERSION "${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
+    else()
+      set(KAHIP_PYTHON_VERSION "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+    endif()
+    set(CMAKE_INSTALL_PYTHONDIR "${CMAKE_INSTALL_LIBDIR}/python${KAHIP_PYTHON_VERSION}/site-packages"
+        CACHE STRING "Python package install directory, relative to CMAKE_INSTALL_PREFIX")
     install(TARGETS kahip_python_binding DESTINATION "${CMAKE_INSTALL_PYTHONDIR}/kahip")
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/kahip/__init__.py DESTINATION "${CMAKE_INSTALL_PYTHONDIR}/kahip")
   endif()
 
   target_link_libraries(kahip_python_binding PUBLIC kahip_static)

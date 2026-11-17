@@ -13,6 +13,9 @@
 #include "data_structure/parallel_graph_access.h"
 #include "partition_config.h"
 
+// ParHIP's own class, kept apart from the main KaHIP class of the same name
+namespace parhip {
+
 class mpi_tools {
 public:
         mpi_tools();
@@ -47,6 +50,10 @@ public:
 
 
 };
+
+} // namespace parhip
+
+using parhip::mpi_tools;
 
 
 #endif /* end of include guard: MPI_TOOLS_HMESDXF2 */

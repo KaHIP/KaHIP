@@ -15,6 +15,9 @@
 #include "data_structure/parallel_graph_access.h"
 #include "tools/random_functions.h"
 
+// ParHIP's own class, kept apart from the main KaHIP class of the same name
+namespace parhip {
+
 class node_ordering {
 public:
         node_ordering();
@@ -66,6 +69,10 @@ public:
                            });
         }
 };
+
+} // namespace parhip
+
+using parhip::node_ordering;
 
 
 #endif /* end of include guard: NODE_ORDERING_HM1YMLB1 */

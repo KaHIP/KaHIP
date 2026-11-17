@@ -17,6 +17,9 @@
 
 typedef std::mt19937 MersenneTwister;
 
+// ParHIP's own class, kept apart from the main KaHIP class of the same name
+namespace parhip {
+
 class random_functions {
         public:
                 random_functions();
@@ -162,5 +165,10 @@ class random_functions {
                 static int m_seed;
                 static MersenneTwister m_mt;
 };
+
+} // namespace parhip
+
+using parhip::random_functions;
+
 
 #endif /* end of include guard: RANDOM_FUNCTIONS_RMEPKWYT */

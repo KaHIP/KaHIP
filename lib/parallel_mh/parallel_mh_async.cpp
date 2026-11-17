@@ -77,35 +77,37 @@ void parallel_mh_async::perform_partitioning(const PartitionConfig & partition_c
         }
 
         m_t.restart();
-        exchanger ex(m_communicator);
-        do {
-                PartitionConfig working_config  = partition_config; 
+        if( !m_single_individual ) {
+                exchanger ex(m_communicator);
+                do {
+                        PartitionConfig working_config  = partition_config; 
 
-                working_config.graph_allready_partitioned  = false;
-                if(!partition_config.strong)
-                        working_config.no_new_initial_partitioning = false;
+                        working_config.graph_allready_partitioned  = false;
+                        if(!partition_config.strong)
+                                working_config.no_new_initial_partitioning = false;
 
-                working_config.mh_pool_size = ini_working_config.mh_pool_size;
-                if(m_rounds == 0 && working_config.mh_enable_quickstart) {
-                        ex.quick_start( working_config, G, *m_island );
-                }
-
-                perform_local_partitioning( working_config, G );
-                if(m_rank == ROOT) {
-                        std::cout <<  "t left " <<  (m_time_limit - m_t.elapsed()) << std::endl;
-                }
-
-                //push and recv 
-                if( m_t.elapsed() <= m_time_limit && m_size > 1) {
-                        unsigned messages = ceil(log(m_size));
-                        for( unsigned i = 0; i < messages; i++) {
-                                ex.push_best( working_config, G, *m_island );
-                                ex.recv_incoming( working_config, G, *m_island );
+                        working_config.mh_pool_size = ini_working_config.mh_pool_size;
+                        if(m_rounds == 0 && working_config.mh_enable_quickstart) {
+                                ex.quick_start( working_config, G, *m_island );
                         }
-                }
 
-                m_rounds++;
-        } while( m_t.elapsed() <= m_time_limit );
+                        perform_local_partitioning( working_config, G );
+                        if(m_rank == ROOT) {
+                                std::cout <<  "t left " <<  (m_time_limit - m_t.elapsed()) << std::endl;
+                        }
+
+                        //push and recv 
+                        if( m_t.elapsed() <= m_time_limit && m_size > 1) {
+                                unsigned messages = ceil(log(m_size));
+                                for( unsigned i = 0; i < messages; i++) {
+                                        ex.push_best( working_config, G, *m_island );
+                                        ex.recv_incoming( working_config, G, *m_island );
+                                }
+                        }
+
+                        m_rounds++;
+                } while( m_t.elapsed() <= m_time_limit );
+        }
 
         collect_best_partitioning(G, partition_config);
         if(partition_config.mh_penalty_for_imbalance) {
@@ -147,6 +149,12 @@ void parallel_mh_async::initialize(PartitionConfig & working_config, graph_acces
         double time_spend = m_t.elapsed();
         m_island->insert(G, first_one);
 
+        if( m_single_individual ) {
+                working_config.mh_pool_size = 1;
+                m_island->set_pool_size(1);
+                return;
+        }
+
         //compute S and Bcast
         int population_size = 1;
         double fraction     = working_config.mh_initial_population_fraction;
@@ -165,7 +173,7 @@ void parallel_mh_async::initialize(PartitionConfig & working_config, graph_acces
                 MPI_Recv(&population_size, 1, MPI_INT, ROOT, POPSIZE_TAG, m_communicator, &rst); 
         }
 
-        MPI_Barrier(MPI_COMM_WORLD);
+        MPI_Barrier(m_communicator);
 
         population_size = std::max(3, population_size);
         if(working_config.mh_easy_construction) {

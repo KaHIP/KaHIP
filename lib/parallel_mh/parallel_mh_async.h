@@ -27,6 +27,9 @@ public:
         void rebalance_if_overloaded(const PartitionConfig & partition_config, graph_access & G);
         void perform_cycle_partitioning(PartitionConfig & graph_partitioner_config, graph_access & G);
 
+        // every process computes one individual, the best one is returned (no evolution, no exchange)
+        void set_single_individual(bool single) { m_single_individual = single; }
+
 private:
         //misc
         const unsigned MASTER;
@@ -45,6 +48,7 @@ private:
         //island
         population* m_island;
         MPI_Comm m_communicator;
+        bool     m_single_individual = false;
 };
 
 

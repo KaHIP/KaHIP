@@ -499,6 +499,11 @@ mpicxx -o parhip_test parhip_test.cpp -I/path/to/kahip/include -L/path/to/kahip/
 mpirun -np 4 ./parhip_test graph.metis
 ```
 
+To link statically, use the installed `libparhip_interface_static.a` together with `libkahip_parallel_static.a`, which contains the KaHIP library that ParHIP uses for initial partitioning (the KaFFPaE call `kaffpaE_comm` from `kaHIP_interface_mpi.h`):
+```console
+mpicxx -fopenmp -o parhip_test parhip_test.cpp -I/path/to/kahip/include -L/path/to/kahip/lib -lparhip_interface_static -lkahip_parallel_static
+```
+
 Using KaHIP in Python
 =====
 KaHIP can also be used in Python. The easiest way is to install it using pip:

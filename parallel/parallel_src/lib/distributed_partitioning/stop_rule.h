@@ -11,6 +11,9 @@
 #include "data_structure/parallel_graph_access.h"
 #include "partition_config.h"
 
+// ParHIP's own class, kept apart from the main KaHIP class of the same name
+namespace parhip {
+
 class stop_rule {
 public:
         stop_rule() {} ;
@@ -22,6 +25,10 @@ public:
                 return false;       
         }
 };
+
+} // namespace parhip
+
+using parhip::stop_rule;
 
 
 #endif /* end of include guard: STOP_RULE_23YOZ7GX */

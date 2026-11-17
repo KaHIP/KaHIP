@@ -5,9 +5,11 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
+#include <vector>
+
 #include "communication/mpi_tools.h"
 #include "distributed_evolutionary_partitioning.h"
-#include "kaHIP_interface.h"
+#include "kaHIP_interface_mpi.h"
 #include "parallel_contraction_projection/parallel_projection.h"
 #include "io/parallel_graph_io.h"
 #include "tools/distributed_quality_metrics.h"
@@ -40,6 +42,11 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
         int* vwgt   = Q_bar.UNSAFE_metis_style_vwgt_array();
         int* adjwgt = Q_bar.UNSAFE_metis_style_adjwgt_array();
 
+        // kaffpaE_comm takes kahip_idx arrays (64 bit with KAHIP_64BIT)
+        std::vector<kahip_idx> k_xadj(xadj, xadj + n + 1);
+        std::vector<kahip_idx> k_adjncy(adjncy, adjncy + xadj[n]);
+        std::vector<kahip_idx> k_adjwgt(adjwgt, adjwgt + xadj[n]);
+
         int* partition_map = new int[n];
 
         PEID rank; MPI_Comm_rank( communicator, &rank);
@@ -65,12 +72,14 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
         }
 
         double inbalance       = config.inbalance/100.0;
-        int edgecut            = 0;
+        kahip_idx edgecut      = 0;
         double balance         = 0;
         bool graph_partitioned = config.vcycle;
 
-        int mode = 0; 
- 
+        // every ParHIP initial partitioning algorithm is mapped explicitly onto a main KaHIP mode
+        int mode               = FASTSOCIAL;
+        bool single_individual = false;
+
         switch( config.initial_partitioning_algorithm ) {
                 case KAFFPAESTRONG:
                         mode = STRONG;
@@ -82,7 +91,9 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
                         mode = FAST;
                         break;
                 case KAFFPAEULTRAFASTSNW:
-                        mode = ULTRAFASTSOCIAL;
+                        // one fastsocial partition per process, the best one is taken (no evolution)
+                        mode              = FASTSOCIAL;
+                        single_individual = true;
                         break;
                 case KAFFPAEFASTSNW:
                         mode = FASTSOCIAL;
@@ -114,11 +125,11 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
 #endif
 
 #ifdef DETERMINISTIC_PARHIP
-        kaffpaE(&n, 
+        kaffpaE_comm(&n, 
                 vwgt, 
-                xadj, 
-                adjwgt, 
-                adjncy, 
+                k_xadj.data(), 
+                k_adjwgt.data(), 
+                k_adjncy.data(), 
                 &nparts, 
                 &inbalance, 
                 false,  // supress output
@@ -126,16 +137,17 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
                 0, // time limit set to zero, so only the initial population is created
                 config.seed, 
                 mode,
+                single_individual,
                 communicator, 
                 &edgecut, 
                 &balance, 
                 partition_map);
 #else
-        kaffpaE(&n, 
+        kaffpaE_comm(&n, 
                 vwgt, 
-                xadj, 
-                adjwgt, 
-                adjncy, 
+                k_xadj.data(), 
+                k_adjwgt.data(), 
+                k_adjncy.data(), 
                 &nparts, 
                 &inbalance, 
                 false,  // supress output
@@ -143,6 +155,7 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
                 config.evolutionary_time_limit, // time limit
                 config.seed, 
                 mode,
+                single_individual,
                 communicator, 
                 &edgecut, 
                 &balance, 

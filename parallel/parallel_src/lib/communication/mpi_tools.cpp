@@ -12,6 +12,8 @@
 #include "io/parallel_graph_io.h"
 #include "mpi_tools.h"
 
+namespace parhip {
+
 mpi_tools::mpi_tools() {
                 
 }
@@ -258,3 +260,4 @@ void mpi_tools::alltoallv( void * sendbuf,
         }
 }
 
+} // namespace parhip
