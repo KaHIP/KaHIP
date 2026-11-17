@@ -7,6 +7,10 @@
 
 #define _FILE_OFFSET_BITS 64
 
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -16,6 +20,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <vector>
+#include <cstring>
 
 #include "parallel_graph_io.h"
 #include "tools/helpers.h"
@@ -58,26 +63,65 @@ int parallel_graph_io::readGraphWeighted(PPartitionConfig & config,
         return readGraphWeightedFlexible(G, filename, peID, comm_size, communicator);
 }
 
+// Parses one number like strtol(p, &end, 10) on a line that ends at line_end:
+// leading whitespace, an optional sign, then decimal digits; returns 0 if there are no digits.
+static inline long parse_long_in_line(const char *& p, const char * line_end) {
+        const char * q = p;
+        while( q < line_end && (*q == ' ' || *q == '\t' || *q == '\r' || *q == '\v' || *q == '\f') ) q++;
+        bool negative = false;
+        if( q < line_end && (*q == '+' || *q == '-') ) { negative = (*q == '-'); q++; }
+        if( q == line_end || *q < '0' || *q > '9' ) return 0; // no conversion, strtol returns 0
+        unsigned long value = 0;
+        while( q < line_end && *q >= '0' && *q <= '9' ) {
+                value = value * 10 + (unsigned long)(*q - '0');
+                q++;
+        }
+        p = q;
+        return negative ? -(long)value : (long)value;
+}
+
 int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G, 
                                                  std::string filename, 
                                                  PEID peID, PEID comm_size, MPI_Comm communicator) {
-        std::string line;
-
-        // open file for reading
-        std::ifstream in(filename.c_str());
-        if (!in) {
+        // map the file and split it into lines like std::getline does
+        int fd = open(filename.c_str(), O_RDONLY);
+        if (fd < 0) {
                 std::cerr << "Error opening " << filename << std::endl;
                 return 1;
         }
+        struct stat sb;
+        fstat(fd, &sb);
+        size_t file_size = sb.st_size;
+        const char * data = NULL;
+        if( file_size > 0 ) {
+                data = (const char*) mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+                madvise((void*)data, file_size, MADV_SEQUENTIAL);
+        }
+        close(fd);
+        const char * pos = data;
+        const char * end = data + file_size;
+
+        // returns the next line [line_begin, line_end) or false at the end of the file
+        auto next_line = [&](const char *& line_begin, const char *& line_end) -> bool {
+                if( pos >= end ) return false;
+                line_begin = pos;
+                const char * nl = (const char*) memchr(pos, '\n', end - pos);
+                if( nl == NULL ) { line_end = end; pos = end; }
+                else             { line_end = nl;  pos = nl + 1; }
+                return true;
+        };
+
+        const char * lb = NULL;
+        const char * le = NULL;
+        next_line(lb, le);
+        //skip comments
+        while( lb < le && lb[0] == '%' ) {
+                next_line(lb, le);
+        }
+        std::string line(lb, le);
 
         NodeID nmbNodes;
         EdgeID nmbEdges;
-
-        std::getline(in,line);
-        //skip comments
-        while( line[0] == '%' ) {
-                std::getline(in, line);
-        }
 
         int ew = 0;
         std::stringstream ss(line);
@@ -86,11 +130,11 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         ss >> ew;
 
         if(ew != 0) {
-                in.close();
+                if( data != NULL ) munmap((void*)data, file_size);
                 if(peID == 0) std::cout <<  "graph is weighted --> using a different IO routine"  << std::endl;
                 return readGraphWeightedMETIS_fixed(G, filename, peID, comm_size, communicator);
         }
-        
+
         // pe p reads the lines p*ceil(n/size) to (p+1)floor(n/size) lines of that file
         ULONG from  = peID     * ceil(nmbNodes / (double)comm_size);
         ULONG to    = (peID+1) * ceil(nmbNodes / (double)comm_size) - 1;
@@ -99,53 +143,45 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         ULONG local_no_nodes = to - from + 1;
         PRINT(std::cout <<  "peID " <<  peID <<  " from " <<  from <<  " to " <<  to  <<  " amount " <<  local_no_nodes << std::endl;);
 
-        std::vector< std::vector< NodeID > > local_edge_lists;
-        local_edge_lists.resize(local_no_nodes);
-        
+        // adjacency of the local nodes in one array: targets of node i are
+        // local_targets[local_offsets[i] .. local_offsets[i+1])
+        std::vector< NodeID > local_targets;
+        std::vector< EdgeID > local_offsets;
+        local_offsets.reserve(local_no_nodes + 1);
+        local_offsets.push_back(0);
+
         ULONG counter  = 0;
-        NodeID node_counter = 0;
         EdgeID edge_counter = 0;
 
-        char *oldstr, *newstr;
-        while( std::getline(in, line) ) {
+        while( next_line(lb, le) ) {
                 if( counter > to ) {
                         break;
                 }
-                if (line[0] == '%') { // a comment in the file
+
+                if (lb < le && lb[0] == '%') { // a comment in the file
                         continue;
                 }
 
                 if( counter >= from ) {
-                        oldstr = &line[0];
-                        newstr = 0;
-
+                        const char * p = lb;
                         for (;;) {
-                                NodeID target;
-                                target = (NodeID) strtol(oldstr, &newstr, 10);
-
+                                NodeID target = (NodeID) parse_long_in_line(p, le);
                                 if (target == 0) {
                                         break;
                                 }
-
-                                oldstr = newstr; 
-
-                                local_edge_lists[node_counter].push_back(target);
+                                local_targets.push_back(target);
                                 edge_counter++;
-
                         }
-
-                        node_counter++;
+                        local_offsets.push_back(local_targets.size());
                 }
 
                 counter++;
-
-                if( in.eof() ) {
-                        break;
-                }
         }
+        if( data != NULL ) munmap((void*)data, file_size);
+        while( local_offsets.size() < local_no_nodes + 1 ) local_offsets.push_back(local_targets.size());
 
         MPI_Barrier(communicator);
-        
+
         G.start_construction(local_no_nodes, 2*edge_counter, nmbNodes, 2*nmbEdges);
         G.set_range(from, to);
 
@@ -160,9 +196,9 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
                 G.setNodeWeight(node, 1);
                 G.setNodeLabel(node, from+node);
                 G.setSecondPartitionIndex(node, 0);
-        
-                for( ULONG j = 0; j < local_edge_lists[i].size(); j++) {
-                        NodeID target = local_edge_lists[i][j]-1; // -1 since there are no nodes with id 0 in the file
+
+                for( EdgeID j = local_offsets[i]; j < local_offsets[i+1]; j++) {
+                        NodeID target = local_targets[j]-1; // -1 since there are no nodes with id 0 in the file
                         EdgeID e = G.new_edge(node, target);
                         G.setEdgeWeight(e, 1);
                 }
