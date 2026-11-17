@@ -265,6 +265,13 @@ struct PartitionConfig
         bool kabapE;
         
         bool mh_penalty_for_unconnected;
+
+        // ultra: kaffpaE ranks individuals over the balance bound behind every balanced one and rebalances the
+        // final partition with the negative-cycle model if it is still over the bound
+        bool mh_penalty_for_imbalance = false;
+
+        // ultra: kaffpaE inserts the input partition (--input_partition) unchanged as one individual
+        bool mh_keep_input = false;
         bool connected_blocks;
         bool connected_blocks_init_done;
         //=======================================

@@ -87,6 +87,10 @@ inline void configuration::ultra( PartitionConfig & partition_config ) {
         strong(partition_config);
         partition_config.flow_unlocked_model = true;
         partition_config.jet_refinement      = true;
+        // kaffpaE: individuals over the balance bound rank behind every balanced one (fitness and final choice)
+        partition_config.mh_penalty_for_imbalance = true;
+        // kaffpaE: the input partition enters the population unchanged (never end worse than the input)
+        partition_config.mh_keep_input            = true;
         // k = 2 has the least time headroom: one more V-cycle; otherwise best of two full runs
         if( partition_config.k == 2 ) {
                 partition_config.global_cycle_iterations = 3;
