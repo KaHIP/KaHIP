@@ -16,7 +16,10 @@
 #include <fstream>
 #include <vector>
 
+#include <algorithm>
+
 #include "data_structure/balance_management.h"
+#include "data_structure/open_hash_map.h"
 #include "definitions.h"
 #include "partition_config.h"
 #include "tools/timer.h"
@@ -281,13 +284,11 @@ public:
         };
 
         PEID get_PEID_from_range_array(NodeID node) {
-                // TODO optimize with binary search
-                for( PEID peID = 1; peID < (PEID)m_range_array.size(); peID++) {
-                        if( node < m_range_array[peID] ) {
-                                return (peID-1);
-                        }
-                }
-                return -1;
+                // first peID >= 1 with node < m_range_array[peID] (the array is non-decreasing)
+                if( m_range_array.size() < 2 ) return -1;
+                std::vector< NodeID >::const_iterator it = std::upper_bound(m_range_array.begin() + 1, m_range_array.end(), node);
+                if( it == m_range_array.end() ) return -1;
+                return (PEID)(it - m_range_array.begin()) - 1;
         };
 
         NodeID new_node() {
@@ -307,13 +308,15 @@ public:
                         m_nodes_data[source].is_interface_node = true;
 
                         // check wether this is already a ghost node
-                        if(m_global_to_local_id.find(target) != m_global_to_local_id.end()) {
+                        NodeID * ghost = m_global_to_local_id.find(target);
+                        if( ghost != NULL ) {
                                 // this node is already a ghost node
-                                m_edges[e].local_target = m_global_to_local_id[target]; 
+                                m_edges[e].local_target = *ghost; 
                         } else {
                                 // we need to create a new ghost node
-                                m_global_to_local_id[target] = m_num_nodes++;
-                                m_edges[e].local_target      = m_global_to_local_id[target]; 
+                                NodeID local_id = m_num_nodes++;
+                                m_global_to_local_id.ref(target) = local_id;
+                                m_edges[e].local_target      = local_id; 
 
                                 //create the ghost node in the array
                                 Node dummy;
@@ -460,7 +463,7 @@ public:
                 if( from <= node && node <= to ) {
                         return node - from;
                 } else {
-                        return m_global_to_local_id[node];
+                        return m_global_to_local_id.ref(node);
                 }
         };
 
@@ -538,7 +541,7 @@ private:
         std::vector<NodeID>                     m_range_array;
         std::vector<EdgeID>                     m_edge_range_array;
 
-        std::unordered_map<NodeID, NodeID> m_global_to_local_id;
+        open_hash_map< NodeID > m_global_to_local_id; // ghost nodes: global id -> local id (lookups only)
 
         NodeID m_ghost_adddata_array_offset; // node id of ghost node - offset to get the position in add data  
         NodeID m_divisor; // needed to compute the target id of a ghost node
@@ -937,7 +940,7 @@ void ghost_node_communication::receive_messages_of_neighbors() {
                         NodeID global_id = message[i];
                         NodeID label     = message[i+1];
 
-                        NodeID local_id = m_G->m_global_to_local_id[global_id];
+                        NodeID local_id = m_G->m_global_to_local_id.ref(global_id);
                         m_G->update_non_contained_block_balance(m_G->getNodeLabel(local_id), label, m_G->getNodeWeight(local_id));
                         m_G->setNodeLabel(local_id, label);
                 }
@@ -1048,7 +1051,7 @@ inline void ghost_node_communication::update_ghost_node_data_global() {
                         NodeID global_id = message[i];
                         NodeID label     = message[i+1];
 
-                        m_G->setNodeLabel( m_G->m_global_to_local_id[global_id], label);
+                        m_G->setNodeLabel( m_G->m_global_to_local_id.ref(global_id), label);
                 }
         }
         MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);

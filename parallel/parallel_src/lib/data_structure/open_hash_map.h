@@ -41,6 +41,17 @@ public:
                 return m_values[i];
         }
 
+        // pointer to the value of key, or NULL if it is not contained
+        V * find( NodeID key ) {
+                if( m_keys.empty() ) return NULL;
+                size_t i = slot(key);
+                while( m_keys[i] != empty_key() ) {
+                        if( m_keys[i] == key ) return &m_values[i];
+                        i = (i + 1) & m_mask;
+                }
+                return NULL;
+        }
+
         size_t size() const { return m_count; }
 
         template < typename F >
