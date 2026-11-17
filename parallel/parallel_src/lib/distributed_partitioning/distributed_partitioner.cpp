@@ -18,6 +18,7 @@
 #include "tools/distributed_quality_metrics.h"
 #include "tools/random_functions.h"
 #include "data_structure/linear_probing_hashmap.h"
+#include "tools/aae_timers.h"
 
 std::vector< NodeID > distributed_partitioner::m_cf = std::vector< NodeID >();
 std::vector< NodeID > distributed_partitioner::m_sf = std::vector< NodeID >();
@@ -157,11 +158,14 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         } else {
                 config.upper_bound_cluster = (int)(config.upper_bound_partition/(1.0*config.cluster_coarsening_factor));
         }
+        {
+        aae_scope aae_s(AAE_COARSEN_LP);
         G.init_balance_management( config );
 
         //parallel_label_compress< std::unordered_map< NodeID, NodeWeight> > plc;
         parallel_label_compress< linear_probing_hashmap  > plc;
         plc.perform_parallel_label_compression ( config, G, true);
+        }
 
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
@@ -173,6 +177,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         t.restart();
 
         {
+                aae_scope aae_s(AAE_CONTRACT);
                 parallel_contraction parallel_contract;
                 parallel_contract.contract_to_distributed_quotient( communicator, config, G, Q); // contains one Barrier
 
@@ -209,8 +214,11 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 #endif
                 t.restart();
 
-                initial_partitioning_algorithm ip;
-                ip.perform_partitioning( communicator, config, Q );
+                {
+                        aae_scope aae_s(AAE_IP);
+                        initial_partitioning_algorithm ip;
+                        ip.perform_partitioning( communicator, config, Q );
+                }
 
 #ifndef NOOUTPUT
                 if( rank == ROOT ) {
@@ -229,8 +237,11 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
 #endif
 
         t.restart();
-        parallel_projection parallel_project;
-        parallel_project.parallel_project( communicator, G, Q ); // contains a Barrier
+        {
+                aae_scope aae_s(AAE_PROJECT);
+                parallel_projection parallel_project;
+                parallel_project.parallel_project( communicator, G, Q ); // contains a Barrier
+        }
 
 #ifndef NOOUTPUT
         if( rank == ROOT ) {
@@ -242,6 +253,7 @@ void distributed_partitioner::vcycle( MPI_Comm communicator, PPartitionConfig & 
         config.label_iterations = config.label_iterations_refinement;
 
         if( config.label_iterations != 0 ) {
+                aae_scope aae_s(AAE_REFINE_LP);
                 config.total_num_labels = config.k;
                 config.upper_bound_cluster = config.upper_bound_partition;
 

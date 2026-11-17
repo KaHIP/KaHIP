@@ -13,6 +13,7 @@
 #include "parallel_contraction_projection/parallel_projection.h"
 #include "io/parallel_graph_io.h"
 #include "tools/distributed_quality_metrics.h"
+#include "tools/aae_timers.h"
 
 distributed_evolutionary_partitioning::distributed_evolutionary_partitioning() {
                 
@@ -124,6 +125,8 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
         std::cout.rdbuf(ofs.rdbuf()); 
 #endif
 
+        {
+        aae_scope aae_s(AAE_IP_KAFFPAE);
 #ifdef DETERMINISTIC_PARHIP
         kaffpaE_comm(&n, 
                 vwgt, 
@@ -164,6 +167,7 @@ void distributed_evolutionary_partitioning::perform_partitioning( MPI_Comm commu
 
         
 
+        }
 #ifdef NOOUTPUT
         ofs.close();
         std::cout.rdbuf(backup);
