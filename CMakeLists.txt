@@ -439,8 +439,17 @@ if (BUILDPYTHONMODULE)
     # When building with scikit-build-core, install directly to kahip/
     install(TARGETS kahip_python_binding DESTINATION kahip)
   else()
-    # Standard installation path
+    # Plain cmake --install: the package kahip (extension and __init__.py, as in the wheel) goes to
+    # CMAKE_INSTALL_PYTHONDIR, by default lib/pythonX.Y/site-packages relative to the install prefix
+    if(DEFINED Python_VERSION_MAJOR)
+      set(KAHIP_PYTHON_VERSION "${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
+    else()
+      set(KAHIP_PYTHON_VERSION "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+    endif()
+    set(CMAKE_INSTALL_PYTHONDIR "${CMAKE_INSTALL_LIBDIR}/python${KAHIP_PYTHON_VERSION}/site-packages"
+        CACHE STRING "Python package install directory, relative to CMAKE_INSTALL_PREFIX")
     install(TARGETS kahip_python_binding DESTINATION "${CMAKE_INSTALL_PYTHONDIR}/kahip")
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/kahip/__init__.py DESTINATION "${CMAKE_INSTALL_PYTHONDIR}/kahip")
   endif()
 
   target_link_libraries(kahip_python_binding PUBLIC kahip_static)
