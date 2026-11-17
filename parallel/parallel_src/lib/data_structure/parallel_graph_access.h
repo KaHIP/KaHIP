@@ -90,6 +90,8 @@ public:
                 MPI_Comm_size( m_communicator, &m_size);
                 
                 m_PE_packed.resize(m_size); 
+                m_PE_sent_stamp.resize(m_size, 0);
+                m_add_label_stamp = 0;
                 m_adjacent_processors.resize(m_size); 
                 for( PEID peID = 0; peID < (PEID) m_PE_packed.size(); peID++) {
                         m_PE_packed[ peID ]           = false;
@@ -190,6 +192,8 @@ private:
         PEID m_num_adjacent; 
 
         std::vector< bool >                   m_PE_packed;
+        std::vector< ULONG >                  m_PE_sent_stamp;   // addLabel: m_PE_sent_stamp[peID] == m_add_label_stamp iff already sent in this call
+        ULONG                                 m_add_label_stamp; // incremented once per addLabel call
         std::vector< std::vector< NodeID > >  m_send_buffers_A; // buffers to send messages
         std::vector< std::vector< NodeID > >  m_send_buffers_B; // buffers to send messages
         std::vector< std::vector< NodeID > >* m_send_buffers_ptr; // pointer to current buffers to send messages
@@ -812,21 +816,16 @@ inline int parallel_graph_access::build_from_metis_weighted(int n, int* xadj, in
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 inline 
 void ghost_node_communication::addLabel(NodeID node, NodeID label) {
+        const ULONG stamp = ++m_add_label_stamp; // a fresh mark per call replaces the reset scan
         forall_out_edges((*m_G), e, node) {
                 NodeID target = m_G->getEdgeTarget(e);
                 if( !m_G->is_local_node(target)  ) {
                         PEID peID = m_G->getTargetPE(target);
-                        if( !m_PE_packed[peID] ) { // make sure a node is sent at most once
+                        if( m_PE_sent_stamp[peID] != stamp ) { // make sure a node is sent at most once
                                 (*m_send_buffers_ptr)[peID].push_back(m_G->getGlobalID(node));
                                 (*m_send_buffers_ptr)[peID].push_back(label);
-                                m_PE_packed[peID] = true;
+                                m_PE_sent_stamp[peID] = stamp;
                         }
-                }
-        } endfor
-        forall_out_edges((*m_G), e, node) {
-                NodeID target = m_G->getEdgeTarget(e);
-                if( !m_G->is_local_node(target)  ) {
-                        m_PE_packed[m_G->getTargetPE(target)] = false;
                 }
         } endfor
 }
