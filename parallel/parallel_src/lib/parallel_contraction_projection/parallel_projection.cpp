@@ -5,6 +5,8 @@
  * Christian Schulz <christian.schulz.phone@gmail.com>
  *****************************************************************************/
 
+#include <algorithm>
+
 #include "parallel_projection.h"
 
 parallel_projection::parallel_projection() {
@@ -25,24 +27,41 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
 
         m_messages.resize(size);
 
-        std::unordered_map< NodeID, std::vector< NodeID > > cnode_to_nodes;
+        // nodes whose coarse node lives on another PE, as (cnode, node) in node order
+        std::vector< std::pair< NodeID, NodeID > > remote;
         forall_local_nodes(finer, node) {
                 NodeID cnode = finer.getCNode(node);
-                //std::cout <<  "cnode " <<  cnode  << std::endl;
                 if( coarser.is_local_node_from_global_id(cnode) ) {
                         NodeID new_label = coarser.getNodeLabel(coarser.getLocalID(cnode));
                         finer.setNodeLabel(node, new_label);
                 } else {
-                        //we have to request it from another PE
-                        PEID peID = cnode / divisor; // cnode is 
-
-                        if( cnode_to_nodes.find( cnode ) == cnode_to_nodes.end()) {
-                                m_messages[peID].push_back(cnode); // we are requesting the label of this node 
-                        }
-
-                        cnode_to_nodes[cnode].push_back(node);
+                        remote.push_back(std::make_pair(cnode, node));
                 }
         } endfor
+
+        // group by cnode (nodes stay in increasing order within a group); request every cnode
+        // once, in the order of its first node, as the map based version did
+        std::stable_sort(remote.begin(), remote.end(),
+                         [](const std::pair< NodeID, NodeID > & a, const std::pair< NodeID, NodeID > & b) {
+                                return a.first < b.first; });
+        std::vector< size_t > group_start;
+        for( size_t i = 0; i < remote.size(); i++) {
+                if( i == 0 || remote[i].first != remote[i-1].first ) group_start.push_back(i);
+        }
+        group_start.push_back(remote.size());
+        std::vector< size_t > group_order(group_start.size() - 1);
+        for( size_t g = 0; g < group_order.size(); g++) group_order[g] = g;
+        std::sort(group_order.begin(), group_order.end(), [&](size_t a, size_t b) {
+                return remote[group_start[a]].second < remote[group_start[b]].second; });
+
+        std::vector< std::vector< size_t > > groups_of_pe(size);
+        for( size_t gi = 0; gi < group_order.size(); gi++) {
+                size_t g     = group_order[gi];
+                NodeID cnode = remote[group_start[g]].first;
+                PEID peID    = cnode / divisor;
+                m_messages[peID].push_back(cnode); // we are requesting the label of this node 
+                groups_of_pe[peID].push_back(g);
+        }
 
         std::vector<MPI_Request> requests(size, MPI_REQUEST_NULL);
         for( PEID peID = 0; peID < size; peID++) {
@@ -122,11 +141,11 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
 
                 PEID peID = st.MPI_SOURCE;
                 for( ULONG i = 0; i < (ULONG)incmessage.size(); i++) {
-                        std::vector< NodeID > & proj = cnode_to_nodes[m_messages[peID][i]];
+                        size_t g     = groups_of_pe[peID][i];
                         NodeID label = incmessage[i];
 
-                        for( ULONG j = 0; j < proj.size(); j++) {
-                                finer.setNodeLabel(proj[j], label);
+                        for( size_t j = group_start[g]; j < group_start[g+1]; j++) {
+                                finer.setNodeLabel(remote[j].second, label);
                         }
                 }
         }
