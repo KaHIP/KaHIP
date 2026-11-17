@@ -33,10 +33,10 @@ set(LIBPARALLEL_SOURCE_FILES
   lib/io/parallel_graph_io.cpp
   lib/io/parallel_vector_io.cpp
   lib/tools/random_functions.cpp
-  lib/tools/distributed_quality_metrics.cpp
-  extern/argtable3-3.2.2/argtable3.c)
+  lib/tools/distributed_quality_metrics.cpp)
+# argtable3 comes with kahip_parallel_static
 add_library(libparallel OBJECT ${LIBPARALLEL_SOURCE_FILES})
-target_include_directories(libparallel PUBLIC $<TARGET_PROPERTY:libmodified_kahip_interface,INTERFACE_INCLUDE_DIRECTORIES>)
+target_include_directories(libparallel PUBLIC $<TARGET_PROPERTY:kahip_parallel_static,INTERFACE_INCLUDE_DIRECTORIES>)
 
 set(LIBGRAPH2BGF_SOURCE_FILES
   lib/data_structure/parallel_graph_access.cpp
@@ -52,7 +52,7 @@ set(LIBEDGELIST_SOURCE_FILES
   lib/data_structure/balance_management.cpp
   lib/data_structure/balance_management_refinement.cpp
   lib/data_structure/balance_management_coarsening.cpp
-  extern/argtable3-3.2.2/argtable3.c)
+  ${CMAKE_SOURCE_DIR}/extern/argtable3-3.2.2/argtable3.c)
 add_library(libedgelist OBJECT ${LIBEDGELIST_SOURCE_FILES})
 
 set(LIBDSPAC_SOURCE_FILES
@@ -62,12 +62,12 @@ add_library(libdspac OBJECT ${LIBDSPAC_SOURCE_FILES})
 
 add_executable(parhip app/parhip.cpp $<TARGET_OBJECTS:libparallel>)
 target_compile_definitions(parhip PRIVATE "-DGRAPH_GENERATOR_MPI" "-DGRAPHGEN_DISTRIBUTED_MEMORY" "-DPARALLEL_LABEL_COMPRESSION")
-target_link_libraries(parhip PRIVATE libmodified_kahip_interface)
+target_link_libraries(parhip PRIVATE kahip_parallel_static)
 install(TARGETS parhip DESTINATION bin)
 
 add_executable(toolbox app/toolbox.cpp $<TARGET_OBJECTS:libparallel>)
 target_compile_definitions(toolbox PRIVATE "-DGRAPH_GENERATOR_MPI" "-DGRAPHGEN_DISTRIBUTED_MEMORY" "-DTOOLBOX")
-target_link_libraries(toolbox PRIVATE libmodified_kahip_interface)
+target_link_libraries(toolbox PRIVATE kahip_parallel_static)
 install(TARGETS toolbox DESTINATION bin)
 
 add_executable(graph2binary app/graph2binary.cpp $<TARGET_OBJECTS:libgraph2bgf>)
@@ -84,23 +84,21 @@ install(TARGETS readbgf DESTINATION bin)
 
 add_executable(edge_list_to_metis_graph app/edge_list_to_metis_graph.cpp $<TARGET_OBJECTS:libedgelist>)
 target_compile_definitions(edge_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_MPI" "-DGRAPHGEN_DISTRIBUTED_MEMORY" "-DKRONECKER_GENERATOR_PROGRAM")
-target_link_libraries(edge_list_to_metis_graph PRIVATE libmodified_kahip_interface)
 install(TARGETS edge_list_to_metis_graph DESTINATION bin)
 
 #add_executable(friendster_list_to_metis_graph app/friendster_list_to_metis_graph.cpp $<TARGET_OBJECTS:libedgelist>)
 #target_compile_definitions(friendster_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_MPI" "-DGRAPHGEN_DISTRIBUTED_MEMORY" "-DKRONECKER_GENERATOR_PROGRAM")
-#target_link_libraries(edge_list_to_metis_graph PRIVATE libmodified_kahip_interface)
 #install(TARGETS friendster_list_to_metis_graph DESTINATION bin)
 
 add_executable(dspac app/dspac.cpp $<TARGET_OBJECTS:libparallel> $<TARGET_OBJECTS:libdspac>)
 target_compile_definitions(dspac PRIVATE "-DGRAPH_GENERATOR_MPI -DGRAPHGEN_DISTRIBUTED_MEMORY" "-DPARALLEL_LABEL_COMPRESSION")
-target_link_libraries(dspac PRIVATE libmodified_kahip_interface)
+target_link_libraries(dspac PRIVATE kahip_parallel_static)
 install(TARGETS dspac DESTINATION bin)
 
 add_library(parhip_interface SHARED interface/parhip_interface.cpp $<TARGET_OBJECTS:libparallel>)
 target_compile_definitions(parhip_interface PRIVATE "-DGRAPH_GENERATOR_MPI" "-DGRAPHGEN_DISTRIBUTED_MEMORY" "-DPARALLEL_LABEL_COMPRESSION")
 target_include_directories(parhip_interface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
-target_link_libraries(parhip_interface PRIVATE libmodified_kahip_interface)
+target_link_libraries(parhip_interface PRIVATE kahip_parallel_static)
 set_target_properties(parhip_interface PROPERTIES PUBLIC_HEADER interface/parhip_interface.h)
 install(TARGETS parhip_interface
         LIBRARY DESTINATION lib
@@ -128,5 +126,5 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/parhip_interface.pc" DESTINATION "${C
 add_library(parhip_interface_static interface/parhip_interface.cpp $<TARGET_OBJECTS:libparallel>)
 target_compile_definitions(parhip_interface_static PRIVATE "-DGRAPH_GENERATOR_MPI" "-DGRAPHGEN_DISTRIBUTED_MEMORY" "-DPARALLEL_LABEL_COMPRESSION")
 target_include_directories(parhip_interface_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
-target_link_libraries(parhip_interface_static PRIVATE libmodified_kahip_interface)
+target_link_libraries(parhip_interface_static PUBLIC kahip_parallel_static)
 install(TARGETS parhip_interface_static DESTINATION lib)

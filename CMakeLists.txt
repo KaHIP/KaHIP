@@ -410,7 +410,6 @@ install(TARGETS kahip_static
 
 # ParHIP
 if(NOT NOMPI AND PARHIP)
-  add_subdirectory(parallel/modified_kahip)
   add_subdirectory(parallel/parallel_src)
 endif()
 
