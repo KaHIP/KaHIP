@@ -195,6 +195,7 @@ private:
         std::vector< std::vector< NodeID > >* m_send_buffers_ptr; // pointer to current buffers to send messages
         std::vector< bool >                   m_adjacent_processors; // buffers to send messages
         std::vector< MPI_Request* >           m_isend_requests;
+        std::vector< NodeID >                 m_recv_buffer; // reused receive buffer of the LP ghost exchange
 
         MPI_Comm m_communicator;
 };
@@ -927,7 +928,7 @@ void ghost_node_communication::receive_messages_of_neighbors() {
                 int message_length;
                 MPI_Get_count(&st, MPI_UNSIGNED_LONG_LONG, &message_length);
 
-                std::vector<NodeID> message; message.resize(message_length);
+                std::vector<NodeID> & message = m_recv_buffer; message.resize(message_length); // fully overwritten by MPI_Recv
                 MPI_Status rst;
                 MPI_Recv( &message[0], message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, m_recv_tag, m_communicator, &rst); 
 
