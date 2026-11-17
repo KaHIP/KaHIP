@@ -56,10 +56,17 @@ typedef enum {
         RANDOMIP
 } InitialPartitioningAlgorithm;
 
+// ParHIP's own type, kept apart from the KaHIP type of the same name
+namespace parhip {
+
 struct source_target_pair {
         NodeID source;
         NodeID target;
 };
+
+} // namespace parhip
+
+using parhip::source_target_pair;
 
 typedef enum {
         RANDOM_NODEORDERING, 

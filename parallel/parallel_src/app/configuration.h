@@ -11,6 +11,9 @@
 
 #include "partition_config.h"
 
+// ParHIP's own class, kept apart from the main KaHIP class of the same name
+namespace parhip {
+
 class configuration {
         public:
                 configuration() {} ;
@@ -89,5 +92,10 @@ inline void configuration::standard( PPartitionConfig & partition_config ) {
         partition_config.vertex_degree_weights                  = false;
         partition_config.converter_evaluate                     = false;
 }
+
+} // namespace parhip
+
+using parhip::configuration;
+
 
 #endif /* end of include guard: CONFIGURATION_3APG5V7Z */

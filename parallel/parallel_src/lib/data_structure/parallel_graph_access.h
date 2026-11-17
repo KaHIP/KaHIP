@@ -21,9 +21,16 @@
 #include "partition_config.h"
 #include "tools/timer.h"
 
+// ParHIP's own type, kept apart from the KaHIP type of the same name
+namespace parhip {
+
 struct Node {
     EdgeID firstEdge;
 };
+
+} // namespace parhip
+
+using parhip::Node;
 struct NodeData {
     NodeID     label;
     PartitionID block; // a given partition of the graph (for v-cycles)
@@ -48,10 +55,17 @@ struct AdditionalNonLocalNodeData {
     NodeID globalID;
 };
 
+// ParHIP's own type, kept apart from the KaHIP type of the same name
+namespace parhip {
+
 struct Edge {
     NodeID     local_target;
     EdgeWeight weight;
 };
+
+} // namespace parhip
+
+using parhip::Edge;
 
 //makros - graph access
 #define forall_local_nodes(G,n) { for(NodeID n = 0, end = G.number_of_local_nodes(); n < end; ++n) {

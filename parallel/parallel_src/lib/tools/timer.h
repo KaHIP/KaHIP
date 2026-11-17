@@ -12,6 +12,9 @@
 #include <sys/resource.h> 
 #include <unistd.h> 
 
+// ParHIP's own class, kept apart from the KaHIP class of the same name
+namespace parhip {
+
 class timer {
         public:
                 timer() {
@@ -37,5 +40,9 @@ class timer {
 
                 double m_start;
 }; 
+
+} // namespace parhip
+
+using parhip::timer;
 
 #endif /* end of include guard: TIMER_9KPDEP */
