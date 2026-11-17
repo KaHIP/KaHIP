@@ -30,6 +30,8 @@
 #include "timer.h"
 #include "tools/distributed_quality_metrics.h"
 #include "tools/aae_timers.h"
+// global operator new/delete for small blocks (ParHIP processes are single threaded)
+#include "tools/small_block_alloc.h"
 
 int main(int argn, char **argv) {
 
