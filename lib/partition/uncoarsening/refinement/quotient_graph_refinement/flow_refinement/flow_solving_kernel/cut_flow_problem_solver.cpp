@@ -180,7 +180,13 @@ EdgeWeight cut_flow_problem_solver::get_min_flow_max_cut(const PartitionConfig &
         FlowType lhs_rhs_capacity = 0;
         bool do_sth = convert_ds(config, G, lhs, rhs, lhs_boundary_stripe, rhs_boundary_stripe, new_to_old_ids, fG, lhs_rhs_capacity );
 
-        if(!do_sth) return initial_cut;
+        if(!do_sth) {
+                // no flow problem could be built: report "no change" (the rhs stripe stays rhs). With an empty
+                // new_rhs_nodes the caller would move both stripes to lhs while keeping the old cut value.
+                NodeID no_lhs_stripe = lhs_boundary_stripe.size();
+                for( NodeID i = 0; i < rhs_boundary_stripe.size(); i++) new_rhs_nodes.push_back(no_lhs_stripe + i);
+                return initial_cut;
+        }
 
         NodeID source = fG.number_of_nodes()-2;
         NodeID sink   = fG.number_of_nodes()-1;
