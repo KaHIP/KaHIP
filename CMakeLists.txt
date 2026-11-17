@@ -199,6 +199,7 @@ set(LIBKAFFPA_SOURCE_FILES
   lib/partition/uncoarsening/refinement/cycle_improvements/problem_factory.cpp
   lib/partition/uncoarsening/refinement/cycle_improvements/augmented_Qgraph.cpp
   lib/partition/uncoarsening/refinement/mixed_refinement.cpp
+  lib/partition/uncoarsening/refinement/jet_refinement/jet_refinement.cpp
   lib/partition/uncoarsening/refinement/label_propagation_refinement/label_propagation_refinement.cpp
   lib/partition/uncoarsening/refinement/refinement.cpp
   lib/partition/uncoarsening/refinement/quotient_graph_refinement/2way_fm_refinement/two_way_fm.cpp

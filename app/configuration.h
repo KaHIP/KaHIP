@@ -86,6 +86,7 @@ inline void configuration::strong( PartitionConfig & partition_config ) {
 inline void configuration::ultra( PartitionConfig & partition_config ) {
         strong(partition_config);
         partition_config.flow_unlocked_model = true;
+        partition_config.jet_refinement      = true;
         // k = 2 has the least time headroom: one more V-cycle; otherwise best of two full runs
         if( partition_config.k == 2 ) {
                 partition_config.global_cycle_iterations = 3;

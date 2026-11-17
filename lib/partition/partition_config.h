@@ -124,6 +124,10 @@ struct PartitionConfig
         // third blocks are left out, so region nodes next to the region border can change sides
         bool flow_unlocked_model = false;
 
+        // ultra only: Jet label propagation with negative-gain moves and rebalancing (Gilbert et al., SIAM J. Sci. Comput. 2024)
+        // before the k-way FM on every level
+        bool jet_refinement = false;
+
         bool most_balanced_minimum_cuts_node_sep;
         
         unsigned toposort_iterations;
