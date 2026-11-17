@@ -1,5 +1,6 @@
 #!/bin/bash
 cd "${0%/*}" || exit  # Run from current directory (source directory) or exit
+set -e  # stop with a non-zero exit code as soon as a build or copy step fails
 
 if [[ -z "$NCORES" ]]; then 
     case "$(uname)" in
@@ -26,7 +27,6 @@ fi
 export pybind11_DIR=$(pip show pybind11 | grep Location | cut -d ' ' -f 2)/pybind11/share/cmake/pybind11
 
 cmake -B build -DCMAKE_BUILD_TYPE=Release "$ADDITIONAL_ARGS"
-make -j "$NCORES"
 
 cd build
 cmake --build . -j "$NCORES"
@@ -83,13 +83,19 @@ if [ -d ./build/parallel ]
 then
     echo "... executables (parallel)"
 
-    cp ./build/parallel/parallel_src/dsp* ./deploy/distributed_edge_partitioning
-    cp ./build/parallel/parallel_src/g* ./deploy
-    cp ./build/parallel/parallel_src/parhip* ./deploy/parhip
-    cp ./build/parallel/parallel_src/toolbox* ./deploy/
+    for name in \
+        graph2binary \
+        graph2binary_external \
+        parhip \
+        toolbox \
+    ;
+    do
+        cp ./build/parallel/parallel_src/"$name" deploy/
+    done
+    cp ./build/parallel/parallel_src/dspac deploy/distributed_edge_partitioning
 
     echo "... libraries (parallel)"
-    cp ./build/parallel/parallel_src/libparhip_inter*.a deploy/libparhip.a
+    cp ./build/parallel/parallel_src/libparhip_interface_static.a deploy/libparhip.a
     mkdir deploy/parallel
     # libparhip.a needs it: kaffpaE_comm and the KaHIP library it is built on
     cp ./build/libkahip_parallel_static.a deploy/parallel/libkahip.a
