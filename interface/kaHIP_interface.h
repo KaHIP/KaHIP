@@ -31,6 +31,7 @@ const int STRONG         = 2;
 const int FASTSOCIAL     = 3;
 const int ECOSOCIAL      = 4;
 const int STRONGSOCIAL   = 5;
+const int ULTRA          = 6;
 
 const int MAPMODE_MULTISECTION = 0;
 const int MAPMODE_BISECTION = 1;

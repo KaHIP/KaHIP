@@ -302,6 +302,8 @@ void graph_partitioner::perform_partitioning( PartitionConfig & config, graph_ac
                                 G.setPartitionIndex(node,0);
                         } endfor
                         PartitionConfig working_config = config;
+                        // repeat only the top level: nested partitioner calls (initial partitioning) run once
+                        working_config.repetitions = 1;
                         single_run(working_config, G);
 
                         EdgeWeight cur_cut = qm.edge_cut(G);

@@ -50,6 +50,7 @@ class population {
                                    graph_access & G, 
                                    Individuum & first_ind);
 
+                void createIndividuumFromPartition(const PartitionConfig & config, graph_access & G, Individuum & ind);
                 void insert(graph_access & G, Individuum & ind);
 
                 void set_pool_size(int size);

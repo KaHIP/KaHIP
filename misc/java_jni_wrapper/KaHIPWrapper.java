@@ -22,6 +22,7 @@ public class KaHIPWrapper {
 	public final static int KAHIP_FASTSOCIAL   = 3;
 	public final static int KAHIP_ECOSOCIAL    = 4;
 	public final static int KAHIP_STRONGSOCIAL = 5;
+	public final static int KAHIP_ULTRA        = 6;
 
 	static {
 		try {
