@@ -91,10 +91,12 @@ then
     echo "... libraries (parallel)"
     cp ./build/parallel/parallel_src/libparhip_inter*.a deploy/libparhip.a
     mkdir deploy/parallel
-    cp ./build/parallel/modified_kahip/lib*.a deploy/parallel/libkahip.a
+    # libparhip.a needs it: kaffpaE_comm and the KaHIP library it is built on
+    cp ./build/libkahip_parallel_static.a deploy/parallel/libkahip.a
 
     echo "... headers (parallel)"
     cp ./parallel/parallel_src/interface/parhip_interface.h deploy/
+    cp ./interface/kaHIP_interface_mpi.h deploy/
 
 else
     echo "Parhip was not built - skipping deployment"
