@@ -333,6 +333,20 @@ if(NOT NOMPI)
   install(TARGETS kaffpaE DESTINATION bin)
 endif()
 
+# kaffpaE as a library call on an MPI communicator (kaffpaE_comm), used by ParHIP for initial partitioning
+if(NOT NOMPI)
+  add_library(kahip_parallel_static STATIC interface/kaHIP_interface_mpi.cpp $<TARGET_OBJECTS:libkaffpa>
+                                                                          $<TARGET_OBJECTS:libmapping>
+                                                                          $<TARGET_OBJECTS:libkaffpa_parallel>)
+  target_include_directories(kahip_parallel_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface ${MPI_CXX_INCLUDE_PATH})
+  target_link_libraries(kahip_parallel_static PUBLIC ${MPI_CXX_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
+  set_target_properties(kahip_parallel_static PROPERTIES PUBLIC_HEADER "interface/kaHIP_interface_mpi.h;interface/kaHIP_interface.h")
+  install(TARGETS kahip_parallel_static
+          ARCHIVE DESTINATION lib
+          PUBLIC_HEADER DESTINATION include
+          )
+endif()
+
 add_executable(graphchecker app/graphchecker.cpp $<TARGET_OBJECTS:libkaffpa> $<TARGET_OBJECTS:libmapping>)
 target_compile_definitions(graphchecker PRIVATE "-DMODE_GRAPHCHECKER")
 target_link_libraries(graphchecker ${OpenMP_CXX_LIBRARIES})
