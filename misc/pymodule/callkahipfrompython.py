@@ -17,6 +17,7 @@ seed           = 0
 #const int FASTSOCIAL     = 3;
 #const int ECOSOCIAL      = 4;
 #const int STRONGSOCIAL   = 5;
+#const int ULTRA          = 6;
 mode = 2 
 
 edgecut, blocks = kahip.kaffpa(vwgt, xadj, adjcwgt, 
