@@ -65,24 +65,6 @@ int parallel_graph_io::readGraphWeighted(PPartitionConfig & config,
 
 // Parses one number like strtol(p, &end, 10) on a line that ends at line_end:
 // leading whitespace, an optional sign, then decimal digits; returns 0 if there are no digits.
-// Same as parse_long_in_line for a line that is terminated by '\n' (*line_end == '\n'): the
-// newline is neither skipped whitespace nor a digit or sign, so the scans can stop on it without
-// comparing against line_end.
-static inline long parse_long_in_terminated_line(const char *& p) {
-        const char * q = p;
-        while( *q == ' ' || *q == '\t' || *q == '\r' || *q == '\v' || *q == '\f' ) q++;
-        bool negative = false;
-        if( *q == '+' || *q == '-' ) { negative = (*q == '-'); q++; }
-        if( *q < '0' || *q > '9' ) return 0; // no conversion, strtol returns 0
-        unsigned long value = 0;
-        while( *q >= '0' && *q <= '9' ) {
-                value = value * 10 + (unsigned long)(*q - '0');
-                q++;
-        }
-        p = q;
-        return negative ? -(long)value : (long)value;
-}
-
 static inline long parse_long_in_line(const char *& p, const char * line_end) {
         const char * q = p;
         while( q < line_end && (*q == ' ' || *q == '\t' || *q == '\r' || *q == '\v' || *q == '\f') ) q++;
@@ -183,10 +165,8 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
 
                 if( counter >= from ) {
                         const char * p = lb;
-                        const bool terminated = le < end; // then *le == '\n'
                         for (;;) {
-                                NodeID target = (NodeID) (terminated ? parse_long_in_terminated_line(p)
-                                                                     : parse_long_in_line(p, le));
+                                NodeID target = (NodeID) parse_long_in_line(p, le);
                                 if (target == 0) {
                                         break;
                                 }
