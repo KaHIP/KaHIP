@@ -31,7 +31,9 @@ void parallel_contraction::contract_to_distributed_quotient( MPI_Comm communicat
         
         // compute the projection table
         G.allocate_node_to_cnode();
+        const NodeID ahead = 8; // hash map lookups below prefetch their slot this many entries ahead
         forall_local_nodes(G, node) {
+                if( node + ahead < G.number_of_local_nodes() ) label_mapping.prefetch( G.getNodeLabel( node + ahead ));
                 G.setCNode( node, label_mapping.ref( G.getNodeLabel( node )));
         } endfor
 
@@ -193,6 +195,7 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
                 }
 
                 for( ULONG i = 0; i < inc_messages[peID].size(); i++) {
+                        if( i + 8 < inc_messages[peID].size() ) label_mapping_to_cnode.prefetch( inc_messages[peID][i + 8] );
                         m_out_messages[peID].push_back( label_mapping_to_cnode.ref( inc_messages[peID][i] ) );
                 }
         }
@@ -208,6 +211,10 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
 
         // first the local labels 
         for( ULONG i = 0; i < m_messages[rank].size(); i++) {
+                if( i + 8 < m_messages[rank].size() ) {
+                        label_mapping.prefetch( m_messages[rank][i + 8] );
+                        label_mapping_to_cnode.prefetch( m_messages[rank][i + 8] );
+                }
                 label_mapping.ref( m_messages[rank][i] ) = label_mapping_to_cnode.ref( m_messages[rank][i] );
         }
 
@@ -230,6 +237,7 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
 
                 PEID peID = st.MPI_SOURCE;
                 for( int i = 0; i < message_length; i++) {
+                        if( i + 8 < message_length ) label_mapping.prefetch( m_messages[peID][i + 8] );
                         label_mapping.ref( m_messages[peID][i] ) = incmessage[i];
                 }
         }
@@ -298,6 +306,7 @@ void parallel_contraction::get_nodes_to_cnodes_ghost_nodes( MPI_Comm communicato
                 if(message_length == 1) continue; // nothing to do
 
                 for( int i = 0; i < message_length-1; i+=2) {
+                        if( i + 16 < message_length-1 ) G.prefetch_local_id( message[i + 16] );
                         NodeID global_id = message[i];
                         NodeID cnode     = message[i+1];
 

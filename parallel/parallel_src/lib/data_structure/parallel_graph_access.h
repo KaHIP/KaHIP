@@ -488,6 +488,11 @@ public:
         //these methods are usally called to communicate data
         PEID getTargetPE(NodeID node);
 
+        // cache hint for getLocalID(node); changes nothing
+        void prefetch_local_id(NodeID node) {
+                if( node < from || node > to ) m_global_to_local_id.prefetch(node);
+        }
+
         //input is a global id 
         //output is the local id
         NodeID getLocalID(NodeID node) {
