@@ -377,7 +377,7 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
 
 
         if( m_messages[ rank ].size() != 0 ) {
-                local_msg_byPE[rank] = m_messages[rank];
+                local_msg_byPE[rank].swap(m_messages[rank]); // not sent, cleared below anyway
         }
        
         PEID counter = 0;
@@ -399,7 +399,7 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
 
 
                 PEID peID = rst.MPI_SOURCE;
-                local_msg_byPE[peID] = incmessage;
+                local_msg_byPE[peID].swap(incmessage);
         }
         MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
@@ -419,31 +419,35 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         to   = std::min(to, number_of_cnodes - 1);
         ULONG local_num_cnodes = to - from + 1;
 
-        std::vector < std::vector< std::pair<NodeID, NodeWeight > > > sorted_graph;
-        sorted_graph.resize( local_num_cnodes );
+        // the adjacency of the local coarse nodes as one array: the edges are collected in iteration
+        // order together with their local row, then a stable counting sort by row gives every row
+        // its edges in the same order as appending them to one vector per row
+        std::vector< NodeID > edge_row;
+        std::vector< std::pair< NodeID, NodeWeight > > edge_list;
+        edge_row.reserve(2 * local_graph.size());
+        edge_list.reserve(2 * local_graph.size());
 
-        EdgeID edge_counter = 0;
         local_graph.for_each([&](NodeID source, NodeID target, NodeWeight weight) {
                 if( from <= target && target <= to) {
-                        std::pair< NodeID, NodeWeight > edge;
-                        edge.first  = target;
-                        edge.second = weight/4;
-
-                        std::pair< NodeID, NodeWeight > e_bar;
-                        e_bar.first  = source;
-                        e_bar.second = weight/4;
-
-                        sorted_graph[ target - from ].push_back( e_bar);
-                        sorted_graph[ source - from ].push_back( edge );
-                        edge_counter+=2;
+                        edge_row.push_back( target - from );
+                        edge_list.push_back( std::make_pair( source, weight/4 ) );
+                        edge_row.push_back( source - from );
+                        edge_list.push_back( std::make_pair( target, weight/4 ) );
                 } else {
-                        std::pair< NodeID, NodeWeight > edge;
-                        edge.first  = target;
-                        edge.second = weight/2;
-                        sorted_graph[ source - from ].push_back( edge );
-                        edge_counter++;
+                        edge_row.push_back( source - from );
+                        edge_list.push_back( std::make_pair( target, weight/2 ) );
                 }
         });
+        EdgeID edge_counter = edge_list.size();
+
+        std::vector< EdgeID > row_start( local_num_cnodes + 1, 0 );
+        for( EdgeID i = 0; i < edge_counter; i++) row_start[ edge_row[i] + 1 ]++;
+        for( NodeID r = 0; r < local_num_cnodes; r++) row_start[ r + 1 ] += row_start[ r ];
+        std::vector< std::pair< NodeID, NodeWeight > > sorted_edges( edge_counter );
+        {
+                std::vector< EdgeID > fill( row_start.begin(), row_start.end() - 1 );
+                for( EdgeID i = 0; i < edge_counter; i++) sorted_edges[ fill[ edge_row[i] ]++ ] = edge_list[i];
+        }
  
         ULONG global_edges = 0;
         MPI_Allreduce(&edge_counter, &global_edges, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
@@ -464,10 +468,10 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
                 Q.setNodeWeight(node, 0); 
                 Q.setNodeLabel(node, globalID);
                
-                for( EdgeID e = 0; e < sorted_graph[node].size(); e++) {
-                        NodeID target = sorted_graph[node][e].first;
+                for( EdgeID e = row_start[node]; e < row_start[node + 1]; e++) {
+                        NodeID target = sorted_edges[e].first;
                         EdgeID e_bar = Q.new_edge(node, target);
-                        Q.setEdgeWeight(e_bar, sorted_graph[node][e].second);
+                        Q.setEdgeWeight(e_bar, sorted_edges[e].second);
                 }
         }
 
