@@ -237,6 +237,8 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
                 G.setSecondPartitionIndex(node, 0);
 
                 for( EdgeID j = local_offsets[i]; j < local_offsets[i+1]; j++) {
+                        // cache hint for the ghost id lookup of an edge a few entries ahead
+                        if( j + 8 < local_targets.size() ) G.prefetch_local_id(local_targets[j + 8] - 1);
                         NodeID target = local_targets[j]-1; // -1 since there are no nodes with id 0 in the file
                         EdgeID e = G.new_edge(node, target);
                         G.setEdgeWeight(e, 1);
