@@ -52,6 +52,14 @@ public:
                 return NULL;
         }
 
+        // cache hint for the slot of key; changes nothing
+        void prefetch( NodeID key ) const {
+                if( m_keys.empty() ) return;
+                size_t i = slot(key);
+                __builtin_prefetch(&m_keys[i]);
+                __builtin_prefetch(&m_values[i]);
+        }
+
         size_t size() const { return m_count; }
 
         template < typename F >

@@ -972,7 +972,9 @@ void ghost_node_communication::receive_messages_of_neighbors() {
                 // now integrate the changes
                 if(message_length == 1) continue; // nothing to do
 
+                const int ahead = 16; // prefetch the ghost id slot eight updates ahead
                 for( int i = 0; i < message_length-1; i+=2) {
+                        if( i + ahead < message_length-1 ) m_G->m_global_to_local_id.prefetch(message[i+ahead]);
                         NodeID global_id = message[i];
                         NodeID label     = message[i+1];
 
