@@ -48,11 +48,16 @@ public:
                 random_functions::permutate_vector_fast(ordered_nodes, false);
         }
 
+        // ascending degree, ties in node order (counting sort): nodes of equal degree are visited in
+        // memory order, which keeps their own data and edges in cache (std::sort left ties scattered)
         void order_nodes_degree(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) { 
-                std::sort( ordered_nodes.begin(), ordered_nodes.end(), 
-                           [&]( const NodeID & lhs, const NodeID & rhs) -> bool {
-                                return (G.getNodeDegree(lhs) < G.getNodeDegree(rhs));
-                           });
+                NodeID n = ordered_nodes.size();
+                EdgeID max_deg = 0;
+                for( NodeID node = 0; node < n; node++) max_deg = std::max(max_deg, (EdgeID)G.getNodeDegree(node));
+                std::vector< NodeID > start( max_deg + 2, 0 );
+                for( NodeID node = 0; node < n; node++) start[G.getNodeDegree(node) + 1]++;
+                for( EdgeID d = 1; d < start.size(); d++) start[d] += start[d-1];
+                for( NodeID node = 0; node < n; node++) ordered_nodes[start[G.getNodeDegree(node)]++] = node;
         }
 
         void order_leastghostnodes_nodes_degree(const PPartitionConfig & config, parallel_graph_access & G, std::vector< NodeID > & ordered_nodes) { 
