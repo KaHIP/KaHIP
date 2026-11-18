@@ -123,12 +123,12 @@ class parallel_label_compress {
                                 G.update_ghost_node_data_finish(); 
 
                                 // refinement: once the global number of moves stops falling by at least
-                                // 5% per iteration, the remaining moves are mostly ties flipping
+                                // 10% per iteration, the remaining moves are mostly ties flipping
                                 // between blocks; stop (the same decision on every PE)
                                 if( !for_coarsening ) {
                                         unsigned long long global_moved = 0;
                                         MPI_Allreduce(&moved, &global_moved, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, G.getCommunicator());
-                                        if( global_moved == 0 || (i > 0 && 20 * global_moved > 19 * prev_moved) ) break;
+                                        if( global_moved == 0 || (i > 0 && 10 * global_moved > 9 * prev_moved) ) break;
                                         prev_moved = global_moved;
                                 }
                         }
