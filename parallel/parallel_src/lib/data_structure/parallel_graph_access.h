@@ -201,7 +201,8 @@ private:
         std::vector< std::vector< NodeID > >  m_send_buffers_B; // buffers to send messages
         std::vector< std::vector< NodeID > >* m_send_buffers_ptr; // pointer to current buffers to send messages
         std::vector< bool >                   m_adjacent_processors; // buffers to send messages
-        std::vector< MPI_Request* >           m_isend_requests;
+        std::vector< MPI_Request >            m_isend_requests;
+        std::vector< NodeID >                 m_recv_buffer; // reused by every receive
 
         MPI_Comm m_communicator;
 };
@@ -878,13 +879,11 @@ inline void ghost_node_communication::update_ghost_node_data( bool check_iterati
                                         (*m_send_buffers_ptr)[peID].push_back(0);
                                 }
 
-                                MPI_Request * request = new MPI_Request();
+                                m_isend_requests.push_back( MPI_REQUEST_NULL );
                                 MPI_Isend( &(*m_send_buffers_ptr)[peID][0], 
                                            (*m_send_buffers_ptr)[peID].size(), 
                                            MPI_UNSIGNED_LONG_LONG, 
-                                           peID, m_send_tag, m_communicator, request);
-                                
-                                m_isend_requests.push_back( request );
+                                           peID, m_send_tag, m_communicator, &m_isend_requests.back());
                         }
                 }
 
@@ -921,13 +920,11 @@ inline void ghost_node_communication::update_ghost_node_data( bool check_iterati
                                 (*m_send_buffers_ptr)[peID].push_back(0);
                         }
 
-                        MPI_Request * request = new MPI_Request();
+                        m_isend_requests.push_back( MPI_REQUEST_NULL );
                         MPI_Isend( &(*m_send_buffers_ptr)[peID][0], 
                                    (*m_send_buffers_ptr)[peID].size(), 
                                    MPI_UNSIGNED_LONG_LONG, 
-                                   peID, m_send_tag, m_communicator, request);
-                        
-                        m_isend_requests.push_back( request );
+                                   peID, m_send_tag, m_communicator, &m_isend_requests.back());
                 }
         }
 
@@ -954,9 +951,10 @@ void ghost_node_communication::receive_messages_of_neighbors() {
                 int message_length;
                 MPI_Get_count(&st, MPI_UNSIGNED_LONG_LONG, &message_length);
 
-                std::vector<NodeID> message; message.resize(message_length);
+                if( (int)m_recv_buffer.size() < message_length ) m_recv_buffer.resize(message_length);
+                NodeID * message = &m_recv_buffer[0];
                 MPI_Status rst;
-                MPI_Recv( &message[0], message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, m_recv_tag, m_communicator, &rst); 
+                MPI_Recv( message, message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, m_recv_tag, m_communicator, &rst); 
 
                 counter++;
 
@@ -974,10 +972,8 @@ void ghost_node_communication::receive_messages_of_neighbors() {
         }
 
         // wait for previous iteration to finish
-        for( unsigned i = 0; i < m_isend_requests.size(); i++) {
-                MPI_Status st;
-                MPI_Wait( m_isend_requests[i], &st);
-                delete m_isend_requests[i];
+        if( !m_isend_requests.empty() ) {
+                MPI_Waitall( m_isend_requests.size(), &m_isend_requests[0], MPI_STATUSES_IGNORE);
         }
         m_isend_requests.clear();
 
