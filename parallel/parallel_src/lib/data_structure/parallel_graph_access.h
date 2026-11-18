@@ -264,12 +264,7 @@ public:
 
                 //resizes property arrays
                 m_nodes.resize(n+1);
-                // not zero-filled: new_node() zeroes each entry beyond the previous size, which is
-                // what resize() did (a rebuild of the same graph keeps the old entries, and some
-                // callers rely on that, e.g. the second partition index in distribute_local_graph)
-                m_fresh_node_data = std::min((NodeID)m_nodes_data.size(), (NodeID)(n+1));
                 m_nodes_data.resize(n+1);
-                if( n >= m_fresh_node_data ) set_node_data_zero(n); // slot between local and ghost nodes
                 m_edges.resize(m);
 
                 m_nodes[node].firstEdge = e;
@@ -324,7 +319,6 @@ public:
         NodeID new_node() {
 		m_cur_degree = 0;
                 ASSERT_TRUE(m_building_graph);
-                if( node >= m_fresh_node_data ) set_node_data_zero(node);
                 return node++;
         };
 
@@ -564,18 +558,7 @@ private:
         // local nodes are stored in the beginning
         // ghost nodes in the end of the array
         std::vector<Node>                       m_nodes; 
-        std::vector<NodeData, parhip::uninitialized_allocator<NodeData> > m_nodes_data;
-
-        NodeID m_fresh_node_data; // entries from here on were added by the last resize
-
-        // the value a zero-filled entry had
-        void set_node_data_zero( NodeID n ) {
-                NodeData & d        = m_nodes_data[n];
-                d.label             = 0;
-                d.block             = 0;
-                d.weight            = 0;
-                d.is_interface_node = false;
-        }
+        std::vector<NodeData>                   m_nodes_data;
         std::vector<Edge, parhip::uninitialized_allocator<Edge> > m_edges;
 
         //Ghost Node Stuff
