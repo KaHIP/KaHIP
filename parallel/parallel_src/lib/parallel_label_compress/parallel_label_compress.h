@@ -11,6 +11,13 @@
 #include "data_structure/parallel_graph_access.h"
 #include "partition_config.h"
 #include "tools/random_functions.h"
+
+// 64-byte code alignment of a function on GCC and Clang, nothing elsewhere
+#if defined(__GNUC__) || defined(__clang__)
+#define PARHIP_ALIGN_CODE_64 __attribute__((aligned(64)))
+#else
+#define PARHIP_ALIGN_CODE_64
+#endif
 #include "hmap_wrapper.h"
 #include "node_ordering.h"
 
@@ -21,11 +28,8 @@ class parallel_label_compress {
                 parallel_label_compress() {};
                 virtual ~parallel_label_compress() {};
 
-                // The refinement instantiation of this function was up to 33% slower (k = 64,
-                // one process) when its code started at 48 bytes past a 64-byte boundary; where it
-                // lands depends on the size of all code linked before it. A fixed alignment makes its
-                // speed independent of unrelated changes elsewhere.
-                __attribute__((aligned(64)))
+                // fixed code alignment: the refinement LP was up to 33% slower at some offsets of this function
+                PARHIP_ALIGN_CODE_64
                 void perform_parallel_label_compression( PPartitionConfig & config, 
                                 parallel_graph_access & G, bool balance, bool for_coarsening = true) {
 
