@@ -53,14 +53,6 @@ void parallel_graph_access::update_block_weights() {
         m_bm->update();
 }
 
-void parallel_graph_access::update_block_weights_begin() {
-        m_bm->update_begin();
-}
-
-void parallel_graph_access::update_block_weights_end() {
-        m_bm->update_end();
-}
-
 void parallel_graph_access::update_ghost_node_data( bool check_iteration_counter ) {
         m_gnc->update_ghost_node_data( check_iteration_counter );
 }

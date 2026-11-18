@@ -38,14 +38,3 @@ void balance_management_refinement::update() {
         MPI_Allreduce(&m_local_block_weights[0], &m_total_block_weights[0], 
                        m_total_num_labels, MPI_UNSIGNED_LONG_LONG, MPI_SUM, m_G->getCommunicator());
 }
-
-// the same sum as update(), overlapped with the receive of the ghost labels (which does not touch
-// the block weights during refinement)
-void balance_management_refinement::update_begin() {
-        MPI_Iallreduce(&m_local_block_weights[0], &m_total_block_weights[0], 
-                       m_total_num_labels, MPI_UNSIGNED_LONG_LONG, MPI_SUM, m_G->getCommunicator(), &m_update_request);
-}
-
-void balance_management_refinement::update_end() {
-        MPI_Wait(&m_update_request, MPI_STATUS_IGNORE);
-}

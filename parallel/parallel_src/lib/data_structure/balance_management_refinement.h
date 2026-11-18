@@ -8,8 +8,6 @@
 #ifndef BALANCE_MANAGEMENT_REFINEMENT_ZHYKQBYB
 #define BALANCE_MANAGEMENT_REFINEMENT_ZHYKQBYB
 
-#include <mpi.h>
-
 #include "balance_management.h"
 
 class parallel_graph_access;
@@ -25,13 +23,10 @@ public:
 
         virtual void init();
         virtual void update();
-        virtual void update_begin();
-        virtual void update_end();
 
 private:
         std::vector< NodeWeight > m_total_block_weights;
         std::vector< NodeWeight > m_local_block_weights;
-        MPI_Request m_update_request;
 };
 
 
