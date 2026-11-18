@@ -488,6 +488,12 @@ public:
         //these methods are usally called to communicate data
         PEID getTargetPE(NodeID node);
 
+        // cache hint for the node data of the ghost node with global id node; changes nothing
+        void prefetch_ghost_node_data(NodeID node) {
+                NodeID * local_id = m_global_to_local_id.find(node);
+                if( local_id != NULL ) __builtin_prefetch(&m_nodes_data[*local_id]);
+        }
+
         // cache hint for getLocalID(node); changes nothing
         void prefetch_local_id(NodeID node) {
                 if( node < from || node > to ) m_global_to_local_id.prefetch(node);
@@ -980,6 +986,8 @@ void ghost_node_communication::receive_messages_of_neighbors() {
                 const int ahead = 16; // prefetch the ghost id slot eight updates ahead
                 for( int i = 0; i < message_length-1; i+=2) {
                         if( i + ahead < message_length-1 ) m_G->m_global_to_local_id.prefetch(message[i+ahead]);
+                        // four updates ahead the slot is cached: look it up and prefetch the ghost's node data
+                        if( i + ahead/2 < message_length-1 ) m_G->prefetch_ghost_node_data(message[i+ahead/2]);
                         NodeID global_id = message[i];
                         NodeID label     = message[i+1];
 
