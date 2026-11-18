@@ -85,24 +85,16 @@ class hmap_wrapper <std::vector<NodeWeight> > {
 
                 };
 
-                // reset only the entries used since the last clear (an entry that is still 0 is
-                // recorded again on its next use, which is harmless)
                 void clear() { 
-                        for( size_t i = 0; i < m_touched.size(); i++) {
-                                mapping_type[m_touched[i]] = 0;
+                        for( ULONG k = 0; k < m_config.k; k++) {
+                                mapping_type[k] = 0;
                         }
-                        m_touched.clear();
                 };
 
-                NodeWeight & operator[](NodeID node) {
-                        NodeWeight & value = mapping_type[node];
-                        if( value == 0 ) m_touched.push_back(node);
-                        return value;
-                };
+                NodeWeight & operator[](NodeID node) {return mapping_type[node];};
 
          private:
                 std::vector<NodeWeight> mapping_type;
-                std::vector<NodeID> m_touched;
                 PPartitionConfig m_config;
 };
 
