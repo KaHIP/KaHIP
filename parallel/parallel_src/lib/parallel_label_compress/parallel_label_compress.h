@@ -21,6 +21,11 @@ class parallel_label_compress {
                 parallel_label_compress() {};
                 virtual ~parallel_label_compress() {};
 
+                // The refinement instantiation of this function was up to 33% slower (k = 64,
+                // one process) when its code started at 48 bytes past a 64-byte boundary; where it
+                // lands depends on the size of all code linked before it. A fixed alignment makes its
+                // speed independent of unrelated changes elsewhere.
+                __attribute__((aligned(64)))
                 void perform_parallel_label_compression( PPartitionConfig & config, 
                                 parallel_graph_access & G, bool balance, bool for_coarsening = true) {
 
