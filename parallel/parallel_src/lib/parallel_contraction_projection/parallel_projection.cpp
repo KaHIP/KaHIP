@@ -9,6 +9,11 @@
 
 #include "parallel_projection.h"
 
+namespace {
+// receive buffers: sized for MPI_Recv, which writes every entry, so they are not zero-filled
+typedef std::vector< NodeID, parhip::uninitialized_allocator< NodeID > > recv_buffer;
+}
+
 parallel_projection::parallel_projection() {
                 
 }
@@ -89,7 +94,7 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
                 
                 int message_length;
                 MPI_Get_count(&st, MPI_UNSIGNED_LONG_LONG, &message_length);
-                std::vector<NodeID> incmessage; incmessage.resize(message_length);
+                recv_buffer incmessage; incmessage.resize(message_length); // MPI_Recv overwrites it, no zero-fill
 
                 MPI_Status rst;
                 MPI_Recv( &incmessage[0], message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, rank+size, communicator, &rst); 
@@ -108,6 +113,7 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
                 }
 
 
+                out_messages[peID].reserve(message_length);
                 for( int i = 0; i < message_length; i++) {
                         NodeID cnode = coarser.getLocalID(incmessage[i]);
                         out_messages[peID].push_back(coarser.getNodeLabel(cnode));
@@ -128,7 +134,7 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
 
                 int message_length;
                 MPI_Get_count(&st, MPI_UNSIGNED_LONG_LONG, &message_length);
-                std::vector<NodeID> incmessage; incmessage.resize(message_length);
+                recv_buffer incmessage; incmessage.resize(message_length); // MPI_Recv overwrites it, no zero-fill
 
                 MPI_Status rst;
                 MPI_Recv( &incmessage[0], message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, tag, communicator, &rst); 
