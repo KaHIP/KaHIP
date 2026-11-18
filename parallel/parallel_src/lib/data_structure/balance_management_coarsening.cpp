@@ -20,15 +20,17 @@ balance_management_coarsening::~balance_management_coarsening() {
 }
 
 void balance_management_coarsening::init(  ) {
-        m_fuzzy_block_weights.reserve(m_G->number_of_local_nodes() + m_G->number_of_ghost_nodes());
+        m_local_from = m_G->get_from_range();
+        m_local_weights.assign(m_G->number_of_local_nodes(), 0);
+        m_fuzzy_block_weights.reserve(m_G->number_of_ghost_nodes());
         forall_local_nodes((*m_G), node) {
                 PartitionID label = m_G->getNodeLabel(node);
-                m_fuzzy_block_weights.ref(label) += m_G->getNodeWeight(node);
+                local_or_map_ref(label) += m_G->getNodeWeight(node);
         } endfor
 
         forall_ghost_nodes((*m_G),node) {
                 PartitionID label = m_G->getNodeLabel(node);
-                m_fuzzy_block_weights.ref(label) += m_G->getNodeWeight(node);
+                local_or_map_ref(label) += m_G->getNodeWeight(node);
         } endfor
 }
 

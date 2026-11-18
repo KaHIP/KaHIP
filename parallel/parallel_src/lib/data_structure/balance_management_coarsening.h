@@ -90,26 +90,38 @@ public:
         virtual void update();
 
 private:
+        // weights of the blocks whose id is a local node id (from .. from + local_n - 1), the
+        // common case, in a dense array; all other blocks in the map
+        long & local_or_map_ref( PartitionID block ) {
+                PartitionID idx = block - m_local_from;
+                if( idx < m_local_weights.size() ) return m_local_weights[idx];
+                return m_fuzzy_block_weights.ref(block);
+        }
+
+        PartitionID m_local_from;
+        std::vector< long > m_local_weights;
         block_weight_map m_fuzzy_block_weights;
 };
 
 
 inline 
 NodeWeight balance_management_coarsening::getBlockSize( PartitionID block ) {
+        PartitionID idx = block - m_local_from;
+        if( idx < m_local_weights.size() ) return m_local_weights[idx];
         return m_fuzzy_block_weights.get(block);
 }
 
 // this function is only called for local nodes
 inline 
 void balance_management_coarsening::setBlockSize( PartitionID block, NodeWeight block_size ) {
-        m_fuzzy_block_weights.ref(block) = block_size;
+        local_or_map_ref(block) = block_size;
 }
 
 inline
 void balance_management_coarsening::update_non_contained_block_balance( PartitionID from, PartitionID to, NodeWeight node_weight) {
         if( from == to ) return; // subtracting and adding the same weight changes nothing
-        m_fuzzy_block_weights.ref(from) -= node_weight;
-        m_fuzzy_block_weights.ref(to)   += node_weight;
+        local_or_map_ref(from) -= node_weight;
+        local_or_map_ref(to)   += node_weight;
 }
 
 #endif /* end of include guard: BALANCE_MANAGEMENT_COARSENING_TS6EZN5A */
