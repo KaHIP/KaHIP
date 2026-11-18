@@ -67,6 +67,7 @@ class parallel_label_compress {
                                                 }
 
                                         } else {
+                                                hash_map.prepare( G.getNodeDegree(node) );
                                                 forall_out_edges(G, e, node) {
                                                         if( e + 8 < end ) G.prefetchTargetData(e + 8);
                                                         NodeID target             = G.getEdgeTarget(e);
