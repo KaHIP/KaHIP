@@ -17,6 +17,9 @@
 #include <vector>
 
 #include <algorithm>
+#include <memory>
+#include <new>
+#include <utility>
 
 #include "data_structure/balance_management.h"
 #include "data_structure/balance_management_coarsening.h"
@@ -67,6 +70,19 @@ namespace parhip {
 struct Edge {
     NodeID     local_target;
     EdgeWeight weight;
+};
+
+// allocator whose resize() leaves new elements of a trivial type uninitialized; used for the edge
+// array, whose entries are all written by new_edge before they are read
+template < typename T >
+struct uninitialized_allocator : std::allocator< T > {
+        template < typename U > struct rebind { typedef uninitialized_allocator< U > other; };
+        uninitialized_allocator() {}
+        template < typename U > uninitialized_allocator( const uninitialized_allocator< U > & ) {}
+        template < typename U > void construct( U * p ) { ::new ((void*)p) U; }
+        template < typename U, typename... Args > void construct( U * p, Args&&... args ) {
+                ::new ((void*)p) U(std::forward< Args >(args)...);
+        }
 };
 
 } // namespace parhip
@@ -309,6 +325,7 @@ public:
         EdgeID new_edge(NodeID source, NodeID target) {
                 ASSERT_TRUE(m_building_graph);
                 ASSERT_TRUE(e < m_edges.size());
+                m_edges[e].weight = 0; // the edge array is not zero-filled (see uninitialized_allocator)
 
                 // build ghost nodes on the fly
                 if( from <= target && target <= to) {
@@ -542,7 +559,7 @@ private:
         // ghost nodes in the end of the array
         std::vector<Node>                       m_nodes; 
         std::vector<NodeData>                   m_nodes_data;
-        std::vector<Edge>                       m_edges;
+        std::vector<Edge, parhip::uninitialized_allocator<Edge> > m_edges;
 
         //Ghost Node Stuff
         std::vector<AdditionalNonLocalNodeData> m_add_non_local_node_data;
