@@ -164,15 +164,6 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         {
                 const char * cb = chunk_begin(peID);
                 const char * ce = chunk_begin(peID + 1);
-#ifdef MADV_POPULATE_READ
-                // map the pages of the own chunk in one call instead of one page fault per few pages
-                // (an error, e.g. on kernels before 5.14, only leaves the pages to be faulted in)
-                if( cb < ce ) {
-                        const size_t page = (size_t) sysconf(_SC_PAGESIZE);
-                        const char * pb = data + ((size_t)(cb - data) / page) * page;
-                        madvise((void*)pb, (size_t)(ce - pb), MADV_POPULATE_READ);
-                }
-#endif
                 if( cb < ce && (cb == body || cb[-1] == '\n') && cb[0] != '%' ) my_count++;
                 const char * q = cb;
                 while( q < ce ) {
