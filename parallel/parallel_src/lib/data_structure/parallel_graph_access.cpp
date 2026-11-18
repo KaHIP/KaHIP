@@ -16,7 +16,7 @@ ULONG parallel_graph_access::m_comm_rounds_up = 128;
 parallel_graph_access::parallel_graph_access( MPI_Comm communicator ) : m_num_local_nodes(0), 
                                                  from(0), 
                                                  to(0),
-                                                 m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL), m_coarsening_weights(NULL) {
+                                                 m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL) {
 
 
                 m_communicator = communicator;
@@ -38,16 +38,16 @@ void parallel_graph_access::init_balance_management( PPartitionConfig & config )
                 delete m_bm;
         }
 
-        m_coarsening_weights = NULL;
         if( config.total_num_labels != config.k ) {
-                balance_management_coarsening * bmc = new balance_management_coarsening( this, config.total_num_labels );
-                m_bm = bmc;
-                m_coarsening_weights = bmc->weights();
+                m_bm = new balance_management_coarsening( this, config.total_num_labels );
         } else {
                 m_bm = new balance_management_refinement( this, config.total_num_labels );
         }
 }
 
+void parallel_graph_access::update_non_contained_block_balance( PartitionID from, PartitionID to, NodeWeight node_weight) {
+        m_bm->update_non_contained_block_balance( from, to, node_weight);
+}
 void parallel_graph_access::update_block_weights() {
         m_bm->update();
 }

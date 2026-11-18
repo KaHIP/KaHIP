@@ -19,7 +19,6 @@
 #include <algorithm>
 
 #include "data_structure/balance_management.h"
-#include "data_structure/block_weight_map.h"
 #include "data_structure/open_hash_map.h"
 #include "definitions.h"
 #include "partition_config.h"
@@ -213,7 +212,7 @@ public:
         parallel_graph_access( ) : m_num_local_nodes(0), 
                                      from(0), 
                                      to(0),
-                                     m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL), m_coarsening_weights(NULL)  { 
+                                     m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL)  { 
                                              m_communicator = MPI_COMM_WORLD;
                                              MPI_Comm_rank( m_communicator, &rank);
                                              MPI_Comm_size( m_communicator, &size);
@@ -240,7 +239,6 @@ public:
                 m_global_m                   = global_m;
                 m_ghost_adddata_array_offset = n+1;
                 m_bm                         = NULL;
-                m_coarsening_weights         = NULL;
 		m_cur_degree                 = 0;
 
                 //resizes property arrays
@@ -581,37 +579,20 @@ private:
 
         ghost_node_communication* m_gnc;
         balance_management* m_bm;
-        // the block weights of m_bm if it is a balance_management_coarsening, else NULL; lets the
-        // per-node block weight accesses of the coarsening run without a virtual call (same operations)
-        block_weight_map* m_coarsening_weights;
         MPI_Comm m_communicator;
 
 };
 
 typedef parallel_graph_access complete_graph_access; // this is just a naming convention for a graph that is completely local
 
-// the coarsening branches do exactly what balance_management_coarsening does
 inline
 NodeWeight parallel_graph_access::getBlockSize( PartitionID block ) {
-        if( m_coarsening_weights != NULL ) return m_coarsening_weights->get(block);
         return m_bm->getBlockSize(block);
 }
 
 inline 
 void parallel_graph_access::setBlockSize( PartitionID block, NodeWeight block_size ) {
-        if( m_coarsening_weights != NULL ) { m_coarsening_weights->ref(block) = block_size; return; }
         m_bm->setBlockSize(block, block_size);
-}
-
-inline
-void parallel_graph_access::update_non_contained_block_balance( PartitionID from, PartitionID to, NodeWeight node_weight) {
-        if( m_coarsening_weights != NULL ) {
-                if( from == to ) return; // subtracting and adding the same weight changes nothing
-                m_coarsening_weights->ref(from) -= node_weight;
-                m_coarsening_weights->ref(to)   += node_weight;
-                return;
-        }
-        m_bm->update_non_contained_block_balance( from, to, node_weight);
 }
 
 inline EdgeID parallel_graph_access::get_first_edge(NodeID node) {
