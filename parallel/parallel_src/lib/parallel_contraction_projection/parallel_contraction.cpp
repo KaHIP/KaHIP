@@ -324,11 +324,8 @@ void parallel_contraction::build_quotient_graph_locally( parallel_graph_access &
         forall_local_nodes(G, node) {
                 NodeID cur_cnode = G.getCNode( node );
                 node_weights.ref(cur_cnode) += G.getNodeWeight( node );
-                const EdgeID end = G.get_first_invalid_edge(node);
 
                 forall_out_edges(G, e, node) {
-                        // cache hint for the edge map slot of an edge of this node a few edges ahead
-                        if( e + 4 < end ) hG.prefetch(cur_cnode, G.getCNode(G.getEdgeTarget(e + 4)));
                         NodeID target       = G.getEdgeTarget(e);
                         NodeID target_cnode = G.getCNode(target);
                         if( cur_cnode != target_cnode ) {
