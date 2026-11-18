@@ -41,6 +41,15 @@ public:
                 m_last_pos     = NOT_CONTAINED;
         }
 
+        // use only the first part of the table that keeps a node of this degree at most half full;
+        // only valid while the map is empty (between two clear() calls the keys stay in place)
+        void use_capacity_for( NodeID degree ) {
+                size_t cap = 16;
+                while( cap < 2 * (size_t)degree ) cap <<= 1;
+                if( cap > m_internal_map.size() ) cap = m_internal_map.size();
+                m_mask = cap - 1;
+        }
+
         void clear() {
                 for( size_t i = 0; i < m_contained_key_positions.size(); i++) {
                         KeyValuePair & kv = m_internal_map[m_contained_key_positions[i]];
