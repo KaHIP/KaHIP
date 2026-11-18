@@ -37,8 +37,9 @@ struct Node {
 } // namespace parhip
 
 using parhip::Node;
+// the label of a node is kept in its own array (m_labels): the label propagation edge loops read
+// the labels of all neighbors and nothing else of them
 struct NodeData {
-    NodeID     label;
     PartitionID block; // a given partition of the graph (for v-cycles)
     NodeWeight weight; // save a little bit of memory
     bool       is_interface_node; // save a little bit of memory
@@ -248,6 +249,7 @@ public:
                 //resizes property arrays
                 m_nodes.resize(n+1);
                 m_nodes_data.resize(n+1);
+                m_labels.resize(n+1);
                 m_edges.resize(m);
 
                 m_nodes[node].firstEdge = e;
@@ -332,7 +334,7 @@ public:
                                 m_nodes.push_back(dummy);
 
                                 NodeData dummy_data; 
-                                dummy_data.label             = target;
+                                m_labels.push_back(target);
                                 dummy_data.block             = 0;
                                 dummy_data.is_interface_node = false;
                                 dummy_data.weight            = 1;
@@ -465,7 +467,7 @@ public:
 
         // hint the cache about the node data (label, block) of the target of edge e; no effect on results
         void prefetchTargetData(EdgeID e) {
-                __builtin_prefetch(&m_nodes_data[m_edges[e].local_target]);
+                __builtin_prefetch(&m_labels[m_edges[e].local_target]);
         }
 
         //methods for non-local / ghost nodes only
@@ -543,6 +545,7 @@ private:
         // ghost nodes in the end of the array
         std::vector<Node>                       m_nodes; 
         std::vector<NodeData>                   m_nodes_data;
+        std::vector<NodeID>                     m_labels;
         std::vector<Edge>                       m_edges;
 
         //Ghost Node Stuff
@@ -628,20 +631,20 @@ inline EdgeID parallel_graph_access::get_first_invalid_edge(NodeID node) {
 
 inline EdgeID parallel_graph_access::getNodeLabel(NodeID node) {
 #ifdef NDEBUG
-        return m_nodes_data[node].label;
+        return m_labels[node];
 #else
-        return m_nodes_data.at(node).label;
+        return m_labels.at(node);
 #endif
 }
 
 inline void parallel_graph_access::setNodeLabel(NodeID node, NodeID label) {
-        if( m_nodes_data[node].label != label && is_interface_node(node)) {
+        if( m_labels[node] != label && is_interface_node(node)) {
                 m_gnc->addLabel(node, label);
         }
 #ifdef NDEBUG
-        m_nodes_data[node].label = label;
+        m_labels[node] = label;
 #else
-        m_nodes_data.at(node).label = label;
+        m_labels.at(node) = label;
 #endif
 }
 
