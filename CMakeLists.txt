@@ -434,6 +434,7 @@ endif()
 
 # ParHIP
 if(NOT NOMPI AND PARHIP)
+  enable_testing()
   add_subdirectory(parallel/parallel_src)
 endif()
 

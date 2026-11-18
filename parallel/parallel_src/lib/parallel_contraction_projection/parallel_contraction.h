@@ -8,7 +8,7 @@
 #ifndef PARALLEL_CONTRACTION_64O127GD
 #define PARALLEL_CONTRACTION_64O127GD
 
-#include "data_structure/hashed_graph.h"
+#include "data_structure/ordered_edge_map.h"
 #include "data_structure/open_hash_map.h"
 #include "data_structure/parallel_graph_access.h"
 #include "partition_config.h"
@@ -31,10 +31,10 @@ private:
 
 	void build_quotient_graph_locally( parallel_graph_access & G, 
                                            NodeID number_of_distinct_labels, 
-					   hashed_graph & hG, 
+					   ordered_edge_map & hG, 
 					   open_hash_map< NodeWeight > & node_weights);
 
-        void redistribute_hased_graph_and_build_graph_locally( MPI_Comm communicator, hashed_graph &  hG, 
+        void redistribute_hased_graph_and_build_graph_locally( MPI_Comm communicator, ordered_edge_map & hG, 
                                                                open_hash_map< NodeWeight > & node_weights,
                                                                NodeID number_of_cnodes,
                                                                parallel_graph_access & Q);

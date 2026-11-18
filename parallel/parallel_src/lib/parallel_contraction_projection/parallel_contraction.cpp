@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 #include "parallel_contraction.h"
-#include "data_structure/hashed_graph.h"
+#include "data_structure/ordered_edge_map.h"
 #include "tools/helpers.h"
 
 parallel_contraction::parallel_contraction() {
@@ -38,7 +38,7 @@ void parallel_contraction::contract_to_distributed_quotient( MPI_Comm communicat
         get_nodes_to_cnodes_ghost_nodes( communicator, G );   
 
         //now we can really build the edges of the quotient graph
-        hashed_graph hG;
+        ordered_edge_map hG(number_of_distinct_labels);
         open_hash_map< NodeWeight > node_weights;
 
         build_quotient_graph_locally( G, number_of_distinct_labels, hG, node_weights);
@@ -310,7 +310,7 @@ void parallel_contraction::get_nodes_to_cnodes_ghost_nodes( MPI_Comm communicato
 
 void parallel_contraction::build_quotient_graph_locally( parallel_graph_access & G, 
                                                          NodeID number_of_distinct_labels, 
-                                                         hashed_graph & hG, 
+                                                         ordered_edge_map & hG, 
                                                          open_hash_map< NodeWeight > & node_weights) {
         forall_local_nodes(G, node) {
                 NodeID cur_cnode = G.getCNode( node );
@@ -321,12 +321,7 @@ void parallel_contraction::build_quotient_graph_locally( parallel_graph_access &
                         NodeID target_cnode = G.getCNode(target);
                         if( cur_cnode != target_cnode ) {
                                 // update the edge
-                                hashed_edge he;
-                                he.k            = number_of_distinct_labels;
-                                he.source       = cur_cnode;
-                                he.target       = target_cnode;
-
-                                hG[he].weight  += G.getEdgeWeight(e);
+                                hG.weight(cur_cnode, target_cnode) += G.getEdgeWeight(e);
                         }
                 } endfor
         } endfor
@@ -334,7 +329,7 @@ void parallel_contraction::build_quotient_graph_locally( parallel_graph_access &
 
 
 
-void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI_Comm communicator, hashed_graph &  hG, 
+void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI_Comm communicator, ordered_edge_map & hG, 
                                                                              open_hash_map< NodeWeight > & node_weights,
                                                                              NodeID number_of_cnodes, 
                                                                              parallel_graph_access & Q  ) {
@@ -348,21 +343,17 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         m_messages.resize(size);
 
         //build messages
-        hashed_graph::iterator it;
-        for( it = hG.begin(); it != hG.end(); it++) {
-                data_hashed_edge & e = it->second;
-                hashed_edge he       = it->first;
+        hG.for_each([&](NodeID source, NodeID target, NodeWeight weight) {
+                PEID peID = source / divisor;
+                m_messages[ peID ].push_back( source );
+                m_messages[ peID ].push_back( target );
+                m_messages[ peID ].push_back( weight );
 
-                PEID peID = he.source / divisor;
-                m_messages[ peID ].push_back( he.source );
-                m_messages[ peID ].push_back( he.target );
-                m_messages[ peID ].push_back( e.weight );
-
-                peID = he.target / divisor;
-                m_messages[ peID ].push_back( he.target );
-                m_messages[ peID ].push_back( he.source );
-                m_messages[ peID ].push_back( e.weight );
-        }
+                peID = target / divisor;
+                m_messages[ peID ].push_back( target );
+                m_messages[ peID ].push_back( source );
+                m_messages[ peID ].push_back( weight );
+        });
 
         // now flood the network
         std::vector<MPI_Request> requests(size, MPI_REQUEST_NULL);
@@ -412,16 +403,11 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         }
         MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
-        hashed_graph local_graph;
+        ordered_edge_map local_graph(number_of_cnodes);
         for( PEID peID = 0; peID < size; peID++) {
                 if(local_msg_byPE[peID].size() > 0) {
                 for( ULONG i = 0; i < local_msg_byPE[peID].size()-2; i+=3) {
-                        hashed_edge he;
-                        he.k = number_of_cnodes;
-                        he.source = local_msg_byPE[peID][i];
-                        he.target = local_msg_byPE[peID][i+1];
-
-                        local_graph[he].weight += local_msg_byPE[peID][i+2];
+                        local_graph.weight(local_msg_byPE[peID][i], local_msg_byPE[peID][i+1]) += local_msg_byPE[peID][i+2];
                 }}
         }
 
@@ -437,30 +423,27 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         sorted_graph.resize( local_num_cnodes );
 
         EdgeID edge_counter = 0;
-        for( it = local_graph.begin(); it != local_graph.end(); it++) {
-                data_hashed_edge & e = it->second;
-                hashed_edge he       = it->first;
-
-                if( from <= he.target && he.target <= to) {
+        local_graph.for_each([&](NodeID source, NodeID target, NodeWeight weight) {
+                if( from <= target && target <= to) {
                         std::pair< NodeID, NodeWeight > edge;
-                        edge.first  = he.target;
-                        edge.second = e.weight/4;
+                        edge.first  = target;
+                        edge.second = weight/4;
 
                         std::pair< NodeID, NodeWeight > e_bar;
-                        e_bar.first  = he.source;
-                        e_bar.second = e.weight/4;
+                        e_bar.first  = source;
+                        e_bar.second = weight/4;
 
-                        sorted_graph[ he.target - from ].push_back( e_bar);
-                        sorted_graph[ he.source - from ].push_back( edge );
+                        sorted_graph[ target - from ].push_back( e_bar);
+                        sorted_graph[ source - from ].push_back( edge );
                         edge_counter+=2;
                 } else {
                         std::pair< NodeID, NodeWeight > edge;
-                        edge.first  = he.target;
-                        edge.second = e.weight/2;
-                        sorted_graph[ he.source - from ].push_back( edge );
+                        edge.first  = target;
+                        edge.second = weight/2;
+                        sorted_graph[ source - from ].push_back( edge );
                         edge_counter++;
                 }
-        }
+        });
  
         ULONG global_edges = 0;
         MPI_Allreduce(&edge_counter, &global_edges, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);

@@ -86,6 +86,10 @@ add_executable(edge_list_to_metis_graph app/edge_list_to_metis_graph.cpp $<TARGE
 target_compile_definitions(edge_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_MPI" "-DGRAPHGEN_DISTRIBUTED_MEMORY" "-DKRONECKER_GENERATOR_PROGRAM")
 install(TARGETS edge_list_to_metis_graph DESTINATION bin)
 
+# checks that ordered_edge_map iterates exactly like the hashed_graph it replaces
+add_executable(ordered_edge_map_test tests/ordered_edge_map_test.cpp)
+add_test(NAME ordered_edge_map_test COMMAND ordered_edge_map_test)
+
 #add_executable(friendster_list_to_metis_graph app/friendster_list_to_metis_graph.cpp $<TARGET_OBJECTS:libedgelist>)
 #target_compile_definitions(friendster_list_to_metis_graph PRIVATE "-DGRAPH_GENERATOR_MPI" "-DGRAPHGEN_DISTRIBUTED_MEMORY" "-DKRONECKER_GENERATOR_PROGRAM")
 #install(TARGETS friendster_list_to_metis_graph DESTINATION bin)
