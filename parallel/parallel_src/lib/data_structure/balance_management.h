@@ -30,6 +30,9 @@ public:
         // init local and total block sizes
         virtual void init() = 0;
         virtual void update() = 0;
+        // update() split in two: between both calls, the block weights are neither read nor changed
+        virtual void update_begin() { update(); }
+        virtual void update_end() {}
 
 protected:
         balance_management() {};

@@ -395,6 +395,8 @@ public:
         /* ============================================================= */
         void init_balance_management( PPartitionConfig & config );
         void update_block_weights();
+        void update_block_weights_begin();
+        void update_block_weights_end();
 
         // if a ghost node changes its block we update the fuzzy block weight
         void update_non_contained_block_balance( PartitionID from, PartitionID to, NodeWeight node_weight);
@@ -892,10 +894,11 @@ inline void ghost_node_communication::update_ghost_node_data( bool check_iterati
                 return; // compute a little bit more
         }
 
-        m_G->update_block_weights();
+        m_G->update_block_weights_begin();
 
         //receive incomming
         receive_messages_of_neighbors();
+        m_G->update_block_weights_end();
        
         if( m_send_buffers_ptr == & m_send_buffers_A) {
                 for( int i = 0; i < m_size; i++) {
@@ -989,8 +992,9 @@ inline void ghost_node_communication::update_ghost_node_data_finish() {
         
         m_first_send = true; // last send
         update_ghost_node_data(false);
-        m_G->update_block_weights();
+        m_G->update_block_weights_begin();
         receive_messages_of_neighbors();
+        m_G->update_block_weights_end();
 
         m_send_iteration = 0;
         m_recv_iteration = 0;
