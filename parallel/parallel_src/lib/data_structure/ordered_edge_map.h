@@ -61,6 +61,14 @@ public:
                 return m_weight.back();
         }
 
+        // cache hint for the slot of edge {source, target}; changes nothing
+        void prefetch( NodeID source, NodeID target ) const {
+                if( m_slots.empty() ) return;
+                NodeID lo = source < target ? source : target;
+                NodeID hi = source < target ? target : source;
+                __builtin_prefetch(&m_slots[slot(lo, hi)]);
+        }
+
         size_t size() const { return m_source.size(); }
 
         // calls f(source, target, weight) for every edge in unordered_map iteration order
@@ -174,6 +182,8 @@ public:
                 he.target = target;
                 return m_map[he].weight;
         }
+
+        void prefetch( NodeID, NodeID ) const {}
 
         size_t size() const { return m_map.size(); }
 
