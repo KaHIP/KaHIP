@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <cstring>
+#include <algorithm>
 
 #include "parallel_graph_io.h"
 #include "tools/helpers.h"
@@ -151,7 +152,44 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         local_offsets.reserve(local_no_nodes + 1);
         local_offsets.push_back(0);
 
+        // Find the first line of this PE's range without scanning the file up to it: split the
+        // body (after the header) into comm_size byte chunks, count the node lines (lines that are
+        // not comments) that start in each chunk, and start at the chunk that holds node "from".
+        const char * body   = pos;
+        const size_t body_n = end - body;
+        auto chunk_begin = [&](PEID c) -> const char * {
+                return body + (body_n / comm_size) * (size_t)c + std::min((size_t)c, body_n % comm_size);
+        };
+        ULONG my_count = 0;
+        {
+                const char * cb = chunk_begin(peID);
+                const char * ce = chunk_begin(peID + 1);
+                if( cb < ce && (cb == body || cb[-1] == '\n') && cb[0] != '%' ) my_count++;
+                const char * q = cb;
+                while( q < ce ) {
+                        const char * nl = (const char*) memchr(q, '\n', ce - q);
+                        if( nl == NULL ) break;
+                        if( nl + 1 < ce && nl[1] != '%' ) my_count++; // a line starts at nl + 1
+                        q = nl + 1;
+                }
+        }
+        std::vector< ULONG > chunk_counts(comm_size, 0);
+        MPI_Allgather(&my_count, 1, MPI_UNSIGNED_LONG_LONG, &chunk_counts[0], 1, MPI_UNSIGNED_LONG_LONG, communicator);
+
         ULONG counter  = 0;
+        {
+                PEID c = 0;
+                while( c < comm_size - 1 && counter + chunk_counts[c] <= from ) {
+                        counter += chunk_counts[c];
+                        c++;
+                }
+                // first line start at or after the chunk begin; counter is its node index
+                pos = chunk_begin(c);
+                if( pos > body && pos < end && pos[-1] != '\n' ) {
+                        const char * nl = (const char*) memchr(pos, '\n', end - pos);
+                        pos = (nl == NULL) ? end : nl + 1;
+                }
+        }
         EdgeID edge_counter = 0;
 
         while( next_line(lb, le) ) {
