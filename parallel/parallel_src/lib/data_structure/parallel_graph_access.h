@@ -19,6 +19,8 @@
 #include <algorithm>
 
 #include "data_structure/balance_management.h"
+#include "data_structure/balance_management_coarsening.h"
+#include "data_structure/balance_management_refinement.h"
 #include "data_structure/open_hash_map.h"
 #include "definitions.h"
 #include "partition_config.h"
@@ -212,7 +214,7 @@ public:
         parallel_graph_access( ) : m_num_local_nodes(0), 
                                      from(0), 
                                      to(0),
-                                     m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL)  { 
+                                     m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL), m_bm_coarsening(NULL), m_bm_refinement(NULL)  { 
                                              m_communicator = MPI_COMM_WORLD;
                                              MPI_Comm_rank( m_communicator, &rank);
                                              MPI_Comm_size( m_communicator, &size);
@@ -239,6 +241,8 @@ public:
                 m_global_m                   = global_m;
                 m_ghost_adddata_array_offset = n+1;
                 m_bm                         = NULL;
+                m_bm_coarsening              = NULL;
+                m_bm_refinement              = NULL;
 		m_cur_degree                 = 0;
 
                 //resizes property arrays
@@ -579,20 +583,33 @@ private:
 
         ghost_node_communication* m_gnc;
         balance_management* m_bm;
+        // m_bm with its concrete type (exactly one is set after init_balance_management), so that
+        // the per-node block weight accesses call the implementation directly instead of virtually
+        balance_management_coarsening* m_bm_coarsening;
+        balance_management_refinement* m_bm_refinement;
         MPI_Comm m_communicator;
 
 };
 
 typedef parallel_graph_access complete_graph_access; // this is just a naming convention for a graph that is completely local
 
+// qualified calls: the same implementation as the virtual call on m_bm, without the indirection
 inline
 NodeWeight parallel_graph_access::getBlockSize( PartitionID block ) {
-        return m_bm->getBlockSize(block);
+        if( m_bm_coarsening != NULL ) return m_bm_coarsening->balance_management_coarsening::getBlockSize(block);
+        return m_bm_refinement->balance_management_refinement::getBlockSize(block);
 }
 
 inline 
 void parallel_graph_access::setBlockSize( PartitionID block, NodeWeight block_size ) {
-        m_bm->setBlockSize(block, block_size);
+        if( m_bm_coarsening != NULL ) m_bm_coarsening->balance_management_coarsening::setBlockSize(block, block_size);
+        else                          m_bm_refinement->balance_management_refinement::setBlockSize(block, block_size);
+}
+
+inline
+void parallel_graph_access::update_non_contained_block_balance( PartitionID from, PartitionID to, NodeWeight node_weight) {
+        if( m_bm_coarsening != NULL ) m_bm_coarsening->balance_management_coarsening::update_non_contained_block_balance( from, to, node_weight);
+        else                          m_bm_refinement->balance_management_refinement::update_non_contained_block_balance( from, to, node_weight);
 }
 
 inline EdgeID parallel_graph_access::get_first_edge(NodeID node) {
