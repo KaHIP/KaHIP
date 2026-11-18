@@ -47,7 +47,9 @@ class parallel_label_compress {
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
+                        unsigned long long prev_moved = 0;
                         for( ULONG i = 0; i < config.label_iterations; i++) {
+                                unsigned long long moved = 0;
                                 NodeID prev_node = 0;
                                 forall_local_nodes(G, rnode) {
                                         NodeID node = permutation[rnode]; // use the current random node
@@ -106,6 +108,7 @@ class parallel_label_compress {
                                         }
 
                                         if( old_block != max_block ) {
+                                                moved++;
                                                 G.setNodeLabel(node, max_block);
 
                                                 G.setBlockSize(old_block, G.getBlockSize(old_block) - node_weight);
@@ -118,6 +121,16 @@ class parallel_label_compress {
 
                                 } endfor
                                 G.update_ghost_node_data_finish(); 
+
+                                // refinement: once the global number of moves stops falling by at least
+                                // 10% per iteration, the remaining moves are mostly ties flipping
+                                // between blocks; stop (the same decision on every PE)
+                                if( !for_coarsening ) {
+                                        unsigned long long global_moved = 0;
+                                        MPI_Allreduce(&moved, &global_moved, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, G.getCommunicator());
+                                        if( global_moved == 0 || (i > 0 && 10 * global_moved > 9 * prev_moved) ) break;
+                                        prev_moved = global_moved;
+                                }
                         }
                 }
 
