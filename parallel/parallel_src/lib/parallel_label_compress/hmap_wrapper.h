@@ -21,7 +21,6 @@ class hmap_wrapper {
                 virtual ~hmap_wrapper() {};
 
                 void init( NodeID max_fill_count );
-                void prepare( NodeID degree );
                 void clear();
                 NodeWeight & operator[](NodeID node);
 
@@ -41,7 +40,6 @@ class hmap_wrapper < linear_probing_hashmap > {
                 virtual ~hmap_wrapper() {};
 
                 void init(NodeID max_fill_count )  {mapping_type.init(max_fill_count, m_config.ht_fill_factor);};
-                void prepare( NodeID degree ) { mapping_type.use_capacity_for(degree); };
                 void clear() { mapping_type.clear(); };
                 NodeWeight & operator[](NodeID node) {return mapping_type[node];};
 
@@ -61,7 +59,6 @@ class hmap_wrapper <std::unordered_map<NodeID, NodeWeight> > {
                 virtual ~hmap_wrapper() {};
 
                 void init( NodeID max_fill_count )  {};
-                void prepare( NodeID degree ) {};
                 void clear() { mapping_type.clear(); };
                 NodeWeight & operator[](NodeID node) {return mapping_type[node];};
 
@@ -87,8 +84,6 @@ class hmap_wrapper <std::vector<NodeWeight> > {
                         }
 
                 };
-
-                void prepare( NodeID degree ) {};
 
                 // reset only the entries used since the last clear (an entry that is still 0 is
                 // recorded again on its next use, which is harmless)
