@@ -9,6 +9,19 @@
 #include "data_structure/ordered_edge_map.h"
 #include "tools/helpers.h"
 
+namespace {
+// receive buffers: sized for MPI_Recv, which writes every entry, so they are not zero-filled
+typedef std::vector< NodeID, parhip::uninitialized_allocator< NodeID > > recv_buffer;
+
+// an edge of the local coarse adjacency (a trivial type, so its array need not be zero-filled)
+struct coarse_edge {
+        NodeID     target;
+        NodeWeight weight;
+        coarse_edge() {}
+        coarse_edge( NodeID t, NodeWeight w ) : target(t), weight(w) {}
+};
+}
+
 parallel_contraction::parallel_contraction() {
                 
 }
@@ -112,7 +125,7 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
 
                 int message_length;
                 MPI_Get_count(&st, MPI_UNSIGNED_LONG_LONG, &message_length);
-                std::vector<NodeID> incmessage; incmessage.resize(message_length);
+                recv_buffer incmessage; incmessage.resize(message_length); // MPI_Recv overwrites it, no zero-fill
 
                 MPI_Status rst;
                 MPI_Recv( &incmessage[0], message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, rank+4*size, communicator, &rst); 
@@ -219,7 +232,7 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
                 
                 int message_length;
                 MPI_Get_count(&st, MPI_UNSIGNED_LONG_LONG, &message_length);
-                std::vector<NodeID> incmessage; incmessage.resize(message_length);
+                recv_buffer incmessage; incmessage.resize(message_length); // MPI_Recv overwrites it, no zero-fill
 
                 MPI_Status rst;
                 MPI_Recv( &incmessage[0], message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, rank+5*size, communicator, &rst); 
@@ -372,12 +385,12 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
 
         // build the local part of the graph
         //
-        std::vector< std::vector< NodeID > > local_msg_byPE;
+        std::vector< recv_buffer > local_msg_byPE;
         local_msg_byPE.resize(size);
 
 
         if( m_messages[ rank ].size() != 0 ) {
-                local_msg_byPE[rank] = m_messages[rank];
+                local_msg_byPE[rank].assign(m_messages[rank].begin(), m_messages[rank].end());
         }
        
         PEID counter = 0;
@@ -388,7 +401,7 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
                 
                 int message_length;
                 MPI_Get_count(&st, MPI_UNSIGNED_LONG_LONG, &message_length);
-                std::vector<NodeID> incmessage; incmessage.resize(message_length);
+                recv_buffer incmessage; incmessage.resize(message_length); // MPI_Recv overwrites it, no zero-fill
 
                 MPI_Status rst;
                 MPI_Recv( &incmessage[0], message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, rank+7*size, communicator, &rst); 
@@ -399,7 +412,7 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
 
 
                 PEID peID = rst.MPI_SOURCE;
-                local_msg_byPE[peID] = incmessage;
+                local_msg_byPE[peID].swap(incmessage);
         }
         MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
@@ -423,19 +436,19 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         // order together with their local row, then a stable counting sort by row gives every row
         // its edges in the same order as appending them to one vector per row
         std::vector< NodeID > edge_row;
-        std::vector< std::pair< NodeID, NodeWeight > > edge_list;
+        std::vector< coarse_edge > edge_list;
         edge_row.reserve(2 * local_graph.size());
         edge_list.reserve(2 * local_graph.size());
 
         local_graph.for_each([&](NodeID source, NodeID target, NodeWeight weight) {
                 if( from <= target && target <= to) {
                         edge_row.push_back( target - from );
-                        edge_list.push_back( std::make_pair( source, weight/4 ) );
+                        edge_list.push_back( coarse_edge(source, weight/4) );
                         edge_row.push_back( source - from );
-                        edge_list.push_back( std::make_pair( target, weight/4 ) );
+                        edge_list.push_back( coarse_edge(target, weight/4) );
                 } else {
                         edge_row.push_back( source - from );
-                        edge_list.push_back( std::make_pair( target, weight/2 ) );
+                        edge_list.push_back( coarse_edge(target, weight/2) );
                 }
         });
         EdgeID edge_counter = edge_list.size();
@@ -443,7 +456,7 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         std::vector< EdgeID > row_start( local_num_cnodes + 1, 0 );
         for( EdgeID i = 0; i < edge_counter; i++) row_start[ edge_row[i] + 1 ]++;
         for( NodeID r = 0; r < local_num_cnodes; r++) row_start[ r + 1 ] += row_start[ r ];
-        std::vector< std::pair< NodeID, NodeWeight > > sorted_edges( edge_counter );
+        std::vector< coarse_edge, parhip::uninitialized_allocator< coarse_edge > > sorted_edges( edge_counter ); // all entries written below
         {
                 std::vector< EdgeID > fill( row_start.begin(), row_start.end() - 1 );
                 for( EdgeID i = 0; i < edge_counter; i++) sorted_edges[ fill[ edge_row[i] ]++ ] = edge_list[i];
@@ -469,9 +482,9 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
                 Q.setNodeLabel(node, globalID);
                
                 for( EdgeID e = row_start[node]; e < row_start[node + 1]; e++) {
-                        NodeID target = sorted_edges[e].first;
+                        NodeID target = sorted_edges[e].target;
                         EdgeID e_bar = Q.new_edge(node, target);
-                        Q.setEdgeWeight(e_bar, sorted_edges[e].second);
+                        Q.setEdgeWeight(e_bar, sorted_edges[e].weight);
                 }
         }
 
@@ -520,7 +533,7 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
 
                 int message_length;
                 MPI_Get_count(&st, MPI_UNSIGNED_LONG_LONG, &message_length);
-                std::vector<NodeID> incmessage; incmessage.resize(message_length);
+                recv_buffer incmessage; incmessage.resize(message_length); // MPI_Recv overwrites it, no zero-fill
 
                 MPI_Status rst;
                 MPI_Recv( &incmessage[0], message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, rank+8*size, communicator, &rst); 
