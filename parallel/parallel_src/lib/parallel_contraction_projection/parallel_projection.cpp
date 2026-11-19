@@ -28,7 +28,14 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
         MPI_Comm_rank( communicator, &rank);
         MPI_Comm_size( communicator, &size);
         
-        NodeID divisor = ceil(coarser.number_of_global_nodes() / (double)size);
+        // owner PE of a coarse node: equal node counts unless the contraction rebalanced the ranges
+        const std::vector< NodeID > & range = coarser.get_range_array();
+        const NodeID divisor = ceil( coarser.number_of_global_nodes() / (double)size);
+        auto owner = [&](NodeID cnode) -> PEID {
+                PEID p = cnode / divisor;
+                if( p < size && range[p] <= cnode && cnode < range[p+1] ) return p;
+                return coarser.get_PEID_from_range_array(cnode);
+        };
 
         m_messages.resize(size);
 
@@ -63,7 +70,7 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
         for( size_t gi = 0; gi < group_order.size(); gi++) {
                 size_t g     = group_order[gi];
                 NodeID cnode = remote[group_start[g]].first;
-                PEID peID    = cnode / divisor;
+                PEID peID    = owner(cnode);
                 m_messages[peID].push_back(cnode); // we are requesting the label of this node 
                 groups_of_pe[peID].push_back(g);
         }

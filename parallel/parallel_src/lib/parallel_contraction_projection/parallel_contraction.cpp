@@ -29,12 +29,22 @@ void parallel_contraction::contract_to_distributed_quotient( MPI_Comm communicat
 
         compute_label_mapping( communicator, G, number_of_distinct_labels, label_mapping);
         
-        // compute the projection table
+        // compute the projection table; also sum the fine degrees of the local nodes per bucket of
+        // the coarse IDs (the cost estimate for the coarse PE ranges)
+        PEID comm_size; MPI_Comm_size( communicator, &comm_size);
+        // buckets of 2^shift consecutive coarse IDs, at most comm_size * 1024 of them
+        unsigned shift = 0;
+        while( number_of_distinct_labels > 0 && ((number_of_distinct_labels - 1) >> shift) >= (NodeID)comm_size * 1024 ) shift++;
+        m_bucket_shift = shift;
+        const ULONG buckets = number_of_distinct_labels > 0 ? ((number_of_distinct_labels - 1) >> shift) + 1 : 0;
+        m_bucket_degrees.assign(buckets, 0);
         G.allocate_node_to_cnode();
         const NodeID ahead = 8; // hash map lookups below prefetch their slot this many entries ahead
         forall_local_nodes(G, node) {
                 if( node + ahead < G.number_of_local_nodes() ) label_mapping.prefetch( G.getNodeLabel( node + ahead ));
-                G.setCNode( node, label_mapping.ref( G.getNodeLabel( node )));
+                NodeID cnode = label_mapping.ref( G.getNodeLabel( node ));
+                G.setCNode( node, cnode );
+                m_bucket_degrees[ cnode >> shift ] += G.getNodeDegree(node);
         } endfor
 
         get_nodes_to_cnodes_ghost_nodes( communicator, G );   
@@ -344,19 +354,75 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         MPI_Comm_rank( communicator, &rank);
         MPI_Comm_size( communicator, &size);
         
-        NodeID divisor          = ceil( number_of_cnodes/(double)size);
+        // PE ranges of the coarse nodes: contiguous, chosen so that every PE gets about the same
+        // edge endpoints + nodes * average degree (as the input reader does). The endpoints of the
+        // fine degrees of the nodes of each coarse node (an upper bound of its coarse degree) are
+        // summed in at most size * 1024 buckets of 2^k consecutive coarse IDs. Small coarse graphs
+        // (and the case that a PE would get no node) keep equal node counts.
+        std::vector< NodeID > vertex_dist( size+1, 0 );
+        for( PEID peID = 0; peID <= size; peID++) {
+                vertex_dist[peID] = std::min(number_of_cnodes, (NodeID) (peID * ceil(number_of_cnodes / (double)size))); // from positions
+        }
+        const ULONG    buckets = m_bucket_degrees.size();
+        const unsigned shift   = m_bucket_shift;
+        bool rebalanced = false;
+        if( size > 1 && number_of_cnodes >= (ULONG)size * 16 ) {
+                const NodeID n = number_of_cnodes;
+                auto bucket_start = [&](ULONG b) -> NodeID { return std::min((NodeID)(b << shift), n); };
+                auto bucket_of    = [&](NodeID c) -> ULONG { return c >= n ? buckets : (ULONG)(c >> shift); };
+                // keep equal node counts unless their most loaded PE has more than twice the mean cost
+                // (at bucket resolution): a shift of the ranges also moves coarse nodes away from
+                // the PE that holds most of their fine nodes. The decision needs only one sum per
+                // equal range, so the bucket counts are reduced only if it fires.
+                std::vector< ULONG > local_range(size, 0), range_endpoints(size, 0);
+                for( PEID c = 0; c < size; c++) {
+                        for( ULONG b = bucket_of(vertex_dist[c]); b < bucket_of(vertex_dist[c+1]); b++) local_range[c] += m_bucket_degrees[b];
+                }
+                MPI_Allreduce(&local_range[0], &range_endpoints[0], size, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+                double total_endpoints = 0;
+                for( PEID c = 0; c < size; c++) total_endpoints += range_endpoints[c];
+                const double avg_deg = total_endpoints / n;
+                const double total   = 2 * total_endpoints;
+                double max_uniform = 0;
+                for( PEID c = 0; c < size; c++) {
+                        max_uniform = std::max(max_uniform, range_endpoints[c] + (bucket_start(bucket_of(vertex_dist[c+1])) - bucket_start(bucket_of(vertex_dist[c]))) * avg_deg);
+                }
+                if( max_uniform > 2.0 * total / size ) {
+                        std::vector< ULONG > counts(buckets, 0);
+                        MPI_Allreduce(&m_bucket_degrees[0], &counts[0], buckets, MPI_UNSIGNED_LONG_LONG, MPI_SUM, communicator);
+                        std::vector< NodeID > dist( size+1, 0 );
+                        double cost = 0;
+                        PEID   p    = 1;
+                        for( ULONG b = 0; b < buckets && p < size; b++) {
+                                cost += counts[b] + (bucket_start(b + 1) - bucket_start(b)) * avg_deg;
+                                while( p < size && cost >= total * p / size ) dist[p++] = bucket_start(b + 1);
+                        }
+                        while( p < size ) dist[p++] = n;
+                        dist[size] = n;
+                        bool every_pe_has_nodes = true;
+                        for( PEID c = 0; c < size; c++) {
+                                if( dist[c+1] <= dist[c] ) every_pe_has_nodes = false;
+                        }
+                        if( every_pe_has_nodes ) { vertex_dist = dist; rebalanced = true; }
+                }
+        }
+        const NodeID divisor = ceil( number_of_cnodes/(double)size);
+        auto owner = [&](NodeID cnode) -> PEID {
+                if( !rebalanced ) return cnode / divisor;
+                return (PEID)(std::upper_bound(vertex_dist.begin() + 1, vertex_dist.end(), cnode) - vertex_dist.begin()) - 1;
+        };
 
         //std::vector< std::vector< NodeID > >  messages;
         m_messages.resize(size);
 
         //build messages
         hG.for_each([&](NodeID source, NodeID target, NodeWeight weight) {
-                PEID peID = source / divisor;
+                PEID peID = owner(source);
                 m_messages[ peID ].push_back( source );
                 m_messages[ peID ].push_back( target );
                 m_messages[ peID ].push_back( weight );
 
-                peID = target / divisor;
+                peID = owner(target);
                 m_messages[ peID ].push_back( target );
                 m_messages[ peID ].push_back( source );
                 m_messages[ peID ].push_back( weight );
@@ -419,11 +485,8 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         }
 
 
-        ULONG from = rank     * ceil(number_of_cnodes / (double)size);
-        ULONG to   = (rank+1) * ceil(number_of_cnodes / (double)size) - 1;
-        // handle the case where we dont have local edges
-        from = std::min(from, number_of_cnodes);
-        to   = std::min(to, number_of_cnodes - 1);
+        ULONG from = vertex_dist[rank];
+        ULONG to   = vertex_dist[rank+1] - 1; // from - 1 if this PE has no coarse node
         ULONG local_num_cnodes = to - from + 1;
 
         // the adjacency of the local coarse nodes as one array: the edges are collected in iteration
@@ -462,11 +525,6 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         Q.start_construction(local_num_cnodes, edge_counter, number_of_cnodes, global_edges);
         Q.set_range(from, to);
 
-        std::vector< NodeID > vertex_dist( size+1, 0 );
-        for( PEID peID = 0; peID <= size; peID++) {
-                vertex_dist[peID] = std::min(number_of_cnodes, (NodeID) (peID * ceil(number_of_cnodes / (double)size))); // from positions
-        }
-        //vertex_dist[size] = std::min(to, number_of_cnodes - 1);
         Q.set_range_array(vertex_dist);
 
         for (NodeID i = 0; i < local_num_cnodes; ++i) {
@@ -491,7 +549,7 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
         //pack messages
         // the order of the (node, weight) pairs is irrelevant: the receiver adds them up
         node_weights.for_each([&](NodeID node, NodeWeight weight) {
-                PEID peID         = node / divisor;
+                PEID peID         = owner(node);
 
                 m_messages[ peID ].push_back( node );
                 m_messages[ peID ].push_back( weight );

@@ -43,6 +43,8 @@ private:
 
         // some send buffers
         std::vector< std::vector< NodeID > >  m_messages;
+        std::vector< ULONG > m_bucket_degrees; // fine degrees of the local nodes per bucket of the coarse IDs
+        unsigned m_bucket_shift = 0; // a bucket holds 2^m_bucket_shift consecutive coarse IDs
         std::vector< std::vector< NodeID > >  m_out_messages;
         std::vector< std::vector< NodeID > >  m_send_buffers; // buffers to send messages
 };

@@ -31,7 +31,14 @@ void parallel_block_down_propagation::propagate_block_down( MPI_Comm communicato
         MPI_Comm_rank( communicator, &rank);
         MPI_Comm_size( communicator, &size);
         
-        NodeID divisor          = ceil( Q.number_of_global_nodes()/(double)size);
+        // owner PE of a coarse node: equal node counts unless the contraction rebalanced the ranges
+        const std::vector< NodeID > & range = Q.get_range_array();
+        const NodeID divisor = ceil( Q.number_of_global_nodes() / (double)size);
+        auto owner = [&](NodeID cnode) -> PEID {
+                PEID p = cnode / divisor;
+                if( p < size && range[p] <= cnode && cnode < range[p+1] ) return p;
+                return Q.get_PEID_from_range_array(cnode);
+        };
 
         m_messages.resize(size);
 
@@ -40,7 +47,7 @@ void parallel_block_down_propagation::propagate_block_down( MPI_Comm communicato
         for( auto it = coarse_block_ids.begin(); it != coarse_block_ids.end(); it++) {
                 NodeID node       = it->first;
                 NodeID block      = it->second;
-                PEID peID         = node / divisor;
+                PEID peID         = owner(node);
 
                 m_messages[ peID ].push_back( node );
                 m_messages[ peID ].push_back( block );
