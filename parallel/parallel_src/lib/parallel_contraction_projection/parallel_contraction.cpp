@@ -65,8 +65,6 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
         MPI_Comm_rank( communicator, &rank);
         MPI_Comm_size( communicator, &size);
         
-        NodeID divisor  = ceil( G.number_of_global_nodes()/ (double)size);
-
         helpers helper;
         m_messages.resize(size);
 
@@ -78,7 +76,7 @@ void parallel_contraction::compute_label_mapping( MPI_Comm communicator, paralle
                 filter.ref(G.getNodeLabel(node)) = 1;
         } endfor
         filter.for_each([&](NodeID label, char) {
-                m_messages[ label / divisor ].push_back(label);
+                m_messages[ G.get_PEID_from_range_array(label) ].push_back(label); // labels are node IDs of G
         });
 
         // now flood the network

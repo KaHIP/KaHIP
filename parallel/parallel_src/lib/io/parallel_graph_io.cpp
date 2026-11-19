@@ -136,50 +136,88 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
                 return readGraphWeightedMETIS_fixed(G, filename, peID, comm_size, communicator);
         }
 
-        // pe p reads the lines p*ceil(n/size) to (p+1)floor(n/size) lines of that file
-        ULONG from  = peID     * ceil(nmbNodes / (double)comm_size);
-        ULONG to    = (peID+1) * ceil(nmbNodes / (double)comm_size) - 1;
-        to = std::min(to, nmbNodes-1);
-
-        ULONG local_no_nodes = to - from + 1;
-        PRINT(std::cout <<  "peID " <<  peID <<  " from " <<  from <<  " to " <<  to  <<  " amount " <<  local_no_nodes << std::endl;);
-
         // adjacency of the local nodes in one array: targets of node i are
         // local_targets[local_offsets[i] .. local_offsets[i+1])
         std::vector< NodeID > local_targets;
         std::vector< EdgeID > local_offsets;
         local_targets.reserve( (2 * (ULONG)nmbEdges) / comm_size + 1 ); // average share; grows if needed
-        local_offsets.reserve(local_no_nodes + 1);
         local_offsets.push_back(0);
 
         // Find the first line of this PE's range without scanning the file up to it: split the
-        // body (after the header) into comm_size byte chunks, count the node lines (lines that are
+        // body (after the header) into SUB byte chunks per PE, count the node lines (lines that are
         // not comments) that start in each chunk, and start at the chunk that holds node "from".
         const char * body   = pos;
         const size_t body_n = end - body;
-        auto chunk_begin = [&](PEID c) -> const char * {
-                return body + (body_n / comm_size) * (size_t)c + std::min((size_t)c, body_n % comm_size);
+        const PEID   SUB    = 1024;
+        const size_t chunks = (size_t)comm_size * SUB;
+        auto chunk_begin = [&](size_t c) -> const char * {
+                return body + (body_n / chunks) * (size_t)c + std::min((size_t)c, body_n % chunks);
         };
-        ULONG my_count = 0;
+        // per chunk: node lines and adjacency entries (numbers) that start in it
+        std::vector< ULONG > my_counts(2 * SUB, 0);
+        for( PEID s = 0; s < SUB && comm_size > 1; s++) { // with one PE the range is the whole file
+                const unsigned char * cb = (const unsigned char *) chunk_begin((size_t)peID * SUB + s);
+                const unsigned char * ce = (const unsigned char *) chunk_begin((size_t)peID * SUB + s + 1);
+                const size_t len = ce - cb;
+                if( len == 0 ) continue;
+                // branch-free so that the compiler vectorizes it: a number starts at a digit that
+                // follows a non-digit, a line starts after a newline unless it is a comment
+                const unsigned char before = cb > (const unsigned char *) body ? cb[-1] : '\n';
+                ULONG lines   = (before == '\n' && cb[0] != '%') ? 1 : 0;
+                ULONG entries = ((unsigned char)(cb[0] - '0') < 10 && (unsigned char)(before - '0') >= 10) ? 1 : 0;
+                for( size_t i = 1; i < len; i++) {
+                        const unsigned char c = cb[i], b = cb[i-1];
+                        entries += ((unsigned char)(c - '0') < 10) & ((unsigned char)(b - '0') >= 10);
+                        lines   += (b == '\n') & (c != '%');
+                }
+                my_counts[2*s]   = lines;
+                my_counts[2*s+1] = entries;
+        }
+        std::vector< ULONG > all_counts(2 * chunks, 0);
+        MPI_Allgather(&my_counts[0], 2 * SUB, MPI_UNSIGNED_LONG_LONG, &all_counts[0], 2 * SUB, MPI_UNSIGNED_LONG_LONG, communicator);
+        std::vector< ULONG > chunk_counts(chunks, 0);
+        for( size_t c = 0; c < chunks; c++) chunk_counts[c] = all_counts[2*c];
+
+        // PE ranges at chunk boundaries so that every PE gets about the same cost, where a chunk
+        // costs its adjacency entries plus its node lines times the average degree: half of the
+        // cost balances edges, half balances nodes. Fall back to equal node counts if a PE would
+        // get no node.
+        std::vector< NodeID > vertex_dist( comm_size+1, 0 );
         {
-                const char * cb = chunk_begin(peID);
-                const char * ce = chunk_begin(peID + 1);
-                if( cb < ce && (cb == body || cb[-1] == '\n') && cb[0] != '%' ) my_count++;
-                const char * q = cb;
-                while( q < ce ) {
-                        const char * nl = (const char*) memchr(q, '\n', ce - q);
-                        if( nl == NULL ) break;
-                        if( nl + 1 < ce && nl[1] != '%' ) my_count++; // a line starts at nl + 1
-                        q = nl + 1;
+                const double avg_deg = nmbNodes > 0 ? 2.0 * nmbEdges / (double)nmbNodes : 0;
+                double total = 0;
+                for( size_t c = 0; c < chunks; c++) total += all_counts[2*c+1] + all_counts[2*c] * avg_deg;
+                double cost  = 0;
+                ULONG  lines = 0;
+                PEID   p     = 1;
+                for( size_t c = 0; c < chunks && p < comm_size; c++) {
+                        cost  += all_counts[2*c+1] + all_counts[2*c] * avg_deg;
+                        lines += all_counts[2*c];
+                        while( p < comm_size && cost >= total * p / comm_size ) vertex_dist[p++] = lines;
+                }
+                while( p < comm_size ) vertex_dist[p++] = lines;
+                for( size_t c = 0; c < chunks; c++) vertex_dist[comm_size] += chunk_counts[c];
+        }
+        bool every_pe_has_nodes = vertex_dist[comm_size] == nmbNodes;
+        for( PEID c = 0; c < comm_size; c++) {
+                if( vertex_dist[c+1] <= vertex_dist[c] ) every_pe_has_nodes = false;
+        }
+        if( !every_pe_has_nodes ) {
+                for( PEID c = 0; c <= comm_size; c++) {
+                        vertex_dist[c] = std::min((NodeID)nmbNodes, (NodeID)(c * ceil(nmbNodes / (double)comm_size)));
                 }
         }
-        std::vector< ULONG > chunk_counts(comm_size, 0);
-        MPI_Allgather(&my_count, 1, MPI_UNSIGNED_LONG_LONG, &chunk_counts[0], 1, MPI_UNSIGNED_LONG_LONG, communicator);
+        ULONG from  = vertex_dist[peID];
+        ULONG to    = vertex_dist[peID+1] - 1;
+
+        ULONG local_no_nodes = to - from + 1;
+        PRINT(std::cout <<  "peID " <<  peID <<  " from " <<  from <<  " to " <<  to  <<  " amount " <<  local_no_nodes << std::endl;);
+        local_offsets.reserve(local_no_nodes + 1);
 
         ULONG counter  = 0;
-        {
-                PEID c = 0;
-                while( c < comm_size - 1 && counter + chunk_counts[c] <= from ) {
+        if( comm_size > 1 ) { // with one PE reading starts at the body
+                size_t c = 0;
+                while( c < chunks - 1 && counter + chunk_counts[c] <= from ) {
                         counter += chunk_counts[c];
                         c++;
                 }
@@ -224,10 +262,6 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         G.start_construction(local_no_nodes, 2*edge_counter, nmbNodes, 2*nmbEdges);
         G.set_range(from, to);
 
-        std::vector< NodeID > vertex_dist( comm_size+1, 0 );
-        for( PEID peID = 0; peID <= comm_size; peID++) {
-                vertex_dist[peID] = peID * ceil(nmbNodes / (double)comm_size); // from positions
-        }
         G.set_range_array(vertex_dist);
 
         for (NodeID i = 0; i < local_no_nodes; ++i) {
