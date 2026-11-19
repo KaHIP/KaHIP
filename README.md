@@ -78,7 +78,7 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 - *Agentic Algorithm Engineering*: these improvements were engineered with [Agentic Algorithm Engineering](https://github.com/CHSZLab/AgenticAlgorithmEngineering) (AAE): a loop of profiling, hypothesis, implementation and measurement on a fixed benchmark, where each change is kept only if it is faster and passes the correctness or quality gate.
 
 ## NEW in v3.25:
-- *Connected Blocks (Experimental)*: KaFFPa and KaFFPaE now support `--connected_blocks` (strong preconfiguration only) to produce partitions where each block is a connected subgraph. The input graph must be connected. Connectivity is enforced via checkpoint-based component elimination during uncoarsening, combined with connectivity-aware refinement and greedy rebalancing. When this flag is not used, KaHIP behavior is unchanged.
+- *Connected Blocks (Experimental)*: KaFFPa and KaFFPaE now support `--connected_blocks` (strong preconfiguration only) to produce partitions where each block is a connected subgraph. The input graph must be connected. Connectivity is enforced via checkpoint-based component elimination during uncoarsening, combined with connectivity-aware refinement and greedy rebalancing. When this flag is not used, KaHIP behavior is unchanged. The library interface offers the same as `kaffpa_connected_blocks` (same arguments as `kaffpa`, mode `STRONG`).
 
 ## NEW in v3.24:
 - *64-bit Edge Support*: The C interface now supports 64-bit edges via a compile-time `kahip_idx` typedef. Compile with `-D64BITMODE=On` to enable `int64_t` for all edge-related arrays and values (xadj, adjncy, adjcwgt, edgecut). Node-related parameters remain `int`.

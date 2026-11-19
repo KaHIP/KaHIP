@@ -173,6 +173,7 @@ set(LIBKAFFPA_SOURCE_FILES
   lib/tools/graph_extractor.cpp
   lib/tools/misc.cpp
   lib/tools/partition_snapshooter.cpp
+  lib/partition/connected_blocks.cpp
   lib/partition/graph_partitioner.cpp
   lib/partition/w_cycles/wcycle_partitioner.cpp
   lib/partition/coarsening/coarsening.cpp

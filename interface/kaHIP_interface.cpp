@@ -23,6 +23,7 @@
 //#include "../lib/parallel_mh/parallel_mh_async.h"
 #include "../lib/partition/uncoarsening/separator/area_bfs.h"
 #include "../lib/partition/partition_config.h"
+#include "../lib/partition/connected_blocks.h"
 #include "../lib/partition/graph_partitioner.h"
 #include "../lib/partition/uncoarsening/separator/vertex_separator_algorithm.h"
 #include "../lib/partition/uncoarsening/refinement/cycle_improvements/cycle_refinement.h"
@@ -127,6 +128,11 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
         graph_access G;     
         internal_build_graph( partition_config, n, vwgt, xadj, adjcwgt, adjncy, G);
 
+        bool do_connected_blocks = partition_config.connected_blocks;
+        if(do_connected_blocks && !graph_is_connected(G) && !suppress_output) {
+                std::cout << "WARNING: input graph is disconnected, connected blocks cannot be guaranteed." << std::endl;
+        }
+
         graph_partitioner partitioner;
         partitioner.perform_partitioning(partition_config, G);
 
@@ -141,6 +147,10 @@ void internal_kaffpa_call(PartitionConfig & partition_config,
                 cr.perform_refinement(partition_config, G, boundary);
         }
 
+        partition_config.connected_blocks = do_connected_blocks;
+        if(do_connected_blocks) {
+                enforce_connected_blocks(partition_config, G);
+        }
 
         forall_nodes(G, node) {
                 part[node] = G.getPartitionIndex(node);
@@ -172,6 +182,35 @@ void kaffpa(int* n,
         internal_kaffpa_set_configuration(cfg, partition_config, mode);
 
         partition_config.seed = seed;
+        internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, false, edgecut, part);
+}
+
+void kaffpa_connected_blocks(int* n,
+                   int* vwgt,
+                   kahip_idx* xadj,
+                   kahip_idx* adjcwgt,
+                   kahip_idx* adjncy,
+                   int* nparts,
+                   double* imbalance,
+                   bool suppress_output,
+                   int seed,
+                   int mode,
+                   kahip_idx* edgecut,
+                   int* part) {
+        if(mode != STRONG) {
+                std::cerr << "ERROR: kaffpa_connected_blocks only supports mode STRONG." << std::endl;
+                *edgecut = -1;
+                return;
+        }
+        configuration cfg;
+        PartitionConfig partition_config;
+        partition_config.k = *nparts;
+
+        internal_kaffpa_set_configuration(cfg, partition_config, mode);
+
+        partition_config.seed                  = seed;
+        partition_config.connected_blocks      = true;
+        partition_config.bipartition_algorithm = BIPARTITION_BFS;
         internal_kaffpa_call(partition_config, suppress_output, n, vwgt, xadj, adjcwgt, adjncy, nparts, imbalance, false, edgecut, part);
 }
 
