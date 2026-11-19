@@ -66,6 +66,9 @@ The graph partitioning problem asks for a division of a graph's node set into k 
 </p>
 
 
+## NEW in v3.29:
+- *Connected blocks in the library*: the connected-blocks partitioning (`--connected_blocks`, see v3.25) is now also available through the C/C++ interface as `kaffpa_connected_blocks`, with the same arguments as `kaffpa` (mode `STRONG` only). The post-processing that makes every block connected moved from the `kaffpa` program into the library (`lib/partition/connected_blocks.cpp`); the output of `kaffpa` and `kaffpaE` is unchanged.
+
 ## NEW in v3.28:
 - *New preconfiguration `ultra`* ([one-page description](manual/ultra.pdf)): `--preconfiguration=ultra` (mode `ULTRA` in the C/C++ interface, `kahip.ULTRA` in Python) starts from `strong` and adds Jet refinement (label propagation with bounded negative-gain moves) before the k-way FM on every level, the unlocked flow model in the pairwise flow refinement, and more global work (3 V-cycles for k = 2, the best of 2 runs for k > 2). Against v3.26 `strong` it gives 2.2% smaller cuts in geometric mean (7% on social graphs) at 2.0x its time, which is still below the time of v3.25 `strong` on every job of our benchmark. Inside kaffpaE and KaBaPE, `ultra` also keeps balanced individuals ahead of overloaded ones and, with `--input_partition`, keeps the input partition, so the result is never worse than the input. All other preconfigurations are unchanged. It was developed with [Agentic Algorithm Engineering](https://github.com/CHSZLab/AgenticAlgorithmEngineering) (AAE), run with a focus on solution quality. Details are in [PR #176](https://github.com/KaHIP/KaHIP/pull/176).
 - *Bug fix*: when no flow network could be built for a pair of blocks, flow refinement could move a whole stripe of nodes while keeping the old cut value. This changes the output of `strong` and `strongsocial` in rare cases (cut quality unchanged on average); all other preconfigurations are unchanged. Fixed in [PR #175](https://github.com/KaHIP/KaHIP/pull/175).
@@ -230,7 +233,7 @@ These programs and configurations take a graph and partition it more or less seq
 | Very Good Partitioning | Social | kaffpa preconfiguration set to ssocial                                                             |
 | Highest Quality        | Social | kaffpaE, use mpirun, large time limit, preconfiguration ssocial                                    |
 | Even Higher Quality    |        | kaffpaE, use mpirun, large time limit, use the options --mh_enable_tabu_search, --mh_enable_kabapE |
-| Connected Blocks (Exp) |        | kaffpa or kaffpaE, preconfiguration strong, --connected_blocks (input graph must be connected)      |
+| Connected Blocks (Exp) |        | kaffpa or kaffpaE, preconfiguration strong, --connected_blocks (input graph must be connected); library: kaffpa_connected_blocks |
 #### Example Runs
 ```console
 ./deploy/graphchecker ./examples/rgg_n_2_15_s0.graph 
@@ -419,6 +422,12 @@ int main(int argn, char **argv) {
 
         std::cout <<  "edge cut " <<  edge_cut  << std::endl;
 }
+```
+
+To get a partition in which every block is a connected subgraph, call `kaffpa_connected_blocks` instead of `kaffpa`. It takes the same arguments, supports only mode `STRONG` (any other mode sets `edge_cut` to -1 and computes nothing) and requires a connected input graph:
+
+```cpp
+        kaffpa_connected_blocks(&n, vwgt, xadj, adjcwgt, adjncy, &nparts, &imbalance, false, 0, STRONG, &edge_cut, part);
 ```
 
 Linking the ParHIP Library (Parallel Partitioning)

@@ -11,7 +11,7 @@ if(CCACHE_PROGRAM)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CCACHE_PROGRAM}")
 endif()
-project(KaHIP VERSION 3.28 LANGUAGES C CXX)
+project(KaHIP VERSION 3.29 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -173,6 +173,7 @@ set(LIBKAFFPA_SOURCE_FILES
   lib/tools/graph_extractor.cpp
   lib/tools/misc.cpp
   lib/tools/partition_snapshooter.cpp
+  lib/partition/connected_blocks.cpp
   lib/partition/graph_partitioner.cpp
   lib/partition/w_cycles/wcycle_partitioner.cpp
   lib/partition/coarsening/coarsening.cpp

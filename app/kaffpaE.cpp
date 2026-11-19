@@ -9,7 +9,6 @@
 #include <iostream>
 #include <math.h>
 #include <mpi.h>
-#include <queue>
 #ifndef _WIN32
 #include <regex.h>
 #endif
@@ -24,6 +23,7 @@
 #include "macros_assertions.h"
 #include "parallel_mh/parallel_mh_async.h"
 #include "parse_parameters.h"
+#include "partition/connected_blocks.h"
 #include "partition/graph_partitioner.h"
 #include "partition/partition_config.h"
 #include "quality_metrics.h"
@@ -60,22 +60,8 @@ int main(int argn, char **argv) {
 
         std::cout << "io time: " << t.elapsed()  << std::endl;
 
-        if(partition_config.connected_blocks) {
-                std::vector<bool> visited(G.number_of_nodes(), false);
-                std::queue<NodeID> bfs_queue;
-                visited[0] = true;
-                bfs_queue.push(0);
-                NodeID visited_count = 1;
-                while(!bfs_queue.empty()) {
-                        NodeID v = bfs_queue.front(); bfs_queue.pop();
-                        forall_out_edges(G, e, v) {
-                                NodeID u = G.getEdgeTarget(e);
-                                if(!visited[u]) { visited[u] = true; visited_count++; bfs_queue.push(u); }
-                        } endfor
-                }
-                if(visited_count < G.number_of_nodes()) {
-                        std::cout << "WARNING: input graph is disconnected, connected blocks cannot be guaranteed." << std::endl;
-                }
+        if(partition_config.connected_blocks && !graph_is_connected(G)) {
+                std::cout << "WARNING: input graph is disconnected, connected blocks cannot be guaranteed." << std::endl;
         }
 
         omp_set_num_threads(1);

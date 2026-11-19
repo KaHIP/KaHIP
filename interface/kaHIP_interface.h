@@ -52,6 +52,15 @@ void kaffpa_balance(int* n, int* vwgt, kahip_idx* xadj,
                    bool suppress_output, int seed, int mode,
                    kahip_idx* edgecut, int* part);
 
+// same as kaffpa, but every block of the partition is a connected subgraph
+// (corresponds to kaffpa --connected_blocks). The input graph must be connected,
+// otherwise connected blocks cannot be guaranteed. Only mode STRONG is supported;
+// for any other mode nothing is computed and edgecut is set to -1.
+void kaffpa_connected_blocks(int* n, int* vwgt, kahip_idx* xadj,
+                   kahip_idx* adjcwgt, kahip_idx* adjncy, int* nparts,
+                   double* imbalance, bool suppress_output, int seed, int mode,
+                   kahip_idx* edgecut, int* part);
+
 // balance constraint on nodes and edges
 void kaffpa_balance_NE(int* n, int* vwgt, kahip_idx* xadj,
                 kahip_idx* adjcwgt, kahip_idx* adjncy, int* nparts,
