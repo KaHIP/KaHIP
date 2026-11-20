@@ -101,7 +101,7 @@ class parallel_graph_access;
 //handle communication of data associated with ghost nodes
 class ghost_node_communication {
 public:
-        ghost_node_communication(MPI_Comm communicator) : m_iteration_counter(0), m_first_send(true) {
+        ghost_node_communication(MPI_Comm communicator) : m_iteration_counter(0), m_work_counter(0), m_work_limit(0), m_first_send(true) {
                 m_communicator     = communicator;
 
                 MPI_Comm_rank( m_communicator, &m_rank);
@@ -155,6 +155,12 @@ public:
                 m_skip_limit = skip_limit;
         }
 
+        // limit for update_ghost_node_data_by_work (work since the last round)
+        inline 
+        void set_work_limit( ULONG work_limit ) {
+                m_work_limit = work_limit;
+        }
+
         inline 
         void set_desired_rounds( ULONG desired_rounds) {
                 m_desired_rounds = desired_rounds;
@@ -162,6 +168,11 @@ public:
 
         inline 
         void update_ghost_node_data( bool check_iteration_counter );
+
+        // like update_ghost_node_data(true), but a round starts once the work since the last
+        // round exceeds the work limit; own counter, so the node-count rounds are unchanged
+        inline 
+        void update_ghost_node_data_by_work( ULONG work );
 
         inline 
         void update_ghost_node_data_finish();
@@ -196,6 +207,8 @@ private:
         PEID m_rank;
         NodeID m_iteration_counter; // this counter is used to manage the communication rounds
         ULONG m_skip_limit; 
+        ULONG m_work_counter; // work since the last round of update_ghost_node_data_by_work
+        ULONG m_work_limit; 
         bool m_first_send;
 
         ULONG m_send_iteration;
@@ -276,6 +289,9 @@ public:
                         m_comm_rounds = std::max(m_comm_rounds, 8ULL);
                         m_gnc->set_desired_rounds(m_comm_rounds); 
                         m_gnc->set_skip_limit(ceil(n/(double)m_comm_rounds)); 
+                        // the work limit needs the edges actually built (m is only a capacity bound
+                        // for some readers), see finish_construction
+                        m_rounds_for_work_limit = m_comm_rounds;
                 }
         };
 
@@ -401,6 +417,13 @@ public:
         void finish_construction() {
                 m_edges.resize(e);
                 m_building_graph = false;
+
+                // rounds of equal work (degree + 1 per visited node) for the refinement LP; each round
+                // needs more than the limit, so a PE never makes more than the desired number of rounds
+                if( m_rounds_for_work_limit > 0 ) {
+                        m_gnc->set_work_limit(ceil((e + m_num_local_nodes)/(double)m_rounds_for_work_limit));
+                        m_rounds_for_work_limit = 0;
+                }
 
                 //fill isolated sources at the end
                 if ((NodeID)(m_last_source) != node-1) {
@@ -529,6 +552,8 @@ public:
         /* inter process communication routines  */
         /* ============================================================= */
         void update_ghost_node_data( bool check_iteration_counter = true );
+        // work: degree + 1 of the visited node (refinement LP), see ghost_node_communication
+        void update_ghost_node_data_by_work( ULONG work );
         void update_ghost_node_data_finish();
         void update_ghost_node_data_global();
 
@@ -605,6 +630,7 @@ private:
         NodeID m_global_m; // global number of edges
         static ULONG m_comm_rounds; // global number of edges
         static ULONG m_comm_rounds_up; // global number of edges
+        ULONG m_rounds_for_work_limit = 0; // > 0 between start_construction and finish_construction
 
 	NodeID m_max_node_degree;
 	NodeID m_cur_degree;
@@ -881,6 +907,13 @@ void ghost_node_communication::addLabel(NodeID node, NodeID label) {
                         }
                 }
         } endfor
+}
+
+inline void ghost_node_communication::update_ghost_node_data_by_work( ULONG work ) {
+        m_work_counter += work;
+        if( m_work_counter <= m_work_limit || m_size == 1 ) return; 
+        m_work_counter = 0;
+        update_ghost_node_data( false );
 }
 
 // we want to interleave computation and communication

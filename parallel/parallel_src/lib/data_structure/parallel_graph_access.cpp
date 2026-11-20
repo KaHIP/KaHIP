@@ -56,6 +56,9 @@ void parallel_graph_access::update_block_weights() {
 void parallel_graph_access::update_ghost_node_data( bool check_iteration_counter ) {
         m_gnc->update_ghost_node_data( check_iteration_counter );
 }
+void parallel_graph_access::update_ghost_node_data_by_work( ULONG work ) {
+        m_gnc->update_ghost_node_data_by_work( work );
+}
 void parallel_graph_access::update_ghost_node_data_global() {
         m_gnc->update_ghost_node_data_global();
 }

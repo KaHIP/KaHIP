@@ -47,6 +47,18 @@ class parallel_label_compress {
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
+                        // one instantiation per round rule, so the node loop has no branch on it
+                        if( for_coarsening ) sweeps< false >( config, G, balance, cluster_upperbound, permutation, hash_map );
+                        else sweeps< true >( config, G, balance, cluster_upperbound, permutation, hash_map );
+                }
+
+        private:
+                // by_work: rounds of equal work (refinement), otherwise of equal node counts (coarsening)
+                template < bool by_work >
+                PARHIP_ALIGN_CODE_64
+                void sweeps( PPartitionConfig & config, parallel_graph_access & G, bool balance,
+                             NodeWeight cluster_upperbound, std::vector< NodeID > & permutation,
+                             hmap_wrapper< T > & hash_map ) {
                         for( ULONG i = 0; i < config.label_iterations; i++) {
                                 NodeID prev_node = 0;
                                 forall_local_nodes(G, rnode) {
@@ -113,7 +125,8 @@ class parallel_label_compress {
                                         }
 
                                         prev_node = node;
-                                        G.update_ghost_node_data(); 
+                                        if( by_work ) G.update_ghost_node_data_by_work( G.getNodeDegree(node) + 1 ); 
+                                        else G.update_ghost_node_data(); 
                                         hash_map.clear();
 
                                 } endfor
