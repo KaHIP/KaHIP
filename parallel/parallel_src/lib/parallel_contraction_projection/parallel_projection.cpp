@@ -44,22 +44,23 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
                 }
         } endfor
 
+        std::vector<MPI_Request> requests(size, MPI_REQUEST_NULL);
         for( PEID peID = 0; peID < size; peID++) {
                 if( peID != rank ) {
                         if( m_messages[peID].size() == 0 ){
                                 m_messages[peID].push_back(std::numeric_limits<NodeID>::max());
                         }
 
-                        MPI_Request rq;
                         MPI_Isend( &m_messages[peID][0], 
                                                 m_messages[peID].size(), 
                                                 MPI_UNSIGNED_LONG_LONG, 
-                                                peID, peID+size, communicator, &rq);
+                                                peID, peID+size, communicator, &requests[peID]);
                 }
         }
 
         std::vector< std::vector< NodeID > > out_messages;
         out_messages.resize(size);
+        std::vector<MPI_Request> replies(size, MPI_REQUEST_NULL);
 
         PEID counter = 0;
         while( counter < size - 1) {
@@ -79,11 +80,10 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
                 // now integrate the changes
                 if( incmessage[0] == std::numeric_limits< NodeID >::max()) {
                         out_messages[peID].push_back(std::numeric_limits< NodeID >::max());
-                        MPI_Request rq; 
                         MPI_Isend( &out_messages[peID][0], 
                                         out_messages[peID].size(), 
                                         MPI_UNSIGNED_LONG_LONG, 
-                                        peID, peID+2*size, communicator, &rq);
+                                        peID, peID+2*size, communicator, &replies[peID]);
 
                         continue; // nothing to do
                 }
@@ -94,11 +94,10 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
                         out_messages[peID].push_back(coarser.getNodeLabel(cnode));
                 }
 
-                MPI_Request rq;
                 MPI_Isend( &out_messages[peID][0], 
                                 out_messages[peID].size(), 
                                 MPI_UNSIGNED_LONG_LONG, 
-                                peID, peID+2*size, communicator, &rq);
+                                peID, peID+2*size, communicator, &replies[peID]);
 
         }
 
@@ -131,6 +130,8 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
                         }
                 }
         }
+        MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
+        MPI_Waitall(replies.size(), replies.data(), MPI_STATUSES_IGNORE);
 
         finer.update_ghost_node_data_global(); // blocking
 }
