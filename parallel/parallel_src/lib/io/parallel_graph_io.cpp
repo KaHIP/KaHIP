@@ -81,6 +81,44 @@ static inline long parse_long_in_line(const char *& p, const char * line_end) {
         return negative ? -(long)value : (long)value;
 }
 
+// number of leading decimal digits in the 8 bytes of x (in memory order), 8 if all are digits;
+// 9 if a byte is not ASCII
+static inline unsigned leading_digits8(unsigned long long x) {
+        if( x & 0x8080808080808080ULL ) return 9;
+        // high bit of a byte set iff the byte is above '9' or below '0' (no carries between bytes)
+        const unsigned long long non_digit = ((x + 0x4646464646464646ULL) | ~((x | 0x8080808080808080ULL) - 0x3030303030303030ULL)) & 0x8080808080808080ULL;
+        return non_digit ? (unsigned)(__builtin_ctzll(non_digit) >> 3) : 8;
+}
+
+// value of the first n (1 to 7) digits of x: shift out the bytes after them, then combine digit
+// pairs, pairs of pairs and the two halves with three multiplications
+static inline unsigned long long value_of_digits8(unsigned long long x, unsigned n) {
+        unsigned long long v = (x - 0x3030303030303030ULL) << (8 * (8 - n));
+        v = (v * 10) + (v >> 8);
+        v = (((v & 0x000000FF000000FFULL) * (100 + (1000000ULL << 32))) + (((v >> 16) & 0x000000FF000000FFULL) * (1 + (10000ULL << 32)))) >> 32;
+        return v;
+}
+
+// the same as parse_long_in_line; a run of at most 7 digits after blanks is read with one 8-byte
+// load (end is the end of the mapping, so the load stays inside it)
+static inline long parse_target_in_line(const char *& p, const char * line_end, const char * end) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        const char * q = p;
+        while( q < line_end && *q == ' ' ) q++;
+        if( q < line_end && (unsigned char)(*q - '0') < 10 && end - q >= 8 ) {
+                unsigned long long x;
+                memcpy(&x, q, 8);
+                const unsigned n = leading_digits8(x);
+                if( n < 8 && q + n <= line_end ) {
+                        p = q + n;
+                        return (long)value_of_digits8(x, n);
+                }
+        }
+#endif
+        (void)end;
+        return parse_long_in_line(p, line_end);
+}
+
 int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G, 
                                                  std::string filename, 
                                                  PEID peID, PEID comm_size, MPI_Comm communicator) {
@@ -249,7 +287,7 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
                 if( counter >= from ) {
                         const char * p = lb;
                         for (;;) {
-                                NodeID target = (NodeID) parse_long_in_line(p, le);
+                                NodeID target = (NodeID) parse_target_in_line(p, le, end);
                                 if (target == 0) {
                                         break;
                                 }
