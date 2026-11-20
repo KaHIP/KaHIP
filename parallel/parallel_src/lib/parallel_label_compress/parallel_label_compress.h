@@ -47,8 +47,11 @@ class parallel_label_compress {
                         //std::unordered_map<NodeID, NodeWeight> hash_map;
                         hmap_wrapper< T > hash_map(config);
                         hash_map.init( G.get_max_degree() );
-                        // one instantiation per round rule, so the node loop has no branch on it
-                        if( for_coarsening ) sweeps< false >( config, G, balance, cluster_upperbound, permutation, hash_map );
+                        // one instantiation per round rule, so the node loop has no branch on it; on one PE
+                        // there are no rounds, so refinement uses the node-count instance as well
+                        int size = 1;
+                        MPI_Comm_size( G.getCommunicator(), &size );
+                        if( for_coarsening || size == 1 ) sweeps< false >( config, G, balance, cluster_upperbound, permutation, hash_map );
                         else sweeps< true >( config, G, balance, cluster_upperbound, permutation, hash_map );
                 }
 
