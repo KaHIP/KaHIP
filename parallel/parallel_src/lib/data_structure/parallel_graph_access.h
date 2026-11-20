@@ -279,6 +279,14 @@ public:
                 }
         };
 
+        // capacity for this many ghost nodes, to be created by new_edge (changes no result)
+        void reserve_ghosts(NodeID ghosts) {
+                m_global_to_local_id.reserve(ghosts);
+                m_nodes.reserve(m_nodes.size() + ghosts);
+                m_nodes_data.reserve(m_nodes_data.size() + ghosts);
+                m_add_non_local_node_data.reserve(m_add_non_local_node_data.size() + ghosts);
+        }
+
         void set_range(NodeID l, NodeID r) {
                 from        = l;
                 to          = r;

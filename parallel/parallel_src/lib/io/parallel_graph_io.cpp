@@ -264,12 +264,25 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         if( data != NULL ) munmap((void*)data, file_size);
         while( local_offsets.size() < local_no_nodes + 1 ) local_offsets.push_back(local_targets.size());
 
+        // number of distinct ghost nodes (non-local targets), so that the build below allocates
+        // the ghost structures once; only if the bitmap over all ids is not larger than local_targets
+        NodeID ghosts = 0;
+        if( comm_size > 1 && nmbNodes / 64 + 1 <= local_targets.size() ) {
+                std::vector< unsigned long long > seen( nmbNodes / 64 + 1, 0 );
+                for( EdgeID j = 0; j < local_targets.size(); j++) {
+                        NodeID target = local_targets[j]-1;
+                        if( (target < from || target > to) && target < nmbNodes ) seen[target >> 6] |= 1ULL << (target & 63);
+                }
+                for( size_t w = 0; w < seen.size(); w++) ghosts += __builtin_popcountll(seen[w]);
+        }
+
         MPI_Barrier(communicator);
 
         G.start_construction(local_no_nodes, 2*edge_counter, nmbNodes, 2*nmbEdges);
         G.set_range(from, to);
 
         G.set_range_array(vertex_dist);
+        if( ghosts > 0 ) G.reserve_ghosts(ghosts);
 
         for (NodeID i = 0; i < local_no_nodes; ++i) {
                 NodeID node = G.new_node();
