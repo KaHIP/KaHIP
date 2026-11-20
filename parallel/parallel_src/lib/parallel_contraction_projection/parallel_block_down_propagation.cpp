@@ -46,17 +46,17 @@ void parallel_block_down_propagation::propagate_block_down( MPI_Comm communicato
                 m_messages[ peID ].push_back( block );
         }
 
+        std::vector<MPI_Request> requests(size, MPI_REQUEST_NULL);
         for( PEID peID = 0; peID < size; peID++) {
                 if( peID != rank ) {
                         if( m_messages[peID].size() == 0 ){
                                 m_messages[peID].push_back(std::numeric_limits<NodeID>::max());
                         }
 
-                        MPI_Request rq; 
                         MPI_Isend( &m_messages[peID][0], 
                                    m_messages[peID].size(), 
                                    MPI_UNSIGNED_LONG_LONG, 
-                                   peID, peID+10*size, communicator, &rq );
+                                   peID, peID+10*size, communicator, &requests[peID]);
                 }
         }
 
@@ -94,6 +94,7 @@ void parallel_block_down_propagation::propagate_block_down( MPI_Comm communicato
                         Q.setSecondPartitionIndex( node , block);
                 }
         }
+        MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
         update_ghost_nodes_blocks( communicator, Q );
 }
@@ -127,6 +128,7 @@ void parallel_block_down_propagation::update_ghost_nodes_blocks( MPI_Comm commun
 
         //send all neighbors their packages using Isends
         //a neighbor that does not receive something gets a specific token
+        std::vector<MPI_Request> requests(m_send_buffers.size(), MPI_REQUEST_NULL);
         for( PEID peID = 0; peID < (PEID)m_send_buffers.size(); peID++) {
                 if( G.is_adjacent_PE(peID) ) {
                         //now we have to send a message
@@ -135,9 +137,8 @@ void parallel_block_down_propagation::update_ghost_nodes_blocks( MPI_Comm commun
                                 m_send_buffers[peID].push_back(0);
                         }
 
-                        MPI_Request rq;
                         MPI_Isend( &m_send_buffers[peID][0], 
-                                    m_send_buffers[peID].size(), MPI_UNSIGNED_LONG_LONG, peID, peID+11*size, communicator, &rq);
+                                    m_send_buffers[peID].size(), MPI_UNSIGNED_LONG_LONG, peID, peID+11*size, communicator, &requests[peID]);
                 }
         }
 
@@ -166,5 +167,6 @@ void parallel_block_down_propagation::update_ghost_nodes_blocks( MPI_Comm commun
                         G.setSecondPartitionIndex( G.getLocalID(global_id), block );
                 }
         }
+        MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
 }

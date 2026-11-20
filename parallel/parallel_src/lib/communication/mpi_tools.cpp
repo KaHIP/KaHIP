@@ -155,8 +155,7 @@ void mpi_tools::collect_parallel_graph_to_local_graph( MPI_Comm communicator, PP
 
                 }
         } else {
-                MPI_Request rq; 
-                MPI_Isend( &message[0], message.size(), MPI_UNSIGNED_LONG_LONG, ROOT, 13*size, communicator, &rq);
+                MPI_Send( &message[0], message.size(), MPI_UNSIGNED_LONG_LONG, ROOT, 13*size, communicator);
         }
 
         if( rank == ROOT ) {

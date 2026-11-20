@@ -297,6 +297,7 @@ void distributed_partitioner::check_labels( MPI_Comm communicator, PPartitionCon
 
         //send all neighbors their packages using Isends
         //a neighbor that does not receive something gets a specific token
+        std::vector<MPI_Request> requests(send_buffers.size(), MPI_REQUEST_NULL);
         for( PEID peID = 0; peID < (PEID)send_buffers.size(); peID++) {
                 if( G.is_adjacent_PE(peID) ) {
                         //now we have to send a message
@@ -305,9 +306,9 @@ void distributed_partitioner::check_labels( MPI_Comm communicator, PPartitionCon
                                 send_buffers[peID].push_back(0);
                         }
 
-                        MPI_Request rq; int tag = peID+17*m_size;
+                        int tag = peID+17*m_size;
                         MPI_Isend( &send_buffers[peID][0], 
-                                    send_buffers[peID].size(), MPI_UNSIGNED_LONG_LONG, peID, tag, communicator, &rq);
+                                    send_buffers[peID].size(), MPI_UNSIGNED_LONG_LONG, peID, tag, communicator, &requests[peID]);
                         
                 }
         }
@@ -343,6 +344,7 @@ void distributed_partitioner::check_labels( MPI_Comm communicator, PPartitionCon
                         }
                 }
         }
+        MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
         MPI_Barrier(communicator);
 }
@@ -383,6 +385,7 @@ void distributed_partitioner::check( MPI_Comm communicator, PPartitionConfig & c
 
         //send all neighbors their packages using Isends
         //a neighbor that does not receive something gets a specific token
+        std::vector<MPI_Request> requests(send_buffers.size(), MPI_REQUEST_NULL);
         for( PEID peID = 0; peID < (PEID)send_buffers.size(); peID++) {
                 if( G.is_adjacent_PE(peID) ) {
                         //now we have to send a message
@@ -391,9 +394,8 @@ void distributed_partitioner::check( MPI_Comm communicator, PPartitionConfig & c
                                 send_buffers[peID].push_back(0);
                         }
 
-                        MPI_Request rq; 
                         MPI_Isend( &send_buffers[peID][0], 
-                                    send_buffers[peID].size(), MPI_UNSIGNED_LONG_LONG, peID, peID+17*m_size, communicator, &rq);
+                                    send_buffers[peID].size(), MPI_UNSIGNED_LONG_LONG, peID, peID+17*m_size, communicator, &requests[peID]);
                 }
         }
 
@@ -428,6 +430,7 @@ void distributed_partitioner::check( MPI_Comm communicator, PPartitionConfig & c
                         }
                 }
         }
+        MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
         MPI_Barrier(communicator);
 }
