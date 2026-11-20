@@ -101,7 +101,7 @@ class parallel_graph_access;
 //handle communication of data associated with ghost nodes
 class ghost_node_communication {
 public:
-        ghost_node_communication(MPI_Comm communicator) : m_iteration_counter(0), m_work_counter(0), m_work_limit(0), m_first_send(true) {
+        ghost_node_communication(MPI_Comm communicator) : m_iteration_counter(0), m_work_counter(0), m_work_limit(0), m_record(false), m_first_send(true) {
                 m_communicator     = communicator;
 
                 MPI_Comm_rank( m_communicator, &m_rank);
@@ -183,6 +183,11 @@ public:
         inline
         void addLabel(NodeID node, NodeID label);
 
+        // label changes are recorded for the ghost exchange only while label propagation runs;
+        // outside it every caller sets the ghost copies itself or exchanges all labels afterwards
+        void set_record_labels( bool record ) { m_record = record; }
+        bool record_labels() const { return m_record; }
+
         inline
         bool is_adjacent_PE(PEID peID) {
                 return m_adjacent_processors[peID];
@@ -209,6 +214,7 @@ private:
         ULONG m_skip_limit; 
         ULONG m_work_counter; // work since the last round of update_ghost_node_data_by_work
         ULONG m_work_limit; 
+        bool m_record; // see set_record_labels
         bool m_first_send;
 
         ULONG m_send_iteration;
@@ -501,6 +507,9 @@ public:
                 return m_gnc->getNumberOfAdjacentPEs();
         }
 
+        // see ghost_node_communication::set_record_labels
+        void set_record_labels( bool record ) { m_gnc->set_record_labels( record ); }
+
         MPI_Comm getCommunicator() {
                 return m_communicator;
         }
@@ -690,7 +699,7 @@ inline EdgeID parallel_graph_access::getNodeLabel(NodeID node) {
 }
 
 inline void parallel_graph_access::setNodeLabel(NodeID node, NodeID label) {
-        if( m_nodes_data[node].label != label && is_interface_node(node)) {
+        if( m_nodes_data[node].label != label && is_interface_node(node) && m_gnc->record_labels() ) {
                 m_gnc->addLabel(node, label);
         }
 #ifdef NDEBUG

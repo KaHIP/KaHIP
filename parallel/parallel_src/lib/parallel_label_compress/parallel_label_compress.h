@@ -34,6 +34,7 @@ class parallel_label_compress {
                                 parallel_graph_access & G, bool balance, bool for_coarsening = true) {
 
                         if( config.label_iterations == 0) return;
+                        G.set_record_labels( true ); // the ghost exchange of this LP needs the label changes
                         NodeWeight cluster_upperbound = config.upper_bound_cluster;
 
                         std::vector< NodeID > permutation( G.number_of_local_nodes() );
@@ -53,6 +54,7 @@ class parallel_label_compress {
                         MPI_Comm_size( G.getCommunicator(), &size );
                         if( for_coarsening || size == 1 ) sweeps< false >( config, G, balance, cluster_upperbound, permutation, hash_map );
                         else sweeps< true >( config, G, balance, cluster_upperbound, permutation, hash_map );
+                        G.set_record_labels( false );
                 }
 
         private:
