@@ -164,10 +164,14 @@ void parallel_mh_async::initialize(PartitionConfig & working_config, graph_acces
                 double fraction_to_spend_for_IP = (double)m_time_limit / fraction;
                 population_size                 = ceil(fraction_to_spend_for_IP / time_spend);
 
+                std::vector< MPI_Request > requests;
                 for( int target = 1; target < m_size; target++) {
                         MPI_Request rq;
                         MPI_Isend(&population_size, 1, MPI_INT, target, POPSIZE_TAG, m_communicator, &rq); 
+                        requests.push_back(rq);
                 }
+                // population_size is changed below: complete the sends first
+                MPI_Waitall( (int)requests.size(), requests.data(), MPI_STATUSES_IGNORE );
         } else {
                 MPI_Status rst;
                 MPI_Recv(&population_size, 1, MPI_INT, ROOT, POPSIZE_TAG, m_communicator, &rst); 
