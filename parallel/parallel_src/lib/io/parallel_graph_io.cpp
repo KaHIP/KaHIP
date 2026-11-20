@@ -165,10 +165,17 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
                 const unsigned char before = cb > (const unsigned char *) body ? cb[-1] : '\n';
                 ULONG lines   = (before == '\n' && cb[0] != '%') ? 1 : 0;
                 ULONG entries = ((unsigned char)(cb[0] - '0') < 10 && (unsigned char)(before - '0') >= 10) ? 1 : 0;
-                for( size_t i = 1; i < len; i++) {
-                        const unsigned char c = cb[i], b = cb[i-1];
-                        entries += ((unsigned char)(c - '0') < 10) & ((unsigned char)(b - '0') >= 10);
-                        lines   += (b == '\n') & (c != '%');
+                // byte counters over blocks of at most 255 bytes, so that the vector adds stay 8 bit wide
+                for( size_t i = 1; i < len; ) {
+                        const size_t stop = std::min(len, i + 255);
+                        unsigned char block_entries = 0, block_lines = 0;
+                        for( ; i < stop; i++) {
+                                const unsigned char c = cb[i], b = cb[i-1];
+                                block_entries += ((unsigned char)(c - '0') < 10) & ((unsigned char)(b - '0') >= 10);
+                                block_lines   += (b == '\n') & (c != '%');
+                        }
+                        entries += block_entries;
+                        lines   += block_lines;
                 }
                 my_counts[2*s]   = lines;
                 my_counts[2*s+1] = entries;
