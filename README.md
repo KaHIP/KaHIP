@@ -49,6 +49,7 @@ KaHIP v3.29
 - [Linking the KaHIP Library](#linking-the-kahip-library)
 - [Linking the ParHIP Library](#linking-the-parhip-library-parallel-partitioning)
 - [Using KaHIP in Python](#using-kahip-in-python)
+- [Using KaHIP in Fortran](#using-kahip-in-fortran)
 - [Licence](#licence)
 - [Contributors](#project-contributors-sorted-by-last-name)
 
@@ -604,6 +605,50 @@ edgecut, blocks = kahip.kaffpa(vwgt, xadj, adjcwgt, adjncy, 2, 0.03, 0, 0, 0)
 print(f"Edgecut: {edgecut}")
 print(f"Blocks: {blocks}")
 ```
+
+Using KaHIP in Fortran
+=====
+KaHIP provides the Fortran modules `kahip` (all routines of `kaHIP_interface.h`) and `parhip` (`ParHIPPartitionKWay`). Build them with
+```console
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILDFORTRAN=On
+cmake --build build
+cmake --install build --prefix /path/to/kahip
+```
+This installs `kahip.mod`, `parhip.mod`, `libkahip_fortran.a` and `libparhip_fortran.a`. Graphs use the same 0-based CSR format as the C interface, and the integer kind `kahip_idx` matches the library (64 bit with `-D64BITMODE=On`). Node and edge weights are optional arguments: leave them out for an unweighted graph and pass the remaining arguments by keyword. The constants are prefixed, e.g. `KAHIP_ECO` or `PARHIP_FASTMESH`.
+
+```fortran
+program partition
+  use, intrinsic :: iso_c_binding, only: c_int, c_double, c_bool
+  use kahip
+  implicit none
+
+  ! the graph from the manual, 0-based CSR format as in the C interface
+  integer(c_int)     :: n = 5, nparts = 2, part(5)
+  integer(kahip_idx) :: xadj(6)    = [0, 2, 5, 7, 9, 12]
+  integer(kahip_idx) :: adjncy(12) = [1, 4, 0, 2, 4, 1, 3, 2, 4, 0, 1, 3]
+  integer(kahip_idx) :: edgecut
+  real(c_double)     :: imbalance = 0.03
+
+  ! unweighted graph: leave out vwgt and adjcwgt and pass the rest by keyword
+  call kaffpa(n, xadj=xadj, adjncy=adjncy, nparts=nparts, imbalance=imbalance, &
+              suppress_output=.true._c_bool, seed=0, mode=KAHIP_ECO,           &
+              edgecut=edgecut, part=part)
+
+  print *, "edge cut", edgecut
+  print *, "blocks  ", part
+end program partition
+```
+
+Compile and link with
+```console
+gfortran partition.f90 -I/path/to/kahip/include -L/path/to/kahip/lib -lkahip_fortran -lkahip_static -lstdc++ -fopenmp
+```
+For ParHIP, use the module `parhip`; the communicator is passed as a Fortran handle (e.g. `MPI_COMM_WORLD` from the module `mpi`):
+```console
+mpifort parhip_example.f90 -I/path/to/kahip/include -L/path/to/kahip/lib -lparhip_fortran -lparhip_interface_static -lkahip_parallel_static -lstdc++ -fopenmp
+```
+
+Complete examples that call every routine are in [misc/example_library_call/fortran](misc/example_library_call/fortran); with `-DBUILDFORTRAN=On` they are built and run by `ctest`.
 
 Licence
 =====

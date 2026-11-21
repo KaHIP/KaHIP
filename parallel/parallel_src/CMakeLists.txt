@@ -128,3 +128,26 @@ target_compile_definitions(parhip_interface_static PRIVATE "-DGRAPH_GENERATOR_MP
 target_include_directories(parhip_interface_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/interface)
 target_link_libraries(parhip_interface_static PUBLIC kahip_parallel_static)
 install(TARGETS parhip_interface_static DESTINATION lib)
+
+# Fortran interface: module parhip plus the communicator conversion it needs
+if(BUILDFORTRAN)
+  add_library(parhip_fortran STATIC interface/fortran/parhip.F90 interface/fortran/parhip_fortran.cpp)
+  set_target_properties(parhip_fortran PROPERTIES Fortran_MODULE_DIRECTORY ${KAHIP_FORTRAN_MODULE_DIR})
+  target_include_directories(parhip_fortran PUBLIC $<BUILD_INTERFACE:${KAHIP_FORTRAN_MODULE_DIR}>
+                                                   $<INSTALL_INTERFACE:include>)
+  target_link_libraries(parhip_fortran PUBLIC parhip_interface_static)
+  install(TARGETS parhip_fortran ARCHIVE DESTINATION lib)
+  install(FILES ${KAHIP_FORTRAN_MODULE_DIR}/parhip.mod DESTINATION include)
+
+  # the example uses the Fortran MPI module, so it needs a Fortran MPI
+  find_package(MPI COMPONENTS Fortran)
+  if(MPI_Fortran_FOUND)
+    add_executable(parhip_fortran_example ${CMAKE_SOURCE_DIR}/misc/example_library_call/fortran/parhip_example.f90)
+    target_link_libraries(parhip_fortran_example PRIVATE parhip_fortran MPI::MPI_Fortran)
+    add_test(NAME fortran_interface_parhip
+             COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ${MPIEXEC_PREFLAGS}
+                     $<TARGET_FILE:parhip_fortran_example> ${MPIEXEC_POSTFLAGS})
+  else()
+    message(STATUS "No Fortran MPI found: parhip_fortran_example not built")
+  endif()
+endif()
