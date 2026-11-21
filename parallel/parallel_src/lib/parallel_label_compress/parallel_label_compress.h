@@ -68,6 +68,17 @@ class parallel_label_compress {
                                 NodeID prev_node = 0;
                                 forall_local_nodes(G, rnode) {
                                         NodeID node = permutation[rnode]; // use the current random node
+                                        // the nodes come in permutation order, so the next nodes' records, first edges,
+                                        // data and first target labels miss; hint them a few nodes ahead (no effect on results)
+                                        if( rnode + 4 < end ) G.prefetchNodeRecord(permutation[rnode + 4]);
+                                        if( rnode + 2 < end ) G.prefetchEdge(G.get_first_edge(permutation[rnode + 2]));
+                                        if( rnode + 1 < end ) {
+                                                NodeID next = permutation[rnode + 1];
+                                                G.prefetchNodeData(next);
+                                                EdgeID b = G.get_first_edge(next), b_end = G.get_first_invalid_edge(next);
+                                                if( b_end > b + 8 ) b_end = b + 8;
+                                                for( EdgeID e = b; e < b_end; e++) G.prefetchTargetData(e);
+                                        }
 
                                         //move the node to the cluster that is most common in the neighborhood
                                         //second sweep for finding max and resetting array

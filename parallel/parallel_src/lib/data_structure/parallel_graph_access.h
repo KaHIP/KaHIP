@@ -524,6 +524,14 @@ public:
                 __builtin_prefetch(&m_nodes_data[m_edges[e].local_target]);
         }
 
+        // cache hints for the edge range start of a node and for an edge; change nothing
+        void prefetchNodeRecord(NodeID node) {
+                __builtin_prefetch(&m_nodes[node]);
+        }
+        void prefetchEdge(EdgeID e) {
+                __builtin_prefetch(&m_edges[e]);
+        }
+
         // cache hints for the data of a node and for the weight of a block (coarsening only); change nothing
         void prefetchNodeData(NodeID node) {
                 __builtin_prefetch(&m_nodes_data[node]);
