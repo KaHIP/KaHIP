@@ -1052,6 +1052,7 @@ void ghost_node_communication::receive_messages_of_neighbors() {
                 const int updates = message_length / 2;
                 const int slot_ahead = 8, lookup_ahead = 4, old_ahead = 2;
                 NodeID ring[8]; // local ids of the updates u .. u + lookup_ahead
+                static_assert( lookup_ahead < 8 && old_ahead < lookup_ahead, "a ring slot must not be overwritten before it is read" );
                 for( int u = 0; u < lookup_ahead && u < updates; u++) {
                         ring[u] = m_G->m_global_to_local_id.ref(message[2*u]);
                 }
@@ -1169,11 +1170,26 @@ inline void ghost_node_communication::update_ghost_node_data_global() {
                 // now integrate the changes
                 if(message_length == 1) continue; // nothing to do
 
-                for( int i = 0; i < message_length-1; i+=2) {
-                        NodeID global_id = message[i];
-                        NodeID label     = message[i+1];
-
-                        m_G->setNodeLabel( m_G->m_global_to_local_id.ref(global_id), label);
+                // the global ids are random keys into the ghost map, so the lookups of pair u are
+                // started early: the hash slot slot_ahead pairs ahead, the lookup itself (into a ring)
+                // and the node data lookup_ahead pairs ahead; the stores keep their order
+                const int pairs = message_length / 2;
+                const int slot_ahead = 8, lookup_ahead = 4;
+                const int ring_size = 8; // a power of two
+                static_assert( lookup_ahead < ring_size, "a ring slot must not be overwritten before it is read" );
+                static_assert( (ring_size & (ring_size - 1)) == 0, "ring_size must be a power of two" );
+                NodeID ring[ring_size]; // local ids of the pairs u .. u + lookup_ahead
+                for( int u = 0; u < lookup_ahead && u < pairs; u++) {
+                        ring[u] = m_G->m_global_to_local_id.ref(message[2*u]);
+                }
+                for( int u = 0; u < pairs; u++) {
+                        if( u + slot_ahead < pairs ) m_G->m_global_to_local_id.prefetch(message[2*(u+slot_ahead)]);
+                        if( u + lookup_ahead < pairs ) {
+                                NodeID ahead_id = m_G->m_global_to_local_id.ref(message[2*(u+lookup_ahead)]);
+                                ring[(u+lookup_ahead) & (ring_size - 1)] = ahead_id;
+                                m_G->prefetchNodeData(ahead_id);
+                        }
+                        m_G->setNodeLabel( ring[u & (ring_size - 1)], message[2*u+1]);
                 }
         }
         MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
