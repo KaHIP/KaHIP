@@ -144,6 +144,14 @@ else()
   message(STATUS "Build without MPI dependency: kaffpaE and ParHIP disabled")
 endif()
 
+# Fortran interface (enabled after the MPI search, so MPI does not require a Fortran MPI)
+option(BUILDFORTRAN "Build the Fortran interface (modules kahip and parhip)" OFF)
+if(BUILDFORTRAN)
+  enable_language(Fortran)
+  set(KAHIP_FORTRAN_MODULE_DIR "${CMAKE_BINARY_DIR}/fortran_modules")
+  enable_testing()
+endif()
+
 
 # tcmalloc
 option(USE_TCMALLOC "if available, link against tcmalloc" OFF)
@@ -408,6 +416,21 @@ install(TARGETS kahip_static
         LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include
         )
+
+# Fortran interface library: module kahip plus the C helpers it needs
+if(BUILDFORTRAN)
+  add_library(kahip_fortran STATIC interface/fortran/kahip.F90 interface/fortran/kahip_fortran.cpp)
+  set_target_properties(kahip_fortran PROPERTIES Fortran_MODULE_DIRECTORY ${KAHIP_FORTRAN_MODULE_DIR})
+  target_include_directories(kahip_fortran PUBLIC $<BUILD_INTERFACE:${KAHIP_FORTRAN_MODULE_DIR}>
+                                                  $<INSTALL_INTERFACE:include>)
+  target_link_libraries(kahip_fortran PUBLIC kahip_static)
+  install(TARGETS kahip_fortran ARCHIVE DESTINATION lib)
+  install(FILES ${KAHIP_FORTRAN_MODULE_DIR}/kahip.mod DESTINATION include)
+
+  add_executable(kahip_fortran_example misc/example_library_call/fortran/kahip_example.f90)
+  target_link_libraries(kahip_fortran_example PRIVATE kahip_fortran)
+  add_test(NAME fortran_interface COMMAND kahip_fortran_example)
+endif()
 
 # ParHIP
 if(NOT NOMPI AND PARHIP)
