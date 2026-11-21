@@ -1,0 +1,42 @@
+name: Fortran interface
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        argument: ["", "-D64BITMODE=On"]
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install -y gfortran libopenmpi-dev openmpi-bin
+    - uses: actions/checkout@v5
+      with:
+        submodules: 'recursive'
+    - name: Build
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILDFORTRAN=On -DMPIEXEC_PREFLAGS=--oversubscribe ${{ matrix.argument }}
+        cmake --build build -j "$(nproc)"
+    - name: Test Fortran interface (kahip and parhip)
+      run: cd build && ctest --output-on-failure
+    - name: Install and link by hand (as in the README)
+      run: |
+        cmake --install build --prefix "$PWD/inst"
+        gfortran misc/example_library_call/fortran/kahip_example.f90 -I inst/include -L inst/lib \
+          -lkahip_fortran -lkahip_static -lstdc++ -fopenmp -o kahip_example
+        ./kahip_example
+        mpifort misc/example_library_call/fortran/parhip_example.f90 -I inst/include -L inst/lib \
+          -lparhip_fortran -lparhip_interface_static -lkahip_parallel_static -lstdc++ -fopenmp -o parhip_example
+        mpiexec --oversubscribe -n 2 ./parhip_example
