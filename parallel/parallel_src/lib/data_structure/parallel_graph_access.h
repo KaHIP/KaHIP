@@ -529,7 +529,9 @@ public:
                 __builtin_prefetch(&m_nodes[node]);
         }
         void prefetchEdge(EdgeID e) {
-                __builtin_prefetch(&m_edges[e]);
+                // e may be m_edges.size() (the first edge of a trailing node without edges): form the
+                // one-past-the-end pointer without operator[]; a prefetch never faults
+                __builtin_prefetch(m_edges.data() + e);
         }
 
         // cache hints for the data of a node and for the weight of a block (coarsening only); change nothing
