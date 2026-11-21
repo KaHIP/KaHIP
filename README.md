@@ -32,6 +32,7 @@ KaHIP v3.29
 ## Table of Contents
 
 - [About](#about)
+- [Example Users](#example-users)
 - [What's New](#new-in-v328)
 - [Installation](#installation-notes)
   - [Install via Homebrew](#install-via-homebrew)
@@ -65,6 +66,19 @@ The graph partitioning problem asks for a division of a graph's node set into k 
   width="601" height="558">
 </p>
 
+
+## Example Users
+Some projects that use KaHIP or ParHIP:
+- [DOLFINx](https://github.com/FEniCS/dolfinx) (FEniCS): finite element framework, KaHIP as mesh partitioner
+- [PyFR](https://github.com/PyFR/PyFR): high-order flow solver, KaHIP as mesh partitioner
+- [SeisSol](https://github.com/SeisSol/SeisSol): earthquake and seismic wave simulation, uses ParHIP
+- [CB-Geo MPM](https://github.com/cb-geo/mpm) (also [geomechanics/mpm](https://github.com/geomechanics/mpm)): material point method
+- [OP2](https://github.com/OP-DSL/OP2-Common): framework for unstructured-mesh applications on CPUs and GPUs
+- [OpenFOAM](https://gitlab.com/openfoam/core/openfoam) (ESI, openfoam.com): CFD, decomposition method `kahip`
+- [TCSExam](https://github.com/MoonshotAI/TCSExam) (Moonshot AI): benchmark for theoretical computer science research, uses KaHIP in its graph partitioning task
+- [Data leakage in PPI prediction](https://github.com/daisybio/data-leakage-ppi-prediction): partitions protein interaction data with KaHIP to build leakage-free train/test splits
+- [ESPRESO](https://github.com/It4innovations/espreso): parallel framework for engineering simulations
+- [meshio++](https://github.com/loumalouomega/meshioplusplus): mesh input/output and partitioning
 
 ## NEW in v3.29:
 - *Connected blocks in the library*: the connected-blocks partitioning (`--connected_blocks`, see v3.25) is now also available through the C/C++ interface as `kaffpa_connected_blocks`, with the same arguments as `kaffpa` (mode `STRONG` only). The post-processing that makes every block connected moved from the `kaffpa` program into the library (`lib/partition/connected_blocks.cpp`); the output of `kaffpa` and `kaffpaE` is unchanged.
