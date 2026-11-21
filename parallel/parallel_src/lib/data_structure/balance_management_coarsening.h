@@ -25,6 +25,14 @@ public:
                 if( cap > m_keys.size() ) rehash(cap);
         }
 
+        // cache hint for the slot of key; changes nothing
+        void prefetch( PartitionID key ) const {
+                if( m_keys.empty() ) return;
+                size_t i = slot(key);
+                __builtin_prefetch(&m_keys[i]);
+                __builtin_prefetch(&m_values[i]);
+        }
+
         long get( PartitionID key ) const {
                 size_t i = slot(key);
                 while( m_keys[i] != empty_key() ) {
@@ -88,6 +96,13 @@ public:
 
         virtual void init();
         virtual void update();
+
+        // cache hint for the weight of block; changes nothing
+        void prefetch_block( PartitionID block ) const {
+                PartitionID idx = block - m_local_from;
+                if( idx < m_local_weights.size() ) __builtin_prefetch(&m_local_weights[idx]);
+                else m_fuzzy_block_weights.prefetch(block);
+        }
 
 private:
         // weights of the blocks whose id is a local node id (from .. from + local_n - 1), the

@@ -28,7 +28,9 @@ void balance_management_coarsening::init(  ) {
                 local_or_map_ref(label) += m_G->getNodeWeight(node);
         } endfor
 
+        const NodeID ghost_end = m_G->number_of_local_nodes() + 1 + m_G->number_of_ghost_nodes();
         forall_ghost_nodes((*m_G),node) {
+                if( node + 8 < ghost_end ) prefetch_block(m_G->getNodeLabel(node + 8)); // random keys: hide the miss
                 PartitionID label = m_G->getNodeLabel(node);
                 local_or_map_ref(label) += m_G->getNodeWeight(node);
         } endfor

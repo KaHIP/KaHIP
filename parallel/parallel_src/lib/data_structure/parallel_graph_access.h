@@ -524,6 +524,14 @@ public:
                 __builtin_prefetch(&m_nodes_data[m_edges[e].local_target]);
         }
 
+        // cache hints for the data of a node and for the weight of a block (coarsening only); change nothing
+        void prefetchNodeData(NodeID node) {
+                __builtin_prefetch(&m_nodes_data[node]);
+        }
+        void prefetch_non_contained_block( PartitionID block ) {
+                if( m_bm_coarsening != NULL ) m_bm_coarsening->prefetch_block(block);
+        }
+
         //methods for non-local / ghost nodes only
         //these methods are usally called to communicate data
         PEID getTargetPE(NodeID node);
@@ -1027,13 +1035,29 @@ void ghost_node_communication::receive_messages_of_neighbors() {
                 // now integrate the changes
                 if(message_length == 1) continue; // nothing to do
 
-                const int ahead = 16; // prefetch the ghost id slot eight updates ahead
-                for( int i = 0; i < message_length-1; i+=2) {
-                        if( i + ahead < message_length-1 ) m_G->m_global_to_local_id.prefetch(message[i+ahead]);
-                        NodeID global_id = message[i];
-                        NodeID label     = message[i+1];
-
-                        NodeID local_id = m_G->m_global_to_local_id.ref(global_id);
+                // the message holds (global id, label) pairs; the keys are random, so the misses of
+                // update u are started early: 8 updates ahead the ghost id slot, 4 ahead the ghost
+                // lookup (into a ring), its node data and the weight slot of the new label, 2 ahead
+                // the weight slot of the old label. Only cache hints move; the updates run in order.
+                const int updates = message_length / 2;
+                const int slot_ahead = 8, lookup_ahead = 4, old_ahead = 2;
+                NodeID ring[8]; // local ids of the updates u .. u + lookup_ahead
+                for( int u = 0; u < lookup_ahead && u < updates; u++) {
+                        ring[u] = m_G->m_global_to_local_id.ref(message[2*u]);
+                }
+                for( int u = 0; u < updates; u++) {
+                        if( u + slot_ahead < updates ) m_G->m_global_to_local_id.prefetch(message[2*(u+slot_ahead)]);
+                        if( u + lookup_ahead < updates ) {
+                                NodeID ahead_id = m_G->m_global_to_local_id.ref(message[2*(u+lookup_ahead)]);
+                                ring[(u+lookup_ahead) & 7] = ahead_id;
+                                m_G->prefetchNodeData(ahead_id);
+                                m_G->prefetch_non_contained_block(message[2*(u+lookup_ahead)+1]);
+                        }
+                        if( u + old_ahead < updates ) {
+                                m_G->prefetch_non_contained_block(m_G->getNodeLabel(ring[(u+old_ahead) & 7]));
+                        }
+                        NodeID local_id = ring[u & 7];
+                        NodeID label    = message[2*u+1];
                         m_G->update_non_contained_block_balance(m_G->getNodeLabel(local_id), label, m_G->getNodeWeight(local_id));
                         m_G->setNodeLabel(local_id, label);
                 }
