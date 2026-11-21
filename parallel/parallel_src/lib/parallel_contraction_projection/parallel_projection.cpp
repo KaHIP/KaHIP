@@ -51,6 +51,26 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
                 }
         } endfor
 
+        // ghosts take the label of the cnode that contraction stored for them (their owners' cnode,
+        // so the label their owners project), which replaces the global ghost label exchange; each
+        // distinct remote cnode gets a slot in the order of its first ghost and is requested once
+        const NodeID n_local = finer.number_of_local_nodes();
+        const unsigned no_slot = std::numeric_limits< unsigned >::max();
+        std::vector< unsigned > ghost_slot(finer.number_of_ghost_nodes(), no_slot);
+        std::vector< NodeID > slot_cnode;
+        open_hash_map< unsigned > slot_of;
+        NodeID ghost;
+        forall_ghost_nodes(finer, ghost) {
+                NodeID cnode = finer.getCNode(ghost);
+                if( coarser.is_local_node_from_global_id(cnode) ) {
+                        finer.setNodeLabel(ghost, coarser.getNodeLabel(coarser.getLocalID(cnode)));
+                } else {
+                        unsigned * slot = slot_of.find(cnode);
+                        if( !slot ) { slot = &slot_of.ref(cnode); *slot = slot_cnode.size(); slot_cnode.push_back(cnode); }
+                        ghost_slot[ghost - n_local - 1] = *slot;
+                }
+        } endfor
+
         // group by cnode (nodes stay in increasing order within a group); request every cnode
         // once, in the order of its first node, as the map based version did
         std::stable_sort(remote.begin(), remote.end(),
@@ -74,6 +94,14 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
                 m_messages[peID].push_back(cnode); // we are requesting the label of this node 
                 groups_of_pe[peID].push_back(g);
         }
+        // the ghost slots are requested after the groups
+        std::vector< std::vector< unsigned > > slots_of_pe(size);
+        for( unsigned slot = 0; slot < slot_cnode.size(); slot++) {
+                PEID peID = owner(slot_cnode[slot]);
+                m_messages[peID].push_back(slot_cnode[slot]);
+                slots_of_pe[peID].push_back(slot);
+        }
+        std::vector< NodeID > slot_label(slot_cnode.size());
 
         std::vector<MPI_Request> requests(size, MPI_REQUEST_NULL);
         for( PEID peID = 0; peID < size; peID++) {
@@ -153,7 +181,11 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
                 }
 
                 PEID peID = st.MPI_SOURCE;
-                for( ULONG i = 0; i < (ULONG)incmessage.size(); i++) {
+                const ULONG groups = groups_of_pe[peID].size();
+                for( ULONG i = groups; i < (ULONG)incmessage.size(); i++) {
+                        slot_label[slots_of_pe[peID][i - groups]] = incmessage[i];
+                }
+                for( ULONG i = 0; i < groups; i++) {
                         size_t g     = groups_of_pe[peID][i];
                         NodeID label = incmessage[i];
 
@@ -165,7 +197,15 @@ void parallel_projection::parallel_project( MPI_Comm communicator, parallel_grap
         MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
         MPI_Waitall(replies.size(), replies.data(), MPI_STATUSES_IGNORE);
 
-        finer.update_ghost_node_data_global(); // blocking
+        forall_ghost_nodes(finer, ghost) {
+                unsigned slot = ghost_slot[ghost - n_local - 1];
+                if( slot != no_slot ) finer.setNodeLabel(ghost, slot_label[slot]);
+        } endfor
+
+        // the request loops count messages, not senders: without a barrier, a rank could receive the
+        // next level's request (same tags) while it still waits for this level's, e.g. when refinement
+        // is skipped between two projections
+        MPI_Barrier(communicator);
 }
 
 //initial assignment after initial partitioning
