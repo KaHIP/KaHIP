@@ -78,6 +78,10 @@ Simulation codes that use KaHIP or ParHIP for partitioning:
 - [ESPRESO](https://github.com/It4innovations/espreso): parallel framework for engineering simulations
 - [meshio++](https://github.com/loumalouomega/meshioplusplus): mesh input/output and partitioning
 
+Applications that use KaHIP:
+- [TCSExam](https://github.com/MoonshotAI/TCSExam) (Moonshot AI): benchmark for theoretical computer science research, uses KaHIP in its graph partitioning task
+- [Data leakage in PPI prediction](https://github.com/daisybio/data-leakage-ppi-prediction): partitions protein interaction data with KaHIP to build leakage-free train/test splits
+
 ## NEW in v3.29:
 - *Connected blocks in the library*: the connected-blocks partitioning (`--connected_blocks`, see v3.25) is now also available through the C/C++ interface as `kaffpa_connected_blocks`, with the same arguments as `kaffpa` (mode `STRONG` only). The post-processing that makes every block connected moved from the `kaffpa` program into the library (`lib/partition/connected_blocks.cpp`); the output of `kaffpa` and `kaffpaE` is unchanged.
 
