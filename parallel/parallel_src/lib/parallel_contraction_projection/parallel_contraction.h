@@ -28,6 +28,10 @@ private:
                                     open_hash_map< NodeID > & label_mapping);
 
         void get_nodes_to_cnodes_ghost_nodes( MPI_Comm communicator, parallel_graph_access & G );   
+        // in parallel_contraction_send_lists.cpp: send buffers of a graph contracted before, refilled from the lists
+        // recorded at its first contraction (false if there are none yet); the recording itself
+        bool refill_ghost_send_buffers( parallel_graph_access & G );
+        void record_ghost_send_lists( parallel_graph_access & G );
 
 	void build_quotient_graph_locally( parallel_graph_access & G, 
                                            NodeID number_of_distinct_labels, 
