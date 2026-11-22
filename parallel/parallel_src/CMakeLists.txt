@@ -34,7 +34,8 @@ set(LIBPARALLEL_SOURCE_FILES
   lib/io/parallel_vector_io.cpp
   lib/tools/random_functions.cpp
   lib/tools/distributed_quality_metrics.cpp
-  lib/io/parallel_graph_io_huge.cpp) # last, so the code before it keeps its place
+  lib/io/parallel_graph_io_huge.cpp # last, so the code before it keeps its place
+  lib/parallel_label_compress/parallel_label_compress_skip.cpp) # last, so the code before it keeps its place
 # argtable3 comes with kahip_parallel_static
 add_library(libparallel OBJECT ${LIBPARALLEL_SOURCE_FILES})
 target_include_directories(libparallel PUBLIC $<TARGET_PROPERTY:kahip_parallel_static,INTERFACE_INCLUDE_DIRECTORIES>)

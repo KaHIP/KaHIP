@@ -52,7 +52,10 @@ class parallel_label_compress {
                         // there are no rounds, so refinement uses the node-count instance as well
                         int size = 1;
                         MPI_Comm_size( G.getCommunicator(), &size );
-                        if( for_coarsening || size == 1 ) sweeps< false >( config, G, balance, cluster_upperbound, permutation, hash_map );
+                        // refinement skips clean nodes (see sweeps_skip) on one PE, and on more PEs only if at least half
+                        // of the local nodes have no ghost neighbour; otherwise few nodes can be clean
+                        if( !for_coarsening && skipping_sweeps( config, G, balance, cluster_upperbound, permutation, hash_map, size ) ) {}
+                        else if( for_coarsening || size == 1 ) sweeps< false >( config, G, balance, cluster_upperbound, permutation, hash_map );
                         else sweeps< true >( config, G, balance, cluster_upperbound, permutation, hash_map );
                         G.set_record_labels( false );
                 }
@@ -150,6 +153,12 @@ class parallel_label_compress {
                         }
                 }
 
+                // refinement: runs the skipping sweeps and returns true if the gate holds (one PE, or at least half of
+                // the local nodes without a ghost neighbour); otherwise returns false and the plain sweeps run.
+                // Defined in parallel_label_compress_skip.cpp, so the code of this header compiles as without the skip.
+                bool skipping_sweeps( PPartitionConfig & config, parallel_graph_access & G, bool balance,
+                                      NodeWeight cluster_upperbound, std::vector< NodeID > & permutation,
+                                      hmap_wrapper< T > & hash_map, int size );
 };
 
 
