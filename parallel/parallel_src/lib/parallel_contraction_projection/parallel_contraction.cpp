@@ -407,8 +407,11 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
                 }
         }
         const NodeID divisor = ceil( number_of_cnodes/(double)size);
+        // cnode / divisor by one multiplication (exact for 32-bit operands, divisor > 1)
+        const bool  fast_div = number_of_cnodes < (1ULL << 32) && divisor > 1;
+        const ULONG div_M    = fast_div ? 0xFFFFFFFFFFFFFFFFULL / divisor + 1 : 0;
         auto owner = [&](NodeID cnode) -> PEID {
-                if( !rebalanced ) return cnode / divisor;
+                if( !rebalanced ) return fast_div ? (PEID)(((__uint128_t)div_M * cnode) >> 64) : (PEID)(cnode / divisor);
                 return (PEID)(std::upper_bound(vertex_dist.begin() + 1, vertex_dist.end(), cnode) - vertex_dist.begin()) - 1;
         };
 
@@ -450,7 +453,7 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
 
 
         if( m_messages[ rank ].size() != 0 ) {
-                local_msg_byPE[rank] = m_messages[rank];
+                local_msg_byPE[rank].swap(m_messages[rank]);
         }
        
         PEID counter = 0;
@@ -472,14 +475,16 @@ void parallel_contraction::redistribute_hased_graph_and_build_graph_locally( MPI
 
 
                 PEID peID = rst.MPI_SOURCE;
-                local_msg_byPE[peID] = incmessage;
+                local_msg_byPE[peID].swap(incmessage);
         }
         MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
         ordered_edge_map local_graph(number_of_cnodes);
         for( PEID peID = 0; peID < size; peID++) {
                 if(local_msg_byPE[peID].size() > 0) {
+                const ULONG len = local_msg_byPE[peID].size();
                 for( ULONG i = 0; i < local_msg_byPE[peID].size()-2; i+=3) {
+                        if( i + 26 < len ) local_graph.prefetch(local_msg_byPE[peID][i+24], local_msg_byPE[peID][i+25]); // the slot 8 triples ahead
                         local_graph.weight(local_msg_byPE[peID][i], local_msg_byPE[peID][i+1]) += local_msg_byPE[peID][i+2];
                 }}
         }

@@ -33,6 +33,15 @@
     (_GLIBCXX_RELEASE == 11 || _GLIBCXX_RELEASE == 13 || _GLIBCXX_RELEASE == 15)
 #define ORDERED_EDGE_MAP_EMULATES_UNORDERED_MAP 1
 
+// a % d for 64-bit a and d by multiplication (Lemire, Kaser and Kurz, "Faster remainder by direct
+// computation", 2019), exact for all 64-bit operands with M = 2^128 / d rounded up
+inline ULONG fastmod_u64( ULONG a, __uint128_t M, ULONG d ) {
+        __uint128_t low    = M * a;
+        __uint128_t bottom = ((low & 0xFFFFFFFFFFFFFFFFULL) * d) >> 64;
+        __uint128_t top    = (low >> 64) * d;
+        return (ULONG)((bottom + top) >> 64);
+}
+
 class ordered_edge_map {
 public:
         explicit ordered_edge_map( NodeID k ) : m_k(k), m_mask(0) {}
@@ -62,6 +71,13 @@ public:
         }
 
         size_t size() const { return m_source.size(); }
+
+        void prefetch( NodeID source, NodeID target ) const {
+                if( m_slots.empty() ) return;
+                NodeID lo = source < target ? source : target;
+                NodeID hi = source < target ? target : source;
+                __builtin_prefetch(&m_slots[slot(lo, hi)]);
+        }
 
         // calls f(source, target, weight) for every edge in unordered_map iteration order
         template < typename F >
@@ -126,8 +142,9 @@ private:
                         bucket.resize(seq.size());
                         start.assign(B, 0);
                         touched.clear();
+                        const __uint128_t M = ~(__uint128_t)0 / B + 1;
                         for( size_t i = 0; i < seq.size(); i++ ) {
-                                ULONG b   = m_hash[seq[i]] % B;
+                                ULONG b   = fastmod_u64(m_hash[seq[i]], M, B);
                                 bucket[i] = b;
                                 if( start[b]++ == 0 ) touched.push_back(b);
                         }
