@@ -126,15 +126,9 @@ bool parallel_label_compress< T >::skipping_sweeps( PPartitionConfig & config, p
                                                     NodeWeight cluster_upperbound, std::vector< NodeID > & permutation,
                                                     hmap_wrapper< T > & hash_map, int size ) {
         const NodeID n = G.number_of_local_nodes();
-        if( n == 0 ) return false;
-        if( size > 1 ) {
-                NodeID non_interface = 0;
-                for( NodeID v = 0; v < n; v++) non_interface += !G.is_interface_node(v);
-                if( 2 * (ULONG)non_interface < (ULONG)n ) return false;
-        }
+        if( size != 1 || n == 0 ) return false;
         std::vector< unsigned char > clean( n, 0 ); // clean flag per local node, released with the call
-        if( size == 1 ) sweeps_skip< false >( config, G, balance, cluster_upperbound, permutation, hash_map, clean );
-        else sweeps_skip< true >( config, G, balance, cluster_upperbound, permutation, hash_map, clean );
+        sweeps_skip< false >( config, G, balance, cluster_upperbound, permutation, hash_map, clean );
         return true;
 }
 
