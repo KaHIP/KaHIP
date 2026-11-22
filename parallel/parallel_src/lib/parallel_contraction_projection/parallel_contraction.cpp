@@ -262,21 +262,37 @@ void parallel_contraction::get_nodes_to_cnodes_ghost_nodes( MPI_Comm communicato
         std::vector< NodeID > PE_packed_by( size, 0 );
         m_send_buffers.resize( size );
 
-        forall_local_nodes(G, node) {
-                if(G.is_interface_node(node)) {
-                        forall_out_edges(G, e, node) {
-                                NodeID target = G.getEdgeTarget(e);
-                                if( !G.is_local_node(target)  ) {
-                                        PEID peID = G.getTargetPE(target);
-                                        if( PE_packed_by[peID] != node + 1 ) { // make sure a node is sent at most once
-                                                m_send_buffers[peID].push_back(G.getGlobalID(node));
-                                                m_send_buffers[peID].push_back(G.getCNode(node));
-                                                PE_packed_by[peID] = node + 1;
+        // the first contraction of G scans its interface edges and records which nodes go to which PE;
+        // later contractions of the same graph (V-cycle restarts) send the same nodes with their current cnodes
+        std::vector< std::vector< NodeID > > & send_lists = G.ghost_send_lists();
+        if( send_lists.empty() ) {
+                send_lists.resize( size );
+                forall_local_nodes(G, node) {
+                        if(G.is_interface_node(node)) {
+                                forall_out_edges(G, e, node) {
+                                        NodeID target = G.getEdgeTarget(e);
+                                        if( !G.is_local_node(target)  ) {
+                                                PEID peID = G.getTargetPE(target);
+                                                if( PE_packed_by[peID] != node + 1 ) { // make sure a node is sent at most once
+                                                        m_send_buffers[peID].push_back(G.getGlobalID(node));
+                                                        m_send_buffers[peID].push_back(G.getCNode(node));
+                                                        send_lists[peID].push_back(node);
+                                                        PE_packed_by[peID] = node + 1;
+                                                }
                                         }
-                                }
-                        } endfor
+                                } endfor
+                        }
+                } endfor
+        } else {
+                for( PEID peID = 0; peID < size; peID++) {
+                        const std::vector< NodeID > & nodes = send_lists[peID];
+                        m_send_buffers[peID].reserve( 2 * nodes.size() );
+                        for( NodeID node : nodes ) {
+                                m_send_buffers[peID].push_back(G.getGlobalID(node));
+                                m_send_buffers[peID].push_back(G.getCNode(node));
+                        }
                 }
-        } endfor
+        }
 
         //send all neighbors their packages using Isends
         //a neighbor that does not receive something gets a specific token

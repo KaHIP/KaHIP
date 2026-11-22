@@ -615,6 +615,10 @@ public:
         }
 
         void reinit();
+
+        // per PE, the local nodes that the contraction sends to it (their cnodes), in send order;
+        // recorded by the first contraction of this graph, empty before (the adjacency is fixed after construction)
+        std::vector< std::vector< NodeID > > & ghost_send_lists() { return m_ghost_send_lists; }
         /* ============================================================= */
         /* parallel graph data structure  */
         /* ============================================================= */
@@ -674,6 +678,7 @@ private:
         balance_management_refinement* m_bm_refinement;
         MPI_Comm m_communicator;
 
+        std::vector< std::vector< NodeID > > m_ghost_send_lists; // see ghost_send_lists(); last, so the other members keep their offsets
 };
 
 typedef parallel_graph_access complete_graph_access; // this is just a naming convention for a graph that is completely local
