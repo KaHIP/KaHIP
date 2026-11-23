@@ -16,7 +16,15 @@
 #include <fstream>
 #include <vector>
 
+#include <algorithm>
+#include <memory>
+#include <new>
+#include <utility>
+
 #include "data_structure/balance_management.h"
+#include "data_structure/balance_management_coarsening.h"
+#include "data_structure/balance_management_refinement.h"
+#include "data_structure/open_hash_map.h"
 #include "definitions.h"
 #include "partition_config.h"
 #include "tools/timer.h"
@@ -63,6 +71,19 @@ struct Edge {
     EdgeWeight weight;
 };
 
+// allocator whose resize() leaves new elements of a trivial type uninitialized; used for the edge
+// array, whose entries are all written by new_edge before they are read
+template < typename T >
+struct uninitialized_allocator : std::allocator< T > {
+        template < typename U > struct rebind { typedef uninitialized_allocator< U > other; };
+        uninitialized_allocator() {}
+        template < typename U > uninitialized_allocator( const uninitialized_allocator< U > & ) {}
+        template < typename U > void construct( U * p ) { ::new ((void*)p) U; }
+        template < typename U, typename... Args > void construct( U * p, Args&&... args ) {
+                ::new ((void*)p) U(std::forward< Args >(args)...);
+        }
+};
+
 } // namespace parhip
 
 using parhip::Edge;
@@ -79,13 +100,15 @@ class parallel_graph_access;
 //handle communication of data associated with ghost nodes
 class ghost_node_communication {
 public:
-        ghost_node_communication(MPI_Comm communicator) : m_iteration_counter(0), m_first_send(true) {
+        ghost_node_communication(MPI_Comm communicator) : m_iteration_counter(0), m_work_counter(0), m_work_limit(0), m_record(false), m_first_send(true) {
                 m_communicator     = communicator;
 
                 MPI_Comm_rank( m_communicator, &m_rank);
                 MPI_Comm_size( m_communicator, &m_size);
                 
                 m_PE_packed.resize(m_size); 
+                m_PE_sent_stamp.resize(m_size, 0);
+                m_add_label_stamp = 0;
                 m_adjacent_processors.resize(m_size); 
                 for( PEID peID = 0; peID < (PEID) m_PE_packed.size(); peID++) {
                         m_PE_packed[ peID ]           = false;
@@ -131,6 +154,12 @@ public:
                 m_skip_limit = skip_limit;
         }
 
+        // limit for update_ghost_node_data_by_work (work since the last round)
+        inline 
+        void set_work_limit( ULONG work_limit ) {
+                m_work_limit = work_limit;
+        }
+
         inline 
         void set_desired_rounds( ULONG desired_rounds) {
                 m_desired_rounds = desired_rounds;
@@ -138,6 +167,11 @@ public:
 
         inline 
         void update_ghost_node_data( bool check_iteration_counter );
+
+        // like update_ghost_node_data(true), but a round starts once the work since the last
+        // round exceeds the work limit; own counter, so the node-count rounds are unchanged
+        inline 
+        void update_ghost_node_data_by_work( ULONG work );
 
         inline 
         void update_ghost_node_data_finish();
@@ -147,6 +181,11 @@ public:
 
         inline
         void addLabel(NodeID node, NodeID label);
+
+        // label changes are recorded for the ghost exchange only while label propagation runs;
+        // outside it every caller sets the ghost copies itself or exchanges all labels afterwards
+        void set_record_labels( bool record ) { m_record = record; }
+        bool record_labels() const { return m_record; }
 
         inline
         bool is_adjacent_PE(PEID peID) {
@@ -172,6 +211,9 @@ private:
         PEID m_rank;
         NodeID m_iteration_counter; // this counter is used to manage the communication rounds
         ULONG m_skip_limit; 
+        ULONG m_work_counter; // work since the last round of update_ghost_node_data_by_work
+        ULONG m_work_limit; 
+        bool m_record; // see set_record_labels
         bool m_first_send;
 
         ULONG m_send_iteration;
@@ -186,11 +228,14 @@ private:
         PEID m_num_adjacent; 
 
         std::vector< bool >                   m_PE_packed;
+        std::vector< ULONG >                  m_PE_sent_stamp;   // addLabel: m_PE_sent_stamp[peID] == m_add_label_stamp iff already sent in this call
+        ULONG                                 m_add_label_stamp; // incremented once per addLabel call
         std::vector< std::vector< NodeID > >  m_send_buffers_A; // buffers to send messages
         std::vector< std::vector< NodeID > >  m_send_buffers_B; // buffers to send messages
         std::vector< std::vector< NodeID > >* m_send_buffers_ptr; // pointer to current buffers to send messages
         std::vector< bool >                   m_adjacent_processors; // buffers to send messages
-        std::vector< MPI_Request* >           m_isend_requests;
+        std::vector< MPI_Request >            m_isend_requests;
+        std::vector< NodeID >                 m_recv_buffer; // reused by every receive
 
         MPI_Comm m_communicator;
 };
@@ -200,11 +245,12 @@ class parallel_graph_access {
 public:
 
         friend class ghost_node_communication;
+        friend struct io_huge_pages; // io/parallel_graph_io_huge.cpp
 
         parallel_graph_access( ) : m_num_local_nodes(0), 
                                      from(0), 
                                      to(0),
-                                     m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL)  { 
+                                     m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL), m_bm_coarsening(NULL), m_bm_refinement(NULL)  { 
                                              m_communicator = MPI_COMM_WORLD;
                                              MPI_Comm_rank( m_communicator, &rank);
                                              MPI_Comm_size( m_communicator, &size);
@@ -231,6 +277,8 @@ public:
                 m_global_m                   = global_m;
                 m_ghost_adddata_array_offset = n+1;
                 m_bm                         = NULL;
+                m_bm_coarsening              = NULL;
+                m_bm_refinement              = NULL;
 		m_cur_degree                 = 0;
 
                 //resizes property arrays
@@ -247,8 +295,19 @@ public:
                         m_comm_rounds = std::max(m_comm_rounds, 8ULL);
                         m_gnc->set_desired_rounds(m_comm_rounds); 
                         m_gnc->set_skip_limit(ceil(n/(double)m_comm_rounds)); 
+                        // the work limit needs the edges actually built (m is only a capacity bound
+                        // for some readers), see finish_construction
+                        m_rounds_for_work_limit = m_comm_rounds;
                 }
         };
+
+        // capacity for this many ghost nodes, to be created by new_edge (changes no result)
+        void reserve_ghosts(NodeID ghosts) {
+                m_global_to_local_id.reserve(ghosts);
+                m_nodes.reserve(m_nodes.size() + ghosts);
+                m_nodes_data.reserve(m_nodes_data.size() + ghosts);
+                m_add_non_local_node_data.reserve(m_add_non_local_node_data.size() + ghosts);
+        }
 
         void set_range(NodeID l, NodeID r) {
                 from        = l;
@@ -280,13 +339,11 @@ public:
         };
 
         PEID get_PEID_from_range_array(NodeID node) {
-                // TODO optimize with binary search
-                for( PEID peID = 1; peID < (PEID)m_range_array.size(); peID++) {
-                        if( node < m_range_array[peID] ) {
-                                return (peID-1);
-                        }
-                }
-                return -1;
+                // first peID >= 1 with node < m_range_array[peID] (the array is non-decreasing)
+                if( m_range_array.size() < 2 ) return -1;
+                std::vector< NodeID >::const_iterator it = std::upper_bound(m_range_array.begin() + 1, m_range_array.end(), node);
+                if( it == m_range_array.end() ) return -1;
+                return (PEID)(it - m_range_array.begin()) - 1;
         };
 
         NodeID new_node() {
@@ -298,6 +355,7 @@ public:
         EdgeID new_edge(NodeID source, NodeID target) {
                 ASSERT_TRUE(m_building_graph);
                 ASSERT_TRUE(e < m_edges.size());
+                m_edges[e].weight = 0; // the edge array is not zero-filled (see uninitialized_allocator)
 
                 // build ghost nodes on the fly
                 if( from <= target && target <= to) {
@@ -306,13 +364,15 @@ public:
                         m_nodes_data[source].is_interface_node = true;
 
                         // check wether this is already a ghost node
-                        if(m_global_to_local_id.find(target) != m_global_to_local_id.end()) {
+                        NodeID * ghost = m_global_to_local_id.find(target);
+                        if( ghost != NULL ) {
                                 // this node is already a ghost node
-                                m_edges[e].local_target = m_global_to_local_id[target]; 
+                                m_edges[e].local_target = *ghost; 
                         } else {
                                 // we need to create a new ghost node
-                                m_global_to_local_id[target] = m_num_nodes++;
-                                m_edges[e].local_target      = m_global_to_local_id[target]; 
+                                NodeID local_id = m_num_nodes++;
+                                m_global_to_local_id.ref(target) = local_id;
+                                m_edges[e].local_target      = local_id; 
 
                                 //create the ghost node in the array
                                 Node dummy;
@@ -363,6 +423,13 @@ public:
         void finish_construction() {
                 m_edges.resize(e);
                 m_building_graph = false;
+
+                // rounds of equal work (degree + 1 per visited node) for the refinement LP; each round
+                // needs more than the limit, so a PE never makes more than the desired number of rounds
+                if( m_rounds_for_work_limit > 0 ) {
+                        m_gnc->set_work_limit(ceil((e + m_num_local_nodes)/(double)m_rounds_for_work_limit));
+                        m_rounds_for_work_limit = 0;
+                }
 
                 //fill isolated sources at the end
                 if ((NodeID)(m_last_source) != node-1) {
@@ -440,6 +507,9 @@ public:
                 return m_gnc->getNumberOfAdjacentPEs();
         }
 
+        // see ghost_node_communication::set_record_labels
+        void set_record_labels( bool record ) { m_gnc->set_record_labels( record ); }
+
         MPI_Comm getCommunicator() {
                 return m_communicator;
         }
@@ -449,9 +519,37 @@ public:
 
         NodeID getEdgeTarget(EdgeID e);
 
+        // hint the cache about the node data (label, block) of the target of edge e; no effect on results
+        void prefetchTargetData(EdgeID e) {
+                __builtin_prefetch(&m_nodes_data[m_edges[e].local_target]);
+        }
+
+        // cache hints for the edge range start of a node and for an edge; change nothing
+        void prefetchNodeRecord(NodeID node) {
+                __builtin_prefetch(&m_nodes[node]);
+        }
+        void prefetchEdge(EdgeID e) {
+                // e may be m_edges.size() (the first edge of a trailing node without edges): form the
+                // one-past-the-end pointer without operator[]; a prefetch never faults
+                __builtin_prefetch(m_edges.data() + e);
+        }
+
+        // cache hints for the data of a node and for the weight of a block (coarsening only); change nothing
+        void prefetchNodeData(NodeID node) {
+                __builtin_prefetch(&m_nodes_data[node]);
+        }
+        void prefetch_non_contained_block( PartitionID block ) {
+                if( m_bm_coarsening != NULL ) m_bm_coarsening->prefetch_block(block);
+        }
+
         //methods for non-local / ghost nodes only
         //these methods are usally called to communicate data
         PEID getTargetPE(NodeID node);
+
+        // cache hint for getLocalID(node); changes nothing
+        void prefetch_local_id(NodeID node) {
+                if( node < from || node > to ) m_global_to_local_id.prefetch(node);
+        }
 
         //input is a global id 
         //output is the local id
@@ -459,7 +557,7 @@ public:
                 if( from <= node && node <= to ) {
                         return node - from;
                 } else {
-                        return m_global_to_local_id[node];
+                        return m_global_to_local_id.ref(node);
                 }
         };
 
@@ -481,6 +579,8 @@ public:
         /* inter process communication routines  */
         /* ============================================================= */
         void update_ghost_node_data( bool check_iteration_counter = true );
+        // work: degree + 1 of the visited node (refinement LP), see ghost_node_communication
+        void update_ghost_node_data_by_work( ULONG work );
         void update_ghost_node_data_finish();
         void update_ghost_node_data_global();
 
@@ -514,6 +614,10 @@ public:
         }
 
         void reinit();
+
+        // per PE, the local nodes that the contraction sends to it (their cnodes), in send order, as 32-bit local ids;
+        // recorded by the first contraction of this graph, empty before (the adjacency is fixed after construction)
+        std::vector< std::vector< unsigned int > > & ghost_send_lists() { return m_ghost_send_lists; }
         /* ============================================================= */
         /* parallel graph data structure  */
         /* ============================================================= */
@@ -524,7 +628,7 @@ private:
         // ghost nodes in the end of the array
         std::vector<Node>                       m_nodes; 
         std::vector<NodeData>                   m_nodes_data;
-        std::vector<Edge>                       m_edges;
+        std::vector<Edge, parhip::uninitialized_allocator<Edge> > m_edges;
 
         //Ghost Node Stuff
         std::vector<AdditionalNonLocalNodeData> m_add_non_local_node_data;
@@ -537,7 +641,7 @@ private:
         std::vector<NodeID>                     m_range_array;
         std::vector<EdgeID>                     m_edge_range_array;
 
-        std::unordered_map<NodeID, NodeID> m_global_to_local_id;
+        open_hash_map< NodeID > m_global_to_local_id; // ghost nodes: global id -> local id (lookups only)
 
         NodeID m_ghost_adddata_array_offset; // node id of ghost node - offset to get the position in add data  
         NodeID m_divisor; // needed to compute the target id of a ghost node
@@ -557,6 +661,7 @@ private:
         NodeID m_global_m; // global number of edges
         static ULONG m_comm_rounds; // global number of edges
         static ULONG m_comm_rounds_up; // global number of edges
+        ULONG m_rounds_for_work_limit = 0; // > 0 between start_construction and finish_construction
 
 	NodeID m_max_node_degree;
 	NodeID m_cur_degree;
@@ -566,20 +671,34 @@ private:
 
         ghost_node_communication* m_gnc;
         balance_management* m_bm;
+        // m_bm with its concrete type (exactly one is set after init_balance_management), so that
+        // the per-node block weight accesses call the implementation directly instead of virtually
+        balance_management_coarsening* m_bm_coarsening;
+        balance_management_refinement* m_bm_refinement;
         MPI_Comm m_communicator;
 
+        std::vector< std::vector< unsigned int > > m_ghost_send_lists; // see ghost_send_lists(); last, so the other members keep their offsets
 };
 
 typedef parallel_graph_access complete_graph_access; // this is just a naming convention for a graph that is completely local
 
+// qualified calls: the same implementation as the virtual call on m_bm, without the indirection
 inline
 NodeWeight parallel_graph_access::getBlockSize( PartitionID block ) {
-        return m_bm->getBlockSize(block);
+        if( m_bm_coarsening != NULL ) return m_bm_coarsening->balance_management_coarsening::getBlockSize(block);
+        return m_bm_refinement->balance_management_refinement::getBlockSize(block);
 }
 
 inline 
 void parallel_graph_access::setBlockSize( PartitionID block, NodeWeight block_size ) {
-        m_bm->setBlockSize(block, block_size);
+        if( m_bm_coarsening != NULL ) m_bm_coarsening->balance_management_coarsening::setBlockSize(block, block_size);
+        else                          m_bm_refinement->balance_management_refinement::setBlockSize(block, block_size);
+}
+
+inline
+void parallel_graph_access::update_non_contained_block_balance( PartitionID from, PartitionID to, NodeWeight node_weight) {
+        if( m_bm_coarsening != NULL ) m_bm_coarsening->balance_management_coarsening::update_non_contained_block_balance( from, to, node_weight);
+        else                          m_bm_refinement->balance_management_refinement::update_non_contained_block_balance( from, to, node_weight);
 }
 
 inline EdgeID parallel_graph_access::get_first_edge(NodeID node) {
@@ -603,7 +722,7 @@ inline EdgeID parallel_graph_access::getNodeLabel(NodeID node) {
 }
 
 inline void parallel_graph_access::setNodeLabel(NodeID node, NodeID label) {
-        if( m_nodes_data[node].label != label && is_interface_node(node)) {
+        if( m_nodes_data[node].label != label && is_interface_node(node) && m_gnc->record_labels() ) {
                 m_gnc->addLabel(node, label);
         }
 #ifdef NDEBUG
@@ -808,23 +927,25 @@ inline int parallel_graph_access::build_from_metis_weighted(int n, int* xadj, in
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 inline 
 void ghost_node_communication::addLabel(NodeID node, NodeID label) {
+        const ULONG stamp = ++m_add_label_stamp; // a fresh mark per call replaces the reset scan
         forall_out_edges((*m_G), e, node) {
                 NodeID target = m_G->getEdgeTarget(e);
                 if( !m_G->is_local_node(target)  ) {
                         PEID peID = m_G->getTargetPE(target);
-                        if( !m_PE_packed[peID] ) { // make sure a node is sent at most once
+                        if( m_PE_sent_stamp[peID] != stamp ) { // make sure a node is sent at most once
                                 (*m_send_buffers_ptr)[peID].push_back(m_G->getGlobalID(node));
                                 (*m_send_buffers_ptr)[peID].push_back(label);
-                                m_PE_packed[peID] = true;
+                                m_PE_sent_stamp[peID] = stamp;
                         }
                 }
         } endfor
-        forall_out_edges((*m_G), e, node) {
-                NodeID target = m_G->getEdgeTarget(e);
-                if( !m_G->is_local_node(target)  ) {
-                        m_PE_packed[m_G->getTargetPE(target)] = false;
-                }
-        } endfor
+}
+
+inline void ghost_node_communication::update_ghost_node_data_by_work( ULONG work ) {
+        m_work_counter += work;
+        if( m_work_counter <= m_work_limit || m_size == 1 ) return; 
+        m_work_counter = 0;
+        update_ghost_node_data( false );
 }
 
 // we want to interleave computation and communication
@@ -848,13 +969,11 @@ inline void ghost_node_communication::update_ghost_node_data( bool check_iterati
                                         (*m_send_buffers_ptr)[peID].push_back(0);
                                 }
 
-                                MPI_Request * request = new MPI_Request();
+                                m_isend_requests.push_back( MPI_REQUEST_NULL );
                                 MPI_Isend( &(*m_send_buffers_ptr)[peID][0], 
                                            (*m_send_buffers_ptr)[peID].size(), 
                                            MPI_UNSIGNED_LONG_LONG, 
-                                           peID, m_send_tag, m_communicator, request);
-                                
-                                m_isend_requests.push_back( request );
+                                           peID, m_send_tag, m_communicator, &m_isend_requests.back());
                         }
                 }
 
@@ -890,13 +1009,11 @@ inline void ghost_node_communication::update_ghost_node_data( bool check_iterati
                                 (*m_send_buffers_ptr)[peID].push_back(0);
                         }
 
-                        MPI_Request * request = new MPI_Request();
+                        m_isend_requests.push_back( MPI_REQUEST_NULL );
                         MPI_Isend( &(*m_send_buffers_ptr)[peID][0], 
                                    (*m_send_buffers_ptr)[peID].size(), 
                                    MPI_UNSIGNED_LONG_LONG, 
-                                   peID, m_send_tag, m_communicator, request);
-                        
-                        m_isend_requests.push_back( request );
+                                   peID, m_send_tag, m_communicator, &m_isend_requests.back());
                 }
         }
 
@@ -922,30 +1039,48 @@ void ghost_node_communication::receive_messages_of_neighbors() {
                 int message_length;
                 MPI_Get_count(&st, MPI_UNSIGNED_LONG_LONG, &message_length);
 
-                std::vector<NodeID> message; message.resize(message_length);
+                if( (int)m_recv_buffer.size() < message_length ) m_recv_buffer.resize(message_length);
+                NodeID * message = &m_recv_buffer[0];
                 MPI_Status rst;
-                MPI_Recv( &message[0], message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, m_recv_tag, m_communicator, &rst); 
+                MPI_Recv( message, message_length, MPI_UNSIGNED_LONG_LONG, st.MPI_SOURCE, m_recv_tag, m_communicator, &rst); 
 
                 counter++;
 
                 // now integrate the changes
                 if(message_length == 1) continue; // nothing to do
 
-                for( int i = 0; i < message_length-1; i+=2) {
-                        NodeID global_id = message[i];
-                        NodeID label     = message[i+1];
-
-                        NodeID local_id = m_G->m_global_to_local_id[global_id];
+                // the message holds (global id, label) pairs; the keys are random, so the misses of
+                // update u are started early: 8 updates ahead the ghost id slot, 4 ahead the ghost
+                // lookup (into a ring), its node data and the weight slot of the new label, 2 ahead
+                // the weight slot of the old label. Only cache hints move; the updates run in order.
+                const int updates = message_length / 2;
+                const int slot_ahead = 8, lookup_ahead = 4, old_ahead = 2;
+                NodeID ring[8]; // local ids of the updates u .. u + lookup_ahead
+                static_assert( lookup_ahead < 8 && old_ahead < lookup_ahead, "a ring slot must not be overwritten before it is read" );
+                for( int u = 0; u < lookup_ahead && u < updates; u++) {
+                        ring[u] = m_G->m_global_to_local_id.ref(message[2*u]);
+                }
+                for( int u = 0; u < updates; u++) {
+                        if( u + slot_ahead < updates ) m_G->m_global_to_local_id.prefetch(message[2*(u+slot_ahead)]);
+                        if( u + lookup_ahead < updates ) {
+                                NodeID ahead_id = m_G->m_global_to_local_id.ref(message[2*(u+lookup_ahead)]);
+                                ring[(u+lookup_ahead) & 7] = ahead_id;
+                                m_G->prefetchNodeData(ahead_id);
+                                m_G->prefetch_non_contained_block(message[2*(u+lookup_ahead)+1]);
+                        }
+                        if( u + old_ahead < updates ) {
+                                m_G->prefetch_non_contained_block(m_G->getNodeLabel(ring[(u+old_ahead) & 7]));
+                        }
+                        NodeID local_id = ring[u & 7];
+                        NodeID label    = message[2*u+1];
                         m_G->update_non_contained_block_balance(m_G->getNodeLabel(local_id), label, m_G->getNodeWeight(local_id));
                         m_G->setNodeLabel(local_id, label);
                 }
         }
 
         // wait for previous iteration to finish
-        for( unsigned i = 0; i < m_isend_requests.size(); i++) {
-                MPI_Status st;
-                MPI_Wait( m_isend_requests[i], &st);
-                delete m_isend_requests[i];
+        if( !m_isend_requests.empty() ) {
+                MPI_Waitall( m_isend_requests.size(), &m_isend_requests[0], MPI_STATUSES_IGNORE);
         }
         m_isend_requests.clear();
 
@@ -989,21 +1124,18 @@ inline void ghost_node_communication::update_ghost_node_data_global() {
         std::vector< std::vector< NodeID > > send_buffers; // buffers to send messages
         send_buffers.resize(m_size);
         forall_local_nodes((*m_G), node) {
+                // only interface nodes have ghost neighbors (new_edge marks them), so the others add nothing
+                if( !m_G->is_interface_node(node) ) continue;
+                const ULONG stamp = ++m_add_label_stamp; // fresh mark per node, as in addLabel
                 forall_out_edges((*m_G), e, node) {
                         NodeID target = m_G->getEdgeTarget(e);
                         if( !m_G->is_local_node(target)  ) {
                                 PEID peID = m_G->getTargetPE(target);
-                                if( !m_PE_packed[peID] ) { // make sure a node is sent at most once
+                                if( m_PE_sent_stamp[peID] != stamp ) { // make sure a node is sent at most once
                                         send_buffers[peID].push_back(m_G->getGlobalID(node));
                                         send_buffers[peID].push_back(m_G->getNodeLabel(node));
-                                        m_PE_packed[peID] = true;
+                                        m_PE_sent_stamp[peID] = stamp;
                                 }
-                        }
-                } endfor
-                forall_out_edges((*m_G), e, node) {
-                        NodeID target = m_G->getEdgeTarget(e);
-                        if( !m_G->is_local_node(target)  ) {
-                                m_PE_packed[m_G->getTargetPE(target)] = false;
                         }
                 } endfor
         } endfor
@@ -1042,11 +1174,26 @@ inline void ghost_node_communication::update_ghost_node_data_global() {
                 // now integrate the changes
                 if(message_length == 1) continue; // nothing to do
 
-                for( int i = 0; i < message_length-1; i+=2) {
-                        NodeID global_id = message[i];
-                        NodeID label     = message[i+1];
-
-                        m_G->setNodeLabel( m_G->m_global_to_local_id[global_id], label);
+                // the global ids are random keys into the ghost map, so the lookups of pair u are
+                // started early: the hash slot slot_ahead pairs ahead, the lookup itself (into a ring)
+                // and the node data lookup_ahead pairs ahead; the stores keep their order
+                const int pairs = message_length / 2;
+                const int slot_ahead = 8, lookup_ahead = 4;
+                const int ring_size = 8; // a power of two
+                static_assert( lookup_ahead < ring_size, "a ring slot must not be overwritten before it is read" );
+                static_assert( (ring_size & (ring_size - 1)) == 0, "ring_size must be a power of two" );
+                NodeID ring[ring_size]; // local ids of the pairs u .. u + lookup_ahead
+                for( int u = 0; u < lookup_ahead && u < pairs; u++) {
+                        ring[u] = m_G->m_global_to_local_id.ref(message[2*u]);
+                }
+                for( int u = 0; u < pairs; u++) {
+                        if( u + slot_ahead < pairs ) m_G->m_global_to_local_id.prefetch(message[2*(u+slot_ahead)]);
+                        if( u + lookup_ahead < pairs ) {
+                                NodeID ahead_id = m_G->m_global_to_local_id.ref(message[2*(u+lookup_ahead)]);
+                                ring[(u+lookup_ahead) & (ring_size - 1)] = ahead_id;
+                                m_G->prefetchNodeData(ahead_id);
+                        }
+                        m_G->setNodeLabel( ring[u & (ring_size - 1)], message[2*u+1]);
                 }
         }
         MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);

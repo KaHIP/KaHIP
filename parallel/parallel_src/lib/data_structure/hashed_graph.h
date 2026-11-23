@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 #include "definitions.h"
+#include "data_structure/node_pool_allocator.h"
 #include "limits.h"
 
 struct hashed_edge {
@@ -45,7 +46,10 @@ struct hash_hashed_edge {
        }
 };
 
-typedef std::unordered_map<const hashed_edge, data_hashed_edge, hash_hashed_edge, compare_hashed_edge> hashed_graph;
+// node_pool_allocator: one heap allocation per coarse edge was a large part of contraction; the
+// allocator does not change the iteration order, which defines the coarse edge order
+typedef std::unordered_map<const hashed_edge, data_hashed_edge, hash_hashed_edge, compare_hashed_edge,
+                           node_pool_allocator< std::pair<const hashed_edge, data_hashed_edge> > > hashed_graph;
 
 
 #endif /* end of include guard: HASHED_GRAPH_DG1JG7O0 */

@@ -8,7 +8,7 @@
 #ifndef LINEAR_PROBING_HASHMAP_KQ738TKS
 #define LINEAR_PROBING_HASHMAP_KQ738TKS
 
-#include <stack>
+#include <vector>
 
 const NodeID NOT_CONTAINED = std::numeric_limits<NodeID>::max();
 
@@ -23,66 +23,62 @@ struct KeyValuePair {
 };
 
 // no resize, no deletes
+// Open addressing with linear probing in a power-of-two table that is at most half full
+// (multiplicative hash); clear() resets only the slots used since the last clear.
 class linear_probing_hashmap {
 public:
         linear_probing_hashmap() {};
-
         virtual ~linear_probing_hashmap() {};
-        void init( ULONG max_size, ULONG factor ) {
-                m_size      = max_size*factor;
-                m_real_size = m_size + max_size*1.1; // allow some slack in the end so that we do not need to handle special cases
 
-                m_internal_map.resize(m_real_size);
+        void init( ULONG max_size, ULONG factor ) {
+                size_t cap = 16;
+                while( cap < 2 * (size_t)max_size ) cap <<= 1;
+                m_internal_map.assign(cap, KeyValuePair());
+                m_mask         = cap - 1;
+                m_contained_key_positions.clear();
+                m_contained_key_positions.reserve(max_size);
                 m_last_request = NOT_CONTAINED;
                 m_last_pos     = NOT_CONTAINED;
         }
 
         void clear() {
-                while( m_contained_key_positions.size() > 0 ) {
-                        NodeID cur_key_position = m_contained_key_positions.top();
-                        m_contained_key_positions.pop();
-
-                        m_internal_map[cur_key_position].key   = NOT_CONTAINED;
-                        m_internal_map[cur_key_position].value = 0;
+                for( size_t i = 0; i < m_contained_key_positions.size(); i++) {
+                        KeyValuePair & kv = m_internal_map[m_contained_key_positions[i]];
+                        kv.key   = NOT_CONTAINED;
+                        kv.value = 0;
                 }
+                m_contained_key_positions.clear();
                 m_last_request = NOT_CONTAINED;
         }
 
         // find table position or the next free table position if it is not contained
         NodeID contains( NodeID node ) {
                 if( m_last_request == node ) return true;
-                NodeID hash_value = hash(node);
-                for( NodeID i = hash_value; i < m_real_size; i++) {
-                        if( m_internal_map[i].key == node || m_internal_map[i].key == NOT_CONTAINED) {
-                                hash_value = i;
-                                break;
-                        }
+                NodeID pos = hash(node);
+                while( m_internal_map[pos].key != node && m_internal_map[pos].key != NOT_CONTAINED ) {
+                        pos = (pos + 1) & m_mask;
                 }
-
-                return m_internal_map[hash_value].key == node;
+                return m_internal_map[pos].key == node;
         }
 
         // find table position or the next free table position if it is not contained
         NodeID find( NodeID node ) {
                 if( m_last_request == node ) return m_last_pos;
 
-                NodeID hash_value = hash(node);
-                for( NodeID i = hash_value; i < m_real_size; i++) {
-                        if( m_internal_map[i].key == node || m_internal_map[i].key == NOT_CONTAINED) {
-                                hash_value = i;
-                                break;
-                        }
+                NodeID pos = hash(node);
+                while( m_internal_map[pos].key != node && m_internal_map[pos].key != NOT_CONTAINED ) {
+                        pos = (pos + 1) & m_mask;
                 }
 
-                if( m_internal_map[hash_value].key == NOT_CONTAINED ) {
-                        m_internal_map[hash_value].key = node;
-                        m_internal_map[hash_value].value = 0;
-                        m_contained_key_positions.push(hash_value);
+                if( m_internal_map[pos].key == NOT_CONTAINED ) {
+                        m_internal_map[pos].key   = node;
+                        m_internal_map[pos].value = 0;
+                        m_contained_key_positions.push_back(pos);
                 }
 
                 m_last_request = node;
-                m_last_pos     = hash_value;
-                return hash_value;
+                m_last_pos     = pos;
+                return pos;
         }
 
         NodeID& operator[](NodeID node) {
@@ -91,17 +87,17 @@ public:
         };
 
         NodeID hash(NodeID key) {
-                return key % m_size;
+                return (NodeID)((key * 0x9E3779B97F4A7C15ULL) >> 32) & m_mask;
         } 
 
         std::vector< KeyValuePair > * internal_access() {return & m_internal_map; }
+
 private:
-        NodeID m_size; 
-        NodeID m_real_size; 
+        NodeID m_mask;
         NodeID m_last_pos;
         NodeID m_last_request;
         std::vector< KeyValuePair > m_internal_map;
-        std::stack< NodeID > m_contained_key_positions;
+        std::vector< NodeID > m_contained_key_positions;
 };
 
 

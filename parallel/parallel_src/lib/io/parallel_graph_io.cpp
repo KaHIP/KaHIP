@@ -7,6 +7,10 @@
 
 #define _FILE_OFFSET_BITS 64
 
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -16,8 +20,11 @@
 #include <sstream>
 #include <stdlib.h>
 #include <vector>
+#include <cstring>
+#include <algorithm>
 
 #include "parallel_graph_io.h"
+#include "parallel_graph_io_huge.h"
 #include "tools/helpers.h"
 
 const ULONG fileTypeVersionNumber = 3;
@@ -58,26 +65,103 @@ int parallel_graph_io::readGraphWeighted(PPartitionConfig & config,
         return readGraphWeightedFlexible(G, filename, peID, comm_size, communicator);
 }
 
+// Parses one number like strtol(p, &end, 10) on a line that ends at line_end:
+// leading whitespace, an optional sign, then decimal digits; returns 0 if there are no digits.
+static inline long parse_long_in_line(const char *& p, const char * line_end) {
+        const char * q = p;
+        while( q < line_end && (*q == ' ' || *q == '\t' || *q == '\r' || *q == '\v' || *q == '\f') ) q++;
+        bool negative = false;
+        if( q < line_end && (*q == '+' || *q == '-') ) { negative = (*q == '-'); q++; }
+        if( q == line_end || *q < '0' || *q > '9' ) return 0; // no conversion, strtol returns 0
+        unsigned long value = 0;
+        while( q < line_end && *q >= '0' && *q <= '9' ) {
+                value = value * 10 + (unsigned long)(*q - '0');
+                q++;
+        }
+        p = q;
+        return negative ? -(long)value : (long)value;
+}
+
+// number of leading decimal digits in the 8 bytes of x (in memory order), 8 if all are digits;
+// 9 if a byte is not ASCII
+static inline unsigned leading_digits8(unsigned long long x) {
+        if( x & 0x8080808080808080ULL ) return 9;
+        // high bit of a byte set iff the byte is above '9' or below '0' (no carries between bytes)
+        const unsigned long long non_digit = ((x + 0x4646464646464646ULL) | ~((x | 0x8080808080808080ULL) - 0x3030303030303030ULL)) & 0x8080808080808080ULL;
+        return non_digit ? (unsigned)(__builtin_ctzll(non_digit) >> 3) : 8;
+}
+
+// value of the first n (1 to 7) digits of x: shift out the bytes after them, then combine digit
+// pairs, pairs of pairs and the two halves with three multiplications
+static inline unsigned long long value_of_digits8(unsigned long long x, unsigned n) {
+        unsigned long long v = (x - 0x3030303030303030ULL) << (8 * (8 - n));
+        v = (v * 10) + (v >> 8);
+        v = (((v & 0x000000FF000000FFULL) * (100 + (1000000ULL << 32))) + (((v >> 16) & 0x000000FF000000FFULL) * (1 + (10000ULL << 32)))) >> 32;
+        return v;
+}
+
+// the same as parse_long_in_line; a run of at most 7 digits after blanks is read with one 8-byte
+// load (end is the end of the mapping, so the load stays inside it)
+static inline long parse_target_in_line(const char *& p, const char * line_end, const char * end) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        const char * q = p;
+        while( q < line_end && *q == ' ' ) q++;
+        if( q < line_end && (unsigned char)(*q - '0') < 10 && end - q >= 8 ) {
+                unsigned long long x;
+                memcpy(&x, q, 8);
+                const unsigned n = leading_digits8(x);
+                if( n < 8 && q + n <= line_end ) {
+                        p = q + n;
+                        return (long)value_of_digits8(x, n);
+                }
+        }
+#endif
+        (void)end;
+        return parse_long_in_line(p, line_end);
+}
+
 int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G, 
                                                  std::string filename, 
                                                  PEID peID, PEID comm_size, MPI_Comm communicator) {
-        std::string line;
-
-        // open file for reading
-        std::ifstream in(filename.c_str());
-        if (!in) {
+        // map the file and split it into lines like std::getline does
+        int fd = open(filename.c_str(), O_RDONLY);
+        if (fd < 0) {
                 std::cerr << "Error opening " << filename << std::endl;
                 return 1;
         }
+        struct stat sb;
+        fstat(fd, &sb);
+        size_t file_size = sb.st_size;
+        const char * data = NULL;
+        if( file_size > 0 ) {
+                data = (const char*) mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+                madvise((void*)data, file_size, MADV_SEQUENTIAL);
+        }
+        close(fd);
+        const char * pos = data;
+        const char * end = data + file_size;
+
+        // returns the next line [line_begin, line_end) or false at the end of the file
+        auto next_line = [&](const char *& line_begin, const char *& line_end) -> bool {
+                if( pos >= end ) return false;
+                line_begin = pos;
+                const char * nl = (const char*) memchr(pos, '\n', end - pos);
+                if( nl == NULL ) { line_end = end; pos = end; }
+                else             { line_end = nl;  pos = nl + 1; }
+                return true;
+        };
+
+        const char * lb = NULL;
+        const char * le = NULL;
+        next_line(lb, le);
+        //skip comments
+        while( lb < le && lb[0] == '%' ) {
+                next_line(lb, le);
+        }
+        std::string line(lb, le);
 
         NodeID nmbNodes;
         EdgeID nmbEdges;
-
-        std::getline(in,line);
-        //skip comments
-        while( line[0] == '%' ) {
-                std::getline(in, line);
-        }
 
         int ew = 0;
         std::stringstream ss(line);
@@ -86,83 +170,177 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         ss >> ew;
 
         if(ew != 0) {
-                in.close();
+                if( data != NULL ) munmap((void*)data, file_size);
                 if(peID == 0) std::cout <<  "graph is weighted --> using a different IO routine"  << std::endl;
                 return readGraphWeightedMETIS_fixed(G, filename, peID, comm_size, communicator);
         }
-        
-        // pe p reads the lines p*ceil(n/size) to (p+1)floor(n/size) lines of that file
-        ULONG from  = peID     * ceil(nmbNodes / (double)comm_size);
-        ULONG to    = (peID+1) * ceil(nmbNodes / (double)comm_size) - 1;
-        to = std::min(to, nmbNodes-1);
+
+        // adjacency of the local nodes in one array: targets of node i are
+        // local_targets[local_offsets[i] .. local_offsets[i+1])
+        std::vector< NodeID > local_targets;
+        std::vector< EdgeID > local_offsets;
+        local_targets.reserve( (2 * (ULONG)nmbEdges) / comm_size + 1 ); // average share; grows if needed
+        local_offsets.push_back(0);
+
+        // Find the first line of this PE's range without scanning the file up to it: split the
+        // body (after the header) into SUB byte chunks per PE, count the node lines (lines that are
+        // not comments) that start in each chunk, and start at the chunk that holds node "from".
+        const char * body   = pos;
+        const size_t body_n = end - body;
+        const PEID   SUB    = 1024;
+        const size_t chunks = (size_t)comm_size * SUB;
+        auto chunk_begin = [&](size_t c) -> const char * {
+                return body + (body_n / chunks) * (size_t)c + std::min((size_t)c, body_n % chunks);
+        };
+        // per chunk: node lines and adjacency entries (numbers) that start in it
+        std::vector< ULONG > my_counts(2 * SUB, 0);
+        for( PEID s = 0; s < SUB && comm_size > 1; s++) { // with one PE the range is the whole file
+                const unsigned char * cb = (const unsigned char *) chunk_begin((size_t)peID * SUB + s);
+                const unsigned char * ce = (const unsigned char *) chunk_begin((size_t)peID * SUB + s + 1);
+                const size_t len = ce - cb;
+                if( len == 0 ) continue;
+                // branch-free so that the compiler vectorizes it: a number starts at a digit that
+                // follows a non-digit, a line starts after a newline unless it is a comment
+                const unsigned char before = cb > (const unsigned char *) body ? cb[-1] : '\n';
+                ULONG lines   = (before == '\n' && cb[0] != '%') ? 1 : 0;
+                ULONG entries = ((unsigned char)(cb[0] - '0') < 10 && (unsigned char)(before - '0') >= 10) ? 1 : 0;
+                // byte counters over blocks of at most 255 bytes, so that the vector adds stay 8 bit wide
+                for( size_t i = 1; i < len; ) {
+                        const size_t stop = std::min(len, i + 255);
+                        unsigned char block_entries = 0, block_lines = 0;
+                        for( ; i < stop; i++) {
+                                const unsigned char c = cb[i], b = cb[i-1];
+                                block_entries += ((unsigned char)(c - '0') < 10) & ((unsigned char)(b - '0') >= 10);
+                                block_lines   += (b == '\n') & (c != '%');
+                        }
+                        entries += block_entries;
+                        lines   += block_lines;
+                }
+                my_counts[2*s]   = lines;
+                my_counts[2*s+1] = entries;
+        }
+        std::vector< ULONG > all_counts(2 * chunks, 0);
+        MPI_Allgather(&my_counts[0], 2 * SUB, MPI_UNSIGNED_LONG_LONG, &all_counts[0], 2 * SUB, MPI_UNSIGNED_LONG_LONG, communicator);
+        std::vector< ULONG > chunk_counts(chunks, 0);
+        for( size_t c = 0; c < chunks; c++) chunk_counts[c] = all_counts[2*c];
+
+        // PE ranges at chunk boundaries so that every PE gets about the same cost, where a chunk
+        // costs its adjacency entries plus its node lines times the average degree: half of the
+        // cost balances edges, half balances nodes. Fall back to equal node counts if a PE would
+        // get no node.
+        std::vector< NodeID > vertex_dist( comm_size+1, 0 );
+        {
+                const double avg_deg = nmbNodes > 0 ? 2.0 * nmbEdges / (double)nmbNodes : 0;
+                double total = 0;
+                for( size_t c = 0; c < chunks; c++) total += all_counts[2*c+1] + all_counts[2*c] * avg_deg;
+                double cost  = 0;
+                ULONG  lines = 0;
+                PEID   p     = 1;
+                for( size_t c = 0; c < chunks && p < comm_size; c++) {
+                        cost  += all_counts[2*c+1] + all_counts[2*c] * avg_deg;
+                        lines += all_counts[2*c];
+                        while( p < comm_size && cost >= total * p / comm_size ) vertex_dist[p++] = lines;
+                }
+                while( p < comm_size ) vertex_dist[p++] = lines;
+                for( size_t c = 0; c < chunks; c++) vertex_dist[comm_size] += chunk_counts[c];
+        }
+        bool every_pe_has_nodes = vertex_dist[comm_size] == nmbNodes;
+        for( PEID c = 0; c < comm_size; c++) {
+                if( vertex_dist[c+1] <= vertex_dist[c] ) every_pe_has_nodes = false;
+        }
+        if( !every_pe_has_nodes ) {
+                for( PEID c = 0; c <= comm_size; c++) {
+                        vertex_dist[c] = std::min((NodeID)nmbNodes, (NodeID)(c * ceil(nmbNodes / (double)comm_size)));
+                }
+        }
+        ULONG from  = vertex_dist[peID];
+        ULONG to    = vertex_dist[peID+1] - 1;
 
         ULONG local_no_nodes = to - from + 1;
         PRINT(std::cout <<  "peID " <<  peID <<  " from " <<  from <<  " to " <<  to  <<  " amount " <<  local_no_nodes << std::endl;);
+        local_offsets.reserve(local_no_nodes + 1);
 
-        std::vector< std::vector< NodeID > > local_edge_lists;
-        local_edge_lists.resize(local_no_nodes);
-        
         ULONG counter  = 0;
-        NodeID node_counter = 0;
+        if( comm_size > 1 ) { // with one PE reading starts at the body
+                size_t c = 0;
+                while( c < chunks - 1 && counter + chunk_counts[c] <= from ) {
+                        counter += chunk_counts[c];
+                        c++;
+                }
+                // first line start at or after the chunk begin; counter is its node index
+                pos = chunk_begin(c);
+                if( pos > body && pos < end && pos[-1] != '\n' ) {
+                        const char * nl = (const char*) memchr(pos, '\n', end - pos);
+                        pos = (nl == NULL) ? end : nl + 1;
+                }
+                // huge pages for the part of local_targets that is surely written (chunk-aligned ranges only)
+                if( every_pe_has_nodes ) {
+                        const ULONG surely = io_huge_pages::entries_lower_bound(all_counts, chunks, from, to, chunk_begin(c), pos);
+                        io_huge_pages::advise(local_targets.data(), std::min((ULONG)local_targets.capacity(), surely) * sizeof(NodeID));
+                }
+        } else { // one PE reads all 2m entries of the file
+                io_huge_pages::advise(local_targets.data(), std::min((ULONG)local_targets.capacity(), 2 * (ULONG)nmbEdges) * sizeof(NodeID));
+        }
         EdgeID edge_counter = 0;
 
-        char *oldstr, *newstr;
-        while( std::getline(in, line) ) {
+        while( next_line(lb, le) ) {
                 if( counter > to ) {
                         break;
                 }
-                if (line[0] == '%') { // a comment in the file
+
+                if (lb < le && lb[0] == '%') { // a comment in the file
                         continue;
                 }
 
                 if( counter >= from ) {
-                        oldstr = &line[0];
-                        newstr = 0;
-
+                        const char * p = lb;
                         for (;;) {
-                                NodeID target;
-                                target = (NodeID) strtol(oldstr, &newstr, 10);
-
+                                NodeID target = (NodeID) parse_target_in_line(p, le, end);
                                 if (target == 0) {
                                         break;
                                 }
-
-                                oldstr = newstr; 
-
-                                local_edge_lists[node_counter].push_back(target);
+                                local_targets.push_back(target);
                                 edge_counter++;
-
                         }
-
-                        node_counter++;
+                        local_offsets.push_back(local_targets.size());
                 }
 
                 counter++;
+        }
+        if( data != NULL ) munmap((void*)data, file_size);
+        while( local_offsets.size() < local_no_nodes + 1 ) local_offsets.push_back(local_targets.size());
 
-                if( in.eof() ) {
-                        break;
+        // number of distinct ghost nodes (non-local targets), so that the build below allocates
+        // the ghost structures once; only if the bitmap over all ids is not larger than local_targets
+        NodeID ghosts = 0;
+        if( comm_size > 1 && nmbNodes / 64 + 1 <= local_targets.size() ) {
+                std::vector< unsigned long long > seen( nmbNodes / 64 + 1, 0 );
+                for( EdgeID j = 0; j < local_targets.size(); j++) {
+                        NodeID target = local_targets[j]-1;
+                        if( (target < from || target > to) && target < nmbNodes ) seen[target >> 6] |= 1ULL << (target & 63);
                 }
+                for( size_t w = 0; w < seen.size(); w++) ghosts += __builtin_popcountll(seen[w]);
         }
 
         MPI_Barrier(communicator);
-        
+
         G.start_construction(local_no_nodes, 2*edge_counter, nmbNodes, 2*nmbEdges);
+        io_huge_pages::advise_edges(G, edge_counter); // the first edge_counter elements, each written by new_edge below
         G.set_range(from, to);
 
-        std::vector< NodeID > vertex_dist( comm_size+1, 0 );
-        for( PEID peID = 0; peID <= comm_size; peID++) {
-                vertex_dist[peID] = peID * ceil(nmbNodes / (double)comm_size); // from positions
-        }
         G.set_range_array(vertex_dist);
+        if( ghosts > 0 ) G.reserve_ghosts(ghosts);
 
         for (NodeID i = 0; i < local_no_nodes; ++i) {
                 NodeID node = G.new_node();
                 G.setNodeWeight(node, 1);
                 G.setNodeLabel(node, from+node);
                 G.setSecondPartitionIndex(node, 0);
-        
-                for( ULONG j = 0; j < local_edge_lists[i].size(); j++) {
-                        NodeID target = local_edge_lists[i][j]-1; // -1 since there are no nodes with id 0 in the file
+
+                for( EdgeID j = local_offsets[i]; j < local_offsets[i+1]; j++) {
+                        // cache hint for the ghost id lookup of an edge a few entries ahead
+                        if( j + 8 < local_targets.size() ) G.prefetch_local_id(local_targets[j + 8] - 1);
+                        NodeID target = local_targets[j]-1; // -1 since there are no nodes with id 0 in the file
                         EdgeID e = G.new_edge(node, target);
                         G.setEdgeWeight(e, 1);
                 }

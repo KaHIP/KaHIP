@@ -16,7 +16,7 @@ ULONG parallel_graph_access::m_comm_rounds_up = 128;
 parallel_graph_access::parallel_graph_access( MPI_Comm communicator ) : m_num_local_nodes(0), 
                                                  from(0), 
                                                  to(0),
-                                                 m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL) {
+                                                 m_num_ghost_nodes(0), m_max_node_degree(0), m_bm(NULL), m_bm_coarsening(NULL), m_bm_refinement(NULL) {
 
 
                 m_communicator = communicator;
@@ -38,22 +38,26 @@ void parallel_graph_access::init_balance_management( PPartitionConfig & config )
                 delete m_bm;
         }
 
+        m_bm_coarsening = NULL;
+        m_bm_refinement = NULL;
         if( config.total_num_labels != config.k ) {
-                m_bm = new balance_management_coarsening( this, config.total_num_labels );
+                m_bm_coarsening = new balance_management_coarsening( this, config.total_num_labels );
+                m_bm = m_bm_coarsening;
         } else {
-                m_bm = new balance_management_refinement( this, config.total_num_labels );
+                m_bm_refinement = new balance_management_refinement( this, config.total_num_labels );
+                m_bm = m_bm_refinement;
         }
 }
 
-void parallel_graph_access::update_non_contained_block_balance( PartitionID from, PartitionID to, NodeWeight node_weight) {
-        m_bm->update_non_contained_block_balance( from, to, node_weight);
-}
 void parallel_graph_access::update_block_weights() {
         m_bm->update();
 }
 
 void parallel_graph_access::update_ghost_node_data( bool check_iteration_counter ) {
         m_gnc->update_ghost_node_data( check_iteration_counter );
+}
+void parallel_graph_access::update_ghost_node_data_by_work( ULONG work ) {
+        m_gnc->update_ghost_node_data_by_work( work );
 }
 void parallel_graph_access::update_ghost_node_data_global() {
         m_gnc->update_ghost_node_data_global();

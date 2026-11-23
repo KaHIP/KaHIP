@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string>
 #include "parallel_vector_io.h"
 #include "tools/helpers.h"
 
@@ -180,14 +181,18 @@ void parallel_vector_io::writePartitionSimpleParallel(parallel_graph_access & G,
         MPI_Comm_rank( MPI_COMM_WORLD, &rank);
         MPI_Comm_size( MPI_COMM_WORLD, &size);
         
+        // each process formats its labels into one buffer and writes it at once
+        // (same bytes as one "label\n" line per node, without a flush per line)
+        std::string buffer;
+        buffer.reserve(G.number_of_local_nodes() * 4);
+        forall_local_nodes(G, node) {
+                buffer += std::to_string(G.getNodeLabel(node));
+                buffer += '\n';
+        } endfor
+
         if( rank == ROOT ) {
                 std::ofstream f(filename.c_str());
-
-                forall_local_nodes(G, node) {
-                        f <<  G.getNodeLabel(node) ;
-                        f <<  std::endl;
-                } endfor
-
+                f.write(buffer.data(), buffer.size());
                 f.close();
         } 
 
@@ -197,10 +202,7 @@ void parallel_vector_io::writePartitionSimpleParallel(parallel_graph_access & G,
                 if( rank == i ) {
                         std::ofstream f;
                         f.open(filename.c_str(), std::ofstream::out | std::ofstream::app);
-                        forall_local_nodes(G, node) {
-                                f <<  G.getNodeLabel(node) ;
-                                f <<  std::endl;
-                        } endfor
+                        f.write(buffer.data(), buffer.size());
                         f.close();
                 }
         }
