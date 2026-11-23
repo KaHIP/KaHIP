@@ -24,6 +24,7 @@
 #include <algorithm>
 
 #include "parallel_graph_io.h"
+#include "parallel_graph_io_huge.h"
 #include "tools/helpers.h"
 
 const ULONG fileTypeVersionNumber = 3;
@@ -272,6 +273,13 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
                         const char * nl = (const char*) memchr(pos, '\n', end - pos);
                         pos = (nl == NULL) ? end : nl + 1;
                 }
+                // huge pages for the part of local_targets that is surely written (chunk-aligned ranges only)
+                if( every_pe_has_nodes ) {
+                        const ULONG surely = io_huge_pages::entries_lower_bound(all_counts, chunks, from, to, chunk_begin(c), pos);
+                        io_huge_pages::advise(local_targets.data(), std::min((ULONG)local_targets.capacity(), surely) * sizeof(NodeID));
+                }
+        } else { // one PE reads all 2m entries of the file
+                io_huge_pages::advise(local_targets.data(), std::min((ULONG)local_targets.capacity(), 2 * (ULONG)nmbEdges) * sizeof(NodeID));
         }
         EdgeID edge_counter = 0;
 
@@ -317,6 +325,7 @@ int parallel_graph_io::readGraphWeightedFlexible(parallel_graph_access & G,
         MPI_Barrier(communicator);
 
         G.start_construction(local_no_nodes, 2*edge_counter, nmbNodes, 2*nmbEdges);
+        io_huge_pages::advise_edges(G, edge_counter); // the first edge_counter elements, each written by new_edge below
         G.set_range(from, to);
 
         G.set_range_array(vertex_dist);

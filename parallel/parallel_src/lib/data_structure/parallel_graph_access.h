@@ -246,6 +246,7 @@ class parallel_graph_access {
 public:
 
         friend class ghost_node_communication;
+        friend struct io_huge_pages; // io/parallel_graph_io_huge.cpp
 
         parallel_graph_access( ) : m_num_local_nodes(0), 
                                      from(0), 
