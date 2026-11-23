@@ -83,6 +83,19 @@ Some projects that use KaHIP or ParHIP:
 
 A longer list, including papers that use KaHIP, is in [docs/kahip_users.pdf](docs/kahip_users.pdf).
 
+## NEW in v3.30:
+- *Faster ParHIP*: ParHIP's partitioning is 2.5x faster in geometric mean and 3.2x faster in total time over a benchmark of 180 jobs (20 graphs, k = 8 and 64, 1 to 32 processes, all six preconfigurations); reading the graph is 2.8x faster in geometric mean and 3.6x faster in total. Most changes give bit-identical partitions; the others (coarsening node order, input distribution, coarse rebalancing, refinement round budget) passed a quality gate against the previous version, and the geometric mean edge cut is 0.5% smaller. Main changes: an mmap graph reader with a hand-written parser and balanced input distribution, cache-friendly coarsening label propagation with open-addressing maps and prefetching, array-based contraction with reused ghost send lists, sort-based projection, refinement rounds of equal edge work, and a buffered partition writer. It was developed with [Agentic Algorithm Engineering](https://github.com/CHSZLab/AgenticAlgorithmEngineering) (AAE). Details are in [PR #189](https://github.com/KaHIP/KaHIP/pull/189).
+- *Example*: ParHIP on uk-2007-05, k = 64, 128 cores, fastsocial, seeds 0 to 4:
+
+  | | v3.29 | v3.30 | v3.30 / v3.29 |
+  |---|---|---|---|
+  | edge cut, average | 6,635,192 | 6,680,251 | 1.007 |
+  | edge cut, minimum | 6,191,128 | 6,300,236 | 1.018 |
+  | edge cut, maximum | 7,098,687 | 7,140,866 | 1.006 |
+  | partitioning time, average (s) | 66.93 | 16.35 | 0.244 (4.1x faster) |
+  | partitioning time, min to max (s) | 66.73 to 67.25 | 16.26 to 16.43 | |
+  | time to read the graph (s) | about 66.8 | about 4.84 | 0.072 (13.8x faster) |
+
 ## NEW in v3.29:
 - *Connected blocks in the library*: the connected-blocks partitioning (`--connected_blocks`, see v3.25) is now also available through the C/C++ interface as `kaffpa_connected_blocks`, with the same arguments as `kaffpa` (mode `STRONG` only). The post-processing that makes every block connected moved from the `kaffpa` program into the library (`lib/partition/connected_blocks.cpp`); the output of `kaffpa` and `kaffpaE` is unchanged.
 
