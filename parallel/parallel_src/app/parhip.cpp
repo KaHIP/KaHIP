@@ -29,7 +29,6 @@
 #include "random_functions.h"
 #include "timer.h"
 #include "tools/distributed_quality_metrics.h"
-#include "tools/aae_timers.h"
 
 int main(int argn, char **argv) {
 
@@ -80,10 +79,7 @@ int main(int argn, char **argv) {
                 srand(partition_config.seed);
 
                 parallel_graph_access G(communicator);
-                {
-                        aae_scope aae_s(AAE_IO);
-                        parallel_graph_io::readGraphWeighted(partition_config, G, graph_filename, rank, size, communicator);
-                }
+                parallel_graph_io::readGraphWeighted(partition_config, G, graph_filename, rank, size, communicator);
                 //parallel_graph_io::readGraphWeightedFlexible(G, graph_filename, rank, size, communicator);
                 if( rank == ROOT ) std::cout <<  "took " <<  t.elapsed()  << std::endl;
                 if( rank == ROOT ) std::cout <<  "n:" <<  G.number_of_global_nodes() << " m: " <<  G.number_of_global_edges()  << std::endl;
@@ -186,7 +182,6 @@ int main(int argn, char **argv) {
                 if( partition_config.save_partition ) {
                         parallel_vector_io pvio;
                         std::string filename("tmppartition.txtp");
-                        aae_scope aae_s(AAE_WRITE);
                         pvio.writePartitionSimpleParallel(G, filename);
                 }
 
@@ -195,7 +190,6 @@ int main(int argn, char **argv) {
                         std::string filename("tmppartition.binp");
                         pvio.writePartitionBinaryParallelPosix(partition_config, G, filename);
                 }
-                aae_report(communicator);
         }
 
         MPI_Barrier(MPI_COMM_WORLD);

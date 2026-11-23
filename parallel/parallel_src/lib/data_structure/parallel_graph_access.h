@@ -28,7 +28,6 @@
 #include "definitions.h"
 #include "partition_config.h"
 #include "tools/timer.h"
-#include "tools/aae_timers.h"
 
 // ParHIP's own type, kept apart from the KaHIP type of the same name
 namespace parhip {
@@ -1029,7 +1028,6 @@ inline void ghost_node_communication::update_ghost_node_data( bool check_iterati
 
 inline 
 void ghost_node_communication::receive_messages_of_neighbors() {
-        aae_scope aae_s(AAE_COMM);
         PEID counter = 0;
         m_recv_iteration++;
         m_recv_tag++;
