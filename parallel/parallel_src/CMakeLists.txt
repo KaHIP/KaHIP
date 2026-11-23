@@ -46,7 +46,8 @@ set(LIBGRAPH2BGF_SOURCE_FILES
   lib/io/parallel_graph_io.cpp
   lib/data_structure/balance_management.cpp
   lib/data_structure/balance_management_refinement.cpp
-  lib/data_structure/balance_management_coarsening.cpp)
+  lib/data_structure/balance_management_coarsening.cpp
+  lib/io/parallel_graph_io_huge.cpp) # the reader calls it
 add_library(libgraph2bgf OBJECT ${LIBGRAPH2BGF_SOURCE_FILES})
 
 set(LIBEDGELIST_SOURCE_FILES
@@ -55,7 +56,8 @@ set(LIBEDGELIST_SOURCE_FILES
   lib/data_structure/balance_management.cpp
   lib/data_structure/balance_management_refinement.cpp
   lib/data_structure/balance_management_coarsening.cpp
-  ${CMAKE_SOURCE_DIR}/extern/argtable3-3.2.2/argtable3.c)
+  ${CMAKE_SOURCE_DIR}/extern/argtable3-3.2.2/argtable3.c
+  lib/io/parallel_graph_io_huge.cpp) # the reader calls it
 add_library(libedgelist OBJECT ${LIBEDGELIST_SOURCE_FILES})
 
 set(LIBDSPAC_SOURCE_FILES
