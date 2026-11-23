@@ -96,6 +96,8 @@ A longer list, including papers that use KaHIP, is in [docs/kahip_users.pdf](doc
   | partitioning time, min to max (s) | 66.73 to 67.25 | 16.26 to 16.43 | |
   | time to read the graph (s) | about 66.8 | about 4.84 | 0.072 (13.8x faster) |
 
+- *Fortran interface*: the Fortran modules `kahip` (all routines of `kaHIP_interface.h`) and `parhip` (`ParHIPPartitionKWay`), built with `-DBUILDFORTRAN=On`. They bind directly to the C interface; node and edge weights are optional arguments, and the integer kind `kahip_idx` follows `64BITMODE`. Examples that call every routine are in [misc/example_library_call/fortran](misc/example_library_call/fortran) and run as `ctest` tests; see [Using KaHIP in Fortran](#using-kahip-in-fortran). Details are in [PR #186](https://github.com/KaHIP/KaHIP/pull/186) and [PR #187](https://github.com/KaHIP/KaHIP/pull/187).
+
 ## NEW in v3.29:
 - *Connected blocks in the library*: the connected-blocks partitioning (`--connected_blocks`, see v3.25) is now also available through the C/C++ interface as `kaffpa_connected_blocks`, with the same arguments as `kaffpa` (mode `STRONG` only). The post-processing that makes every block connected moved from the `kaffpa` program into the library (`lib/partition/connected_blocks.cpp`); the output of `kaffpa` and `kaffpaE` is unchanged.
 
