@@ -192,6 +192,9 @@ public:
                 return m_map[he].weight;
         }
 
+        // no-op, the prefetch hint only applies to the emulated table
+        void prefetch( NodeID, NodeID ) const {}
+
         size_t size() const { return m_map.size(); }
 
         template < typename F >
